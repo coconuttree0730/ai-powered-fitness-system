@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.course.mapper.CourseMapper">
+
+    <!-- 课程VO结果映射 -->
+    <resultMap id="CourseVOResultMap" type="com.fitness.modules.course.model.vo.CourseVO">
+        <id column="id" property="id"/>
+        <result column="course_name" property="courseName"/>
+        <result column="description" property="description"/>
+        <result column="coach_id" property="coachId"/>
+        <result column="coach_name" property="coachName"/>
+        <result column="category" property="category"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="capacity" property="capacity"/>
+        <result column="booked_count" property="bookedCount"/>
+        <result column="remaining_count" property="remainingCount"/>
+        <result column="status" property="status"/>
+        <result column="image_url" property="imageUrl"/>
+    </resultMap>
+
+    <!-- 分页查询课程列表 -->
+    <select id="selectCourseList" resultMap="CourseVOResultMap">
+        SELECT
+            c.id,
+            c.course_name,
+            c.description,
+            c.coach_id,
+            u.username AS coach_name,
+            c.category,
+            c.start_time,
+            c.end_time,
+            c.capacity,
+            c.booked_count,
+            (c.capacity - c.booked_count) AS remaining_count,
+            c.status,
+            c.image_url
+        FROM fitness_course c
+        LEFT JOIN sys_user u ON c.coach_id = u.id
+        WHERE c.deleted = 0
+        <if test="query.category != null and query.category != ''">
+            AND c.category = #{query.category}
+        </if>
+        <if test="query.startDate != null">
+            AND DATE(c.start_time) >= #{query.startDate}
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND c.course_name LIKE CONCAT('%', #{query.keyword}, '%')
+        </if>
+        ORDER BY c.start_time ASC
+    </select>
+
+    <!-- 查询课程详情 -->
+    <select id="selectCourseDetail" resultMap="CourseVOResultMap">
+        SELECT
+            c.id,
+            c.course_name,
+            c.description,
+            c.coach_id,
+            u.username AS coach_name,
+            c.category,
+            c.start_time,
+            c.end_time,
+            c.capacity,
+            c.booked_count,
+            (c.capacity - c.booked_count) AS remaining_count,
+            c.status,
+            c.image_url
+        FROM fitness_course c
+        LEFT JOIN sys_user u ON c.coach_id = u.id
+        WHERE c.id = #{courseId}
+          AND c.deleted = 0
+    </select>
+
+</mapper>

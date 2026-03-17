@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.equipment.mapper.EquipmentMapper">
+
+    <!-- 器材VO结果映射 -->
+    <resultMap id="EquipmentVOResultMap" type="com.fitness.modules.equipment.model.vo.EquipmentVO">
+        <id column="id" property="id"/>
+        <result column="equipment_name" property="equipmentName"/>
+        <result column="location" property="location"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="purchase_date" property="purchaseDate"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 分页查询器材列表 -->
+    <select id="selectEquipmentList" resultMap="EquipmentVOResultMap">
+        SELECT
+            id,
+            equipment_name,
+            location,
+            status,
+            description,
+            image_url,
+            purchase_date,
+            create_time
+        FROM fitness_equipment
+        WHERE deleted = 0
+        <if test="query.keyword != null and query.keyword != ''">
+            AND equipment_name LIKE CONCAT('%', #{query.keyword}, '%')
+        </if>
+        <if test="query.status != null">
+            AND status = #{query.status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询器材详情 -->
+    <select id="selectEquipmentDetail" resultMap="EquipmentVOResultMap">
+        SELECT
+            id,
+            equipment_name,
+            location,
+            status,
+            description,
+            image_url,
+            purchase_date,
+            create_time
+        FROM fitness_equipment
+        WHERE id = #{equipmentId}
+          AND deleted = 0
+    </select>
+
+</mapper>

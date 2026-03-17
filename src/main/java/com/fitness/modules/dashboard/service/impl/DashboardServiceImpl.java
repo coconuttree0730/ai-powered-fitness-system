@@ -1,0 +1,230 @@
+package com.fitness.modules.dashboard.service.impl;
+
+import com.fitness.common.constants.ErrorCode;
+import com.fitness.common.exception.BusinessException;
+import com.fitness.integration.ai.prompt.DashboardPromptTemplates;
+import com.fitness.integration.ai.service.AIService;
+import com.fitness.modules.dashboard.mapper.DashboardMapper;
+import com.fitness.modules.dashboard.model.enums.AnalysisType;
+import com.fitness.modules.dashboard.model.vo.AnalysisReportVO;
+import com.fitness.modules.dashboard.model.vo.CourseStatsVO;
+import com.fitness.modules.dashboard.model.vo.DashboardStatsVO;
+import com.fitness.modules.dashboard.model.vo.MemberCardStatsVO;
+import com.fitness.modules.dashboard.model.vo.PeakHoursVO;
+import com.fitness.modules.dashboard.service.DashboardService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * 仪表盘服务实现类
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class DashboardServiceImpl implements DashboardService {
+
+    private final DashboardMapper dashboardMapper;
+    private final AIService aiService;
+    private final DashboardPromptTemplates dashboardPromptTemplates;
+    private final Random random = new Random();
+
+    @Override
+    public DashboardStatsVO getDashboardStats() {
+        log.info("获取仪表盘统计数据");
+
+        DashboardStatsVO stats = new DashboardStatsVO();
+        stats.setTotalMembers(dashboardMapper.countTotalMembers());
+        stats.setActiveMembers(dashboardMapper.countActiveMembers());
+        stats.setTotalCourses(dashboardMapper.countTotalCourses());
+        stats.setTotalBookings(dashboardMapper.countTotalBookings());
+        stats.setTotalEquipment(dashboardMapper.countTotalEquipment());
+
+        return stats;
+    }
+
+    @Override
+    public MemberCardStatsVO getMemberCardStats() {
+        log.info("获取会员卡销量统计（模拟数据）");
+
+        // MVP阶段使用模拟数据
+        MemberCardStatsVO stats = new MemberCardStatsVO();
+        stats.setMonthCard(random.nextInt(51) + 50);   // 50-100
+        stats.setQuarterCard(random.nextInt(31) + 30); // 30-60
+        stats.setYearCard(random.nextInt(21) + 10);    // 10-30
+
+        return stats;
+    }
+
+    @Override
+    public List<PeakHoursVO> getPeakHours() {
+        log.info("获取到店高峰时间统计");
+        return dashboardMapper.selectPeakHours();
+    }
+
+    @Override
+    public List<CourseStatsVO> getCourseStats() {
+        log.info("获取课程统计");
+        return dashboardMapper.selectCourseStats();
+    }
+
+    @Override
+    public AnalysisReportVO generateAnalysisReport(String analysisType) {
+        log.info("生成AI分析报告，分析类型: {}", analysisType);
+
+        try {
+            // 解析分析类型
+            AnalysisType type = AnalysisType.fromCode(analysisType);
+            
+            // 收集运营数据
+            Map<String, Object> variables = collectAnalysisData(type);
+            
+            // 构建分析 Prompt
+            String prompt = buildAnalysisPrompt(type, variables);
+            
+            // 调用 AI 生成报告
+            String aiResponse = aiService.chat(prompt);
+            
+            // 解析 AI 返回结果
+            return parseAIResponse(type, aiResponse);
+        } catch (Exception e) {
+            log.error("生成AI分析报告失败", e);
+            throw new BusinessException(ErrorCode.ANALYSIS_ERROR);
+        }
+    }
+
+    /**
+     * 收集分析数据
+     */
+    private Map<String, Object> collectAnalysisData(AnalysisType type) {
+        Map<String, Object> variables = new HashMap<>();
+
+        // 会员数据
+        Integer totalMembers = dashboardMapper.countTotalMembers();
+        Integer activeMembers = dashboardMapper.countActiveMembers();
+        double activeRate = totalMembers > 0 ? (activeMembers * 100.0 / totalMembers) : 0;
+        variables.put("totalMembers", totalMembers);
+        variables.put("activeMembers", activeMembers);
+        variables.put("activeRate", String.format("%.1f", activeRate));
+
+        // 课程数据
+        Integer totalCourses = dashboardMapper.countTotalCourses();
+        Integer totalBookings = dashboardMapper.countTotalBookings();
+        double avgBookingPerCourse = totalCourses > 0 ? (totalBookings * 1.0 / totalCourses) : 0;
+        variables.put("totalCourses", totalCourses);
+        variables.put("totalBookings", totalBookings);
+        variables.put("avgBookingPerCourse", String.format("%.1f", avgBookingPerCourse));
+
+        // 器材数据
+        Integer totalEquipment = dashboardMapper.countTotalEquipment();
+        Integer normalEquipment = dashboardMapper.countNormalEquipment();
+        Integer maintenanceEquipment = dashboardMapper.countMaintenanceEquipment();
+        double equipmentGoodRate = totalEquipment > 0 ? (normalEquipment * 100.0 / totalEquipment) : 0;
+        variables.put("totalEquipment", totalEquipment);
+        variables.put("normalEquipment", normalEquipment);
+        variables.put("maintenanceEquipment", maintenanceEquipment);
+        variables.put("equipmentGoodRate", String.format("%.1f", equipmentGoodRate));
+
+        // 到店高峰时间
+        List<PeakHoursVO> peakHours = dashboardMapper.selectPeakHours();
+        variables.put("peakHoursData", formatPeakHours(peakHours));
+
+        // 课程分类统计
+        List<CourseStatsVO> courseStats = dashboardMapper.selectCourseStats();
+        variables.put("courseStatsData", formatCourseStats(courseStats));
+
+        return variables;
+    }
+
+    /**
+     * 构建分析 Prompt
+     */
+    private String buildAnalysisPrompt(AnalysisType type, Map<String, Object> variables) {
+        return switch (type) {
+            case MEMBER -> dashboardPromptTemplates.generateMemberAnalysis(variables);
+            case COURSE -> dashboardPromptTemplates.generateCourseAnalysis(variables);
+            case EQUIPMENT -> dashboardPromptTemplates.generateEquipmentAnalysis(variables);
+            default -> dashboardPromptTemplates.generateOverallAnalysis(variables);
+        };
+    }
+
+    /**
+     * 解析 AI 返回结果
+     */
+    private AnalysisReportVO parseAIResponse(AnalysisType type, String aiResponse) {
+        List<String> suggestions = extractSuggestions(aiResponse);
+        
+        return AnalysisReportVO.builder()
+                .analysisType(type.getCode())
+                .reportTitle(type.getDescription() + "报告")
+                .reportContent(aiResponse)
+                .suggestions(suggestions)
+                .generateTime(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * 从 AI 响应中提取建议列表
+     */
+    private List<String> extractSuggestions(String content) {
+        List<String> suggestions = new ArrayList<>();
+        
+        // 尝试匹配建议相关的行
+        Pattern pattern = Pattern.compile("(?:建议|建议：|\\d+\\.\\s*建议)[：:]?\\s*(.+)");
+        Matcher matcher = pattern.matcher(content);
+        
+        while (matcher.find()) {
+            String suggestion = matcher.group(1).trim();
+            if (!suggestion.isEmpty()) {
+                suggestions.add(suggestion);
+            }
+        }
+        
+        // 如果没有提取到建议，返回默认提示
+        if (suggestions.isEmpty()) {
+            suggestions.add("请参考报告内容中的建议部分");
+        }
+        
+        return suggestions;
+    }
+
+    /**
+     * 格式化高峰时间数据
+     */
+    private String formatPeakHours(List<PeakHoursVO> peakHours) {
+        if (peakHours == null || peakHours.isEmpty()) {
+            return "暂无数据";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (PeakHoursVO vo : peakHours) {
+            sb.append(String.format("- %d点: %d人次\n", vo.getHour(), vo.getCount()));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 格式化课程统计数据
+     */
+    private String formatCourseStats(List<CourseStatsVO> courseStats) {
+        if (courseStats == null || courseStats.isEmpty()) {
+            return "暂无数据";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (CourseStatsVO vo : courseStats) {
+            sb.append(String.format("- %s: 课程数%d, 预约数%d\n", 
+                    vo.getCategoryName(), vo.getCourseCount(), vo.getBookingCount()));
+        }
+        return sb.toString();
+    }
+}

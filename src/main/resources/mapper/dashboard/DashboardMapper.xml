@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.dashboard.mapper.DashboardMapper">
+
+    <!-- 统计总会员数 -->
+    <select id="countTotalMembers" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM sys_user
+        WHERE deleted = false
+    </select>
+
+    <!-- 统计活跃会员数（近30天内有预约记录） -->
+    <select id="countActiveMembers" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT b.user_id)
+        FROM fitness_booking b
+        INNER JOIN sys_user u ON b.user_id = u.id
+        WHERE b.deleted = false
+          AND u.deleted = false
+          AND b.booking_time >= CURRENT_DATE - INTERVAL '30 days'
+    </select>
+
+    <!-- 统计总课程数 -->
+    <select id="countTotalCourses" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM fitness_course
+        WHERE deleted = false
+    </select>
+
+    <!-- 统计总预约数 -->
+    <select id="countTotalBookings" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM fitness_booking
+        WHERE deleted = false
+    </select>
+
+    <!-- 统计总器材数 -->
+    <select id="countTotalEquipment" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM fitness_equipment
+        WHERE deleted = false
+    </select>
+
+    <!-- 统计到店高峰时间（按课程开始时间的小时分组） -->
+    <select id="selectPeakHours" resultType="com.fitness.modules.dashboard.model.vo.PeakHoursVO">
+        SELECT
+            EXTRACT(HOUR FROM c.start_time) AS hour,
+            COUNT(b.id) AS count
+        FROM fitness_booking b
+        INNER JOIN fitness_course c ON b.course_id = c.id
+        WHERE b.deleted = false
+          AND c.deleted = false
+          AND b.status IN (1, 3)
+        GROUP BY EXTRACT(HOUR FROM c.start_time)
+        ORDER BY hour
+    </select>
+
+    <!-- 统计课程分类数据 -->
+    <select id="selectCourseStats" resultType="com.fitness.modules.dashboard.model.vo.CourseStatsVO">
+        SELECT
+            c.category AS categoryName,
+            COUNT(DISTINCT c.id) AS courseCount,
+            COUNT(b.id) AS bookingCount
+        FROM fitness_course c
+        LEFT JOIN fitness_booking b ON c.id = b.course_id AND b.deleted = false
+        WHERE c.deleted = false
+          AND c.category IS NOT NULL
+        GROUP BY c.category
+        ORDER BY bookingCount DESC
+    </select>
+
+    <!-- 统计正常状态器材数量 -->
+    <select id="countNormalEquipment" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM fitness_equipment
+        WHERE deleted = false
+          AND status = 1
+    </select>
+
+    <!-- 统计维修中器材数量 -->
+    <select id="countMaintenanceEquipment" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM fitness_equipment
+        WHERE deleted = false
+          AND status = 0
+    </select>
+
+</mapper>

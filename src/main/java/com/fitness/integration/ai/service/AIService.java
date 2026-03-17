@@ -1,0 +1,84 @@
+package com.fitness.integration.ai.service;
+
+import reactor.core.publisher.Flux;
+
+import java.util.Map;
+
+/**
+ * AI 服务接口
+ * 提供与阿里百炼大模型的交互能力
+ */
+public interface AIService {
+
+    /**
+     * 通用对话接口
+     *
+     * @param message 用户输入消息
+     * @return AI 回复内容
+     */
+    String chat(String message);
+
+    /**
+     * 使用 PromptTemplate 的对话接口
+     *
+     * @param prompt    Prompt 模板字符串
+     * @param variables 模板变量
+     * @return AI 回复内容
+     */
+    String chatWithPrompt(String prompt, Map<String, Object> variables);
+
+    /**
+     * 流式对话接口
+     *
+     * @param message 用户输入消息
+     * @return AI 回复流
+     */
+    Flux<String> streamChat(String message);
+
+    /**
+     * 使用 PromptTemplate 的流式对话接口
+     *
+     * @param prompt    Prompt 模板字符串
+     * @param variables 模板变量
+     * @return AI 回复流
+     */
+    Flux<String> streamChatWithPrompt(String prompt, Map<String, Object> variables);
+
+    /**
+     * 生成健身计划
+     *
+     * @param goal       健身目标
+     * @param bodyPart   训练部位偏好
+     * @param experience 健身经验
+     * @param height     身高(cm)
+     * @param weight     体重(kg)
+     * @param age        年龄
+     * @return 健身计划内容
+     */
+    String generateFitnessPlan(String goal, String bodyPart, String experience,
+                               Integer height, Integer weight, Integer age);
+
+    /**
+     * 分析健身数据
+     *
+     * @param variables 分析所需的变量
+     * @return 数据分析报告
+     */
+    String analyzeFitnessData(Map<String, Object> variables);
+
+    /**
+     * 获取营养建议
+     *
+     * @param variables 营养建议所需的变量
+     * @return 营养建议内容
+     */
+    String getNutritionAdvice(Map<String, Object> variables);
+
+    /**
+     * 获取运动动作指导
+     *
+     * @param variables 动作指导所需的变量
+     * @return 动作指导内容
+     */
+    String getExerciseGuide(Map<String, Object> variables);
+}
