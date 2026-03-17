@@ -131,6 +131,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<String> roleCodes = roles.stream()
                 .map(Role::getRoleCode)
                 .collect(Collectors.toList());
+        //加入角色信息到userVo返回
         userVO.setRoles(roleCodes);
 
         return userVO;

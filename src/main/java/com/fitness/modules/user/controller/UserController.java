@@ -81,13 +81,11 @@ public class UserController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        // 从Principal中获取用户ID（假设Principal中存储的是用户ID）
+        // 从Principal中获取用户ID
         Object principal = authentication.getPrincipal();
-        if (principal instanceof Long) {
-            return (Long) principal;
+        if (principal instanceof com.fitness.integration.security.UserDetailsImpl) {
+            return ((com.fitness.integration.security.UserDetailsImpl) principal).getId();
         }
-        // 如果Principal是字符串（用户名），需要从Token中获取userId
-        // 这里简化处理，实际应该从JWT Token中解析
         return null;
     }
 }

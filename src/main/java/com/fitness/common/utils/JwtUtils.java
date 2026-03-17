@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class JwtUtils {
 
-    @Value("${jwt.secret:fitness-system-secret-key-for-jwt-token-generation}")
+    @Value("${jwt.secret:your-256-bit-secret-key-for-jwt-signing-must-be-at-least-32-characters-long}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}")
