@@ -86,6 +86,7 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\plan\service\impl\UserProfileServiceImpl.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\plan\service\UserProfileService.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\controller\AuthController.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\controller\CoachController.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\controller\PermissionController.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\controller\UserAdminController.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\controller\UserController.java
@@ -98,6 +99,7 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\entity\Permission.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\entity\Role.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\entity\User.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\CoachVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\UserVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\service\impl\PermissionServiceImpl.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\service\impl\UserServiceImpl.java

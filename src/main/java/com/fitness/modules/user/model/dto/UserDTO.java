@@ -46,4 +46,9 @@ public class UserDTO {
      * 角色编码
      */
     private String roleCode;
+
+    /**
+     * 头像URL
+     */
+    private String avatar;
 }

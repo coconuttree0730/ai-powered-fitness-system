@@ -21,9 +21,24 @@ public class CourseQueryDTO {
     private LocalDate startDate;
 
     /**
+     * 结束日期
+     */
+    private LocalDate endDate;
+
+    /**
      * 关键词（课程名称）
      */
     private String keyword;
+
+    /**
+     * 课程名称
+     */
+    private String courseName;
+
+    /**
+     * 教练ID
+     */
+    private Long coachId;
 
     /**
      * 页码

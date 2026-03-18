@@ -85,4 +85,11 @@ public interface UserService {
      * @param status 状态
      */
     void updateUserStatus(Long userId, Integer status);
+
+    /**
+     * 获取教练列表
+     *
+     * @return 教练列表
+     */
+    java.util.List<com.fitness.modules.user.model.vo.CoachVO> getCoachList();
 }

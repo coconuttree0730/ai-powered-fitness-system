@@ -57,6 +57,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
+        user.setAvatar(dto.getAvatar());
         user.setStatus(1); // 默认启用状态
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
@@ -215,6 +216,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
+        user.setAvatar(dto.getAvatar());
         user.setStatus(1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
@@ -245,6 +247,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         if (StringUtils.hasText(dto.getEmail())) {
             user.setEmail(dto.getEmail());
+        }
+        if (StringUtils.hasText(dto.getAvatar())) {
+            user.setAvatar(dto.getAvatar());
         }
         user.setUpdateTime(LocalDateTime.now());
 
@@ -279,5 +284,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userMapper.updateById(user);
 
         log.info("更新用户状态成功: userId={}, status={}", userId, status);
+    }
+
+    @Override
+    public List<com.fitness.modules.user.model.vo.CoachVO> getCoachList() {
+        return userMapper.selectCoachList();
     }
 }

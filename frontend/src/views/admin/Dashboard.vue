@@ -133,12 +133,12 @@ onMounted(async () => {
 
 async function fetchStats() {
   try {
-    const res = await getDashboardStats()
-    if (res.data) {
-      stats.value[0].value = res.data.totalMembers || 0
-      stats.value[1].value = res.data.totalCourses || 0
-      stats.value[2].value = res.data.totalBookings || 0
-      stats.value[3].value = res.data.totalEquipment || 0
+    const data = await getDashboardStats()
+    if (data) {
+      stats.value[0].value = data.totalMembers || 0
+      stats.value[1].value = data.totalCourses || 0
+      stats.value[2].value = data.totalBookings || 0
+      stats.value[3].value = data.totalEquipment || 0
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
@@ -147,8 +147,8 @@ async function fetchStats() {
 
 async function fetchPeakHours() {
   try {
-    const res = await getPeakHours()
-    peakHoursData.value = res.data || []
+    const data = await getPeakHours()
+    peakHoursData.value = data || []
   } catch (error) {
     console.error('获取高峰时间失败:', error)
   }
@@ -156,8 +156,8 @@ async function fetchPeakHours() {
 
 async function fetchMemberCards() {
   try {
-    const res = await getMemberCardStats()
-    memberCardData.value = res.data || {}
+    const data = await getMemberCardStats()
+    memberCardData.value = data || {}
   } catch (error) {
     console.error('获取会员卡统计失败:', error)
   }
@@ -165,8 +165,8 @@ async function fetchMemberCards() {
 
 async function fetchCourseStats() {
   try {
-    const res = await getCourseStats()
-    courseStatsData.value = res.data || []
+    const data = await getCourseStats()
+    courseStatsData.value = data || []
   } catch (error) {
     console.error('获取课程统计失败:', error)
   }
@@ -175,9 +175,9 @@ async function fetchCourseStats() {
 async function handleAnalysis() {
   analysisLoading.value = true
   try {
-    const res = await generateAnalysis({ analysisType: 'OVERALL' })
-    if (res.data) {
-      analysisReport.value = res.data
+    const data = await generateAnalysis({ analysisType: 'OVERALL' })
+    if (data) {
+      analysisReport.value = data
       analysisVisible.value = true
     }
   } catch (error) {

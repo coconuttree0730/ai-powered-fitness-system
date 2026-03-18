@@ -1,29 +1,120 @@
 <template>
   <div class="users-page">
     <n-card title="用户管理">
-      <template #header-extra>
-        <n-button type="primary" @click="handleAdd">新增用户</n-button>
-      </template>
+      <!-- 搜索区域 -->
+      <n-card embedded style="margin-bottom: 16px;">
+        <n-space align="center" wrap justify="space-between">
+          <n-space align="center" wrap>
+            <n-input
+              v-model:value="searchForm.username"
+              placeholder="用户名"
+              clearable
+              style="width: 200px"
+              @keyup.enter="handleSearch"
+            />
+            <n-input
+              v-model:value="searchForm.phone"
+              placeholder="手机号"
+              clearable
+              style="width: 150px"
+              @keyup.enter="handleSearch"
+            />
+            <n-select
+              v-model:value="searchForm.role"
+              :options="roleOptions"
+              placeholder="角色"
+              clearable
+              style="width: 150px"
+            />
+            <n-select
+              v-model:value="searchForm.status"
+              :options="statusOptions"
+              placeholder="状态"
+              clearable
+              style="width: 120px"
+            />
+            <n-button type="primary" @click="handleSearch">
+              <template #icon>
+                <n-icon><SearchOutline /></n-icon>
+              </template>
+              搜索
+            </n-button>
+            <n-button @click="handleReset">重置</n-button>
+          </n-space>
+          <n-button type="primary" @click="handleAdd">
+            <template #icon>
+              <n-icon><AddOutline /></n-icon>
+            </template>
+            新增用户
+          </n-button>
+        </n-space>
+      </n-card>
+
       <n-data-table :columns="columns" :data="users" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
     </n-card>
 
-    <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑用户' : '新增用户'" style="width: 500px">
+    <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑用户' : '新增用户'" style="width: 600px">
       <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="80">
-        <n-form-item label="用户名" path="username">
-          <n-input v-model:value="form.username" placeholder="请输入用户名" :disabled="isEdit" />
-        </n-form-item>
-        <n-form-item v-if="!isEdit" label="密码" path="password">
-          <n-input v-model:value="form.password" type="password" placeholder="请输入密码" />
-        </n-form-item>
-        <n-form-item label="手机号" path="phone">
-          <n-input v-model:value="form.phone" placeholder="请输入手机号" />
-        </n-form-item>
-        <n-form-item label="邮箱" path="email">
-          <n-input v-model:value="form.email" placeholder="请输入邮箱" />
-        </n-form-item>
+        <n-grid :cols="2" :x-gap="12">
+          <n-grid-item>
+            <n-form-item label="用户名" path="username">
+              <n-input v-model:value="form.username" placeholder="请输入用户名" :disabled="isEdit" />
+            </n-form-item>
+          </n-grid-item>
+          <n-grid-item>
+            <n-form-item v-if="!isEdit" label="密码" path="password">
+              <n-input v-model:value="form.password" type="password" placeholder="请输入密码" />
+            </n-form-item>
+            <n-form-item v-else label="角色" path="roleCode">
+              <n-tag type="info">{{ getRoleLabel(form.roleCode) }}</n-tag>
+            </n-form-item>
+          </n-grid-item>
+        </n-grid>
+        <n-grid :cols="2" :x-gap="12">
+          <n-grid-item>
+            <n-form-item label="手机号" path="phone">
+              <n-input v-model:value="form.phone" placeholder="请输入手机号" />
+            </n-form-item>
+          </n-grid-item>
+          <n-grid-item>
+            <n-form-item label="邮箱" path="email">
+              <n-input v-model:value="form.email" placeholder="请输入邮箱" />
+            </n-form-item>
+          </n-grid-item>
+        </n-grid>
         <n-form-item v-if="!isEdit" label="角色" path="roleCode">
           <n-select v-model:value="form.roleCode" :options="roleOptions" placeholder="请选择角色" />
         </n-form-item>
+
+        <!-- 头像上传 -->
+        <n-form-item label="头像" path="avatar">
+          <n-space vertical>
+            <n-upload
+              :action="uploadUrl"
+              :headers="uploadHeaders"
+              :data="{ folder: 'avatars' }"
+              name="file"
+              accept="image/*"
+              :max="1"
+              v-model:file-list="fileList"
+              list-type="image-card"
+              style="--n-image-width: 100px; --n-image-height: 100px;"
+              @before-upload="handleBeforeUpload"
+              @finish="handleUploadFinish"
+              @remove="handleUploadRemove"
+              @error="handleUploadError"
+            >
+              <n-button style="width: 100px; height: 100px;">
+                <n-space vertical align="center">
+                  <n-icon size="24"><CloudUploadOutline /></n-icon>
+                  <span>上传头像</span>
+                </n-space>
+              </n-button>
+            </n-upload>
+            <n-text depth="3" style="font-size: 12px;">支持 JPG、PNG 格式，建议尺寸 200x200</n-text>
+          </n-space>
+        </n-form-item>
+
         <n-form-item>
           <n-space>
             <n-button type="primary" :loading="submitting" @click="handleSubmit">提交</n-button>
@@ -36,9 +127,11 @@
 </template>
 
 <script setup>
-import { ref, h, reactive, onMounted } from 'vue'
-import { NTag, NButton, NSpace, useMessage, useDialog } from 'naive-ui'
+import { ref, h, reactive, onMounted, computed } from 'vue'
+import { NTag, NButton, NSpace, NIcon, NImage, useMessage, useDialog, NText } from 'naive-ui'
+import { SearchOutline, AddOutline, CloudUploadOutline } from '@vicons/ionicons5'
 import { getUserList, createUser, updateUser, deleteUser, updateUserStatus } from '@/api/user'
+import { getToken } from '@/utils/auth'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -50,6 +143,13 @@ const formRef = ref(null)
 const users = ref([])
 const currentId = ref(null)
 
+// 上传相关
+const uploadUrl = '/api/v1/files/upload'
+const uploadHeaders = computed(() => ({
+  Authorization: 'Bearer ' + getToken()
+}))
+const fileList = ref([])
+
 const pagination = reactive({
   page: 1,
   pageSize: 10,
@@ -60,12 +160,20 @@ const pagination = reactive({
   }
 })
 
+const searchForm = reactive({
+  username: '',
+  phone: '',
+  role: null,
+  status: null
+})
+
 const form = reactive({
   username: '',
   password: '',
   phone: '',
   email: '',
-  roleCode: null
+  roleCode: null,
+  avatar: ''
 })
 
 const rules = {
@@ -79,7 +187,80 @@ const roleOptions = [
   { label: '会员', value: 'MEMBER' }
 ]
 
+const statusOptions = [
+  { label: '正常', value: 1 },
+  { label: '禁用', value: 0 }
+]
+
+const getRoleLabel = (roleCode) => {
+  const role = roleOptions.find(r => r.value === roleCode)
+  return role ? role.label : roleCode
+}
+
+// 上传前校验
+function handleBeforeUpload({ file }) {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    message.error('只支持 JPG、PNG、GIF、WebP 格式的图片')
+    return false
+  }
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    message.error('图片大小不能超过 10MB')
+    return false
+  }
+  return true
+}
+
+// 上传完成回调
+function handleUploadFinish({ file, event }) {
+  try {
+    const response = JSON.parse(event.target.response)
+    if (response.code === 200) {
+      form.avatar = response.data.fileUrl
+      message.success('头像上传成功')
+    } else {
+      message.error(response.message || '上传失败')
+      fileList.value = []
+    }
+  } catch (error) {
+    console.error('解析上传响应失败:', error)
+    message.error('上传响应解析失败')
+    fileList.value = []
+  }
+}
+
+// 上传失败回调
+function handleUploadError({ file, event }) {
+  message.error('头像上传失败')
+}
+
+// 移除图片回调
+function handleUploadRemove({ file, fileList: newFileList }) {
+  form.avatar = ''
+  fileList.value = newFileList
+}
+
 const columns = [
+  {
+    title: '头像',
+    key: 'avatar',
+    width: 80,
+    render: (row) => {
+      if (row.avatar) {
+        return h(NImage, {
+          src: row.avatar,
+          width: 50,
+          height: 50,
+          style: 'border-radius: 50%; object-fit: cover;',
+          fallbackSrc: '/default-avatar.png'
+        })
+      }
+      return h('div', {
+        style: 'width: 50px; height: 50px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
+      }, '无')
+    }
+  },
   { title: '用户名', key: 'username' },
   { title: '手机号', key: 'phone' },
   { title: '邮箱', key: 'email' },
@@ -98,8 +279,8 @@ const columns = [
     key: 'actions',
     render: (row) => h(NSpace, null, () => [
       h(NButton, { size: 'small', onClick: () => handleEdit(row) }, () => '编辑'),
-      h(NButton, { 
-        size: 'small', 
+      h(NButton, {
+        size: 'small',
         type: row.status === 1 ? 'warning' : 'success',
         onClick: () => handleToggleStatus(row)
       }, () => row.status === 1 ? '禁用' : '启用'),
@@ -115,7 +296,12 @@ onMounted(() => {
 async function fetchUsers() {
   loading.value = true
   try {
-    const res = await getUserList({ pageNum: pagination.page, pageSize: pagination.pageSize })
+    const params = {
+      pageNum: pagination.page,
+      pageSize: pagination.pageSize,
+      ...buildSearchParams()
+    }
+    const res = await getUserList(params)
     users.value = res.records || []
     pagination.itemCount = res.total || 0
   } catch (error) {
@@ -125,10 +311,42 @@ async function fetchUsers() {
   }
 }
 
+function buildSearchParams() {
+  const params = {}
+  if (searchForm.username) {
+    params.username = searchForm.username
+  }
+  if (searchForm.phone) {
+    params.phone = searchForm.phone
+  }
+  if (searchForm.role) {
+    params.role = searchForm.role
+  }
+  if (searchForm.status !== null && searchForm.status !== undefined) {
+    params.status = searchForm.status
+  }
+  return params
+}
+
+function handleSearch() {
+  pagination.page = 1
+  fetchUsers()
+}
+
+function handleReset() {
+  searchForm.username = ''
+  searchForm.phone = ''
+  searchForm.role = null
+  searchForm.status = null
+  pagination.page = 1
+  fetchUsers()
+}
+
 function handleAdd() {
   isEdit.value = false
   currentId.value = null
-  Object.assign(form, { username: '', password: '', phone: '', email: '', roleCode: null })
+  Object.assign(form, { username: '', password: '', phone: '', email: '', roleCode: null, avatar: '' })
+  fileList.value = []
   showModal.value = true
 }
 
@@ -140,8 +358,20 @@ function handleEdit(row) {
     password: '',
     phone: row.phone || '',
     email: row.email || '',
-    roleCode: null
+    roleCode: row.roles && row.roles[0] ? row.roles[0] : null,
+    avatar: row.avatar || ''
   })
+  // 设置图片文件列表
+  if (row.avatar) {
+    fileList.value = [{
+      id: 'existing',
+      name: '头像',
+      status: 'finished',
+      url: row.avatar
+    }]
+  } else {
+    fileList.value = []
+  }
   showModal.value = true
 }
 
@@ -149,7 +379,7 @@ async function handleSubmit() {
   try {
     await formRef.value?.validate()
     submitting.value = true
-    
+
     if (isEdit.value) {
       await updateUser(currentId.value, form)
       message.success('更新成功')
@@ -157,7 +387,7 @@ async function handleSubmit() {
       await createUser(form)
       message.success('创建成功')
     }
-    
+
     showModal.value = false
     fetchUsers()
   } catch (error) {

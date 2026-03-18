@@ -44,8 +44,17 @@
         <if test="query.startDate != null">
             AND c.start_time::DATE >= #{query.startDate}::DATE
         </if>
+        <if test="query.endDate != null">
+            AND c.end_time::DATE &lt;= #{query.endDate}::DATE
+        </if>
         <if test="query.keyword != null and query.keyword != ''">
             AND c.course_name LIKE '%' || #{query.keyword} || '%'
+        </if>
+        <if test="query.courseName != null and query.courseName != ''">
+            AND c.course_name LIKE '%' || #{query.courseName} || '%'
+        </if>
+        <if test="query.coachId != null">
+            AND c.coach_id = #{query.coachId}
         </if>
         ORDER BY c.start_time ASC
     </select>

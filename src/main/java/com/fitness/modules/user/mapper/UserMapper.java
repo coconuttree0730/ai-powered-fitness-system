@@ -50,4 +50,15 @@ public interface UserMapper extends BaseMapper<User> {
             "INNER JOIN sys_user_role ur ON r.id = ur.role_id " +
             "WHERE ur.user_id = #{userId} AND r.deleted = false")
     List<String> selectRoleCodesByUserId(@Param("userId") Long userId);
+
+    /**
+     * 查询所有教练列表（角色为COACH的用户）
+     *
+     * @return 教练列表
+     */
+    @Select("SELECT u.id, u.username as name FROM sys_user u " +
+            "INNER JOIN sys_user_role ur ON u.id = ur.user_id " +
+            "INNER JOIN sys_role r ON ur.role_id = r.id " +
+            "WHERE r.role_code = 'COACH' AND u.deleted = false")
+    List<com.fitness.modules.user.model.vo.CoachVO> selectCoachList();
 }
