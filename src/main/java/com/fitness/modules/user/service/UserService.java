@@ -1,7 +1,9 @@
 package com.fitness.modules.user.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fitness.modules.user.model.dto.LoginDTO;
 import com.fitness.modules.user.model.dto.UserDTO;
+import com.fitness.modules.user.model.dto.UserQueryDTO;
 import com.fitness.modules.user.model.vo.UserVO;
 
 import java.util.Map;
@@ -44,4 +46,43 @@ public interface UserService {
      * @return 是否成功
      */
     boolean updatePassword(Long userId, String oldPassword, String newPassword);
+
+    /**
+     * 分页查询用户列表
+     *
+     * @param query 查询条件
+     * @return 用户分页数据
+     */
+    IPage<UserVO> getUserPage(UserQueryDTO query);
+
+    /**
+     * 创建用户（管理员）
+     *
+     * @param dto 用户信息
+     * @return 用户ID
+     */
+    Long createUser(UserDTO dto);
+
+    /**
+     * 更新用户
+     *
+     * @param userId 用户ID
+     * @param dto    用户信息
+     */
+    void updateUser(Long userId, UserDTO dto);
+
+    /**
+     * 删除用户
+     *
+     * @param userId 用户ID
+     */
+    void deleteUser(Long userId);
+
+    /**
+     * 更新用户状态
+     *
+     * @param userId 用户ID
+     * @param status 状态
+     */
+    void updateUserStatus(Long userId, Integer status);
 }

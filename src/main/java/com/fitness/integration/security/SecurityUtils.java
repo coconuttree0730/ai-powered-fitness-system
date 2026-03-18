@@ -21,6 +21,7 @@ public class SecurityUtils {
      * @return Optional包装的Authentication对象
      */
     public static Optional<Authentication> getAuthentication() {
+        // 获取当前登录用户（security-线程数据）的Authentication对象
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication());
     }
 
@@ -85,7 +86,7 @@ public class SecurityUtils {
     /**
      * 判断当前用户是否具有指定角色
      *
-     * @param role 角色编码（不需要ROLE_前缀）
+     * @param role 角色编码（不需要ROLE_前缀） hasRole("role_admin")
      * @return 是否具有该角色
      */
     public static boolean hasRole(String role) {
@@ -97,7 +98,7 @@ public class SecurityUtils {
     }
 
     /**
-     * 判断当前用户是否具有任意指定角色
+     * 判断当前用户是否具有__任意 any __指定角色
      *
      * @param roles 角色编码数组（不需要ROLE_前缀）
      * @return 是否具有任意角色
@@ -112,7 +113,7 @@ public class SecurityUtils {
     }
 
     /**
-     * 判断当前用户是否具有所有指定角色
+     * 判断当前用户是否具有__所有 all __指定角色
      *
      * @param roles 角色编码数组（不需要ROLE_前缀）
      * @return 是否具有所有角色

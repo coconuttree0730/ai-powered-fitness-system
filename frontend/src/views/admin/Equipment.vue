@@ -2,18 +2,18 @@
   <div class="admin-equipment">
     <n-card title="器材管理">
       <template #header-extra>
-        <n-button type="primary" @click="showModal = true">新增器材</n-button>
+        <n-button type="primary" @click="handleAdd">新增器材</n-button>
       </template>
-      <n-data-table :columns="columns" :data="equipment" :loading="loading" :pagination="pagination" />
+      <n-data-table :columns="columns" :data="equipment" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
     </n-card>
 
-    <n-modal v-model:show="showModal" preset="card" title="新增器材" style="width: 500px">
+    <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑器材' : '新增器材'" style="width: 500px">
       <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="80">
-        <n-form-item label="名称" path="name">
-          <n-input v-model:value="form.name" placeholder="请输入器材名称" />
+        <n-form-item label="名称" path="equipmentName">
+          <n-input v-model:value="form.equipmentName" placeholder="请输入器材名称" />
         </n-form-item>
-        <n-form-item label="类型" path="type">
-          <n-input v-model:value="form.type" placeholder="请输入器材类型" />
+        <n-form-item label="类型" path="equipmentType">
+          <n-input v-model:value="form.equipmentType" placeholder="请输入器材类型" />
         </n-form-item>
         <n-form-item label="位置" path="location">
           <n-input v-model:value="form.location" placeholder="请输入器材位置" />
@@ -25,7 +25,10 @@
           <n-input v-model:value="form.description" type="textarea" :rows="3" placeholder="请输入描述" />
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" :loading="submitting" @click="handleSubmit">提交</n-button>
+          <n-space>
+            <n-button type="primary" :loading="submitting" @click="handleSubmit">提交</n-button>
+            <n-button @click="showModal = false">取消</n-button>
+          </n-space>
         </n-form-item>
       </n-form>
     </n-modal>
@@ -34,28 +37,40 @@
 
 <script setup>
 import { ref, h, reactive, onMounted } from 'vue'
-import { NTag, NButton, NSpace, useMessage } from 'naive-ui'
+import { NTag, NButton, NSpace, useMessage, useDialog } from 'naive-ui'
+import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment } from '@/api/equipment'
 
 const message = useMessage()
+const dialog = useDialog()
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
+const isEdit = ref(false)
 const formRef = ref(null)
 const equipment = ref([])
+const currentId = ref(null)
 
-const pagination = reactive({ pageSize: 10 })
+const pagination = reactive({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  onChange: (page) => {
+    pagination.page = page
+    fetchEquipment()
+  }
+})
 
 const form = reactive({
-  name: '',
-  type: '',
+  equipmentName: '',
+  equipmentType: '',
   location: '',
   status: 'AVAILABLE',
   description: ''
 })
 
 const rules = {
-  name: [{ required: true, message: '请输入器材名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请输入器材类型', trigger: 'blur' }],
+  equipmentName: [{ required: true, message: '请输入器材名称', trigger: 'blur' }],
+  equipmentType: [{ required: true, message: '请输入器材类型', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
@@ -67,8 +82,8 @@ const statusOptions = [
 ]
 
 const columns = [
-  { title: '名称', key: 'name' },
-  { title: '类型', key: 'type' },
+  { title: '名称', key: 'equipmentName' },
+  { title: '类型', key: 'equipmentType' },
   { title: '位置', key: 'location' },
   {
     title: '状态',
@@ -90,7 +105,7 @@ const columns = [
     key: 'actions',
     render: (row) => h(NSpace, null, () => [
       h(NButton, { size: 'small', onClick: () => handleEdit(row) }, () => '编辑'),
-      h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row.id) }, () => '删除')
+      h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, () => '删除')
     ])
   }
 ]
@@ -101,15 +116,50 @@ onMounted(() => {
 
 async function fetchEquipment() {
   loading.value = true
-  equipment.value = []
-  loading.value = false
+  try {
+    const res = await getEquipmentList({ pageNum: pagination.page, pageSize: pagination.pageSize })
+    equipment.value = res.records || []
+    pagination.itemCount = res.total || 0
+  } catch (error) {
+    message.error('获取器材列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleAdd() {
+  isEdit.value = false
+  currentId.value = null
+  Object.assign(form, { equipmentName: '', equipmentType: '', location: '', status: 'AVAILABLE', description: '' })
+  showModal.value = true
+}
+
+function handleEdit(row) {
+  isEdit.value = true
+  currentId.value = row.id
+  Object.assign(form, {
+    equipmentName: row.equipmentName,
+    equipmentType: row.equipmentType,
+    location: row.location || '',
+    status: row.status,
+    description: row.description || ''
+  })
+  showModal.value = true
 }
 
 async function handleSubmit() {
   try {
     await formRef.value?.validate()
     submitting.value = true
-    message.success('创建成功')
+    
+    if (isEdit.value) {
+      await updateEquipment(currentId.value, form)
+      message.success('更新成功')
+    } else {
+      await createEquipment(form)
+      message.success('创建成功')
+    }
+    
     showModal.value = false
     fetchEquipment()
   } catch (error) {
@@ -119,12 +169,22 @@ async function handleSubmit() {
   }
 }
 
-function handleEdit(row) {
-  message.info('编辑功能待实现')
-}
-
-function handleDelete(id) {
-  message.info('删除功能待实现')
+function handleDelete(row) {
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除器材 "${row.equipmentName}" 吗？`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await deleteEquipment(row.id)
+        message.success('删除成功')
+        fetchEquipment()
+      } catch (error) {
+        message.error('删除失败')
+      }
+    }
+  })
 }
 </script>
 

@@ -60,7 +60,6 @@ public class JwtTokenProvider {
 
     /**
      * 生成JWT Token
-     *
      * @param userDetails 用户详情
      * @return JWT Token字符串
      */
@@ -130,8 +129,7 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 从Token中获取用户ID
-     *
+     * 从Token中获取用户ID , 用于securityContext
      * @param token JWT Token
      * @return 用户ID
      */

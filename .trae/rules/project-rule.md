@@ -100,41 +100,13 @@ throw new BusinessException("订单金额错误"); // 禁止硬编码
 | 密码存储 | 必须使用 `BCryptPasswordEncoder` 进行编码 |
 
 
+## 5. 项目开发中严格遵守的规则
+
+- 当前项目使用postgresql 16 （包含向量扩展(pgvector)作为业务数据和向量数据的存储; 数据库操作(DDL,DML,查询,事务)时，必须严格使用postgresql的语法和特性，且使用MyBatis-Plus进行数据库操作,必须使用Postgresql支持的语法进行数据库操作
+- 项目使用redis 7.2 作为缓存层，缓存数据必须严格遵守redis的语法和特性
+- 类型转换：
+  - 所有从数据库查询到的实体对象，必须在转换为VO对象之前，进行必要的类型转换。
+  - 所有从VO对象转换为实体对象的操作，必须在存储到数据库之前，进行必要的类型转换。
+  - 使用Hutool工具的相关包工具进行类型转换，如`BeanUtil.copyProperties`等。
 
 ---
-
-## 5. 目录结构
-### 5.1 Java源码目录
-```plain
-src/main/java/com/[公司]/[项目]/
-├── common/              # 公共模块（常量、异常、工具、通用配置）
-├── modules/             # 业务模块（按业务垂直切分）
-│   └── [module]/        # 业务名称（user, order, product...）
-│       ├── controller/  # API层
-│       ├── service/     # 业务逻辑层
-│       │   └── impl/    # 实现类
-│       ├── mapper/      # 数据访问层
-│       └── model/       # 实体、DTO、VO、枚举
-├── config/              # 框架配置（Security, Swagger）
-├── integration/         # 外部服务集成（SMS, Email, OSS...）
-└── 其他拓展.../  
-```
-
-### 5.2 资源文件目录
-```plain
-src/main/resources/
-├── application.yml              # 主配置文件
-├── application-[环境].yml          # 开发环境
-│
-├── mapper/                      # XML映射文件
-│   └── [module]/
-│       └── [Module]Mapper.xml
-├── db/                          # 数据库相关
-├── static/                      # 静态资源
-└── templates/                   # 模板文件
-```
-
----
-
-
-

@@ -26,7 +26,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserMapper userMapper;
 
     /**
-     * 根据用户名加载用户详情
+     * 根据【 用户名 】加载用户详情
      *
      * @param username 用户名
      * @return UserDetails 对象
@@ -63,7 +63,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     /**
-     * 根据用户ID加载用户详情
+     * 根据【用户ID】加载用户详情 : 操作数据源mapper 获取 用户信息
      *
      * @param userId 用户ID
      * @return UserDetails 对象
@@ -77,10 +77,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userMapper.selectById(userId);
         if (user == null) {
             log.warn("用户不存在, ID: {}", userId);
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND); // “用户不存在”
         }
 
-        // 检查用户状态
+        // 检查用户状态 ：状态值：0-禁用, 1-启用
         if (user.getStatus() == null || user.getStatus() != 1) {
             log.warn("用户已被禁用, ID: {}", userId);
             throw new BusinessException(ErrorCode.FORBIDDEN);

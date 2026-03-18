@@ -72,6 +72,6 @@ export function handleRepair(repairId, data) {
   return request({
     url: `/admin/equipment/repairs/${repairId}`,
     method: 'put',
-    data
+    params: data
   })
 }

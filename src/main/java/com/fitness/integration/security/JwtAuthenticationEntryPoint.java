@@ -16,7 +16,7 @@ import java.io.IOException;
 
 /**
  * JWT 认证入口点
- * 处理未认证用户的请求
+ * 处理 未认证 (401 )用户的请求
  */
 @Slf4j
 @Component
@@ -31,7 +31,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          AuthenticationException authException) throws IOException {
         log.warn("未认证访问: {}, URI: {}", authException.getMessage(), request.getRequestURI());
 
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 

@@ -29,7 +29,7 @@ request.interceptors.response.use(
     if (res.code !== 200) {
       return Promise.reject(new Error(res.message || '请求失败'))
     }
-    return response
+    return res.data
   },
   (error) => {
     if (error.response) {

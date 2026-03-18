@@ -26,9 +26,9 @@
             purchase_date,
             create_time
         FROM fitness_equipment
-        WHERE deleted = 0
+        WHERE deleted = false
         <if test="query.keyword != null and query.keyword != ''">
-            AND equipment_name LIKE CONCAT('%', #{query.keyword}, '%')
+            AND equipment_name LIKE '%' || #{query.keyword} || '%'
         </if>
         <if test="query.status != null">
             AND status = #{query.status}
@@ -49,7 +49,7 @@
             create_time
         FROM fitness_equipment
         WHERE id = #{equipmentId}
-          AND deleted = 0
+          AND deleted = false
     </select>
 
 </mapper>

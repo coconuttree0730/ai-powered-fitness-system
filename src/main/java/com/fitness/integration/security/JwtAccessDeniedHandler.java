@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- * JWT 访问拒绝处理器
+ * JWT 访问拒绝处理器 : Denier(拒绝): 403 Forbidden
  * 处理已认证但无权限访问的请求
  */
 @Slf4j
@@ -31,8 +31,8 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
                        AccessDeniedException accessDeniedException) throws IOException {
         log.warn("权限不足: {}, URI: {}", accessDeniedException.getMessage(), request.getRequestURI());
 
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpStatus.FORBIDDEN.value()); // 403 Forbidden
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);// content-type: application/json
         response.setCharacterEncoding("UTF-8");
 
         Result<Void> result = Result.error(403, "没有权限访问该资源");

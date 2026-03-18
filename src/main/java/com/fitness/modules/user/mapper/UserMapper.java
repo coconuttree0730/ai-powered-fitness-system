@@ -36,10 +36,9 @@ public interface UserMapper extends BaseMapper<User> {
      *
      * @param userId 用户ID
      * @param roleId 角色ID
-     * @return 影响行数
      */
     @Insert("INSERT INTO sys_user_role (user_id, role_id, create_time) VALUES (#{userId}, #{roleId}, NOW())")
-    int insertUserRole(@Param("userId") Long userId, @Param("roleId") Long roleId);
+    void insertUserRole(@Param("userId") Long userId, @Param("roleId") Long roleId);
 
     /**
      * 根据用户ID查询角色编码列表

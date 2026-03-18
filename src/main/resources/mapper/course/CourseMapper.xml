@@ -37,15 +37,15 @@
             c.image_url
         FROM fitness_course c
         LEFT JOIN sys_user u ON c.coach_id = u.id
-        WHERE c.deleted = 0
+        WHERE c.deleted = false
         <if test="query.category != null and query.category != ''">
             AND c.category = #{query.category}
         </if>
         <if test="query.startDate != null">
-            AND DATE(c.start_time) >= #{query.startDate}
+            AND c.start_time::DATE >= #{query.startDate}::DATE
         </if>
         <if test="query.keyword != null and query.keyword != ''">
-            AND c.course_name LIKE CONCAT('%', #{query.keyword}, '%')
+            AND c.course_name LIKE '%' || #{query.keyword} || '%'
         </if>
         ORDER BY c.start_time ASC
     </select>
@@ -69,7 +69,7 @@
         FROM fitness_course c
         LEFT JOIN sys_user u ON c.coach_id = u.id
         WHERE c.id = #{courseId}
-          AND c.deleted = 0
+          AND c.deleted = false
     </select>
 
 </mapper>

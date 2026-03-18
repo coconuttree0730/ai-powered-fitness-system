@@ -34,6 +34,8 @@ public final class RoleConstants {
      */
     public static final String ROLE_USER = "USER";
 
+//---------------------------------
+
     /**
      * 带前缀的角色常量（用于Spring Security）
      */
@@ -72,6 +74,7 @@ public final class RoleConstants {
         if (roleCode.startsWith(ROLE_PREFIX)) {
             return roleCode;
         }
+        //拼接返回带前缀
         return ROLE_PREFIX + roleCode;
     }
 

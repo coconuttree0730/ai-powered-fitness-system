@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,20 +45,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private static final String BEARER_PREFIX = "Bearer ";
 
+    /**
+     * 拦截所有请求，进行JWT认证
+     *
+     * @param request     HTTP请求
+     * @param response    HTTP响应
+     * @param filterChain 过滤器链
+     * @throws ServletException Servlet异常
+     * @throws IOException      IO异常
+     */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                      HttpServletResponse response,
-                                      FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NotNull HttpServletRequest request,
+                                    @NotNull HttpServletResponse response,
+                                    @NotNull FilterChain filterChain) throws ServletException, IOException {
         try {
             // 1. 从请求中获取JWT Token
             String jwt = getJwtFromRequest(request);
 
-            // 2. 验证Token
+            // 2. 验证Token : 底层原理： 判断是不是 null
             if (StringUtils.hasText(jwt)) {
                 if (jwtTokenProvider.validateToken(jwt)) {
                     // 3. 从Token中获取用户ID
                     Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
-
+                    // 4. 创建用户详情
                     if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         // 4. 加载用户详情
                         UserDetails userDetails = userDetailsService.loadUserById(userId);
@@ -69,9 +79,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                         null,
                                         userDetails.getAuthorities()
                                 );
+                        // 7. 设置认证对象
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                        // 6. 设置SecurityContext
+                        // 6. 设置SecurityContext 添加权限信息
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
                         log.debug("JWT认证成功, 用户ID: {}, URI: {}", userId, request.getRequestURI());
@@ -88,7 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             sendUnauthorizedResponse(response, "认证失败: " + e.getMessage());
             return;
         }
-
+        //放行
         filterChain.doFilter(request, response);
     }
 

@@ -38,6 +38,11 @@ public class UserVO {
     private String avatar;
 
     /**
+     * 状态: 0-禁用, 1-启用
+     */
+    private Integer status;
+
+    /**
      * 角色列表
      */
     private List<String> roles;

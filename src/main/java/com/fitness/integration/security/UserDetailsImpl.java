@@ -9,12 +9,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * UserDetails 实现类
+ * UserDetails [实现类]
  * 包装 User 实体，提供 Spring Security 所需的用户详情信息
  */
 @Data
@@ -22,32 +23,21 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * 用户ID
      */
     private Long id;
-
-    /**
-     * 用户名
-     */
     private String username;
 
     /**
-     * 密码
+     * 密码 json 解析忽略
      */
     @JsonIgnore
     private String password;
-
-    /**
-     * 手机号
-     */
     private String phone;
-
-    /**
-     * 邮箱
-     */
     private String email;
 
     /**
@@ -64,6 +54,8 @@ public class UserDetailsImpl implements UserDetails {
      * 权限列表
      */
     private Collection<? extends GrantedAuthority> authorities;
+
+
 
     /**
      * 从 User 实体构建 UserDetailsImpl

@@ -89,12 +89,15 @@ const analysisVisible = ref(false)
 const analysisLoading = ref(false)
 const analysisReport = ref(null)
 
-const peakHoursOption = computed(() => ({
-  xAxis: { type: 'category', data: peakHoursData.value.map(d => `${d.hour}:00`) },
-  yAxis: { type: 'value' },
-  series: [{ data: peakHoursData.value.map(d => d.count), type: 'bar', itemStyle: { color: '#1890ff' } }],
-  tooltip: { trigger: 'axis' }
-}))
+const peakHoursOption = computed(() => {
+  const data = peakHoursData.value || []
+  return {
+    xAxis: { type: 'category', data: data.map(d => `${d.hour}:00`) },
+    yAxis: { type: 'value' },
+    series: [{ data: data.map(d => d.count), type: 'bar', itemStyle: { color: '#1890ff' } }],
+    tooltip: { trigger: 'axis' }
+  }
+})
 
 const memberCardOption = computed(() => ({
   series: [{
@@ -110,16 +113,19 @@ const memberCardOption = computed(() => ({
   tooltip: { trigger: 'item' }
 }))
 
-const courseStatsOption = computed(() => ({
-  xAxis: { type: 'category', data: courseStatsData.value.map(d => d.categoryName) },
-  yAxis: [{ type: 'value', name: '课程数' }, { type: 'value', name: '预约数' }],
-  series: [
-    { name: '课程数', data: courseStatsData.value.map(d => d.courseCount), type: 'bar', itemStyle: { color: '#1890ff' } },
-    { name: '预约数', data: courseStatsData.value.map(d => d.bookingCount), type: 'line', yAxisIndex: 1, itemStyle: { color: '#52c41a' } }
-  ],
-  tooltip: { trigger: 'axis' },
-  legend: { data: ['课程数', '预约数'] }
-}))
+const courseStatsOption = computed(() => {
+  const data = courseStatsData.value || []
+  return {
+    xAxis: { type: 'category', data: data.map(d => d.categoryName) },
+    yAxis: [{ type: 'value', name: '课程数' }, { type: 'value', name: '预约数' }],
+    series: [
+      { name: '课程数', data: data.map(d => d.courseCount), type: 'bar', itemStyle: { color: '#1890ff' } },
+      { name: '预约数', data: data.map(d => d.bookingCount), type: 'line', yAxisIndex: 1, itemStyle: { color: '#52c41a' } }
+    ],
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['课程数', '预约数'] }
+  }
+})
 
 onMounted(async () => {
   await Promise.all([fetchStats(), fetchPeakHours(), fetchMemberCards(), fetchCourseStats()])

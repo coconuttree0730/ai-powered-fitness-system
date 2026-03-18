@@ -19,12 +19,12 @@ public class PromptTemplates {
             你是一位专业的健身教练。请为以下学员制定一份周度健身计划（7天）：
 
             学员信息：
-            - 健身目标：{{goal}}
-            - 训练部位偏好：{{bodyPart}}
-            - 健身经验：{{experience}}
-            - 身高：{{height}}cm
-            - 体重：{{weight}}kg
-            - 年龄：{{age}}岁
+            - 健身目标：{goal}
+            - 训练部位偏好：{bodyPart}
+            - 健身经验：{experience}
+            - 身高：{height}cm
+            - 体重：{weight}kg
+            - 年龄：{age}岁
 
             请按照以下格式返回：
             周一：...
@@ -42,6 +42,8 @@ public class PromptTemplates {
             4. 注意事项
 
             请确保计划科学合理，符合学员的身体状况和健身目标。
+
+            输出返回格式，html + css + js 生成的动态交互性好的精美的html页面
             """;
 
     /**
@@ -51,18 +53,18 @@ public class PromptTemplates {
             你是一位专业的健身数据分析师。请根据以下用户的健身数据进行分析并给出建议：
 
             用户基本信息：
-            - 年龄：{{age}}岁
-            - 性别：{{gender}}
-            - 身高：{{height}}cm
-            - 体重：{{weight}}kg
-            - BMI：{{bmi}}
+            - 年龄：{age}岁
+            - 性别：{gender}
+            - 身高：{height}cm
+            - 体重：{weight}kg
+            - BMI：{bmi}
 
             近期运动数据：
-            - 总运动次数：{{totalWorkouts}}次
-            - 总运动时长：{{totalDuration}}分钟
-            - 平均每次运动时长：{{avgDuration}}分钟
-            - 最常进行的运动类型：{{favoriteType}}
-            - 消耗总卡路里：{{totalCalories}}千卡
+            - 总运动次数：{totalWorkouts}次
+            - 总运动时长：{totalDuration}分钟
+            - 平均每次运动时长：{avgDuration}分钟
+            - 最常进行的运动类型：{favoriteType}
+            - 消耗总卡路里：{totalCalories}千卡
 
             请提供以下分析：
             1. 身体状况评估
@@ -78,12 +80,12 @@ public class PromptTemplates {
             你是一位专业的运动营养师。请根据以下信息提供营养建议：
 
             用户信息：
-            - 健身目标：{{goal}}
-            - 当前体重：{{weight}}kg
-            - 目标体重：{{targetWeight}}kg
-            - 每日活动量：{{activityLevel}}
-            - 饮食偏好：{{dietPreference}}
-            - 过敏/忌口：{{allergies}}
+            - 健身目标：{goal}
+            - 当前体重：{weight}kg
+            - 目标体重：{targetWeight}kg
+            - 每日活动量：{activityLevel}
+            - 饮食偏好：{dietPreference}
+            - 过敏/忌口：{allergies}
 
             请提供：
             1. 每日热量需求估算
@@ -99,9 +101,9 @@ public class PromptTemplates {
     private static final String EXERCISE_GUIDE_TEMPLATE = """
             你是一位专业的健身教练。请针对以下运动动作提供详细指导：
 
-            动作名称：{{exerciseName}}
-            用户经验水平：{{experienceLevel}}
-            训练目标：{{trainingGoal}}
+            动作名称：{exerciseName}
+            用户经验水平：{experienceLevel}
+            训练目标：{trainingGoal}
 
             请提供：
             1. 动作要领（详细步骤）

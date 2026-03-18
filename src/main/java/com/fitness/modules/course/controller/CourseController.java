@@ -7,6 +7,7 @@ import com.fitness.modules.course.model.vo.CourseVO;
 import com.fitness.modules.course.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -34,7 +35,21 @@ public class CourseController {
     }
 
     /**
-     * 获取公开课程列表
+     * 获取课程列表（管理员）
+     *
+     * @param query 查询条件
+     * @return 课程列表
+     */
+    @GetMapping("/list")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
+    public Result<Page<CourseVO>> getCourseList(CourseQueryDTO query) {
+        log.info("获取课程列表请求: category={}, keyword={}", query.getCategory(), query.getKeyword());
+        Page<CourseVO> page = courseService.getCourseList(query);
+        return Result.success(page);
+    }
+
+    /**
+     * 获取公开课程列表（游客可看）
      *
      * @param query 查询条件
      * @return 课程列表

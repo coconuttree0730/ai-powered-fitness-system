@@ -16,28 +16,39 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(credentials) {
     try {
       const res = await loginApi(credentials)
-      if (res.data.code === 200) {
-        token.value = res.data.data.token
-        localStorage.setItem('token', res.data.data.token)
+      if (res && res.token) {
+        token.value = res.token
+        localStorage.setItem('token', res.token)
         
-        await fetchUserInfo()
+        if (res.userInfo) {
+          userInfo.value = res.userInfo
+          localStorage.setItem('userInfo', JSON.stringify(res.userInfo))
+        }
         
-        const redirect = router.currentRoute.value.query.redirect || '/'
+        const roles = res.userInfo?.roles || []
+        const redirect = router.currentRoute.value.query.redirect || getDashboardPathByRoles(roles)
         router.push(redirect)
         return { success: true }
       }
-      return { success: false, message: res.data.message }
+      return { success: false, message: '登录失败' }
     } catch (error) {
       return { success: false, message: error.message || '登录失败' }
     }
   }
 
+  function getDashboardPathByRoles(roles) {
+    if (roles.includes('ADMIN')) return '/admin'
+    if (roles.includes('COACH')) return '/coach'
+    if (roles.includes('MEMBER')) return '/member'
+    return '/'
+  }
+
   async function fetchUserInfo() {
     try {
       const res = await getCurrentUser()
-      if (res.data.code === 200) {
-        userInfo.value = res.data.data
-        localStorage.setItem('userInfo', JSON.stringify(res.data.data))
+      if (res) {
+        userInfo.value = res
+        localStorage.setItem('userInfo', JSON.stringify(res))
       }
     } catch (error) {
       console.error('获取用户信息失败:', error)
