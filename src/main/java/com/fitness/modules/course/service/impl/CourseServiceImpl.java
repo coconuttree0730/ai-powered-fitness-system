@@ -8,11 +8,13 @@ import com.fitness.modules.course.model.dto.CourseDTO;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
 import com.fitness.modules.course.model.entity.Course;
 import com.fitness.modules.course.model.vo.CourseVO;
+import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.course.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -25,6 +27,7 @@ import java.time.LocalDateTime;
 public class CourseServiceImpl implements CourseService {
 
     private final CourseMapper courseMapper;
+    private final FileService fileService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -63,6 +66,18 @@ public class CourseServiceImpl implements CourseService {
         // 校验时间合法性
         validateCourseTime(dto.getStartTime(), dto.getEndTime());
 
+        // 如果更换了图片，删除旧图片
+        if (StringUtils.hasText(dto.getImageUrl()) 
+                && !dto.getImageUrl().equals(existingCourse.getImageUrl())
+                && StringUtils.hasText(existingCourse.getImageUrl())) {
+            try {
+                fileService.deleteFile(existingCourse.getImageUrl());
+                log.info("课程旧图片删除成功: courseId={}, oldImageUrl={}", courseId, existingCourse.getImageUrl());
+            } catch (Exception e) {
+                log.warn("课程旧图片删除失败: courseId={}, oldImageUrl={}, error={}", courseId, existingCourse.getImageUrl(), e.getMessage());
+            }
+        }
+
         existingCourse.setCourseName(dto.getCourseName());
         existingCourse.setDescription(dto.getDescription());
         existingCourse.setCoachId(dto.getCoachId());
@@ -86,6 +101,16 @@ public class CourseServiceImpl implements CourseService {
         Course existingCourse = courseMapper.selectById(courseId);
         if (existingCourse == null || existingCourse.getDeleted()) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+
+        // 删除课程图片
+        if (StringUtils.hasText(existingCourse.getImageUrl())) {
+            try {
+                fileService.deleteFile(existingCourse.getImageUrl());
+                log.info("课程图片删除成功: courseId={}, imageUrl={}", courseId, existingCourse.getImageUrl());
+            } catch (Exception e) {
+                log.warn("课程图片删除失败: courseId={}, imageUrl={}, error={}", courseId, existingCourse.getImageUrl(), e.getMessage());
+            }
         }
 
         courseMapper.deleteById(courseId);

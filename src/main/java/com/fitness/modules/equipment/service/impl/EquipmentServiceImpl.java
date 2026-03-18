@@ -15,11 +15,13 @@ import com.fitness.modules.equipment.model.enums.RepairStatus;
 import com.fitness.modules.equipment.model.vo.EquipmentVO;
 import com.fitness.modules.equipment.model.vo.MyRepairVO;
 import com.fitness.modules.equipment.model.vo.RepairVO;
+import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.equipment.service.EquipmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,6 +36,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     private final EquipmentMapper equipmentMapper;
     private final EquipmentRepairMapper equipmentRepairMapper;
+    private final FileService fileService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -61,6 +64,18 @@ public class EquipmentServiceImpl implements EquipmentService {
         Equipment existingEquipment = equipmentMapper.selectById(id);
         if (existingEquipment == null || existingEquipment.getDeleted()) {
             throw new BusinessException(ErrorCode.EQUIPMENT_NOT_FOUND);
+        }
+
+        // 如果更换了图片，删除旧图片
+        if (StringUtils.hasText(dto.getImageUrl()) 
+                && !dto.getImageUrl().equals(existingEquipment.getImageUrl())
+                && StringUtils.hasText(existingEquipment.getImageUrl())) {
+            try {
+                fileService.deleteFile(existingEquipment.getImageUrl());
+                log.info("器材旧图片删除成功: equipmentId={}, oldImageUrl={}", id, existingEquipment.getImageUrl());
+            } catch (Exception e) {
+                log.warn("器材旧图片删除失败: equipmentId={}, oldImageUrl={}, error={}", id, existingEquipment.getImageUrl(), e.getMessage());
+            }
         }
 
         existingEquipment.setEquipmentName(dto.getEquipmentName());
@@ -93,6 +108,16 @@ public class EquipmentServiceImpl implements EquipmentService {
         
         if (hasPendingRepair) {
             throw new BusinessException(ErrorCode.EQUIPMENT_IN_USE);
+        }
+
+        // 删除器材图片
+        if (StringUtils.hasText(existingEquipment.getImageUrl())) {
+            try {
+                fileService.deleteFile(existingEquipment.getImageUrl());
+                log.info("器材图片删除成功: equipmentId={}, imageUrl={}", id, existingEquipment.getImageUrl());
+            } catch (Exception e) {
+                log.warn("器材图片删除失败: equipmentId={}, imageUrl={}, error={}", id, existingEquipment.getImageUrl(), e.getMessage());
+            }
         }
 
         equipmentMapper.deleteById(id);
@@ -137,6 +162,16 @@ public class EquipmentServiceImpl implements EquipmentService {
         
         if (newStatus == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "无效的状态值");
+        }
+
+        // 如果是关闭状态，删除报修图片
+        if (status.equals(RepairStatus.CLOSED.getCode()) && StringUtils.hasText(repair.getImageUrl())) {
+            try {
+                fileService.deleteFile(repair.getImageUrl());
+                log.info("报修图片删除成功: repairId={}, imageUrl={}", repairId, repair.getImageUrl());
+            } catch (Exception e) {
+                log.warn("报修图片删除失败: repairId={}, imageUrl={}, error={}", repairId, repair.getImageUrl(), e.getMessage());
+            }
         }
 
         repair.setStatus(status);
@@ -212,6 +247,16 @@ public class EquipmentServiceImpl implements EquipmentService {
         // 只能取消待处理的报修
         if (!repair.getStatus().equals(RepairStatus.PENDING.getCode())) {
             throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "只能取消待处理的报修");
+        }
+
+        // 删除报修图片
+        if (StringUtils.hasText(repair.getImageUrl())) {
+            try {
+                fileService.deleteFile(repair.getImageUrl());
+                log.info("报修图片删除成功: repairId={}, imageUrl={}", repairId, repair.getImageUrl());
+            } catch (Exception e) {
+                log.warn("报修图片删除失败: repairId={}, imageUrl={}, error={}", repairId, repair.getImageUrl(), e.getMessage());
+            }
         }
 
         // 更新报修状态为已关闭

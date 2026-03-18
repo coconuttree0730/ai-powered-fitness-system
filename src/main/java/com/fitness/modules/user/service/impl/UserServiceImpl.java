@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.utils.JwtUtils;
+import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.user.mapper.RoleMapper;
 import com.fitness.modules.user.mapper.UserMapper;
 import com.fitness.modules.user.model.dto.LoginDTO;
@@ -41,6 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final RoleMapper roleMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final FileService fileService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -242,6 +244,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
+        // 如果更换了头像，删除旧头像
+        if (StringUtils.hasText(dto.getAvatar()) 
+                && !dto.getAvatar().equals(user.getAvatar())
+                && StringUtils.hasText(user.getAvatar())) {
+            try {
+                fileService.deleteFile(user.getAvatar());
+                log.info("用户旧头像删除成功: userId={}, oldAvatar={}", userId, user.getAvatar());
+            } catch (Exception e) {
+                log.warn("用户旧头像删除失败: userId={}, oldAvatar={}, error={}", userId, user.getAvatar(), e.getMessage());
+            }
+        }
+
         if (StringUtils.hasText(dto.getPhone())) {
             user.setPhone(dto.getPhone());
         }
@@ -264,6 +278,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 删除用户头像
+        if (StringUtils.hasText(user.getAvatar())) {
+            try {
+                fileService.deleteFile(user.getAvatar());
+                log.info("用户头像删除成功: userId={}, avatar={}", userId, user.getAvatar());
+            } catch (Exception e) {
+                log.warn("用户头像删除失败: userId={}, avatar={}, error={}", userId, user.getAvatar(), e.getMessage());
+            }
         }
 
         userMapper.deleteById(userId);
