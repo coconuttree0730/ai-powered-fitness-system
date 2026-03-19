@@ -2,8 +2,10 @@ package com.fitness.modules.user.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fitness.modules.user.model.dto.LoginDTO;
+import com.fitness.modules.user.model.dto.ResetPasswordDTO;
 import com.fitness.modules.user.model.dto.UserDTO;
 import com.fitness.modules.user.model.dto.UserQueryDTO;
+import com.fitness.modules.user.model.dto.UserUpdateDTO;
 import com.fitness.modules.user.model.vo.UserVO;
 
 import java.util.Map;
@@ -69,7 +71,15 @@ public interface UserService {
      * @param userId 用户ID
      * @param dto    用户信息
      */
-    void updateUser(Long userId, UserDTO dto);
+    void updateUser(Long userId, UserUpdateDTO dto);
+
+    /**
+     * 重置用户密码（管理员）
+     *
+     * @param userId 用户ID
+     * @param dto    密码信息
+     */
+    void resetPassword(Long userId, ResetPasswordDTO dto);
 
     /**
      * 删除用户

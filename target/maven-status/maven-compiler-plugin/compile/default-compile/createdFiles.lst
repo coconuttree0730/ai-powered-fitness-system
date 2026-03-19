@@ -73,7 +73,6 @@ com\fitness\modules\dashboard\service\DashboardService.class
 com\fitness\modules\course\service\CourseService.class
 com\fitness\config\SecurityConfig.class
 com\fitness\modules\plan\controller\UserProfileController.class
-com\fitness\modules\user\service\impl\UserServiceImpl.class
 com\fitness\modules\user\service\PermissionService.class
 com\fitness\modules\equipment\model\enums\EquipmentStatus.class
 com\fitness\modules\user\mapper\UserMapper.class

@@ -18,6 +18,6 @@ public interface RoleMapper extends BaseMapper<Role> {
      * @param roleCode 角色编码
      * @return 角色实体
      */
-    @Select("SELECT * FROM roles WHERE role_code = #{roleCode} AND deleted = 0")
+    @Select("SELECT * FROM sys_role WHERE role_code = #{roleCode} AND deleted = false")
     Role selectByRoleCode(@Param("roleCode") String roleCode);
 }

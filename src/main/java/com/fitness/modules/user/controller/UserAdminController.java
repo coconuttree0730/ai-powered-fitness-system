@@ -2,8 +2,10 @@ package com.fitness.modules.user.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fitness.common.result.Result;
+import com.fitness.modules.user.model.dto.ResetPasswordDTO;
 import com.fitness.modules.user.model.dto.UserDTO;
 import com.fitness.modules.user.model.dto.UserQueryDTO;
+import com.fitness.modules.user.model.dto.UserUpdateDTO;
 import com.fitness.modules.user.model.vo.UserVO;
 import com.fitness.modules.user.service.UserService;
 import jakarta.validation.Valid;
@@ -38,9 +40,17 @@ public class UserAdminController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Result<Void> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO dto) {
+    public Result<Void> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
         log.info("更新用户请求: userId={}", id);
         userService.updateUser(id, dto);
+        return Result.success();
+    }
+
+    @PutMapping("/{id}/password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordDTO dto) {
+        log.info("重置用户密码请求: userId={}", id);
+        userService.resetPassword(id, dto);
         return Result.success();
     }
 

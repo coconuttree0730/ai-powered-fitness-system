@@ -61,4 +61,36 @@ public interface UserMapper extends BaseMapper<User> {
             "INNER JOIN sys_role r ON ur.role_id = r.id " +
             "WHERE r.role_code = 'COACH' AND u.deleted = false")
     List<com.fitness.modules.user.model.vo.CoachVO> selectCoachList();
+
+    /**
+     * 分页查询用户列表（支持角色筛选）
+     *
+     * @param username 用户名（模糊查询）
+     * @param phone 手机号（模糊查询）
+     * @param status 状态
+     * @param roleCode 角色编码
+     * @param offset 偏移量
+     * @param limit 每页条数
+     * @return 用户列表
+     */
+    List<User> selectUserPageWithRole(@Param("username") String username,
+                                       @Param("phone") String phone,
+                                       @Param("status") Integer status,
+                                       @Param("roleCode") String roleCode,
+                                       @Param("offset") long offset,
+                                       @Param("limit") long limit);
+
+    /**
+     * 查询用户总数（支持角色筛选）
+     *
+     * @param username 用户名（模糊查询）
+     * @param phone 手机号（模糊查询）
+     * @param status 状态
+     * @param roleCode 角色编码
+     * @return 用户总数
+     */
+    long selectUserCountWithRole(@Param("username") String username,
+                                  @Param("phone") String phone,
+                                  @Param("status") Integer status,
+                                  @Param("roleCode") String roleCode);
 }

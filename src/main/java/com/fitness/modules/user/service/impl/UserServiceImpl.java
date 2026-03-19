@@ -11,8 +11,10 @@ import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.user.mapper.RoleMapper;
 import com.fitness.modules.user.mapper.UserMapper;
 import com.fitness.modules.user.model.dto.LoginDTO;
+import com.fitness.modules.user.model.dto.ResetPasswordDTO;
 import com.fitness.modules.user.model.dto.UserDTO;
 import com.fitness.modules.user.model.dto.UserQueryDTO;
+import com.fitness.modules.user.model.dto.UserUpdateDTO;
 import com.fitness.modules.user.model.entity.Role;
 import com.fitness.modules.user.model.entity.User;
 import com.fitness.modules.user.model.vo.UserVO;
@@ -186,23 +188,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public IPage<UserVO> getUserPage(UserQueryDTO query) {
-        Page<User> page = new Page<>(query.getPageNum(), query.getPageSize());
+        // 使用自定义查询支持角色筛选
+        long offset = (long) (query.getPageNum() - 1) * query.getPageSize();
+        long limit = query.getPageSize();
         
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.hasText(query.getUsername()), User::getUsername, query.getUsername())
-               .like(StringUtils.hasText(query.getPhone()), User::getPhone, query.getPhone())
-               .eq(query.getStatus() != null, User::getStatus, query.getStatus())
-               .orderByDesc(User::getCreateTime);
+        List<User> userList = userMapper.selectUserPageWithRole(
+            query.getUsername(),
+            query.getPhone(),
+            query.getStatus(),
+            query.getRole(),
+            offset,
+            limit
+        );
         
-        IPage<User> userPage = userMapper.selectPage(page, wrapper);
+        long total = userMapper.selectUserCountWithRole(
+            query.getUsername(),
+            query.getPhone(),
+            query.getStatus(),
+            query.getRole()
+        );
         
-        return userPage.convert(user -> {
+        Page<UserVO> resultPage = new Page<>(query.getPageNum(), query.getPageSize(), total);
+        List<UserVO> voList = userList.stream().map(user -> {
             UserVO vo = convertToVO(user);
             vo.setStatus(user.getStatus());
             List<String> roleCodes = userMapper.selectRoleCodesByUserId(user.getId());
             vo.setRoles(roleCodes);
             return vo;
-        });
+        }).collect(Collectors.toList());
+        
+        resultPage.setRecords(voList);
+        return resultPage;
     }
 
     @Override
@@ -238,14 +254,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUser(Long userId, UserDTO dto) {
+    public void updateUser(Long userId, UserUpdateDTO dto) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 如果更换了头像，删除旧头像
-        if (StringUtils.hasText(dto.getAvatar()) 
+        if (StringUtils.hasText(dto.getAvatar())
                 && !dto.getAvatar().equals(user.getAvatar())
                 && StringUtils.hasText(user.getAvatar())) {
             try {
@@ -256,13 +272,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
 
-        if (StringUtils.hasText(dto.getPhone())) {
+        if (dto.getPhone() != null) {
             user.setPhone(dto.getPhone());
         }
-        if (StringUtils.hasText(dto.getEmail())) {
+        if (dto.getEmail() != null) {
             user.setEmail(dto.getEmail());
         }
-        if (StringUtils.hasText(dto.getAvatar())) {
+        if (dto.getAvatar() != null) {
             user.setAvatar(dto.getAvatar());
         }
         user.setUpdateTime(LocalDateTime.now());
@@ -270,6 +286,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userMapper.updateById(user);
 
         log.info("更新用户成功: userId={}", userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPassword(Long userId, ResetPasswordDTO dto) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("管理员重置用户密码成功: userId={}", userId);
     }
 
     @Override

@@ -38,3 +38,11 @@ export function updateUserStatus(id, status) {
     params: { status }
   })
 }
+
+export function resetUserPassword(id, password) {
+  return request({
+    url: `/admin/users/${id}/password`,
+    method: 'put',
+    data: { password }
+  })
+}

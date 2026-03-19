@@ -37,4 +37,48 @@
         AND r.deleted = false
     </select>
 
+    <!-- 分页查询用户列表（支持角色筛选） -->
+    <select id="selectUserPageWithRole" resultMap="BaseResultMap">
+        SELECT DISTINCT
+            u.id, u.username, u.password, u.phone, u.email, u.avatar, u.status, u.create_time, u.update_time, u.deleted
+        FROM sys_user u
+        LEFT JOIN sys_user_role ur ON u.id = ur.user_id
+        LEFT JOIN sys_role r ON ur.role_id = r.id AND r.deleted = false
+        WHERE u.deleted = false
+        <if test="username != null and username != ''">
+            AND u.username LIKE CONCAT('%', #{username}, '%')
+        </if>
+        <if test="phone != null and phone != ''">
+            AND u.phone LIKE CONCAT('%', #{phone}, '%')
+        </if>
+        <if test="status != null">
+            AND u.status = #{status}
+        </if>
+        <if test="roleCode != null and roleCode != ''">
+            AND r.role_code = #{roleCode}
+        </if>
+        ORDER BY u.create_time DESC
+    </select>
+
+    <!-- 查询用户总数（支持角色筛选） -->
+    <select id="selectUserCountWithRole" resultType="long">
+        SELECT COUNT(DISTINCT u.id)
+        FROM sys_user u
+        LEFT JOIN sys_user_role ur ON u.id = ur.user_id
+        LEFT JOIN sys_role r ON ur.role_id = r.id AND r.deleted = false
+        WHERE u.deleted = false
+        <if test="username != null and username != ''">
+            AND u.username LIKE CONCAT('%', #{username}, '%')
+        </if>
+        <if test="phone != null and phone != ''">
+            AND u.phone LIKE CONCAT('%', #{phone}, '%')
+        </if>
+        <if test="status != null">
+            AND u.status = #{status}
+        </if>
+        <if test="roleCode != null and roleCode != ''">
+            AND r.role_code = #{roleCode}
+        </if>
+    </select>
+
 </mapper>

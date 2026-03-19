@@ -47,7 +47,7 @@ public class SecurityConfig {
     private final AccessDeniedHandler accessDeniedHandler;
 
     /**
-     * 白名单URL路径
+     * 白名单URL路径 ******* 全局用户可用
      */
     private static final String[] WHITE_LIST_URLS = {
             // 认证相关
@@ -68,7 +68,7 @@ public class SecurityConfig {
     };
 
     /**
-     * 配置安全过滤链
+     * 配置安全过滤链 【核心配置...】
      *
      * @param http HttpSecurity对象
      * @return SecurityFilterChain
@@ -77,7 +77,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 禁用CSRF（前后端分离）
+                // 禁用CSRF（前后端分离要禁用）
                 .csrf(AbstractHttpConfigurer::disable)
 
                 // 配置CORS

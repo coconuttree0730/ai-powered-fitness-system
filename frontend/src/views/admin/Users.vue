@@ -65,8 +65,11 @@
             <n-form-item v-if="!isEdit" label="密码" path="password">
               <n-input v-model:value="form.password" type="password" placeholder="请输入密码" />
             </n-form-item>
-            <n-form-item v-else label="角色" path="roleCode">
-              <n-tag type="info">{{ getRoleLabel(form.roleCode) }}</n-tag>
+            <n-form-item v-else label="密码">
+              <n-space align="center">
+                <n-input value="********" disabled placeholder="密码已加密" style="width: 150px" />
+                <n-button type="warning" size="small" :loading="resettingPassword" @click="handleResetPasswordClick">重置密码</n-button>
+              </n-space>
             </n-form-item>
           </n-grid-item>
         </n-grid>
@@ -84,6 +87,9 @@
         </n-grid>
         <n-form-item v-if="!isEdit" label="角色" path="roleCode">
           <n-select v-model:value="form.roleCode" :options="roleOptions" placeholder="请选择角色" />
+        </n-form-item>
+        <n-form-item v-else label="角色" path="roleCode">
+          <n-tag type="info">{{ getRoleLabel(form.roleCode) }}</n-tag>
         </n-form-item>
 
         <!-- 头像上传 -->
@@ -123,6 +129,8 @@
         </n-form-item>
       </n-form>
     </n-modal>
+
+
   </div>
 </template>
 
@@ -130,7 +138,7 @@
 import { ref, h, reactive, onMounted, computed } from 'vue'
 import { NTag, NButton, NSpace, NIcon, NImage, useMessage, useDialog, NText } from 'naive-ui'
 import { SearchOutline, AddOutline, CloudUploadOutline } from '@vicons/ionicons5'
-import { getUserList, createUser, updateUser, deleteUser, updateUserStatus } from '@/api/user'
+import { getUserList, createUser, updateUser, deleteUser, updateUserStatus, resetUserPassword } from '@/api/user'
 import { getToken } from '@/utils/auth'
 
 const message = useMessage()
@@ -176,10 +184,17 @@ const form = reactive({
   avatar: ''
 })
 
-const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
-}
+const rules = computed(() => {
+  const baseRules = {
+    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+    roleCode: [{ required: true, message: '请选择角色', trigger: 'change' }]
+  }
+  // 新增时才需要校验密码
+  if (!isEdit.value) {
+    baseRules.password = [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  }
+  return baseRules
+})
 
 const roleOptions = [
   { label: '管理员', value: 'ADMIN' },
@@ -381,7 +396,13 @@ async function handleSubmit() {
     submitting.value = true
 
     if (isEdit.value) {
-      await updateUser(currentId.value, form)
+      // 编辑时只提交必要的字段，不包含密码
+      const updateData = {
+        phone: form.phone,
+        email: form.email,
+        avatar: form.avatar
+      }
+      await updateUser(currentId.value, updateData)
       message.success('更新成功')
     } else {
       await createUser(form)
@@ -395,6 +416,31 @@ async function handleSubmit() {
   } finally {
     submitting.value = false
   }
+}
+
+// 重置密码相关
+const resettingPassword = ref(false)
+
+async function handleResetPasswordClick() {
+  if (resettingPassword.value) return
+  
+  dialog.warning({
+    title: '确认重置密码',
+    content: '确定要将该用户的密码重置为默认密码 "123456" 吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        resettingPassword.value = true
+        await resetUserPassword(currentId.value, '123456')
+        message.success('密码已重置为 123456')
+      } catch (error) {
+        message.error(error.message || '密码重置失败')
+      } finally {
+        resettingPassword.value = false
+      }
+    }
+  })
 }
 
 function handleDelete(row) {
