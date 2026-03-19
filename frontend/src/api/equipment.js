@@ -82,3 +82,10 @@ export function getEquipmentTypes() {
     method: 'get'
   })
 }
+
+export function getEquipmentRepairs(equipmentId) {
+  return request({
+    url: `/equipment/${equipmentId}/repairs`,
+    method: 'get'
+  })
+}

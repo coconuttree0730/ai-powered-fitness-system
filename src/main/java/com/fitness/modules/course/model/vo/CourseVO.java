@@ -36,6 +36,11 @@ public class CourseVO {
     private String coachName;
 
     /**
+     * 教练头像
+     */
+    private String coachAvatar;
+
+    /**
      * 课程分类
      */
     private String category;

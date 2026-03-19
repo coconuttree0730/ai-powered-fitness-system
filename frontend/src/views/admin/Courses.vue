@@ -1,5 +1,6 @@
 <template>
   <div class="admin-courses">
+  <!-- 搜索区域 -->
     <n-card title="课程管理">
       <!-- 搜索区域 - 新增课程按钮与搜索栏平行 -->
       <n-card embedded style="margin-bottom: 16px;">
@@ -56,7 +57,6 @@
           </n-button>
         </n-space>
       </n-card>
-
       <n-data-table :columns="columns" :data="courses" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
     </n-card>
 
@@ -139,13 +139,99 @@
         </n-form-item>
       </n-form>
     </n-modal>
+
+    <!-- 课程详情弹窗 -->
+    <n-modal v-model:show="showDetailModal" preset="card" title="课程详情" style="width: 700px">
+      <div class="course-detail" v-if="currentCourse">
+        <!-- 课程封面区域 -->
+        <div class="course-header">
+          <div class="course-image-section">
+            <n-image
+              v-if="currentCourse.imageUrl"
+              :src="currentCourse.imageUrl"
+              width="200"
+              height="150"
+              style="border-radius: 8px; object-fit: cover;"
+              :fallback-src="'/default-course.png'"
+            />
+            <div v-else class="no-image-placeholder">
+              <n-icon size="48" depth="3"><ImageOutline /></n-icon>
+              <span>暂无课程图片</span>
+            </div>
+          </div>
+          <div class="course-basic-info">
+            <h2 class="course-title">{{ currentCourse.courseName }}</h2>
+            <n-tag :type="getCategoryType(currentCourse.category)" size="large">
+              {{ getCategoryLabel(currentCourse.category) }}
+            </n-tag>
+            <div class="course-meta">
+              <div class="meta-item">
+                <n-icon size="16"><TimeOutline /></n-icon>
+                <span>{{ formatTime(currentCourse.startTime) }}</span>
+              </div>
+              <div class="meta-item">
+                <n-icon size="16"><PeopleOutline /></n-icon>
+                <span>容量 {{ currentCourse.capacity }} 人</span>
+              </div>
+              <div class="meta-item">
+                <n-icon size="16"><CalendarOutline /></n-icon>
+                <span>已预约 {{ currentCourse.bookingCount || 0 }} 人</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <n-divider />
+
+        <!-- 教练信息区域 -->
+        <div class="coach-section">
+          <h3 class="section-title">
+            <n-icon size="20" color="#2080f0"><PersonCircleOutline /></n-icon>
+            教练信息
+          </h3>
+          <div class="coach-card">
+            <div class="coach-avatar">
+              <n-image
+                v-if="currentCourse.coachAvatar"
+                :src="currentCourse.coachAvatar"
+                width="80"
+                height="80"
+                style="border-radius: 50%; object-fit: cover;"
+                :fallback-src="'/default-avatar.png'"
+              />
+              <div v-else class="no-avatar">
+                <n-icon size="32" depth="3"><PersonOutline /></n-icon>
+              </div>
+            </div>
+            <div class="coach-info">
+              <div class="coach-name">{{ currentCourse.coachName || '暂无教练' }}</div>
+              <div class="coach-label">主讲教练</div>
+            </div>
+          </div>
+        </div>
+
+        <n-divider />
+
+        <!-- 课程描述区域 -->
+        <div class="description-section">
+          <h3 class="section-title">
+            <n-icon size="20" color="#2080f0"><DocumentTextOutline /></n-icon>
+            课程描述
+          </h3>
+          <div class="description-content">
+            {{ currentCourse.description || '暂无课程描述' }}
+          </div>
+        </div>
+
+      </div>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, h, reactive, onMounted, computed } from 'vue'
-import { NTag, NButton, NSpace, NIcon, NImage, useMessage, useDialog, NText } from 'naive-ui'
-import { SearchOutline, AddOutline, CloudUploadOutline } from '@vicons/ionicons5'
+import { NTag, NButton, NSpace, NIcon, NImage, useMessage, useDialog, NText, NDivider } from 'naive-ui'
+import { SearchOutline, AddOutline, CloudUploadOutline, TimeOutline, PeopleOutline, CalendarOutline, PersonCircleOutline, PersonOutline, DocumentTextOutline, ImageOutline } from '@vicons/ionicons5'
 import { createCourse, updateCourse, deleteCourse } from '@/api/course'
 import request from '@/utils/request'
 import { getToken } from '@/utils/auth'
@@ -157,10 +243,12 @@ const dialog = useDialog()
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
+const showDetailModal = ref(false)
 const isEdit = ref(false)
-const formRef = ref(null)
 const courses = ref([])
 const currentId = ref(null)
+const currentCourse = ref(null)
+const formRef = ref(null)
 
 // 上传相关 - 使用代理路径
 const uploadUrl = '/api/v1/files/upload'
@@ -241,14 +329,14 @@ const columns = [
       if (row.imageUrl) {
         return h(NImage, {
           src: row.imageUrl,
-          width: 100,
-          height: 100,
+          width: 80,
+          height: 80,
           style: 'border-radius: 4px; object-fit: cover;',
           fallbackSrc: '/default-course.png'
         })
       }
       return h('div', {
-        style: 'width: 100px; height: 100px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
+        style: 'width: 80px; height: 80px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
       }, '无图片')
     }
   },
@@ -261,15 +349,36 @@ const columns = [
       return h(NTag, { type: 'info' }, () => item?.label || row.category)
     }
   },
-  { title: '教练', key: 'coachName' },
+  {
+    title: '教练头像',
+    key: 'coachAvatar',
+    width: 100,
+    render: (row) => {
+      if (row.coachAvatar) {
+        return h(NImage, {
+          src: row.coachAvatar,
+          width: 60,
+          height: 60,
+          style: 'border-radius: 50%; object-fit: cover;',
+          fallbackSrc: '/default-avatar.png'
+        })
+      }
+      return h('div', {
+        style: 'width: 60px; height: 60px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
+      }, '无')
+    }
+  },
+  { title: '教练名称', key: 'coachName' },
   { title: '开始时间', key: 'startTime', render: (row) => formatTime(row.startTime) },
   { title: '容量', key: 'capacity' },
   { title: '预约数', key: 'bookingCount' },
   {
     title: '操作',
     key: 'actions',
+    width: 200,
     render: (row) => h(NSpace, null, () => [
-      h(NButton, { size: 'small', onClick: () => handleEdit(row) }, () => '编辑'),
+      h(NButton, { size: 'small', onClick: () => handleView(row) }, () => '查看'),
+      h(NButton, { size: 'small', type: 'primary', onClick: () => handleEdit(row) }, () => '编辑'),
       h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, () => '删除')
     ])
   }
@@ -358,6 +467,16 @@ function handleAdd() {
   Object.assign(form, { courseName: '', category: null, coachId: null, startTime: null, endTime: null, capacity: 20, description: '', imageUrl: '' })
   fileList.value = []
   showModal.value = true
+}
+
+function handleView(row) {
+  currentCourse.value = { ...row }
+  showDetailModal.value = true
+}
+
+function handleEditFromDetail() {
+  showDetailModal.value = false
+  handleEdit(currentCourse.value)
 }
 
 function handleEdit(row) {
@@ -479,10 +598,159 @@ function formatTime(time) {
   if (!time) return ''
   return new Date(time).toLocaleString('zh-CN')
 }
+
+function getCategoryLabel(category) {
+  const item = categoryOptions.find(c => c.value === category)
+  return item?.label || category
+}
+
+function getCategoryType(category) {
+  const typeMap = {
+    'YOGA': 'success',
+    'HIIT': 'error',
+    'STRENGTH': 'warning',
+    'SPINNING': 'info'
+  }
+  return typeMap[category] || 'default'
+}
 </script>
 
 <style scoped>
 .admin-courses {
   padding: 0;
+}
+
+/* 课程详情样式 */
+.course-detail {
+  padding: 8px;
+}
+
+.course-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.course-image-section {
+  flex-shrink: 0;
+}
+
+.no-image-placeholder {
+  width: 200px;
+  height: 150px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  gap: 8px;
+}
+
+.course-basic-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.course-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* 教练信息样式 */
+.coach-section {
+  margin: 16px 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.coach-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.coach-avatar {
+  flex-shrink: 0;
+}
+
+.no-avatar {
+  width: 80px;
+  height: 80px;
+  background: #e0e0e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coach-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coach-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.coach-label {
+  font-size: 14px;
+  color: #999;
+}
+
+/* 课程描述样式 */
+.description-section {
+  margin: 16px 0;
+}
+
+.description-content {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #666;
+  line-height: 1.6;
+  min-height: 60px;
+}
+
+/* 底部操作按钮 */
+.detail-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 16px;
 }
 </style>

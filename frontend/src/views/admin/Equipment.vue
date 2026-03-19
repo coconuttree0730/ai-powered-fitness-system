@@ -2,20 +2,18 @@
   <div class="admin-equipment">
     <n-card title="器材管理">
       <!-- 搜索栏 -->
-      <n-space vertical :size="16">
-        <n-space>
-          <n-input v-model:value="searchForm.keyword" placeholder="搜索器材名称" clearable style="width: 200px" />
-          <n-select v-model:value="searchForm.typeCode" :options="typeOptions" placeholder="选择类型" clearable style="width: 150px" />
-          <n-select v-model:value="searchForm.status" :options="statusOptions" placeholder="选择状态" clearable style="width: 150px" />
-          <n-button type="primary" @click="handleSearch">搜索</n-button>
-          <n-button @click="handleReset">重置</n-button>
+      <n-card embedded style="margin-bottom: 16px;">
+        <n-space align="center" wrap justify="space-between">
+          <n-space align="center" wrap>
+            <n-input v-model:value="searchForm.keyword" placeholder="搜索器材名称" clearable style="width: 200px" @keyup.enter="handleSearch" />
+            <n-select v-model:value="searchForm.typeCode" :options="typeOptions" placeholder="选择类型" clearable style="width: 150px" />
+            <n-select v-model:value="searchForm.status" :options="statusOptions" placeholder="选择状态" clearable style="width: 150px" />
+            <n-button type="primary" @click="handleSearch">搜索</n-button>
+            <n-button @click="handleReset">重置</n-button>
+          </n-space>
+          <n-button type="primary" @click="handleAdd">新增器材</n-button>
         </n-space>
-      </n-space>
-
-      <!-- 操作栏 -->
-      <n-space style="margin: 16px 0">
-        <n-button type="primary" @click="handleAdd">新增器材</n-button>
-      </n-space>
+      </n-card>
 
       <!-- 数据表格 -->
       <n-data-table :columns="columns" :data="equipment" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
@@ -31,13 +29,25 @@
           <n-input v-model:value="form.equipmentNo" placeholder="请输入器材编号（可选）" />
         </n-form-item>
         <n-form-item label="器材类型" path="typeCode">
-          <n-select v-model:value="form.typeCode" :options="typeOptions" placeholder="请选择器材类型" />
+          <n-select
+            v-model:value="form.typeCode"
+            :options="typeOptions"
+            placeholder="请选择器材类型"
+            value-field="value"
+            label-field="label"
+          />
         </n-form-item>
         <n-form-item label="位置" path="location">
           <n-input v-model:value="form.location" placeholder="请输入器材位置，如：有氧区-A01" />
         </n-form-item>
         <n-form-item label="状态" path="status">
-          <n-select v-model:value="form.status" :options="statusOptions" placeholder="请选择状态" />
+          <n-select
+            v-model:value="form.status"
+            :options="statusOptions"
+            placeholder="请选择状态"
+            value-field="value"
+            label-field="label"
+          />
         </n-form-item>
         <n-form-item label="购买日期" path="purchaseDate">
           <n-date-picker v-model:value="form.purchaseDate" type="date" placeholder="请选择购买日期" style="width: 100%" />
@@ -87,7 +97,7 @@
 <script setup>
 import { ref, h, reactive, onMounted } from 'vue'
 import { NTag, NButton, NSpace, useMessage, useDialog, NImage, NPopconfirm } from 'naive-ui'
-import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment, getEquipmentTypes } from '@/api/equipment'
+import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment, getEquipmentTypes, getEquipmentRepairs, getEquipmentDetail } from '@/api/equipment'
 import { getToken } from '@/utils/auth'
 
 const message = useMessage()
@@ -103,7 +113,7 @@ const currentId = ref(null)
 const currentEquipment = ref(null)
 const typeOptions = ref([])
 
-const uploadUrl = import.meta.env.VITE_API_BASE_URL + '/files/upload'
+const uploadUrl = '/api/v1/files/upload/image'
 const uploadHeaders = { Authorization: 'Bearer ' + getToken() }
 
 const searchForm = reactive({
@@ -135,9 +145,9 @@ const form = reactive({
 
 const rules = {
   equipmentName: [{ required: true, message: '请输入器材名称', trigger: 'blur' }],
-  typeCode: [{ required: true, message: '请选择器材类型', trigger: 'change' }],
+  typeCode: [{ required: true, message: '请选择器材类型', trigger: 'change', type: 'string' }],
   location: [{ required: true, message: '请输入器材位置', trigger: 'blur' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+  status: [{ required: true, message: '请选择状态', trigger: 'change', type: 'number' }]
 }
 
 const statusOptions = [
@@ -145,6 +155,15 @@ const statusOptions = [
   { label: '正常', value: 1 },
   { label: '已报废', value: 2 }
 ]
+
+// 自定义校验函数
+const validateStatus = (rule, value) => {
+  console.log('校验status:', value, typeof value)
+  if (value === null || value === undefined) {
+    return new Error('请选择状态')
+  }
+  return true
+}
 
 const repairColumns = [
   { title: '报修人', key: 'userName', width: 100 },
@@ -177,12 +196,24 @@ const columns = [
   {
     title: '图片',
     key: 'imageUrl',
-    width: 80,
-    render: (row) => row.imageUrl ? h(NImage, { src: row.imageUrl, width: 50, height: 50, style: 'object-fit: cover' }) : h('span', '无')
+    width: 100,
+    render: (row) => {
+      if (row.imageUrl) {
+        return h(NImage, {
+          src: row.imageUrl,
+          width: 80,
+          height: 80,
+          style: 'border-radius: 4px; object-fit: cover;',
+          fallbackSrc: '/default-equipment.png'
+        })
+      }
+      return h('div', {
+        style: 'width: 80px; height: 80px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
+      }, '无图片')
+    }
   },
   { title: '名称', key: 'equipmentName' },
   { title: '类型', key: 'typeName', render: row => row.typeName || row.typeCode || '-' },
-  { title: '编号', key: 'equipmentNo', render: row => row.equipmentNo || '-' },
   { title: '位置', key: 'location' },
   {
     title: '状态',
@@ -190,7 +221,6 @@ const columns = [
     width: 100,
     render: (row) => h(NTag, { type: getStatusType(row.status) }, () => getStatusText(row.status))
   },
-  { title: '描述', key: 'description', ellipsis: { tooltip: true } },
   {
     title: '操作',
     key: 'actions',
@@ -275,20 +305,47 @@ function handleEdit(row) {
   showModal.value = true
 }
 
-function handleView(row) {
-  currentEquipment.value = row
-  showDetailModal.value = true
+async function handleView(row) {
+  loading.value = true
+  try {
+    const res = await getEquipmentDetail(row.id)
+    currentEquipment.value = res
+    const repairsRes = await getEquipmentRepairs(row.id)
+    currentEquipment.value.repairRecords = repairsRes || []
+    showDetailModal.value = true
+  } catch (error) {
+    message.error('获取器材详情失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 async function handleSubmit() {
+  console.log('表单数据:', {
+    equipmentName: form.equipmentName,
+    typeCode: form.typeCode,
+    location: form.location,
+    status: form.status,
+    statusType: typeof form.status
+  })
+
   try {
-    await formRef.value?.validate()
+    const valid = await formRef.value?.validate()
+    console.log('表单校验结果:', valid)
     submitting.value = true
 
     const submitData = {
-      ...form,
-      purchaseDate: form.purchaseDate ? new Date(form.purchaseDate).toISOString().split('T')[0] : null
+      equipmentName: form.equipmentName,
+      equipmentNo: form.equipmentNo || null,
+      typeCode: form.typeCode,
+      location: form.location,
+      status: Number(form.status),
+      purchaseDate: form.purchaseDate ? new Date(form.purchaseDate).toISOString().split('T')[0] : null,
+      imageUrl: form.imageUrl || null,
+      description: form.description || null
     }
+
+    console.log('提交数据:', submitData)
 
     if (isEdit.value) {
       await updateEquipment(currentId.value, submitData)
@@ -301,7 +358,12 @@ async function handleSubmit() {
     showModal.value = false
     fetchEquipment()
   } catch (error) {
-    message.error(error.message || '操作失败')
+    console.error('提交失败:', error)
+    if (error.message && error.message.includes('验证')) {
+      message.error('请检查表单填写是否正确')
+    } else {
+      message.error(error.response?.data?.message || error.message || '操作失败')
+    }
   } finally {
     submitting.value = false
   }
@@ -321,7 +383,7 @@ function handleUploadFinish({ event }) {
   try {
     const response = JSON.parse(event.target.response)
     if (response.code === 200) {
-      form.imageUrl = response.data
+      form.imageUrl = response.data.fileUrl
       message.success('图片上传成功')
     } else {
       message.error(response.message || '上传失败')

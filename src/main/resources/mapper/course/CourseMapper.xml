@@ -9,6 +9,7 @@
         <result column="description" property="description"/>
         <result column="coach_id" property="coachId"/>
         <result column="coach_name" property="coachName"/>
+        <result column="coach_avatar" property="coachAvatar"/>
         <result column="category" property="category"/>
         <result column="start_time" property="startTime"/>
         <result column="end_time" property="endTime"/>
@@ -27,6 +28,7 @@
             c.description,
             c.coach_id,
             u.username AS coach_name,
+            u.avatar AS coach_avatar,
             c.category,
             c.start_time,
             c.end_time,
@@ -67,6 +69,7 @@
             c.description,
             c.coach_id,
             u.username AS coach_name,
+            u.avatar AS coach_avatar,
             c.category,
             c.start_time,
             c.end_time,

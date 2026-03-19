@@ -265,14 +265,14 @@ const columns = [
       if (row.avatar) {
         return h(NImage, {
           src: row.avatar,
-          width: 50,
-          height: 50,
+          width: 80,
+          height: 80,
           style: 'border-radius: 50%; object-fit: cover;',
           fallbackSrc: '/default-avatar.png'
         })
       }
       return h('div', {
-        style: 'width: 50px; height: 50px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
+        style: 'width: 80px; height: 80px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
       }, '无')
     }
   },

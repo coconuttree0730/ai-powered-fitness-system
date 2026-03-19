@@ -43,6 +43,7 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createEquipment(EquipmentDTO dto) {
+
         Equipment equipment = new Equipment();
         equipment.setEquipmentName(dto.getEquipmentName());
         equipment.setLocation(dto.getLocation());
@@ -71,7 +72,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         }
 
         // 如果更换了图片，删除旧图片
-        if (StringUtils.hasText(dto.getImageUrl()) 
+        if (StringUtils.hasText(dto.getImageUrl())
                 && !dto.getImageUrl().equals(existingEquipment.getImageUrl())
                 && StringUtils.hasText(existingEquipment.getImageUrl())) {
             try {
@@ -109,9 +110,9 @@ public class EquipmentServiceImpl implements EquipmentService {
         // 检查是否有待处理的报修记录
         List<RepairVO> repairs = equipmentRepairMapper.selectRepairList(id);
         boolean hasPendingRepair = repairs.stream()
-                .anyMatch(r -> r.getStatus().equals(RepairStatus.PENDING.getCode()) 
+                .anyMatch(r -> r.getStatus().equals(RepairStatus.PENDING.getCode())
                         || r.getStatus().equals(RepairStatus.PROCESSING.getCode()));
-        
+
         if (hasPendingRepair) {
             throw new BusinessException(ErrorCode.EQUIPMENT_IN_USE);
         }
@@ -165,7 +166,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
         // 验证状态转换是否合法
         RepairStatus newStatus = RepairStatus.getByCode(status);
-        
+
         if (newStatus == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "无效的状态值");
         }
@@ -181,14 +182,14 @@ public class EquipmentServiceImpl implements EquipmentService {
         }
 
         repair.setStatus(status);
-        
+
         // 如果是完成或关闭状态，设置处理时间
         if (status.equals(RepairStatus.COMPLETED.getCode()) || status.equals(RepairStatus.CLOSED.getCode())) {
             repair.setHandleTime(LocalDateTime.now());
         }
 
         equipmentRepairMapper.updateById(repair);
-        
+
         // 如果报修完成，将器材状态更新为正常
         if (status.equals(RepairStatus.COMPLETED.getCode())) {
             Equipment equipment = equipmentMapper.selectById(repair.getEquipmentId());
@@ -198,7 +199,7 @@ public class EquipmentServiceImpl implements EquipmentService {
                 equipmentMapper.updateById(equipment);
             }
         }
-        
+
         log.info("报修处理成功: repairId={}, status={}", repairId, status);
     }
 

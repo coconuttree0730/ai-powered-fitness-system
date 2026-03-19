@@ -3,10 +3,12 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\constants\RoleConstants.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\exception\BusinessException.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\exception\GlobalExceptionHandler.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\result\PageResult.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\result\Result.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\utils\DateUtils.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\utils\JsonUtils.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\utils\JwtUtils.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\config\JacksonConfig.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\config\MybatisPlusConfig.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\config\SecurityConfig.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\FitnessApplication.java
