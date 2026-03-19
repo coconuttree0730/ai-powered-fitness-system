@@ -60,4 +60,11 @@ public class SysFile {
      */
     @TableField("create_time")
     private LocalDateTime createTime;
+
+    /**
+     * 是否删除（逻辑删除标志）
+     */
+    @TableField("deleted")
+    @TableLogic
+    private Boolean deleted;
 }
