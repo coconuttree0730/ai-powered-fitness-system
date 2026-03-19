@@ -131,14 +131,13 @@ public class FileServiceImpl implements FileService {
                             .build()
             );
 
-            // 【逻辑删除】数据库记录（@TableLogic会自动处理）
-            SysFile fileRecord = fileMapper.selectOne(
+            // 【物理删除】数据库记录（MinIO文件已物理删除，数据库记录也应物理删除）
+            int deletedRows = fileMapper.delete(
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysFile>()
                             .eq(SysFile::getFileUrl, fileUrl)
             );
-            if (fileRecord != null) {
-                fileMapper.deleteById(fileRecord.getId());
-                log.info("文件记录逻辑删除成功: fileId={}, fileUrl={}", fileRecord.getId(), fileUrl);
+            if (deletedRows > 0) {
+                log.info("文件记录物理删除成功: fileUrl={}, 影响行数={}", fileUrl, deletedRows);
             }
 
             log.info("文件删除成功: {}", fileUrl);

@@ -124,7 +124,7 @@ const searchForm = reactive({
 
 const pagination = reactive({
   page: 1,
-  pageSize: 10,
+  pageSize: 5,
   itemCount: 0,
   onChange: (page) => {
     pagination.page = page

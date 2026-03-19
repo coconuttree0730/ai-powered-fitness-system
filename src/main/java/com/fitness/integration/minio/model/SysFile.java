@@ -62,9 +62,9 @@ public class SysFile {
     private LocalDateTime createTime;
 
     /**
-     * 是否删除（逻辑删除标志）
+     * 是否删除（逻辑删除标志）; 修改：注释掉，使用物理删除，因为原图片Minio已经删除
      */
     @TableField("deleted")
-    @TableLogic
+    //@TableLogic
     private Boolean deleted;
 }
