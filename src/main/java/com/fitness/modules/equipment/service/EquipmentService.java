@@ -101,4 +101,11 @@ public interface EquipmentService {
      * @param repairId 报修ID
      */
     void cancelRepair(Long userId, Long repairId);
+
+    /**
+     * 获取所有器材类型
+     *
+     * @return 器材类型列表
+     */
+    List<com.fitness.modules.equipment.model.entity.EquipmentType> getAllEquipmentTypes();
 }

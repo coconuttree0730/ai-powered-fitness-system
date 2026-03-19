@@ -19,6 +19,11 @@ public class EquipmentQueryDTO {
     private Integer status;
 
     /**
+     * 器材类型编码
+     */
+    private String typeCode;
+
+    /**
      * 页码
      */
     private Integer pageNum = 1;

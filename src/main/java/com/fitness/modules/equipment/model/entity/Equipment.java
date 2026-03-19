@@ -57,6 +57,18 @@ public class Equipment {
     private LocalDate purchaseDate;
 
     /**
+     * 器材类型编码
+     */
+    @TableField("type_code")
+    private String typeCode;
+
+    /**
+     * 器材编号
+     */
+    @TableField("equipment_no")
+    private String equipmentNo;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

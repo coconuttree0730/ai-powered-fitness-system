@@ -58,11 +58,13 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\controller\RepairController.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\mapper\EquipmentMapper.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\mapper\EquipmentRepairMapper.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\mapper\EquipmentTypeMapper.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\dto\EquipmentDTO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\dto\EquipmentQueryDTO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\dto\RepairDTO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\entity\Equipment.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\entity\EquipmentRepair.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\entity\EquipmentType.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\enums\EquipmentStatus.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\enums\RepairStatus.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\equipment\model\vo\EquipmentVO.java

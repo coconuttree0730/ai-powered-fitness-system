@@ -2,6 +2,7 @@ package com.fitness.modules.equipment.controller;
 
 import com.fitness.common.result.Result;
 import com.fitness.modules.equipment.model.dto.EquipmentDTO;
+import com.fitness.modules.equipment.model.entity.EquipmentType;
 import com.fitness.modules.equipment.model.vo.RepairVO;
 import com.fitness.modules.equipment.service.EquipmentService;
 import jakarta.validation.Valid;
@@ -92,5 +93,18 @@ public class EquipmentAdminController {
         log.info("处理报修请求: repairId={}, status={}", repairId, status);
         equipmentService.handleRepair(repairId, status);
         return Result.success();
+    }
+
+    /**
+     * 获取所有器材类型
+     *
+     * @return 器材类型列表
+     */
+    @GetMapping("/types")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<List<EquipmentType>> getAllEquipmentTypes() {
+        log.info("获取所有器材类型请求");
+        List<EquipmentType> types = equipmentService.getAllEquipmentTypes();
+        return Result.success(types);
     }
 }

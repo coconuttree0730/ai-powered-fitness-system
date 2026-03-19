@@ -75,3 +75,10 @@ export function handleRepair(repairId, data) {
     params: data
   })
 }
+
+export function getEquipmentTypes() {
+  return request({
+    url: '/admin/equipment/types',
+    method: 'get'
+  })
+}

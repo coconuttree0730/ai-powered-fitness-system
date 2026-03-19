@@ -47,7 +47,27 @@ public class EquipmentVO {
     private LocalDate purchaseDate;
 
     /**
+     * 器材类型编码
+     */
+    private String typeCode;
+
+    /**
+     * 器材类型名称
+     */
+    private String typeName;
+
+    /**
+     * 器材编号
+     */
+    private String equipmentNo;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;
+
+    /**
+     * 报修记录列表（详情时使用）
+     */
+    private java.util.List<RepairVO> repairRecords;
 }

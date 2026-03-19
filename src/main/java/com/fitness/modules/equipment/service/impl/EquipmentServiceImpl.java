@@ -5,6 +5,7 @@ import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.modules.equipment.mapper.EquipmentMapper;
 import com.fitness.modules.equipment.mapper.EquipmentRepairMapper;
+import com.fitness.modules.equipment.mapper.EquipmentTypeMapper;
 import com.fitness.modules.equipment.model.dto.EquipmentDTO;
 import com.fitness.modules.equipment.model.dto.EquipmentQueryDTO;
 import com.fitness.modules.equipment.model.dto.RepairDTO;
@@ -36,6 +37,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     private final EquipmentMapper equipmentMapper;
     private final EquipmentRepairMapper equipmentRepairMapper;
+    private final EquipmentTypeMapper equipmentTypeMapper;
     private final FileService fileService;
 
     @Override
@@ -48,6 +50,8 @@ public class EquipmentServiceImpl implements EquipmentService {
         equipment.setDescription(dto.getDescription());
         equipment.setImageUrl(dto.getImageUrl());
         equipment.setPurchaseDate(dto.getPurchaseDate());
+        equipment.setTypeCode(dto.getTypeCode());
+        equipment.setEquipmentNo(dto.getEquipmentNo());
         equipment.setCreateTime(LocalDateTime.now());
         equipment.setUpdateTime(LocalDateTime.now());
         equipment.setDeleted(false);
@@ -86,6 +90,8 @@ public class EquipmentServiceImpl implements EquipmentService {
         existingEquipment.setDescription(dto.getDescription());
         existingEquipment.setImageUrl(dto.getImageUrl());
         existingEquipment.setPurchaseDate(dto.getPurchaseDate());
+        existingEquipment.setTypeCode(dto.getTypeCode());
+        existingEquipment.setEquipmentNo(dto.getEquipmentNo());
         existingEquipment.setUpdateTime(LocalDateTime.now());
 
         equipmentMapper.updateById(existingEquipment);
@@ -282,5 +288,10 @@ public class EquipmentServiceImpl implements EquipmentService {
         }
 
         log.info("报修取消成功: repairId={}, userId={}", repairId, userId);
+    }
+
+    @Override
+    public List<com.fitness.modules.equipment.model.entity.EquipmentType> getAllEquipmentTypes() {
+        return equipmentTypeMapper.selectAllActiveTypes();
     }
 }

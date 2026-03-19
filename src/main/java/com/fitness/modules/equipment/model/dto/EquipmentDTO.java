@@ -42,4 +42,15 @@ public class EquipmentDTO {
      * 购买日期
      */
     private LocalDate purchaseDate;
+
+    /**
+     * 器材类型编码
+     */
+    @NotBlank(message = "器材类型不能为空")
+    private String typeCode;
+
+    /**
+     * 器材编号
+     */
+    private String equipmentNo;
 }
