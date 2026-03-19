@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会员端界面原型 - 智能健身系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --primary-light: #FF8C61;
+            --primary-dark: #E55A2B;
+            --secondary: #2EC4B6;
+            --accent: #FFD93D;
+            --success: #06D6A0;
+            --warning: #FFD166;
+            --error: #EF476F;
+            --bg-primary: #FAFBFC;
+            --bg-secondary: #F0F2F5;
+            --text-primary: #1A1A2E;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            --sidebar-bg: #1A1A2E;
+            --sidebar-text: #A0AEC0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .prototype-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 240px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 16px;
+        }
+
+        .logo h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-section {
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(160, 174, 192, 0.6);
+            padding: 16px 12px 8px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 24px 32px;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .points-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--accent), #FFC107);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: background 0.3s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg-secondary);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--success));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* 标签页切换 */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* 内容区域 */
+        .content-area {
+            display: none;
+        }
+
+        .content-area.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 会员卡样式 */
+        .membership-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .membership-card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .membership-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .membership-card.featured {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, white 0%, #FFF5F2 100%);
+        }
+
+        .membership-card.featured::before {
+            content: '推荐';
+            position: absolute;
+            top: 16px;
+            right: -28px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 32px;
+            font-size: 12px;
+            font-weight: 600;
+            transform: rotate(45deg);
+        }
+
+        .card-type {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .card-price {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 16px 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .card-price span {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .card-features {
+            list-style: none;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .card-features li {
+            padding: 8px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-features li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* 我的会员卡 */
+        .my-card {
+            background: linear-gradient(135deg, var(--sidebar-bg) 0%, #2D3748 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .my-card-info h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .my-card-info p {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+        }
+
+        .my-card-status {
+            text-align: right;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: var(--success);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* 教练卡片 */
+        .coach-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .coach-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+        }
+
+        .coach-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .coach-avatar {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, var(--secondary), var(--success));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+        }
+
+        .coach-info {
+            padding: 16px;
+        }
+
+        .coach-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .coach-specialty {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .coach-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 聊天界面 */
+        .chat-container {
+            background: white;
+            border-radius: 16px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            font-size: 18px;
+        }
+
+        .message.user .message-avatar {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .message.ai .message-content {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-area {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-send {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        /* 快捷问题 */
+        .quick-questions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .quick-question {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-question:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* 商品网格 */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--border));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .product-info {
+            padding: 16px;
+        }
+
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .product-points {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 12px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            font-size: 14px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tag-success {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--success);
+        }
+
+        .tag-warning {
+            background: rgba(255, 209, 102, 0.15);
+            color: #D4A017;
+        }
+
+        .tag-default {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .membership-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .coach-grid,
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 64px;
+            }
+            .main-content {
+                margin-left: 64px;
+            }
+            .logo h2 span,
+            .nav-item span,
+            .nav-title {
+                display: none;
+            }
+            .membership-cards,
+            .coach-grid,
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="prototype-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>
+                    <div class="logo-icon">💪</div>
+                    <span>健身会员中心</span>
+                </h2>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">主菜单</div>
+                <div class="nav-item" onclick="switchTab('home')">
+                    <div class="nav-icon">🏠</div>
+                    <span>首页</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('cards')">
+                    <div class="nav-icon">🎫</div>
+                    <span>在线购卡</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('coach')">
+                    <div class="nav-icon">👨‍🏫</div>
+                    <span>我的教练</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('assistant')">
+                    <div class="nav-icon">🤖</div>
+                    <span>健小助</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('store')">
+                    <div class="nav-icon">🎁</div>
+                    <span>积分商城</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">个人中心</div>
+                <div class="nav-item">
+                    <div class="nav-icon">📅</div>
+                    <span>我的预约</span>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">📋</div>
+                    <span>健身计划</span>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">🏋️</div>
+                    <span>器材列表</span>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">👤</div>
+                    <span>个人信息</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 头部 -->
+            <header class="header">
+                <h1 class="page-title" id="pageTitle">在线购卡</h1>
+                <div class="header-actions">
+                    <div class="points-badge">
+                        <span>💎</span>
+                        <span>580 积分</span>
+                    </div>
+                    <div class="user-menu">
+                        <div class="avatar">张</div>
+                        <span>张三</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 在线购卡模块 -->
+            <div id="cards" class="content-area active">
+                <div class="membership-cards">
+                    <div class="membership-card">
+                        <div class="card-type">月卡</div>
+                        <div class="card-price">¥199<span>/月</span></div>
+                        <ul class="card-features">
+                            <li>无限次健身房使用</li>
+                            <li>免费储物柜</li>
+                            <li>基础体测服务</li>
+                            <li>团课免费参与</li>
+                        </ul>
+                        <button class="btn btn-secondary">立即购买</button>
+                    </div>
+                    
+                    <div class="membership-card featured">
+                        <div class="card-type">季卡</div>
+                        <div class="card-price">¥499<span>/季</span></div>
+                        <ul class="card-features">
+                            <li>月卡全部权益</li>
+                            <li>1节私教体验课</li>
+                            <li>营养咨询1次</li>
+                            <li>优先预约热门课程</li>
+                            <li>赠送200积分</li>
+                        </ul>
+                        <button class="btn btn-primary">立即购买</button>
+                    </div>
+                    
+                    <div class="membership-card">
+                        <div class="card-type">年卡</div>
+                        <div class="card-price">¥1599<span>/年</span></div>
+                        <ul class="card-features">
+                            <li>季卡全部权益</li>
+                            <li>3节私教体验课</li>
+                            <li>专属健身计划</li>
+                            <li>VIP专属区域</li>
+                            <li>赠送800积分</li>
+                        </ul>
+                        <button class="btn btn-secondary">立即购买</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">我的会员卡</h3>
+                        <button class="btn btn-primary" style="width: auto; padding: 10px 20px; font-size: 13px;">续费</button>
+                    </div>
+                    <div class="my-card">
+                        <div class="my-card-info">
+                            <h3>季卡会员</h3>
+                            <p>有效期至: 2024年12月31日 | 剩余天数: 85天</p>
+                        </div>
+                        <div class="my-card-status">
+                            <span class="status-badge">有效</span>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 13px;">自动续费已开启</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">购买记录</h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>卡类型</th>
+                                <th>金额</th>
+                                <th>购买时间</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ORD20241015001</td>
+                                <td>季卡</td>
+                                <td>¥499</td>
+                                <td>2024-10-15</td>
+                                <td><span class="tag tag-success">已完成</span></td>
+                            </tr>
+                            <tr>
+                                <td>ORD20240701002</td>
+                                <td>月卡</td>
+                                <td>¥199</td>
+                                <td>2024-07-01</td>
+                                <td><span class="tag tag-default">已过期</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 我的教练模块 -->
+            <div id="coach" class="content-area">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">我的专属教练</h3>
+                        <button class="btn btn-primary" style="width: auto; padding: 10px 20px; font-size: 13px;">预约课程</button>
+                    </div>
+                    <div style="display: flex; gap: 24px; align-items: center;">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--secondary), var(--success)); display: flex; align-items: center; justify-content: center; font-size: 40px; color: white;">张</div>
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 20px; margin-bottom: 8px;">张教练</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 8px;">专长: 增肌训练、减脂塑形、体能提升</p>
+                            <div style="display: flex; gap: 16px; margin-bottom: 8px;">
+                                <span style="color: var(--accent); font-weight: 600;">⭐⭐⭐⭐⭐ 4.9分</span>
+                                <span style="color: var(--text-secondary);">授课: 1,280节</span>
+                                <span style="color: var(--text-secondary);">学员: 156人</span>
+                            </div>
+                            <p style="color: var(--primary); font-size: 14px;">下次课程: 2024年10月20日 14:00 - 增肌训练</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">推荐教练</h3>
+                    </div>
+                    <div class="coach-grid">
+                        <div class="coach-card">
+                            <div class="coach-avatar">李</div>
+                            <div class="coach-info">
+                                <div class="coach-name">李教练</div>
+                                <div class="coach-specialty">瑜伽 / 普拉提</div>
+                                <div class="coach-rating">⭐ 4.8分</div>
+                            </div>
+                        </div>
+                        <div class="coach-card">
+                            <div class="coach-avatar" style="background: linear-gradient(135deg, var(--primary), var(--accent));">王</div>
+                            <div class="coach-info">
+                                <div class="coach-name">王教练</div>
+                                <div class="coach-specialty">力量训练 / CrossFit</div>
+                                <div class="coach-rating">⭐ 4.9分</div>
+                            </div>
+                        </div>
+                        <div class="coach-card">
+                            <div class="coach-avatar" style="background: linear-gradient(135deg, var(--error), var(--warning));">刘</div>
+                            <div class="coach-info">
+                                <div class="coach-name">刘教练</div>
+                                <div class="coach-specialty">有氧 / 舞蹈</div>
+                                <div class="coach-rating">⭐ 4.7分</div>
+                            </div>
+                        </div>
+                        <div class="coach-card">
+                            <div class="coach-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">陈</div>
+                            <div class="coach-info">
+                                <div class="coach-name">陈教练</div>
+                                <div class="coach-specialty">康复 / 体态矫正</div>
+                                <div class="coach-rating">⭐ 4.9分</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">训练记录</h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>教练</th>
+                                <th>课程类型</th>
+                                <th>时长</th>
+                                <th>消耗卡路里</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-10-15</td>
+                                <td>张教练</td>
+                                <td>增肌训练</td>
+                                <td>60分钟</td>
+                                <td>420 kcal</td>
+                                <td><span class="tag tag-success">已完成</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-10-12</td>
+                                <td>张教练</td>
+                                <td>体能测试</td>
+                                <td>45分钟</td>
+                                <td>280 kcal</td>
+                                <td><span class="tag tag-success">已完成</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-10-08</td>
+                                <td>张教练</td>
+                                <td>核心训练</td>
+                                <td>50分钟</td>
+                                <td>350 kcal</td>
+                                <td><span class="tag tag-success">已完成</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 健小助模块 -->
+            <div id="assistant" class="content-area">
+                <div style="display: grid; grid-template-columns: 1fr 350px; gap: 24px;">
+                    <div class="chat-container">
+                        <div class="chat-messages">
+                            <div class="message ai">
+                                <div class="message-avatar">🤖</div>
+                                <div class="message-content">
+                                    您好！我是健小助，您的智能健身助手 💪<br><br>
+                                    我可以帮您：<br>
+                                    • 制定个性化训练计划<br>
+                                    • 解答健身相关问题<br>
+                                    • 介绍健身房器械使用方法<br>
+                                    • 提供饮食和营养建议<br><br>
+                                    有什么可以帮您的吗？
+                                </div>
+                            </div>
+                            <div class="message user">
+                                <div class="message-avatar">张</div>
+                                <div class="message-content">我想减脂，能帮我制定一个训练计划吗？</div>
+                            </div>
+                            <div class="message ai">
+                                <div class="message-avatar">🤖</div>
+                                <div class="message-content">
+                                    好的！根据您的减脂目标，我为您生成了一份7天训练计划：<br><br>
+                                    <strong>📋 7天减脂训练计划</strong><br><br>
+                                    <strong>Day 1:</strong> 有氧燃脂 + 核心训练 (45min)<br>
+                                    <strong>Day 2:</strong> 上肢力量训练 (50min)<br>
+                                    <strong>Day 3:</strong> 休息或轻度拉伸 (20min)<br>
+                                    <strong>Day 4:</strong> HIIT高强度间歇 (30min)<br>
+                                    <strong>Day 5:</strong> 下肢力量训练 (50min)<br>
+                                    <strong>Day 6:</strong> 全身循环训练 (45min)<br>
+                                    <strong>Day 7:</strong> 主动恢复 - 瑜伽/散步 (30min)<br><br>
+                                    <button class="btn btn-primary" style="width: auto; padding: 8px 16px; font-size: 13px; margin-right: 8px;">使用此计划</button>
+                                    <button class="btn btn-secondary" style="width: auto; padding: 8px 16px; font-size: 13px;">重新生成</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" class="chat-input" placeholder="输入您的问题...">
+                            <button class="btn-send">发送</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 16px;">推荐问题</h3>
+                            <div class="quick-questions">
+                                <span class="quick-question">如何增肌？</span>
+                                <span class="quick-question">减脂饮食建议</span>
+                                <span class="quick-question">器械使用指南</span>
+                                <span class="quick-question">训练频率建议</span>
+                                <span class="quick-question">蛋白粉怎么选</span>
+                                <span class="quick-question">热身动作推荐</span>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 16px;">热门器械</h3>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 12px;">
+                                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--secondary), var(--success)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🏋️</div>
+                                    <div>
+                                        <div style="font-weight: 600;">史密斯机</div>
+                                        <div style="font-size: 13px; color: var(--text-secondary);">深蹲、卧推</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 12px;">
+                                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🏃</div>
+                                    <div>
+                                        <div style="font-weight: 600;">跑步机</div>
+                                        <div style="font-size: 13px; color: var(--text-secondary);">有氧训练</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 12px;">
+                                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🚴</div>
+                                    <div>
+                                        <div style="font-weight: 600;">动感单车</div>
+                                        <div style="font-size: 13px; color: var(--text-secondary);">心肺训练</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 积分商城模块 -->
+            <div id="store" class="content-area">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchStoreTab(this, 'all')">全部</button>
+                    <button class="tab" onclick="switchStoreTab(this, 'equipment')">运动装备</button>
+                    <button class="tab" onclick="switchStoreTab(this, 'supplement')">营养补剂</button>
+                    <button class="tab" onclick="switchStoreTab(this, 'course')">课程优惠</button>
+                    <button class="tab" onclick="switchStoreTab(this, 'other')">其他</button>
+                </div>
+
+                <div class="product-grid">
+                    <div class="product-card">
+                        <div class="product-image">🥤</div>
+                        <div class="product-info">
+                            <div class="product-name">运动水壶 750ml</div>
+                            <div class="product-points">200 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #FFE5B4, #FFDAB9);">🥛</div>
+                        <div class="product-info">
+                            <div class="product-name">乳清蛋白粉 2磅</div>
+                            <div class="product-points">500 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #E8F5E9, #C8E6C9);">🧘</div>
+                        <div class="product-info">
+                            <div class="product-name">专业瑜伽垫</div>
+                            <div class="product-points">300 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #FFF3E0, #FFE0B2);">👨‍🏫</div>
+                        <div class="product-info">
+                            <div class="product-name">私教体验课 1节</div>
+                            <div class="product-points">1000 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #F3E5F5, #E1BEE7);">🎒</div>
+                        <div class="product-info">
+                            <div class="product-name">健身背包</div>
+                            <div class="product-points">400 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #E3F2FD, #BBDEFB);">💊</div>
+                        <div class="product-info">
+                            <div class="product-name">复合维生素 60粒</div>
+                            <div class="product-points">350 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #E0F2F1, #B2DFDB);">🎫</div>
+                        <div class="product-info">
+                            <div class="product-name">月卡抵扣券 ¥50</div>
+                            <div class="product-points">800 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, #FBE9E7, #FFCCBC);">🧤</div>
+                        <div class="product-info">
+                            <div class="product-name">健身手套</div>
+                            <div class="product-points">150 积分</div>
+                            <button class="btn btn-primary" style="padding: 10px;">立即兑换</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 32px;">
+                    <div class="card-header">
+                        <h3 class="card-title">兑换记录</h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>商品名称</th>
+                                <th>消耗积分</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-10-15</td>
+                                <td>运动水壶 750ml</td>
+                                <td>-200</td>
+                                <td><span class="tag tag-success">已发货</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-10-05</td>
+                                <td>私教体验课 1节</td>
+                                <td>-1000</td>
+                                <td><span class="tag tag-success">已使用</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-09-20</td>
+                                <td>健身手套</td>
+                                <td>-150</td>
+                                <td><span class="tag tag-success">已完成</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 首页模块 -->
+            <div id="home" class="content-area">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px;">
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: 20px;">快速入口</h3>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" style="width: auto; padding: 12px 24px;">我的预约</button>
+                            <button class="btn btn-secondary" style="width: auto; padding: 12px 24px;">健身计划</button>
+                            <button class="btn btn-secondary" style="width: auto; padding: 12px 24px;">器材列表</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: 20px;">个人信息完成度</h3>
+                        <div style="background: var(--bg-secondary); height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 12px;">
+                            <div style="width: 75%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 10px;"></div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 14px;">已完成 75%，完善信息可获得更好体验</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">最近预约</h3>
+                        <button class="btn btn-primary" style="width: auto; padding: 10px 20px; font-size: 13px;">查看全部</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>课程</th>
+                                <th>教练</th>
+                                <th>时间</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>增肌训练</td>
+                                <td>张教练</td>
+                                <td>2024-10-20 14:00</td>
+                                <td><span class="tag tag-success">已预约</span></td>
+                            </tr>
+                            <tr>
+                                <td>瑜伽基础</td>
+                                <td>李教练</td>
+                                <td>2024-10-18 10:00</td>
+                                <td><span class="tag tag-success">已预约</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">我的健身计划</h3>
+                        <button class="btn btn-primary" style="width: auto; padding: 10px 20px; font-size: 13px;">查看详情</button>
+                    </div>
+                    <div style="padding: 16px; background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(255,140,97,0.1)); border-radius: 12px;">
+                        <h4 style="margin-bottom: 8px;">7天减脂训练计划</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: 12px;">目标: 减脂塑形 | 当前进度: 第3天</p>
+                        <div style="display: flex; gap: 8px;">
+                            <span class="tag tag-success">Day1 ✓</span>
+                            <span class="tag tag-success">Day2 ✓</span>
+                            <span class="tag tag-warning">Day3</span>
+                            <span class="tag tag-default">Day4</span>
+                            <span class="tag tag-default">Day5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 更新导航激活状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // 更新页面标题
+            const titles = {
+                'home': '会员中心',
+                'cards': '在线购卡',
+                'coach': '我的教练',
+                'assistant': '健小助',
+                'store': '积分商城'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName];
+
+            // 切换内容区域
+            document.querySelectorAll('.content-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function switchStoreTab(tab, category) {
+            document.querySelectorAll('.tabs .tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            tab.classList.add('active');
+        }
+    </script>
+</body>
+</html>

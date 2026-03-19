@@ -72,6 +72,30 @@ const routes = [
         name: 'MyRepairs',
         component: () => import('@/views/member/Repairs.vue'),
         meta: { title: '我的报修' }
+      },
+      {
+        path: 'cards',
+        name: 'MemberCards',
+        component: () => import('@/views/member/Cards.vue'),
+        meta: { title: '在线购卡' }
+      },
+      {
+        path: 'coach',
+        name: 'MemberCoach',
+        component: () => import('@/views/member/Coach.vue'),
+        meta: { title: '我的教练' }
+      },
+      {
+        path: 'assistant',
+        name: 'MemberAssistant',
+        component: () => import('@/views/member/Assistant.vue'),
+        meta: { title: '健小助' }
+      },
+      {
+        path: 'store',
+        name: 'MemberStore',
+        component: () => import('@/views/member/Store.vue'),
+        meta: { title: '积分商城' }
       }
     ]
   },
@@ -103,6 +127,12 @@ const routes = [
         name: 'CoachStudents',
         component: () => import('@/views/coach/Students.vue'),
         meta: { title: '我的学员' }
+      },
+      {
+        path: 'schedule',
+        name: 'CoachSchedule',
+        component: () => import('@/views/coach/Schedule.vue'),
+        meta: { title: '课程日程' }
       }
     ]
   },
