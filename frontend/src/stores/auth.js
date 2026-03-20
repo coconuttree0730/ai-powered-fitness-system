@@ -60,7 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
     userInfo.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
-    router.push('/login')
+    router.push('/')
   }
 
   function hasRole(role) {
