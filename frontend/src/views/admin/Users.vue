@@ -50,7 +50,7 @@
         </n-space>
       </n-card>
 
-      <n-data-table :columns="columns" :data="users" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
+      <n-data-table :columns="columns" :data="users" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑用户' : '新增用户'" style="width: 600px">
@@ -158,15 +158,19 @@ const uploadHeaders = computed(() => ({
 }))
 const fileList = ref([])
 
-const pagination = reactive({
+const paginationReactive = reactive({
   page: 1,
   pageSize: 5,
-  itemCount: 0,
+  itemCount: 0
+})
+
+const pagination = computed(() => ({
+  ...paginationReactive,
   onChange: (page) => {
-    pagination.page = page
+    paginationReactive.page = page
     fetchUsers()
   }
-})
+}))
 
 const searchForm = reactive({
   username: '',
@@ -312,13 +316,13 @@ async function fetchUsers() {
   loading.value = true
   try {
     const params = {
-      pageNum: pagination.page,
-      pageSize: pagination.pageSize,
+      pageNum: paginationReactive.page,
+      pageSize: paginationReactive.pageSize,
       ...buildSearchParams()
     }
     const res = await getUserList(params)
     users.value = res.records || []
-    pagination.itemCount = res.total || 0
+    paginationReactive.itemCount = res.total || 0
   } catch (error) {
     message.error('获取用户列表失败')
   } finally {
@@ -344,7 +348,7 @@ function buildSearchParams() {
 }
 
 function handleSearch() {
-  pagination.page = 1
+  paginationReactive.page = 1
   fetchUsers()
 }
 
@@ -353,7 +357,7 @@ function handleReset() {
   searchForm.phone = ''
   searchForm.role = null
   searchForm.status = null
-  pagination.page = 1
+  paginationReactive.page = 1
   fetchUsers()
 }
 

@@ -1,49 +1,54 @@
 <template>
   <div class="admin-repairs">
     <n-card title="报修管理">
-      <n-data-table :columns="columns" :data="repairs" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
+      <n-data-table :columns="columns" :data="displayRepairs" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
     </n-card>
   </div>
 </template>
 
 <script setup>
-import { ref, h, reactive, onMounted } from 'vue'
+import { ref, h, reactive, onMounted, computed } from 'vue'
 import { NTag, NButton, NSpace, useMessage } from 'naive-ui'
 import { getAllRepairs, handleRepair } from '@/api/equipment'
 
 const message = useMessage()
 const loading = ref(false)
-const repairs = ref([])
+const allRepairs = ref([])
 
-const pagination = reactive({
+const paginationReactive = reactive({
   page: 1,
   pageSize: 5,
-  itemCount: 0,
+  itemCount: 0
+})
+
+const pagination = computed(() => ({
+  ...paginationReactive,
   onChange: (page) => {
-    pagination.page = page
-    fetchRepairs()
+    paginationReactive.page = page
   }
+}))
+
+const displayRepairs = computed(() => {
+  const start = (paginationReactive.page - 1) * paginationReactive.pageSize
+  const end = start + paginationReactive.pageSize
+  return allRepairs.value.slice(start, end)
 })
 
 const columns = [
   { title: '器材名称', key: 'equipmentName' },
-  { title: '报修人', key: 'reporterName' },
+  { title: '报修人', key: 'userName' },
   { title: '问题描述', key: 'description', ellipsis: { tooltip: true } },
   {
     title: '状态',
     key: 'status',
     render: (row) => {
       const statusMap = {
-        PENDING: { type: 'warning', text: '待处理' },
-        PROCESSING: { type: 'info', text: '处理中' },
-        COMPLETED: { type: 'success', text: '已完成' },
-        CANCELLED: { type: 'default', text: '已取消' },
-        REJECTED: { type: 'error', text: '已拒绝' },
-        APPROVED: { type: 'success', text: '已批准' },
-        IN_PROGRESS: { type: 'info', text: '进行中' },
-        DONE: { type: 'success', text: '已完成' }
+        0: { type: 'warning', text: '待处理' },
+        1: { type: 'info', text: '处理中' },
+        2: { type: 'success', text: '已完成' },
+        3: { type: 'default', text: '已关闭' }
       }
-      const status = statusMap[row.status] || { type: 'default', text: row.status }
+      const status = statusMap[row.status] || { type: 'default', text: '未知' }
       return h(NTag, { type: status.type }, () => status.text)
     }
   },
@@ -53,12 +58,12 @@ const columns = [
     key: 'actions',
     render: (row) => {
     const buttons = []
-    if (row.status === 'PENDING') {
-      buttons.push(h(NButton, { size: 'small', type: 'primary', onClick: () => handleProcessClick(row.id, 'PROCESSING') }, () => '开始处理'))
-      buttons.push(h(NButton, { size: 'small', type: 'error', onClick: () => handleProcessClick(row.id, 'REJECTED') }, () => '拒绝'))
+    if (row.status === 0) {
+      buttons.push(h(NButton, { size: 'small', type: 'primary', onClick: () => handleProcessClick(row.id, 1) }, () => '开始处理'))
+      buttons.push(h(NButton, { size: 'small', type: 'error', onClick: () => handleProcessClick(row.id, 3) }, () => '关闭'))
     }
-    if (row.status === 'PROCESSING' || row.status === 'IN_PROGRESS') {
-      buttons.push(h(NButton, { size: 'small', type: 'success', onClick: () => handleProcessClick(row.id, 'DONE') }, () => '完成'))
+    if (row.status === 1) {
+      buttons.push(h(NButton, { size: 'small', type: 'success', onClick: () => handleProcessClick(row.id, 2) }, () => '完成'))
     }
     return h(NSpace, null, () => buttons)
   }
@@ -72,9 +77,9 @@ onMounted(() => {
 async function fetchRepairs() {
   loading.value = true
   try {
-    const res = await getAllRepairs({ pageNum: pagination.page, pageSize: pagination.pageSize })
-    repairs.value = res || []
-    pagination.itemCount = repairs.value.length
+    const res = await getAllRepairs()
+    allRepairs.value = res || []
+    paginationReactive.itemCount = allRepairs.value.length
   } catch (error) {
     message.error('获取报修列表失败')
   } finally {

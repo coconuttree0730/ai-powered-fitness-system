@@ -57,7 +57,7 @@
           </n-button>
         </n-space>
       </n-card>
-      <n-data-table :columns="columns" :data="courses" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
+      <n-data-table :columns="columns" :data="courses" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑课程' : '新增课程'" style="width: 700px">
@@ -274,15 +274,19 @@ function handleBeforeUpload({ file }) {
   return true
 }
 
-const pagination = reactive({
+const paginationReactive = reactive({
   page: 1,
   pageSize: 5,
-  itemCount: 0,
+  itemCount: 0
+})
+
+const pagination = computed(() => ({
+  ...paginationReactive,
   onChange: (page) => {
-    pagination.page = page
+    paginationReactive.page = page
     fetchCourses()
   }
-})
+}))
 
 const form = reactive({
   courseName: '',
@@ -408,8 +412,8 @@ async function fetchCourses() {
   loading.value = true
   try {
     const params = {
-      pageNum: pagination.page,
-      pageSize: pagination.pageSize,
+      pageNum: paginationReactive.page,
+      pageSize: paginationReactive.pageSize,
       ...buildSearchParams()
     }
     const res = await request({
@@ -418,7 +422,7 @@ async function fetchCourses() {
       params
     })
     courses.value = res.records || []
-    pagination.itemCount = res.total || 0
+    paginationReactive.itemCount = res.total || 0
   } catch (error) {
     message.error('获取课程列表失败')
   } finally {
@@ -447,7 +451,7 @@ function buildSearchParams() {
 }
 
 function handleSearch() {
-  pagination.page = 1
+  paginationReactive.page = 1
   fetchCourses()
 }
 
@@ -457,7 +461,7 @@ function handleReset() {
   searchForm.coachId = null
   searchForm.startDate = null
   searchForm.endDate = null
-  pagination.page = 1
+  paginationReactive.page = 1
   fetchCourses()
 }
 

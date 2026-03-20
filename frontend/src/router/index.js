@@ -39,9 +39,7 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'MemberHome',
-        component: () => import('@/views/member/Home.vue'),
-        meta: { title: '会员中心' }
+        redirect: '/member/cards'
       },
       {
         path: 'profile',

@@ -96,8 +96,19 @@
               </n-tag>
               <n-dropdown :options="userOptions" @select="handleUserSelect">
                 <n-button text class="user-menu">
-                  <n-avatar round :size="36" class="user-avatar">{{ authStore.userInfo?.username?.charAt(0) || '用' }}</n-avatar>
-                  <span class="username">{{ authStore.userInfo?.username || '用户' }}</span>
+                  <img
+                    v-if="userAvatar"
+                    :src="userAvatar"
+                    class="user-avatar-img"
+                    @error="$event.target.style.display='none'"
+                  />
+                  <n-avatar
+                    v-else
+                    round
+                    :size="36"
+                    class="user-avatar"
+                  >{{ usernameInitial }}</n-avatar>
+                  <span class="username">{{ username || '用户' }}</span>
                 </n-button>
               </n-dropdown>
             </div>
@@ -119,7 +130,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon } from 'naive-ui'
+import { NIcon, NAvatar } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import {
   CalendarOutline,
@@ -142,6 +153,11 @@ const showMobileMenu = ref(false)
 const collapsed = ref(false)
 const isMobile = ref(false)
 const sidebarWidth = ref(220)
+
+// 使用计算属性获取用户头像和用户名，确保响应式
+const userAvatar = computed(() => authStore.userInfo?.avatar || '')
+const username = computed(() => authStore.userInfo?.username || '')
+const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '用')
 
 // 检测屏幕尺寸
 function checkScreenSize() {
@@ -503,6 +519,13 @@ function handleLogout() {
   background: linear-gradient(135deg, #2EC4B6, #06D6A0);
   color: white;
   font-weight: 600;
+}
+
+.user-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .username {

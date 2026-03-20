@@ -58,6 +58,7 @@
             AND r.role_code = #{roleCode}
         </if>
         ORDER BY u.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <!-- 查询用户总数（支持角色筛选） -->

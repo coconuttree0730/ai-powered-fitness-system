@@ -49,8 +49,17 @@
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
-              <el-avatar :size="32">{{ authStore.userInfo?.username?.charAt(0) }}</el-avatar>
-              <span>{{ authStore.userInfo?.username }}</span>
+              <img
+                v-if="userAvatar"
+                :src="userAvatar"
+                class="user-avatar-img"
+                @error="$event.target.style.display='none'"
+              />
+              <el-avatar
+                v-else
+                :size="32"
+              >{{ usernameInitial }}</el-avatar>
+              <span>{{ username }}</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -80,6 +89,11 @@ const authStore = useAuthStore()
 
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '仪表盘')
+
+// 使用计算属性获取用户头像和用户名，确保响应式
+const userAvatar = computed(() => authStore.userInfo?.avatar || '')
+const username = computed(() => authStore.userInfo?.username || '')
+const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '')
 
 function goHome() {
   router.push('/')
@@ -137,6 +151,13 @@ function handleLogout() {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+}
+
+.user-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .main {

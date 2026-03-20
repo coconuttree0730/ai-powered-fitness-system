@@ -16,7 +16,7 @@
       </n-card>
 
       <!-- 数据表格 -->
-      <n-data-table :columns="columns" :data="equipment" :loading="loading" :pagination="pagination" :row-key="row => row.id" />
+      <n-data-table :columns="columns" :data="equipment" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
     </n-card>
 
     <!-- 新增/编辑弹窗 -->
@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, h, reactive, onMounted } from 'vue'
+import { ref, h, reactive, onMounted, computed } from 'vue'
 import { NTag, NButton, NSpace, useMessage, useDialog, NImage, NPopconfirm } from 'naive-ui'
 import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment, getEquipmentTypes, getEquipmentRepairs, getEquipmentDetail } from '@/api/equipment'
 import { getToken } from '@/utils/auth'
@@ -122,15 +122,19 @@ const searchForm = reactive({
   status: null
 })
 
-const pagination = reactive({
+const paginationReactive = reactive({
   page: 1,
   pageSize: 5,
-  itemCount: 0,
+  itemCount: 0
+})
+
+const pagination = computed(() => ({
+  ...paginationReactive,
   onChange: (page) => {
-    pagination.page = page
+    paginationReactive.page = page
     fetchEquipment()
   }
-})
+}))
 
 const form = reactive({
   equipmentName: '',
@@ -245,14 +249,14 @@ async function fetchEquipment() {
   loading.value = true
   try {
     const res = await getEquipmentList({
-      pageNum: pagination.page,
-      pageSize: pagination.pageSize,
+      pageNum: paginationReactive.page,
+      pageSize: paginationReactive.pageSize,
       keyword: searchForm.keyword || undefined,
       typeCode: searchForm.typeCode || undefined,
       status: searchForm.status !== null ? searchForm.status : undefined
     })
     equipment.value = res.records || []
-    pagination.itemCount = res.total || 0
+    paginationReactive.itemCount = res.total || 0
   } catch (error) {
     message.error('获取器材列表失败')
   } finally {
@@ -270,7 +274,7 @@ async function fetchEquipmentTypes() {
 }
 
 function handleSearch() {
-  pagination.page = 1
+  paginationReactive.page = 1
   fetchEquipment()
 }
 
@@ -278,7 +282,7 @@ function handleReset() {
   searchForm.keyword = ''
   searchForm.typeCode = null
   searchForm.status = null
-  pagination.page = 1
+  paginationReactive.page = 1
   fetchEquipment()
 }
 

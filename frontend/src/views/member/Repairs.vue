@@ -1,74 +1,11 @@
 <template>
   <div class="repairs-page">
-    <!-- 报修统计 -->
-    <n-grid :cols="4" :x-gap="16" class="stats-grid">
-      <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #FF6B35, #FF8C61);">🔧</div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.total }}</div>
-            <div class="stat-label">总报修</div>
-          </div>
-        </div>
-      </n-grid-item>
-      <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #FFD166, #FFB347);">⏳</div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.pending }}</div>
-            <div class="stat-label">正在检查</div>
-          </div>
-        </div>
-      </n-grid-item>
-      <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">🔨</div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.repairing }}</div>
-            <div class="stat-label">在维修</div>
-          </div>
-        </div>
-      </n-grid-item>
-      <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #06D6A0, #2EC4B6);">✅</div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.completed }}</div>
-            <div class="stat-label">已修复</div>
-          </div>
-        </div>
-      </n-grid-item>
-    </n-grid>
-
     <!-- 报修表单 -->
     <div class="card-section">
       <div class="section-header">
         <h3 class="section-title">提交报修</h3>
       </div>
       <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="100">
-        <n-grid :cols="2" :x-gap="24">
-          <n-grid-item>
-            <n-form-item label="选择器材" path="equipmentId">
-              <n-select 
-                v-model:value="form.equipmentId" 
-                :options="equipmentOptions" 
-                placeholder="请选择需要报修的器材"
-                size="large"
-              />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item label="问题类型" path="issueType">
-              <n-select 
-                v-model:value="form.issueType" 
-                :options="issueTypeOptions" 
-                placeholder="请选择问题类型"
-                size="large"
-              />
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
-        
         <n-form-item label="问题描述" path="description">
           <n-input 
             v-model:value="form.description" 
@@ -213,35 +150,12 @@ const fileList = ref([])
 
 const formRef = ref(null)
 const form = reactive({
-  equipmentId: null,
-  issueType: null,
   description: ''
 })
 
 const rules = {
-  equipmentId: [{ required: true, message: '请选择器材', trigger: 'change' }],
-  issueType: [{ required: true, message: '请选择问题类型', trigger: 'change' }],
   description: [{ required: true, message: '请描述问题', trigger: 'blur' }]
 }
-
-const equipmentOptions = [
-  { label: '跑步机 #01', value: 1 },
-  { label: '跑步机 #02', value: 2 },
-  { label: '椭圆机 #01', value: 3 },
-  { label: '动感单车 #01', value: 4 },
-  { label: '史密斯机', value: 5 },
-  { label: '哑铃组 A区', value: 6 },
-  { label: '龙门架', value: 7 }
-]
-
-const issueTypeOptions = [
-  { label: '无法启动', value: '无法启动' },
-  { label: '运行异常', value: '运行异常' },
-  { label: '噪音过大', value: '噪音过大' },
-  { label: '显示屏故障', value: '显示屏故障' },
-  { label: '配件损坏', value: '配件损坏' },
-  { label: '其他问题', value: '其他问题' }
-]
 
 // 模拟报修数据
 const repairs = ref([
@@ -287,15 +201,6 @@ const repairs = ref([
     ]
   },
 ])
-
-const stats = computed(() => {
-  return {
-    total: repairs.value.length,
-    pending: repairs.value.filter(r => r.status === 'checking').length,
-    repairing: repairs.value.filter(r => r.status === 'repairing').length,
-    completed: repairs.value.filter(r => r.status === 'completed').length
-  }
-})
 
 const filteredRepairs = computed(() => {
   if (filterStatus.value === 'all') return repairs.value
@@ -359,12 +264,12 @@ async function handleSubmit() {
   try {
     await formRef.value?.validate()
     submitting.value = true
-    
+
     setTimeout(() => {
       repairs.value.unshift({
         id: Date.now(),
-        equipmentName: equipmentOptions.find(e => e.value === form.equipmentId)?.label,
-        issueType: form.issueType,
+        equipmentName: '待分配',
+        issueType: '待分类',
         description: form.description,
         status: 'checking',
         createTime: new Date().toISOString(),
@@ -373,10 +278,8 @@ async function handleSubmit() {
           { type: 'success', title: '报修提交', content: '您的报修申请已提交成功', time: formatTime(new Date().toISOString()) }
         ]
       })
-      
+
       message.success('报修提交成功！')
-      form.equipmentId = null
-      form.issueType = null
       form.description = ''
       fileList.value = []
       submitting.value = false
@@ -408,53 +311,6 @@ onMounted(() => {
 .repairs-page {
   max-width: 1400px;
   margin: 0 auto;
-}
-
-.stats-grid {
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-  transition: all 0.3s;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1A1A2E;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #6B7280;
-  margin-top: 4px;
 }
 
 .card-section {

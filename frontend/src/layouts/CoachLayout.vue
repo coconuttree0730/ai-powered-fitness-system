@@ -1,4 +1,5 @@
 <template>
+  <!-- 教练端布局 -->
   <div class="coach-layout">
     <n-layout has-sider>
       <n-layout-sider
@@ -24,8 +25,18 @@
             <span>{{ currentTitle }}</span>
             <n-dropdown :options="userOptions" @select="handleUserSelect">
               <n-button text>
-                <n-avatar round :size="32">{{ authStore.userInfo?.username?.charAt(0) }}</n-avatar>
-                <span style="margin-left: 8px">{{ authStore.userInfo?.username }}</span>
+                <img
+                  v-if="userAvatar"
+                  :src="userAvatar"
+                  style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
+                  @error="$event.target.style.display='none'"
+                />
+                <n-avatar
+                  v-else
+                  round
+                  :size="32"
+                >{{ usernameInitial }}</n-avatar>
+                <span style="margin-left: 8px">{{ username }}</span>
               </n-button>
             </n-dropdown>
           </div>
@@ -41,7 +52,7 @@
 <script setup>
 import { computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon } from 'naive-ui'
+import { NIcon, NAvatar } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import {
   HomeOutline,
@@ -57,6 +68,11 @@ const authStore = useAuthStore()
 
 const activeKey = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '教练中心')
+
+// 使用计算属性获取用户头像和用户名，确保响应式
+const userAvatar = computed(() => authStore.userInfo?.avatar || '')
+const username = computed(() => authStore.userInfo?.username || '')
+const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '')
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) })
@@ -118,6 +134,13 @@ function handleUserSelect(key) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-content img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .content {
