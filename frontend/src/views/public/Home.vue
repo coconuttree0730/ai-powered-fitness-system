@@ -112,7 +112,7 @@
     <!-- 醒目滚动公告栏 -->
     <section v-if="showMarquee" class="marquee-notice-section">
       <div class="marquee-notice-container">
-        <div class="marquee-notice-label">重要通知</div>
+        <div class="marquee-notice-label">公告</div>
         <div class="marquee-notice-wrapper">
           <div class="marquee-notice-track">
             <span v-for="(item, index) in marqueeItems" :key="index" class="marquee-notice-item" v-html="item"></span>
@@ -454,8 +454,20 @@
         <h2 class="cta-title" v-intersect="onReveal">开启您的<span>智能健身之旅</span></h2>
         <p class="cta-desc" v-intersect="onReveal">立即注册，免费体验7天VIP会员服务，感受AI智能健身的魅力</p>
         <form class="cta-form" v-intersect="onReveal" @submit.prevent="handleCTASubmit">
-          <input v-model="ctaPhone" type="tel" class="cta-input" placeholder="请输入您的手机号" maxlength="11">
-          <button type="submit" class="btn btn-primary btn-large" :loading="ctaLoading">
+          <input 
+            ref="ctaInputRef"
+            v-model="ctaPhone" 
+            type="tel" 
+            class="cta-input" 
+            placeholder="请输入您的手机号" 
+            maxlength="11"
+            :disabled="ctaLoading"
+          >
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-large" 
+            :disabled="ctaLoading"
+          >
             {{ ctaLoading ? '提交中...' : '立即领取' }}
           </button>
         </form>
@@ -549,23 +561,83 @@
     </footer>
 
     <!-- 登录模态框 -->
-    <n-modal v-model:show="showLoginModal" preset="card" title="登录" style="width: 400px">
-      <n-form ref="loginFormRef" :model="loginForm" :rules="loginRules">
-        <n-form-item path="username" label="用户名">
-          <n-input v-model:value="loginForm.username" placeholder="请输入用户名" />
-        </n-form-item>
-        <n-form-item path="password" label="密码">
-          <n-input v-model:value="loginForm.password" type="password" placeholder="请输入密码" />
-        </n-form-item>
-        <n-form-item>
-          <n-button type="primary" block @click="handleLogin" :loading="loginLoading">
-            登录
-          </n-button>
-        </n-form-item>
-      </n-form>
-      <div class="login-footer">
-        <span>还没有账号？</span>
-        <a @click="goToRegisterFromModal">立即注册</a>
+    <LoginModal v-model:visible="showLoginModal" @login-success="handleLoginSuccess" @go-register="showRegisterModal = true" />
+
+    <!-- 注册模态框 -->
+    <RegisterModal v-model:visible="showRegisterModal" @register-success="handleRegisterSuccess" @go-login="showLoginModal = true" />
+
+    <!-- 注册/登录弹窗 -->
+    <n-modal v-model:show="showOldRegisterModal" preset="card" :show-header="false" style="width: 420px" class="register-modal">
+      <div class="register-modal-content">
+        <button class="modal-close-btn" @click="showOldRegisterModal = false">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        <div class="register-modal-header">
+          <div class="register-icon">🎁</div>
+          <h3 class="register-title">领取您的7天VIP体验</h3>
+          <p class="register-subtitle">已有账号将自动登录，新用户将自动注册</p>
+        </div>
+        <n-form ref="registerFormRef" :model="registerForm" :rules="registerRules" class="register-form">
+          <n-form-item path="phone" :show-label="false">
+            <n-input 
+              v-model:value="registerForm.phone" 
+              placeholder="请输入手机号" 
+              size="large"
+              :maxlength="11"
+              class="phone-input"
+            >
+              <template #prefix>
+                <span class="input-prefix">📱</span>
+              </template>
+            </n-input>
+          </n-form-item>
+          <n-form-item path="code" :show-label="false">
+            <div class="code-input-group">
+              <n-input 
+                v-model:value="registerForm.code" 
+                placeholder="请输入验证码" 
+                size="large"
+                :maxlength="6"
+                class="code-input"
+              >
+                <template #prefix>
+                  <span class="input-prefix">🔐</span>
+                </template>
+              </n-input>
+              <n-button 
+                :disabled="countdown > 0 || !isPhoneValid" 
+                :loading="sendingCode"
+                @click="sendVerificationCode"
+                class="send-code-btn"
+                size="large"
+              >
+                {{ countdown > 0 ? `${countdown}s后重发` : '获取验证码' }}
+              </n-button>
+            </div>
+          </n-form-item>
+          <n-form-item :show-label="false">
+            <n-button 
+              type="primary" 
+              block 
+              size="large"
+              @click="handleRegisterSubmit" 
+              :loading="registerLoading"
+              class="submit-btn"
+            >
+              {{ registerLoading ? '处理中...' : '立即领取' }}
+            </n-button>
+          </n-form-item>
+        </n-form>
+        <div class="register-footer">
+          <p class="agreement-text">
+            点击"立即领取"即表示您同意
+            <a href="#" @click.prevent>《用户协议》</a>
+            和
+            <a href="#" @click.prevent>《隐私政策》</a>
+          </p>
+        </div>
       </div>
     </n-modal>
   </div>
@@ -576,6 +648,8 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
+import LoginModal from '@/components/LoginModal.vue'
+import RegisterModal from '@/components/RegisterModal.vue'
 
 const router = useRouter()
 const message = useMessage()
@@ -592,6 +666,7 @@ const mobileMenuOpen = ref(false)
 
 // 登录模态框
 const showLoginModal = ref(false)
+const showRegisterModal = ref(false)
 const loginFormRef = ref(null)
 const loginLoading = ref(false)
 const loginForm = reactive({
@@ -603,6 +678,35 @@ const loginRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
+
+// 旧版注册/登录弹窗（保留用于CTA区域）
+const showOldRegisterModal = ref(false)
+const registerFormRef = ref(null)
+const registerLoading = ref(false)
+const sendingCode = ref(false)
+const countdown = ref(0)
+let countdownTimer = null
+
+const registerForm = reactive({
+  phone: '',
+  code: ''
+})
+
+const registerRules = {
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '请输入6位验证码', trigger: 'blur' }
+  ]
+}
+
+// 计算属性：手机号是否有效
+const isPhoneValid = computed(() => {
+  return /^1[3-9]\d{9}$/.test(registerForm.phone)
+})
 
 // Hero轮播图
 const currentSlide = ref(0)
@@ -813,6 +917,7 @@ const omnichannelFeatures = [
 // CTA
 const ctaPhone = ref('')
 const ctaLoading = ref(false)
+const ctaInputRef = ref(null)
 
 // 方法
 function getParticleStyle(n) {
@@ -882,12 +987,32 @@ function onStatIntersect(el) {
 }
 
 function goToRegister() {
-  router.push('/register')
+  // 滚动到CTA区域
+  const ctaSection = document.getElementById('cta')
+  if (ctaSection) {
+    ctaSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // 延迟聚焦输入框，等待滚动完成
+    setTimeout(() => {
+      if (ctaInputRef.value) {
+        ctaInputRef.value.focus()
+        ctaInputRef.value.classList.add('input-highlight')
+        setTimeout(() => ctaInputRef.value.classList.remove('input-highlight'), 2000)
+      }
+    }, 800)
+  }
 }
 
 function goToRegisterFromModal() {
   showLoginModal.value = false
   router.push('/register')
+}
+
+function handleLoginSuccess() {
+  message.success('登录成功')
+}
+
+function handleRegisterSuccess() {
+  message.success('注册成功')
 }
 
 async function handleLogin() {
@@ -915,16 +1040,80 @@ async function handleLogout() {
 }
 
 async function handleCTASubmit() {
-  if (!ctaPhone.value || ctaPhone.value.length !== 11) {
+  // 手机号格式验证
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!ctaPhone.value || !phoneRegex.test(ctaPhone.value)) {
+    message.error('请输入正确的11位手机号')
+    return
+  }
+  
+  ctaLoading.value = true
+  try {
+    // 模拟请求延迟
+    await new Promise(resolve => setTimeout(resolve, 500))
+    // 打开注册登录弹窗，并预填手机号
+    registerForm.phone = ctaPhone.value
+    showOldRegisterModal.value = true
+  } finally {
+    ctaLoading.value = false
+  }
+}
+
+// 发送验证码
+async function sendVerificationCode() {
+  if (!isPhoneValid.value) {
     message.error('请输入正确的手机号')
     return
   }
-  ctaLoading.value = true
-  // 模拟提交
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  message.success('领取成功！请前往注册页面完成注册')
-  ctaLoading.value = false
-  router.push('/register')
+  
+  sendingCode.value = true
+  try {
+    // 模拟发送验证码请求
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    message.success('验证码已发送')
+    
+    // 开始倒计时
+    countdown.value = 60
+    countdownTimer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(countdownTimer)
+      }
+    }, 1000)
+  } catch (error) {
+    message.error('发送失败，请重试')
+  } finally {
+    sendingCode.value = false
+  }
+}
+
+// 处理注册/登录提交
+async function handleRegisterSubmit() {
+  try {
+    await registerFormRef.value?.validate()
+    registerLoading.value = true
+    
+    // 模拟注册/登录请求
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // 模拟登录成功
+    message.success('领取成功！欢迎加入智健AI')
+    showOldRegisterModal.value = false
+    
+    // 清空表单
+    registerForm.phone = ''
+    registerForm.code = ''
+    ctaPhone.value = ''
+    
+    // 这里可以添加实际的登录逻辑
+    // await authStore.loginWithPhone(registerForm.phone, registerForm.code)
+  } catch (error) {
+    if (error?.message) {
+      message.error(error.message)
+    }
+  } finally {
+    registerLoading.value = false
+  }
 }
 
 // 滚动监听
@@ -1296,6 +1485,12 @@ const vIntersect = {
 .btn-primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 15px 40px rgba(255, 107, 53, 0.45);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-large {
@@ -1686,7 +1881,11 @@ const vIntersect = {
 
 /* Marquee Notice */
 .marquee-notice-section {
-  background: linear-gradient(90deg, #DC2626 0%, #991B1B 50%, #DC2626 100%);
+  /* background: linear-gradient(90deg, #DC2626 0%, #991B1B 50%, #DC2626 100%); */
+  background: #1A1A25;
+  border-top: 2px solid #FF6B35;
+  border-bottom: 2px solid #FF6B35;
+  color: #FFFFFF;
   position: relative;
   overflow: hidden;
   padding: 0;
@@ -1697,22 +1896,22 @@ const vIntersect = {
 .marquee-notice-container {
   display: flex;
   align-items: center;
-  padding: 16px 0;
+  padding: 10px 0;
   position: relative;
 }
 
 .marquee-notice-label {
   flex-shrink: 0;
   background: rgba(0, 0, 0, 0.3);
-  padding: 10px 24px;
-  margin-left: 40px;
+  padding: 1px 1px;
+  margin-left: 30px;
   margin-right: 30px;
-  border-radius: 16px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 600;
+  font-size: 20px;
   color: #FECACA;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -3018,6 +3217,11 @@ const vIntersect = {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.cta-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .cta-input::placeholder {
   color: var(--text-muted);
 }
@@ -3030,6 +3234,190 @@ const vIntersect = {
 .cta-guarantee span {
   color: #2EC4B6;
   margin-right: 4px;
+}
+
+/* CTA输入框高亮动画 */
+.cta-input.input-highlight {
+  animation: inputPulse 2s ease;
+}
+
+@keyframes inputPulse {
+  0%, 100% {
+    border-color: rgba(255, 107, 53, 0.3);
+    box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.4);
+  }
+  50% {
+    border-color: #FF6B35;
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+  }
+}
+
+/* 注册/登录弹窗样式 */
+.register-modal :deep(.n-card) {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.register-modal :deep(.n-card__content) {
+  padding: 0;
+}
+
+.register-modal-content {
+  position: relative;
+  padding: 48px 40px 40px;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 107, 53, 0.2);
+  border-color: rgba(255, 107, 53, 0.4);
+  color: #FF6B35;
+  transform: rotate(90deg);
+}
+
+.register-modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.register-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  animation: giftBounce 2s ease infinite;
+}
+
+@keyframes giftBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.register-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.register-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.register-form {
+  margin-bottom: 24px;
+}
+
+.register-form :deep(.n-form-item) {
+  margin-bottom: 16px;
+}
+
+.input-prefix {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.phone-input :deep(.n-input__input),
+.code-input :deep(.n-input__input) {
+  font-size: 16px;
+}
+
+.code-input-group {
+  display: flex;
+  gap: 12px;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.send-code-btn {
+  min-width: 120px;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 140, 97, 0.2) 100%);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  color: #FF6B35;
+  transition: all 0.3s;
+}
+
+.send-code-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.3) 0%, rgba(255, 140, 97, 0.3) 100%);
+  border-color: rgba(255, 107, 53, 0.5);
+}
+
+.send-code-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  height: 48px;
+  margin-top: 8px;
+  transition: all 0.3s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+}
+
+.register-footer {
+  text-align: center;
+}
+
+.agreement-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.agreement-text a {
+  color: #FF6B35;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.agreement-text a:hover {
+  text-decoration: underline;
+}
+
+/* 响应式适配 */
+@media (max-width: 480px) {
+  .register-modal-content {
+    padding: 40px 24px 32px;
+  }
+  
+  .register-title {
+    font-size: 20px;
+  }
+  
+  .code-input-group {
+    flex-direction: column;
+  }
+  
+  .send-code-btn {
+    width: 100%;
+  }
 }
 
 /* Footer */
