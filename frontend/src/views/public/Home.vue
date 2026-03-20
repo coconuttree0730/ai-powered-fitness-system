@@ -567,7 +567,7 @@
     <RegisterModal v-model:visible="showRegisterModal" @register-success="handleRegisterSuccess" @go-login="showLoginModal = true" />
 
     <!-- 注册/登录弹窗 -->
-    <n-modal v-model:show="showOldRegisterModal" preset="card" :show-header="false" style="width: 420px" class="register-modal">
+    <n-modal v-model:show="showOldRegisterModal" preset="card" :show-header="false" :closable="false" style="width: 420px" class="register-modal">
       <div class="register-modal-content">
         <button class="modal-close-btn" @click="showOldRegisterModal = false">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -589,7 +589,10 @@
               class="phone-input"
             >
               <template #prefix>
-                <span class="input-prefix">📱</span>
+                <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
               </template>
             </n-input>
           </n-form-item>
@@ -603,7 +606,10 @@
                 class="code-input"
               >
                 <template #prefix>
-                  <span class="input-prefix">🔐</span>
+                  <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
                 </template>
               </n-input>
               <n-button 
@@ -3332,6 +3338,20 @@ const vIntersect = {
 .input-prefix {
   margin-right: 8px;
   font-size: 18px;
+}
+
+.input-prefix-icon {
+  margin-right: 8px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.phone-input :deep(.n-input__prefix),
+.code-input :deep(.n-input__prefix) {
+  display: flex;
+  align-items: center;
 }
 
 .phone-input :deep(.n-input__input),
