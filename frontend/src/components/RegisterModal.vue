@@ -557,7 +557,7 @@ function handleAlipayRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1000;
   padding: 20px;
 }
 
