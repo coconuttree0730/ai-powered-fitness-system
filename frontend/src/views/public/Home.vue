@@ -112,7 +112,7 @@
     <!-- 醒目滚动公告栏 -->
     <section v-if="showMarquee" class="marquee-notice-section">
       <div class="marquee-notice-container">
-        <div class="marquee-notice-label">公告</div>
+        <div class="marquee-notice-label">重要通知</div>
         <div class="marquee-notice-wrapper">
           <div class="marquee-notice-track">
             <span v-for="(item, index) in marqueeItems" :key="index" class="marquee-notice-item" v-html="item"></span>
@@ -561,15 +561,16 @@
     </footer>
 
     <!-- 登录模态框 -->
-    <LoginModal v-model:visible="showLoginModal" @login-success="handleLoginSuccess" @go-register="showRegisterModal = true" />
-
-    <!-- 注册模态框 -->
-    <RegisterModal v-model:visible="showRegisterModal" @register-success="handleRegisterSuccess" @go-login="showLoginModal = true" />
+    <LoginModal 
+      v-model:visible="showLoginModal" 
+      @login-success="handleLoginSuccess"
+      @go-register="goToRegisterFromModal"
+    />
 
     <!-- 注册/登录弹窗 -->
-    <n-modal v-model:show="showOldRegisterModal" preset="card" :show-header="false" :closable="false" style="width: 420px" class="register-modal">
+    <n-modal v-model:show="showRegisterModal" preset="card" :show-header="false" :closable="false" style="width: 420px" class="register-modal">
       <div class="register-modal-content">
-        <button class="modal-close-btn" @click="showOldRegisterModal = false">
+        <button class="modal-close-btn" @click="showRegisterModal = false">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
@@ -589,9 +590,9 @@
               class="phone-input"
             >
               <template #prefix>
-                <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                  <path d="M12 18h.01"/>
                 </svg>
               </template>
             </n-input>
@@ -606,9 +607,10 @@
                 class="code-input"
               >
                 <template #prefix>
-                  <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    <circle cx="12" cy="16" r="1"/>
                   </svg>
                 </template>
               </n-input>
@@ -655,7 +657,6 @@ import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import LoginModal from '@/components/LoginModal.vue'
-import RegisterModal from '@/components/RegisterModal.vue'
 
 const router = useRouter()
 const message = useMessage()
@@ -672,21 +673,9 @@ const mobileMenuOpen = ref(false)
 
 // 登录模态框
 const showLoginModal = ref(false)
+
+// 注册/登录弹窗
 const showRegisterModal = ref(false)
-const loginFormRef = ref(null)
-const loginLoading = ref(false)
-const loginForm = reactive({
-  username: '',
-  password: ''
-})
-
-const loginRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
-}
-
-// 旧版注册/登录弹窗（保留用于CTA区域）
-const showOldRegisterModal = ref(false)
 const registerFormRef = ref(null)
 const registerLoading = ref(false)
 const sendingCode = ref(false)
@@ -1010,33 +999,11 @@ function goToRegister() {
 
 function goToRegisterFromModal() {
   showLoginModal.value = false
-  router.push('/register')
+  showRegisterModal.value = true
 }
 
 function handleLoginSuccess() {
   message.success('登录成功')
-}
-
-function handleRegisterSuccess() {
-  message.success('注册成功')
-}
-
-async function handleLogin() {
-  try {
-    await loginFormRef.value?.validate()
-    loginLoading.value = true
-    const result = await authStore.login(loginForm)
-    if (result.success) {
-      message.success('登录成功')
-      showLoginModal.value = false
-    } else {
-      message.error(result.message || '登录失败')
-    }
-  } catch (error) {
-    console.error('登录失败:', error)
-  } finally {
-    loginLoading.value = false
-  }
 }
 
 async function handleLogout() {
@@ -1059,7 +1026,7 @@ async function handleCTASubmit() {
     await new Promise(resolve => setTimeout(resolve, 500))
     // 打开注册登录弹窗，并预填手机号
     registerForm.phone = ctaPhone.value
-    showOldRegisterModal.value = true
+    showRegisterModal.value = true
   } finally {
     ctaLoading.value = false
   }
@@ -1104,7 +1071,7 @@ async function handleRegisterSubmit() {
     
     // 模拟登录成功
     message.success('领取成功！欢迎加入智健AI')
-    showOldRegisterModal.value = false
+    showRegisterModal.value = false
     
     // 清空表单
     registerForm.phone = ''
@@ -1887,11 +1854,10 @@ const vIntersect = {
 
 /* Marquee Notice */
 .marquee-notice-section {
-  /* background: linear-gradient(90deg, #DC2626 0%, #991B1B 50%, #DC2626 100%); */
   background: #1A1A25;
-  border-top: 2px solid #FF6B35;
-  border-bottom: 2px solid #FF6B35;
-  color: #FFFFFF;
+    border-top: 2px solid #FF6B35;
+    border-bottom: 2px solid #FF6B35;
+    color: #FFFFFF;
   position: relative;
   overflow: hidden;
   padding: 0;
@@ -3342,16 +3308,9 @@ const vIntersect = {
 
 .input-prefix-icon {
   margin-right: 8px;
-  color: #666;
   display: flex;
   align-items: center;
-  flex-shrink: 0;
-}
-
-.phone-input :deep(.n-input__prefix),
-.code-input :deep(.n-input__prefix) {
-  display: flex;
-  align-items: center;
+  justify-content: center;
 }
 
 .phone-input :deep(.n-input__input),
