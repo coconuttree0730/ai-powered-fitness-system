@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="modal-fade">
-      <div v-if="visible" class="login-modal-overlay" @click.self="handleClose">
+      <div v-if="visible" class="login-modal-overlay">
         <Transition name="modal-scale">
           <div v-if="visible" class="login-modal-container">
             <!-- 左侧图片区域 -->
@@ -211,19 +211,20 @@
                     </div>
                   </div>
 
-                  <!-- 滑块验证（嵌入表单） -->
-                  <Transition name="slider-fade">
-                    <div v-if="showSliderVerify && !isSliderVerified" class="slider-verify-container">
-                      <div class="slider-track" :style="{ width: sliderBoxWidth + 'px' }">
-                        <div class="slider-progress" :style="{ width: sliderLeft + sliderBtnWidth + 'px' }"></div>
+                  <!-- 滑块验证（紧凑内嵌） -->
+                  <Transition name="slider-compact">
+                    <div v-if="showSliderVerify && !isSliderVerified" class="slider-compact-wrapper">
+                      <div ref="sliderTrackRef" class="slider-compact-track">
+                        <div class="slider-compact-progress" :style="{ width: sliderProgressPercent + '%' }"></div>
+                        <div class="slider-glow" :style="{ left: sliderLeft + 'px' }"></div>
                         <div
-                          class="slider-handle"
+                          class="slider-compact-handle"
                           :class="{ moving: isSliderMoving }"
                           :style="{ left: sliderLeft + 'px' }"
                           @mousedown="startSliderDrag"
                           @touchstart="startSliderDrag"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path d="M9 18l6-6-6-6"/>
                           </svg>
                         </div>
@@ -312,12 +313,11 @@ const isSliderMoving = ref(false)
 const sliderLeft = ref(0)
 const sliderStartX = ref(0)
 const sliderCurrentX = ref(0)
-const sliderBoxWidth = ref(320)
-const sliderBtnWidth = 40
-const sliderText = ref('拖动滑块验证')
-const sliderSuccessText = ref('验证成功')
+const sliderBoxWidth = ref(280)  // 紧凑宽度，自适应容器
+const sliderBtnWidth = 32  // 紧凑按钮
 const pendingPhone = ref('')
 const isSendingCode = ref(false)
+const sliderTrackRef = ref(null)
 
 // 表单数据
 const form = reactive({
@@ -331,6 +331,19 @@ const form = reactive({
 const isPhoneValid = computed(() => {
   return /^1[3-9]\d{9}$/.test(form.phone)
 })
+
+// 滑块进度百分比
+const sliderProgressPercent = computed(() => {
+  const maxLeft = sliderBoxWidth.value - sliderBtnWidth
+  return (sliderLeft.value / maxLeft) * 100
+})
+
+// 更新滑块容器宽度
+function updateSliderWidth() {
+  if (sliderTrackRef.value) {
+    sliderBoxWidth.value = sliderTrackRef.value.offsetWidth
+  }
+}
 
 // 监听visible变化，重置表单
 watch(() => props.visible, (newVal) => {
@@ -373,6 +386,11 @@ async function sendCode() {
 
   // 显示滑块验证（嵌入表单）
   showSliderVerify.value = true
+  
+  // 等待DOM更新后获取容器宽度
+  setTimeout(() => {
+    updateSliderWidth()
+  }, 50)
 
   try {
     // 获取滑块验证令牌
@@ -1212,92 +1230,148 @@ onUnmounted(() => {
   transform: scale(0.9) translateY(20px);
 }
 
-/* 滑块验证 - 现代简洁设计 */
-.slider-verify-container {
-  margin: 12px 0;
-  display: flex;
-  justify-content: center;
+/* 紧凑滑块验证 - 创意设计 */
+.slider-compact-wrapper {
+  margin: 10px 0;
+  height: 36px;
 }
 
-.slider-track {
-  height: 44px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 22px;
+.slider-compact-track {
   position: relative;
+  height: 100%;
+  background: 
+    linear-gradient(90deg, 
+      rgba(255, 107, 53, 0.05) 0%, 
+      rgba(255, 107, 53, 0.02) 50%,
+      rgba(255, 107, 53, 0.05) 100%);
+  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 107, 53, 0.15);
   box-shadow: 
-    inset 0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 3px rgba(0, 0, 0, 0.4),
     0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-.slider-progress {
+/* 动态条纹背景 */
+.slider-compact-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 8px,
+    rgba(255, 107, 53, 0.03) 8px,
+    rgba(255, 107, 53, 0.03) 16px
+  );
+  pointer-events: none;
+}
+
+.slider-compact-progress {
   position: absolute;
   left: 0;
   top: 0;
   height: 100%;
   background: linear-gradient(90deg, 
-    rgba(255, 107, 53, 0.1) 0%, 
-    rgba(255, 107, 53, 0.3) 100%);
-  border-radius: 22px;
+    rgba(255, 107, 53, 0.2) 0%, 
+    rgba(255, 140, 97, 0.35) 100%);
+  border-radius: 18px;
   transition: width 0.05s linear;
+  box-shadow: inset 0 0 20px rgba(255, 107, 53, 0.1);
 }
 
-.slider-handle {
+/* 滑块光效 */
+.slider-glow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, 
+    rgba(255, 107, 53, 0.3) 0%, 
+    rgba(255, 107, 53, 0.1) 40%,
+    transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: left 0.05s linear;
+  filter: blur(4px);
+}
+
+.slider-compact-handle {
   position: absolute;
   left: 0;
-  top: 2px;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
-  border-radius: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(145deg, #FF6B35 0%, #FF8C61 50%, #FF6B35 100%);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
   color: #fff;
-  z-index: 2;
+  z-index: 3;
   transition: 
     transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s ease;
   box-shadow: 
-    0 2px 8px rgba(255, 107, 53, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    0 3px 10px rgba(255, 107, 53, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 -2px 4px rgba(0, 0, 0, 0.1) inset;
 }
 
-.slider-handle:hover {
-  transform: scale(1.05);
+.slider-compact-handle::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 50%,
+    rgba(0, 0, 0, 0.1) 100%);
+  pointer-events: none;
+}
+
+.slider-compact-handle:hover {
+  transform: translateY(-50%) scale(1.1);
   box-shadow: 
-    0 4px 12px rgba(255, 107, 53, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+    0 5px 15px rgba(255, 107, 53, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.25) inset,
+    0 -2px 4px rgba(0, 0, 0, 0.1) inset;
 }
 
-.slider-handle.moving {
+.slider-compact-handle.moving {
   cursor: grabbing;
-  transform: scale(0.95);
+  transform: translateY(-50%) scale(0.95);
   box-shadow: 
-    0 1px 4px rgba(255, 107, 53, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    0 2px 6px rgba(255, 107, 53, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+    0 -2px 4px rgba(0, 0, 0, 0.1) inset;
 }
 
-.slider-handle svg {
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+.slider-compact-handle svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  margin-left: 1px;
 }
 
-/* 滑块出现/消失动画 */
-.slider-fade-enter-active,
-.slider-fade-leave-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* 紧凑滑块动画 */
+.slider-compact-enter-active,
+.slider-compact-leave-active {
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.slider-fade-enter-from {
+.slider-compact-enter-from {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-8px) scaleX(0.95);
+  max-height: 0;
 }
 
-.slider-fade-leave-to {
+.slider-compact-leave-to {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-4px) scaleX(0.98);
+  max-height: 0;
+  margin-top: 0;
 }
 
 /* 响应式 */
