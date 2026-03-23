@@ -128,7 +128,8 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, h } from 'vue'
+import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NAvatar } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
@@ -143,12 +144,18 @@ import {
   DiamondOutline,
   MenuOutline,
   CloseOutline,
-  LogOutOutline
+  LogOutOutline,
+  PersonOutline,
+  TimeOutline,
+  GlobeOutline,
+  MoonOutline,
+  SunnyOutline
 } from '@vicons/ionicons5'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const message = useMessage()
 const showMobileMenu = ref(false)
 const collapsed = ref(false)
 const isMobile = ref(false)
@@ -198,10 +205,39 @@ const menuOptions = [
   { label: '我的报修', key: '/member/repairs', iconComponent: ConstructOutline }
 ]
 
-const userOptions = [
-  { label: '返回首页', key: 'home' },
-  { label: '退出登录', key: 'logout' }
-]
+const isDarkMode = ref(false)
+
+const userOptions = computed(() => [
+  {
+    label: '用户中心',
+    key: 'profile',
+    icon: () => h(NIcon, null, { default: () => h(PersonOutline) })
+  },
+  {
+    label: '更新日志',
+    key: 'changelog',
+    icon: () => h(NIcon, null, { default: () => h(TimeOutline) })
+  },
+  {
+    label: '访问官网',
+    key: 'website',
+    icon: () => h(NIcon, null, { default: () => h(GlobeOutline) })
+  },
+  {
+    label: isDarkMode.value ? '切换为浅色模式' : '切换为深色模式',
+    key: 'toggleTheme',
+    icon: () => h(NIcon, null, { default: () => h(isDarkMode.value ? SunnyOutline : MoonOutline) })
+  },
+  {
+    type: 'divider',
+    key: 'd1'
+  },
+  {
+    label: '退出登录',
+    key: 'logout',
+    icon: () => h(NIcon, null, { default: () => h(LogOutOutline) })
+  }
+])
 
 function handleMenuSelect(key) {
   router.push(key)
@@ -213,8 +249,15 @@ function handleMobileMenuSelect(key) {
 }
 
 function handleUserSelect(key) {
-  if (key === 'home') {
+  if (key === 'profile') {
+    router.push('/member/profile')
+  } else if (key === 'changelog') {
+    message.info('当前版本: v1.0.0')
+  } else if (key === 'website') {
     router.push('/')
+  } else if (key === 'toggleTheme') {
+    isDarkMode.value = !isDarkMode.value
+    message.success(isDarkMode.value ? '已切换到深色模式' : '已切换到浅色模式')
   } else if (key === 'logout') {
     authStore.logout()
   }
