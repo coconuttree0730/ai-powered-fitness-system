@@ -37,7 +37,7 @@ request.interceptors.response.use(
         case 401:
           const authStore = useAuthStore()
           authStore.logout()
-          router.push('/login')
+          router.push('/')
           break
         case 403:
           router.push('/403')

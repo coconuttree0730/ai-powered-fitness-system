@@ -1,7 +1,7 @@
 <template>
   <div class="home-page">
     <!-- 公告栏 -->
-    <div v-if="showAnnouncement" class="announcement-bar">
+    <div v-if="showAnnouncement && !authStore.isLoggedIn" class="announcement-bar">
       <div class="announcement-bar-content">
         <span>🎉</span>
         <span>新用户注册即送7天VIP会员体验！</span>
@@ -70,7 +70,7 @@
             <h1 class="hero-title">让AI成为你的<br><span>私人健身专家</span></h1>
             <p class="hero-desc">智健AI运用先进的人工智能技术，为您量身定制科学训练计划。无论是减脂塑形、增肌力量还是康复训练，我们让每一次锻炼都精准高效，助您快速达成健身目标。</p>
             <div class="hero-actions">
-              <button class="btn btn-primary btn-large" @click="goToRegister">开启智能健身之旅</button>
+              <button v-if="!authStore.isLoggedIn" class="btn btn-primary btn-large" @click="goToRegister">开启智能健身之旅</button>
               <a href="#ai-features" class="btn btn-outline btn-large" @click.prevent="scrollToSection('ai-features')">探索AI功能</a>
             </div>
             <div class="hero-stats-preview">
@@ -448,8 +448,8 @@
       </div>
     </section>
 
-    <!-- CTA区域 -->
-    <section id="cta" class="section cta-section">
+    <!-- CTA区域 - 仅未登录用户可见 -->
+    <section v-if="!authStore.isLoggedIn" id="cta" class="section cta-section">
       <div class="cta-container">
         <h2 class="cta-title" v-intersect="onReveal">开启您的<span>智能健身之旅</span></h2>
         <p class="cta-desc" v-intersect="onReveal">立即注册，免费体验7天VIP会员服务，感受AI智能健身的魅力</p>
@@ -567,10 +567,17 @@
       @go-register="goToRegisterFromModal"
     />
 
-    <!-- 注册/登录弹窗 -->
-    <n-modal v-model:show="showRegisterModal" preset="card" :show-header="false" :closable="false" style="width: 420px" class="register-modal">
+    <!-- 注册模态框 -->
+    <RegisterModal 
+      v-model:visible="showRegisterModal" 
+      @register-success="handleRegisterSuccess"
+      @go-login="goToLoginFromModal"
+    />
+
+    <!-- CTA注册/登录弹窗 -->
+    <n-modal v-model:show="showCTARegisterModal" preset="card" :show-header="false" :closable="false" style="width: 420px" class="register-modal">
       <div class="register-modal-content">
-        <button class="modal-close-btn" @click="showRegisterModal = false">
+        <button class="modal-close-btn" @click="showCTARegisterModal = false">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
@@ -657,6 +664,7 @@ import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import LoginModal from '@/components/LoginModal.vue'
+import RegisterModal from '@/components/RegisterModal.vue'
 
 const router = useRouter()
 const message = useMessage()
@@ -674,8 +682,11 @@ const mobileMenuOpen = ref(false)
 // 登录模态框
 const showLoginModal = ref(false)
 
-// 注册/登录弹窗
+// 注册模态框
 const showRegisterModal = ref(false)
+
+// CTA注册弹窗（原有的）
+const showCTARegisterModal = ref(false)
 const registerFormRef = ref(null)
 const registerLoading = ref(false)
 const sendingCode = ref(false)
@@ -1002,8 +1013,17 @@ function goToRegisterFromModal() {
   showRegisterModal.value = true
 }
 
+function goToLoginFromModal() {
+  showRegisterModal.value = false
+  showLoginModal.value = true
+}
+
 function handleLoginSuccess() {
   message.success('登录成功')
+}
+
+function handleRegisterSuccess() {
+  message.success('注册成功')
 }
 
 async function handleLogout() {
@@ -1026,7 +1046,7 @@ async function handleCTASubmit() {
     await new Promise(resolve => setTimeout(resolve, 500))
     // 打开注册登录弹窗，并预填手机号
     registerForm.phone = ctaPhone.value
-    showRegisterModal.value = true
+    showCTARegisterModal.value = true
   } finally {
     ctaLoading.value = false
   }
@@ -1071,7 +1091,7 @@ async function handleRegisterSubmit() {
     
     // 模拟登录成功
     message.success('领取成功！欢迎加入智健AI')
-    showRegisterModal.value = false
+    showCTARegisterModal.value = false
     
     // 清空表单
     registerForm.phone = ''

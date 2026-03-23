@@ -9,12 +9,6 @@ const routes = [
     meta: { title: '首页', public: true }
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/public/Login.vue'),
-    meta: { title: '登录', public: true }
-  },
-  {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/public/Register.vue'),
@@ -232,7 +226,7 @@ router.beforeEach(async (to, from, next) => {
   
   if (to.meta.requiresAuth) {
     if (!authStore.isLoggedIn) {
-      next({ name: 'Login', query: { redirect: to.fullPath } })
+      next({ path: '/', query: { redirect: to.fullPath } })
       return
     }
     

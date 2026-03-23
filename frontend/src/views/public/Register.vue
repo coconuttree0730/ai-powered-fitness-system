@@ -27,7 +27,7 @@
         </n-form>
         <div class="register-footer">
           <span>已有账号？</span>
-          <router-link to="/login">立即登录</router-link>
+          <router-link to="/">立即登录</router-link>
         </div>
       </div>
     </div>
@@ -88,7 +88,7 @@ async function handleRegister() {
     const res = await register(form)
     if (res.data?.code === 200) {
       message.success('注册成功，请登录')
-      router.push('/login')
+      router.push('/')
     } else {
       message.error(res.data?.message || '注册失败')
     }
