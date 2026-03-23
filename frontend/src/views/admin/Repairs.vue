@@ -1,17 +1,85 @@
 <template>
   <div class="admin-repairs">
-    <n-card title="报修管理">
-      <n-data-table :columns="columns" :data="displayRepairs" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
-    </n-card>
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>报修管理</span>
+        </div>
+      </template>
+
+      <el-table
+        :data="displayRepairs"
+        v-loading="loading"
+        :row-key="row => row.id"
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column prop="equipmentName" label="器材名称" />
+        <el-table-column prop="userName" label="报修人" />
+        <el-table-column prop="description" label="问题描述" show-overflow-tooltip />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ formatTime(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="250" fixed="right">
+          <template #default="{ row }">
+            <el-space>
+              <el-button
+                v-if="row.status === 0"
+                size="small"
+                type="primary"
+                @click="handleProcessClick(row.id, 1)"
+              >
+                开始处理
+              </el-button>
+              <el-button
+                v-if="row.status === 0"
+                size="small"
+                type="danger"
+                @click="handleProcessClick(row.id, 3)"
+              >
+                关闭
+              </el-button>
+              <el-button
+                v-if="row.status === 1"
+                size="small"
+                type="success"
+                @click="handleProcessClick(row.id, 2)"
+              >
+                完成
+              </el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="paginationReactive.page"
+          v-model:page-size="paginationReactive.pageSize"
+          :total="paginationReactive.itemCount"
+          :page-sizes="[5, 10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, h, reactive, onMounted, computed } from 'vue'
-import { NTag, NButton, NSpace, useMessage } from 'naive-ui'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import { getAllRepairs, handleRepair } from '@/api/equipment'
 
-const message = useMessage()
+const message = ElMessage
 const loading = ref(false)
 const allRepairs = ref([])
 
@@ -21,54 +89,39 @@ const paginationReactive = reactive({
   itemCount: 0
 })
 
-const pagination = computed(() => ({
-  ...paginationReactive,
-  onChange: (page) => {
-    paginationReactive.page = page
-  }
-}))
-
 const displayRepairs = computed(() => {
   const start = (paginationReactive.page - 1) * paginationReactive.pageSize
   const end = start + paginationReactive.pageSize
   return allRepairs.value.slice(start, end)
 })
 
-const columns = [
-  { title: '器材名称', key: 'equipmentName' },
-  { title: '报修人', key: 'userName' },
-  { title: '问题描述', key: 'description', ellipsis: { tooltip: true } },
-  {
-    title: '状态',
-    key: 'status',
-    render: (row) => {
-      const statusMap = {
-        0: { type: 'warning', text: '待处理' },
-        1: { type: 'info', text: '处理中' },
-        2: { type: 'success', text: '已完成' },
-        3: { type: 'default', text: '已关闭' }
-      }
-      const status = statusMap[row.status] || { type: 'default', text: '未知' }
-      return h(NTag, { type: status.type }, () => status.text)
-    }
-  },
-  { title: '创建时间', key: 'createTime', render: (row) => formatTime(row.createTime) },
-  {
-    title: '操作',
-    key: 'actions',
-    render: (row) => {
-    const buttons = []
-    if (row.status === 0) {
-      buttons.push(h(NButton, { size: 'small', type: 'primary', onClick: () => handleProcessClick(row.id, 1) }, () => '开始处理'))
-      buttons.push(h(NButton, { size: 'small', type: 'error', onClick: () => handleProcessClick(row.id, 3) }, () => '关闭'))
-    }
-    if (row.status === 1) {
-      buttons.push(h(NButton, { size: 'small', type: 'success', onClick: () => handleProcessClick(row.id, 2) }, () => '完成'))
-    }
-    return h(NSpace, null, () => buttons)
+const getStatusType = (status) => {
+  const statusMap = {
+    0: 'warning',
+    1: 'primary',
+    2: 'success',
+    3: 'info'
   }
+  return statusMap[status] || 'info'
+}
+
+const getStatusText = (status) => {
+  const statusMap = {
+    0: '待处理',
+    1: '处理中',
+    2: '已完成',
+    3: '已关闭'
   }
-]
+  return statusMap[status] || '未知'
+}
+
+function handleSizeChange(size) {
+  paginationReactive.pageSize = size
+}
+
+function handlePageChange(page) {
+  paginationReactive.page = page
+}
 
 onMounted(() => {
   fetchRepairs()
@@ -106,5 +159,16 @@ function formatTime(time) {
 <style scoped>
 .admin-repairs {
   padding: 0;
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

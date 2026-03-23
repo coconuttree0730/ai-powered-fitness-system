@@ -1,49 +1,81 @@
 <template>
   <div class="course-detail-page">
-    <n-spin :show="loading">
-      <template v-if="course">
-        <n-card>
-          <template #cover>
-            <img :src="course.imageUrl || '/placeholder.jpg'" :alt="course.courseName" style="height: 300px; object-fit: cover" />
-          </template>
-          <n-page-header :title="course.courseName" @back="goBack">
-            <template #extra>
-              <n-button type="primary" :disabled="course.remainingCount <= 0" @click="handleBooking">
-                {{ course.remainingCount > 0 ? '立即预约' : '已满' }}
-              </n-button>
+    <el-card v-loading="loading" v-if="course">
+      <template #header>
+        <div class="course-header">
+          <el-page-header @back="goBack" :title="course.courseName">
+            <template #content>
+              <el-tag :type="getCategoryType(course.category)" size="large" style="margin-left: 10px;">
+                {{ getCategoryLabel(course.category) }}
+              </el-tag>
             </template>
-          </n-page-header>
-          <n-descriptions label-placement="left" :column="2" style="margin-top: 20px">
-            <n-descriptions-item label="课程分类">
-              <n-tag :type="getCategoryType(course.category)">{{ course.category }}</n-tag>
-            </n-descriptions-item>
-            <n-descriptions-item label="教练">{{ course.coachName }}</n-descriptions-item>
-            <n-descriptions-item label="开始时间">{{ formatTime(course.startTime) }}</n-descriptions-item>
-            <n-descriptions-item label="结束时间">{{ formatTime(course.endTime) }}</n-descriptions-item>
-            <n-descriptions-item label="容量">{{ course.capacity }}人</n-descriptions-item>
-            <n-descriptions-item label="剩余名额">{{ course.remainingCount }}人</n-descriptions-item>
-          </n-descriptions>
-          <n-divider />
-          <h4>课程介绍</h4>
-          <p class="description">{{ course.description || '暂无介绍' }}</p>
-        </n-card>
+            <template #extra>
+              <el-button
+                type="primary"
+                :disabled="course.remainingCount <= 0"
+                @click="handleBooking"
+              >
+                {{ course.remainingCount > 0 ? '立即预约' : '已满' }}
+              </el-button>
+            </template>
+          </el-page-header>
+        </div>
       </template>
-    </n-spin>
+
+      <!-- 课程封面 -->
+      <div class="course-cover">
+        <el-image
+          :src="course.imageUrl || '/placeholder.jpg'"
+          :alt="course.courseName"
+          style="width: 100%; height: 300px; object-fit: cover; border-radius: 8px;"
+        />
+      </div>
+
+      <!-- 课程信息 -->
+      <el-descriptions label-width="100px" :column="2" style="margin-top: 20px" border>
+        <el-descriptions-item label="课程分类">
+          <el-tag :type="getCategoryType(course.category)">{{ getCategoryLabel(course.category) }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="教练">{{ course.coachName }}</el-descriptions-item>
+        <el-descriptions-item label="开始时间">{{ formatTime(course.startTime) }}</el-descriptions-item>
+        <el-descriptions-item label="结束时间">{{ formatTime(course.endTime) }}</el-descriptions-item>
+        <el-descriptions-item label="容量">{{ course.capacity }}人</el-descriptions-item>
+        <el-descriptions-item label="剩余名额">{{ course.remainingCount }}人</el-descriptions-item>
+      </el-descriptions>
+
+      <el-divider />
+
+      <!-- 课程介绍 -->
+      <div class="course-intro">
+        <h4>课程介绍</h4>
+        <p class="description">{{ course.description || '暂无介绍' }}</p>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { ElMessage } from 'element-plus'
 import { getCourseDetail, bookCourse } from '@/api/course'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
+const message = ElMessage
 
 const loading = ref(false)
 const course = ref(null)
+
+const categoryMap = {
+  YOGA: { label: '瑜伽', type: 'success' },
+  PILATES: { label: '普拉提', type: 'primary' },
+  HIIT: { label: 'HIIT', type: 'danger' },
+  STRENGTH: { label: '力量训练', type: 'warning' },
+  SPINNING: { label: '动感单车', type: 'info' },
+  CARDIO: { label: '有氧运动', type: 'success' },
+  DANCE: { label: '舞蹈', type: 'primary' }
+}
 
 onMounted(() => {
   fetchCourse()
@@ -73,15 +105,11 @@ async function handleBooking() {
 }
 
 function getCategoryType(category) {
-  const types = {
-    YOGA: 'success',
-    PILATES: 'info',
-    HIIT: 'warning',
-    STRENGTH: 'error',
-    CARDIO: 'primary',
-    DANCE: 'default'
-  }
-  return types[category] || 'default'
+  return categoryMap[category]?.type || 'info'
+}
+
+function getCategoryLabel(category) {
+  return categoryMap[category]?.label || category
 }
 
 function formatTime(time) {
@@ -101,8 +129,23 @@ function goBack() {
   margin: 0 auto;
 }
 
+.course-header {
+  display: flex;
+  align-items: center;
+}
+
+.course-cover {
+  margin-bottom: 20px;
+}
+
+.course-intro h4 {
+  margin-bottom: 12px;
+  color: #333;
+}
+
 .description {
   color: #666;
   line-height: 1.8;
+  white-space: pre-wrap;
 }
 </style>

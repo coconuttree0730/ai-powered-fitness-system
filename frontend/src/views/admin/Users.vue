@@ -1,148 +1,208 @@
 <template>
   <div class="users-page">
-    <n-card title="用户管理">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>用户管理</span>
+        </div>
+      </template>
+
       <!-- 搜索区域 -->
-      <n-card embedded style="margin-bottom: 16px;">
-        <n-space align="center" wrap justify="space-between">
-          <n-space align="center" wrap>
-            <n-input
-              v-model:value="searchForm.username"
-              placeholder="用户名"
-              clearable
-              style="width: 200px"
-              @keyup.enter="handleSearch"
-            />
-            <n-input
-              v-model:value="searchForm.phone"
-              placeholder="手机号"
-              clearable
-              style="width: 150px"
-              @keyup.enter="handleSearch"
-            />
-            <n-select
-              v-model:value="searchForm.role"
-              :options="roleOptions"
-              placeholder="角色"
-              clearable
-              style="width: 150px"
-            />
-            <n-select
-              v-model:value="searchForm.status"
-              :options="statusOptions"
-              placeholder="状态"
-              clearable
-              style="width: 120px"
-            />
-            <n-button type="primary" @click="handleSearch">
-              <template #icon>
-                <n-icon><SearchOutline /></n-icon>
-              </template>
-              搜索
-            </n-button>
-            <n-button @click="handleReset">重置</n-button>
-          </n-space>
-          <n-button type="primary" @click="handleAdd">
-            <template #icon>
-              <n-icon><AddOutline /></n-icon>
-            </template>
-            新增用户
-          </n-button>
-        </n-space>
-      </n-card>
+      <el-card shadow="never" style="margin-bottom: 16px;">
+        <el-row justify="space-between" align="middle">
+          <el-col :span="20">
+            <el-space wrap>
+              <el-input
+                v-model="searchForm.username"
+                placeholder="用户名"
+                clearable
+                style="width: 200px"
+                @keyup.enter="handleSearch"
+              />
+              <el-input
+                v-model="searchForm.phone"
+                placeholder="手机号"
+                clearable
+                style="width: 150px"
+                @keyup.enter="handleSearch"
+              />
+              <el-select
+                v-model="searchForm.role"
+                :options="roleOptions"
+                placeholder="角色"
+                clearable
+                style="width: 150px"
+              />
+              <el-select
+                v-model="searchForm.status"
+                :options="statusOptions"
+                placeholder="状态"
+                clearable
+                style="width: 120px"
+              />
+              <el-button type="primary" @click="handleSearch">
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </el-space>
+          </el-col>
+          <el-col :span="4" style="text-align: right;">
+            <el-button type="primary" @click="handleAdd">
+              <el-icon><Plus /></el-icon>
+              新增用户
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-card>
 
-      <n-data-table :columns="columns" :data="users" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
-    </n-card>
+      <el-table
+        :data="users"
+        v-loading="loading"
+        :row-key="row => row.id"
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column label="头像" width="100" align="center">
+          <template #default="{ row }">
+            <el-avatar
+              v-if="row.avatar"
+              :src="row.avatar"
+              :size="60"
+              shape="circle"
+            />
+            <div v-else class="no-avatar">无</div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="phone" label="手机号" />
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column label="角色">
+          <template #default="{ row }">
+            <el-space>
+              <el-tag v-for="role in (row.roles || [])" :key="role" type="info" size="small">{{ role }}</el-tag>
+            </el-space>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '正常' : '禁用' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="250" fixed="right">
+          <template #default="{ row }">
+            <el-space>
+              <el-button size="small" @click="handleEdit(row)">编辑</el-button>
+              <el-button
+                size="small"
+                :type="row.status === 1 ? 'warning' : 'success'"
+                @click="handleToggleStatus(row)"
+              >
+                {{ row.status === 1 ? '禁用' : '启用' }}
+              </el-button>
+              <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+      </el-table>
 
-    <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑用户' : '新增用户'" style="width: 600px">
-      <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="80">
-        <n-grid :cols="2" :x-gap="12">
-          <n-grid-item>
-            <n-form-item label="用户名" path="username">
-              <n-input v-model:value="form.username" placeholder="请输入用户名" :disabled="isEdit" />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item v-if="!isEdit" label="密码" path="password">
-              <n-input v-model:value="form.password" type="password" placeholder="请输入密码" />
-            </n-form-item>
-            <n-form-item v-else label="密码">
-              <n-space align="center">
-                <n-input value="********" disabled placeholder="密码已加密" style="width: 150px" />
-                <n-button type="warning" size="small" :loading="resettingPassword" @click="handleResetPasswordClick">重置密码</n-button>
-              </n-space>
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
-        <n-grid :cols="2" :x-gap="12">
-          <n-grid-item>
-            <n-form-item label="手机号" path="phone">
-              <n-input v-model:value="form.phone" placeholder="请输入手机号" />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item label="邮箱" path="email">
-              <n-input v-model:value="form.email" placeholder="请输入邮箱" />
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
-        <n-form-item v-if="!isEdit" label="角色" path="roleCode">
-          <n-select v-model:value="form.roleCode" :options="roleOptions" placeholder="请选择角色" />
-        </n-form-item>
-        <n-form-item v-else label="角色" path="roleCode">
-          <n-tag type="info">{{ getRoleLabel(form.roleCode) }}</n-tag>
-        </n-form-item>
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="paginationReactive.page"
+          v-model:page-size="paginationReactive.pageSize"
+          :total="paginationReactive.itemCount"
+          :page-sizes="[5, 10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </el-card>
+
+    <el-dialog v-model="showModal" :title="isEdit ? '编辑用户' : '新增用户'" width="680px" destroy-on-close>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="form.username" placeholder="请输入用户名" :disabled="isEdit" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item v-if="!isEdit" label="密码" prop="password">
+              <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+            </el-form-item>
+            <el-form-item v-else label="密码">
+              <el-space>
+                <el-input v-model="passwordPlaceholder" disabled placeholder="密码已加密" style="width: 150px" />
+                <el-button type="warning" size="small" :loading="resettingPassword" @click="handleResetPasswordClick">重置密码</el-button>
+              </el-space>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="手机号" prop="phone">
+              <el-input v-model="form.phone" placeholder="请输入手机号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="form.email" placeholder="请输入邮箱" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item v-if="!isEdit" label="角色" prop="roleCode">
+          <el-select v-model="form.roleCode" :options="roleOptions" placeholder="请选择角色" style="width: 100%" />
+        </el-form-item>
+        <el-form-item v-else label="角色" prop="roleCode">
+          <el-tag type="info">{{ getRoleLabel(form.roleCode) }}</el-tag>
+        </el-form-item>
 
         <!-- 头像上传 -->
-        <n-form-item label="头像" path="avatar">
-          <n-space vertical>
-            <n-upload
+        <el-form-item label="头像" prop="avatar">
+          <el-space direction="vertical" alignment="flex-start">
+            <el-upload
               :action="uploadUrl"
               :headers="uploadHeaders"
               :data="{ folder: 'avatars' }"
               name="file"
               accept="image/*"
-              :max="1"
-              v-model:file-list="fileList"
-              list-type="image-card"
-              style="--n-image-width: 100px; --n-image-height: 100px;"
-              @before-upload="handleBeforeUpload"
-              @finish="handleUploadFinish"
-              @remove="handleUploadRemove"
-              @error="handleUploadError"
+              :limit="1"
+              :file-list="fileList"
+              list-type="picture-card"
+              :before-upload="handleBeforeUpload"
+              :on-success="handleUploadSuccess"
+              :on-remove="handleUploadRemove"
+              :on-error="handleUploadError"
+              :class="{ 'hide-upload': fileList.length > 0 }"
             >
-              <n-button style="width: 100px; height: 100px;">
-                <n-space vertical align="center">
-                  <n-icon size="24"><CloudUploadOutline /></n-icon>
-                  <span>上传头像</span>
-                </n-space>
-              </n-button>
-            </n-upload>
-            <n-text depth="3" style="font-size: 12px;">支持 JPG、PNG 格式，建议尺寸 200x200</n-text>
-          </n-space>
-        </n-form-item>
+              <el-icon><Plus /></el-icon>
+              <div style="font-size: 12px;">上传头像</div>
+            </el-upload>
+            <el-text type="info" size="small">支持 JPG、PNG 格式，建议尺寸 200x200</el-text>
+          </el-space>
+        </el-form-item>
 
-        <n-form-item>
-          <n-space>
-            <n-button type="primary" :loading="submitting" @click="handleSubmit">提交</n-button>
-            <n-button @click="showModal = false">取消</n-button>
-          </n-space>
-        </n-form-item>
-      </n-form>
-    </n-modal>
-
-
+        <el-form-item>
+          <el-space>
+            <el-button type="primary" :loading="submitting" @click="handleSubmit">提交</el-button>
+            <el-button @click="showModal = false">取消</el-button>
+          </el-space>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, h, reactive, onMounted, computed } from 'vue'
-import { NTag, NButton, NSpace, NIcon, NImage, useMessage, useDialog, NText } from 'naive-ui'
-import { SearchOutline, AddOutline, CloudUploadOutline } from '@vicons/ionicons5'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus } from '@element-plus/icons-vue'
 import { getUserList, createUser, updateUser, deleteUser, updateUserStatus, resetUserPassword } from '@/api/user'
 import { getToken } from '@/utils/auth'
 
-const message = useMessage()
-const dialog = useDialog()
+const message = ElMessage
+const passwordPlaceholder = ref('********')
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
@@ -163,14 +223,6 @@ const paginationReactive = reactive({
   pageSize: 5,
   itemCount: 0
 })
-
-const pagination = computed(() => ({
-  ...paginationReactive,
-  onChange: (page) => {
-    paginationReactive.page = page
-    fetchUsers()
-  }
-}))
 
 const searchForm = reactive({
   username: '',
@@ -217,7 +269,7 @@ const getRoleLabel = (roleCode) => {
 }
 
 // 上传前校验
-function handleBeforeUpload({ file }) {
+function handleBeforeUpload(file) {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
     message.error('只支持 JPG、PNG、GIF、WebP 格式的图片')
@@ -231,82 +283,37 @@ function handleBeforeUpload({ file }) {
   return true
 }
 
-// 上传完成回调
-function handleUploadFinish({ file, event }) {
-  try {
-    const response = JSON.parse(event.target.response)
-    if (response.code === 200) {
-      form.avatar = response.data.fileUrl
-      message.success('头像上传成功')
-    } else {
-      message.error(response.message || '上传失败')
-      fileList.value = []
-    }
-  } catch (error) {
-    console.error('解析上传响应失败:', error)
-    message.error('上传响应解析失败')
+// 上传成功回调
+function handleUploadSuccess(response, file) {
+  if (response.code === 200) {
+    form.avatar = response.data.fileUrl
+    message.success('头像上传成功')
+  } else {
+    message.error(response.message || '上传失败')
     fileList.value = []
   }
 }
 
 // 上传失败回调
-function handleUploadError({ file, event }) {
+function handleUploadError() {
   message.error('头像上传失败')
 }
 
 // 移除图片回调
-function handleUploadRemove({ file, fileList: newFileList }) {
+function handleUploadRemove() {
   form.avatar = ''
-  fileList.value = newFileList
+  fileList.value = []
 }
 
-const columns = [
-  {
-    title: '头像',
-    key: 'avatar',
-    width: 80,
-    render: (row) => {
-      if (row.avatar) {
-        return h(NImage, {
-          src: row.avatar,
-          width: 80,
-          height: 80,
-          style: 'border-radius: 50%; object-fit: cover;',
-          fallbackSrc: '/default-avatar.png'
-        })
-      }
-      return h('div', {
-        style: 'width: 80px; height: 80px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
-      }, '无')
-    }
-  },
-  { title: '用户名', key: 'username' },
-  { title: '手机号', key: 'phone' },
-  { title: '邮箱', key: 'email' },
-  {
-    title: '角色',
-    key: 'roles',
-    render: (row) => h(NSpace, null, () => (row.roles || []).map(r => h(NTag, { type: 'info', size: 'small' }, () => r)))
-  },
-  {
-    title: '状态',
-    key: 'status',
-    render: (row) => h(NTag, { type: row.status === 1 ? 'success' : 'default' }, () => row.status === 1 ? '正常' : '禁用')
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    render: (row) => h(NSpace, null, () => [
-      h(NButton, { size: 'small', onClick: () => handleEdit(row) }, () => '编辑'),
-      h(NButton, {
-        size: 'small',
-        type: row.status === 1 ? 'warning' : 'success',
-        onClick: () => handleToggleStatus(row)
-      }, () => row.status === 1 ? '禁用' : '启用'),
-      h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, () => '删除')
-    ])
-  }
-]
+function handleSizeChange(size) {
+  paginationReactive.pageSize = size
+  fetchUsers()
+}
+
+function handlePageChange(page) {
+  paginationReactive.page = page
+  fetchUsers()
+}
 
 onMounted(() => {
   fetchUsers()
@@ -383,9 +390,7 @@ function handleEdit(row) {
   // 设置图片文件列表
   if (row.avatar) {
     fileList.value = [{
-      id: 'existing',
       name: '头像',
-      status: 'finished',
       url: row.avatar
     }]
   } else {
@@ -427,42 +432,47 @@ const resettingPassword = ref(false)
 
 async function handleResetPasswordClick() {
   if (resettingPassword.value) return
-  
-  dialog.warning({
-    title: '确认重置密码',
-    content: '确定要将该用户的密码重置为默认密码 "123456" 吗？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        resettingPassword.value = true
-        await resetUserPassword(currentId.value, '123456')
-        message.success('密码已重置为 123456')
-      } catch (error) {
-        message.error(error.message || '密码重置失败')
-      } finally {
-        resettingPassword.value = false
+
+  try {
+    await ElMessageBox.confirm(
+      '确定要将该用户的密码重置为默认密码 "123456" 吗？',
+      '确认重置密码',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       }
+    )
+    resettingPassword.value = true
+    await resetUserPassword(currentId.value, '123456')
+    message.success('密码已重置为 123456')
+  } catch (error) {
+    if (error !== 'cancel') {
+      message.error(error.message || '密码重置失败')
     }
-  })
+  } finally {
+    resettingPassword.value = false
+  }
 }
 
 function handleDelete(row) {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除用户 "${row.username}" 吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteUser(row.id)
-        message.success('删除成功')
-        fetchUsers()
-      } catch (error) {
-        message.error('删除失败')
-      }
+  ElMessageBox.confirm(
+    `确定要删除用户 "${row.username}" 吗？`,
+    '确认删除',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     }
-  })
+  ).then(async () => {
+    try {
+      await deleteUser(row.id)
+      message.success('删除成功')
+      fetchUsers()
+    } catch (error) {
+      message.error('删除失败')
+    }
+  }).catch(() => {})
 }
 
 async function handleToggleStatus(row) {
@@ -480,5 +490,34 @@ async function handleToggleStatus(row) {
 <style scoped>
 .users-page {
   padding: 0;
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.no-avatar {
+  width: 60px;
+  height: 60px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+  margin: 0 auto;
+}
+
+/* 上传成功后隐藏上传按钮 */
+:deep(.hide-upload .el-upload--picture-card) {
+  display: none;
 }
 </style>

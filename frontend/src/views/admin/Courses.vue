@@ -1,206 +1,270 @@
 <template>
   <div class="admin-courses">
-  <!-- 搜索区域 -->
-    <n-card title="课程管理">
-      <!-- 搜索区域 - 新增课程按钮与搜索栏平行 -->
-      <n-card embedded style="margin-bottom: 16px;">
-        <n-space align="center" wrap justify="space-between">
-          <n-space align="center" wrap>
-            <n-input
-              v-model:value="searchForm.courseName"
-              placeholder="课程名称"
-              clearable
-              style="width: 200px"
-              @keyup.enter="handleSearch"
-            />
-            <n-select
-              v-model:value="searchForm.category"
-              :options="categoryOptions"
-              placeholder="分类"
-              clearable
-              style="width: 150px"
-            />
-            <n-select
-              v-model:value="searchForm.coachId"
-              :options="coachOptions"
-              placeholder="教练"
-              clearable
-              style="width: 150px"
-            />
-            <n-date-picker
-              v-model:value="searchForm.startDate"
-              type="date"
-              placeholder="开始日期"
-              clearable
-              style="width: 150px"
-            />
-            <n-date-picker
-              v-model:value="searchForm.endDate"
-              type="date"
-              placeholder="结束日期"
-              clearable
-              style="width: 150px"
-            />
-            <n-button type="primary" @click="handleSearch">
-              <template #icon>
-                <n-icon><SearchOutline /></n-icon>
-              </template>
-              搜索
-            </n-button>
-            <n-button @click="handleReset">重置</n-button>
-          </n-space>
-          <n-button type="primary" @click="handleAdd">
-            <template #icon>
-              <n-icon><AddOutline /></n-icon>
-            </template>
-            新增课程
-          </n-button>
-        </n-space>
-      </n-card>
-      <n-data-table :columns="columns" :data="courses" :loading="loading" :pagination="pagination" :row-key="row => row.id" remote />
-    </n-card>
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>课程管理</span>
+        </div>
+      </template>
 
-    <n-modal v-model:show="showModal" preset="card" :title="isEdit ? '编辑课程' : '新增课程'" style="width: 700px">
-      <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="100">
-        <n-grid :cols="2" :x-gap="12">
-          <n-grid-item>
-            <n-form-item label="课程名称" path="courseName">
-              <n-input v-model:value="form.courseName" placeholder="请输入课程名称" />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item label="分类" path="category">
-              <n-select v-model:value="form.category" :options="categoryOptions" placeholder="请选择分类" />
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
-        <n-grid :cols="2" :x-gap="12">
-          <n-grid-item>
-            <n-form-item label="教练" path="coachId">
-              <n-select v-model:value="form.coachId" :options="coachOptions" placeholder="请选择教练" />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item label="容量" path="capacity">
-              <n-input-number v-model:value="form.capacity" :min="1" style="width: 100%" />
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
-        <n-grid :cols="2" :x-gap="12">
-          <n-grid-item>
-            <n-form-item label="开始时间" path="startTime">
-              <n-date-picker v-model:value="form.startTime" type="datetime" style="width: 100%" />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item label="结束时间" path="endTime">
-              <n-date-picker v-model:value="form.endTime" type="datetime" style="width: 100%" />
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
+      <!-- 搜索区域 -->
+      <el-card shadow="never" style="margin-bottom: 16px;">
+        <el-row justify="space-between" align="middle">
+          <el-col :span="20">
+            <el-space wrap>
+              <el-input
+                v-model="searchForm.courseName"
+                placeholder="课程名称"
+                clearable
+                style="width: 200px"
+                @keyup.enter="handleSearch"
+              />
+              <el-select
+                v-model="searchForm.category"
+                :options="categoryOptions"
+                placeholder="分类"
+                clearable
+                style="width: 150px"
+              />
+              <el-select
+                v-model="searchForm.coachId"
+                :options="coachOptions"
+                placeholder="教练"
+                clearable
+                style="width: 150px"
+              />
+              <el-date-picker
+                v-model="searchForm.startDate"
+                type="date"
+                placeholder="开始日期"
+                clearable
+                style="width: 150px"
+                value-format="YYYY-MM-DD"
+              />
+              <el-date-picker
+                v-model="searchForm.endDate"
+                type="date"
+                placeholder="结束日期"
+                clearable
+                style="width: 150px"
+                value-format="YYYY-MM-DD"
+              />
+              <el-button type="primary" @click="handleSearch">
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </el-space>
+          </el-col>
+          <el-col :span="4" style="text-align: right;">
+            <el-button type="primary" @click="handleAdd">
+              <el-icon><Plus /></el-icon>
+              新增课程
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-card>
+
+      <el-table
+        :data="courses"
+        v-loading="loading"
+        :row-key="row => row.id"
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column label="课程图片" width="120" align="center">
+          <template #default="{ row }">
+            <el-image
+              v-if="row.imageUrl"
+              :src="row.imageUrl"
+              style="width: 80px; height: 80px; border-radius: 4px; object-fit: cover;"
+              :preview-src-list="[row.imageUrl]"
+            />
+            <div v-else class="no-image">无图片</div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="courseName" label="课程名称" />
+        <el-table-column label="分类">
+          <template #default="{ row }">
+            <el-tag :type="getCategoryType(row.category)">{{ getCategoryLabel(row.category) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="教练头像" width="100" align="center">
+          <template #default="{ row }">
+            <el-avatar
+              v-if="row.coachAvatar"
+              :src="row.coachAvatar"
+              :size="50"
+              shape="circle"
+            />
+            <div v-else class="no-avatar">无</div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="coachName" label="教练名称" />
+        <el-table-column label="开始时间">
+          <template #default="{ row }">
+            {{ formatTime(row.startTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="capacity" label="容量" />
+        <el-table-column prop="bookingCount" label="预约数" />
+        <el-table-column label="操作" width="250" fixed="right">
+          <template #default="{ row }">
+            <el-space>
+              <el-button size="small" @click="handleView(row)">查看</el-button>
+              <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
+              <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="paginationReactive.page"
+          v-model:page-size="paginationReactive.pageSize"
+          :total="paginationReactive.itemCount"
+          :page-sizes="[5, 10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog v-model="showModal" :title="isEdit ? '编辑课程' : '新增课程'" width="700px" destroy-on-close>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="课程名称" prop="courseName">
+              <el-input v-model="form.courseName" placeholder="请输入课程名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="分类" prop="category">
+              <el-select v-model="form.category" :options="categoryOptions" placeholder="请选择分类" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="教练" prop="coachId">
+              <el-select v-model="form.coachId" :options="coachOptions" placeholder="请选择教练" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="容量" prop="capacity">
+              <el-input-number v-model="form.capacity" :min="1" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="开始时间" prop="startTime">
+              <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="结束时间" prop="endTime">
+              <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
         <!-- 课程图片上传 -->
-        <n-form-item label="课程图片" path="imageUrl">
-          <n-space vertical>
-            <n-upload
+        <el-form-item label="课程图片" prop="imageUrl">
+          <el-space direction="vertical" alignment="flex-start">
+            <el-upload
               :action="uploadUrl"
               :headers="uploadHeaders"
               :data="{ folder: 'courses' }"
               name="file"
               accept="image/*"
-              :max="1"
-              v-model:file-list="fileList"
-              list-type="image-card"
-              style="--n-image-width: 100px; --n-image-height: 100px;"
-              @before-upload="handleBeforeUpload"
-              @finish="handleUploadFinish"
-              @remove="handleUploadRemove"
-              @error="handleUploadError"
+              :limit="1"
+              :file-list="fileList"
+              list-type="picture-card"
+              :before-upload="handleBeforeUpload"
+              :on-success="handleUploadSuccess"
+              :on-remove="handleUploadRemove"
+              :on-error="handleUploadError"
+              :class="{ 'hide-upload': fileList.length > 0 }"
             >
-              <n-button style="width: 100px; height: 100px;">
-                <n-space vertical align="center">
-                  <n-icon size="24"><CloudUploadOutline /></n-icon>
-                  <span>上传图片</span>
-                </n-space>
-              </n-button>
-            </n-upload>
-            <n-text depth="3" style="font-size: 12px;">支持 JPG、PNG 格式，建议尺寸 800x600</n-text>
-          </n-space>
-        </n-form-item>
+              <el-icon><Plus /></el-icon>
+              <div style="font-size: 12px;">上传图片</div>
+            </el-upload>
+            <el-text type="info" size="small">支持 JPG、PNG 格式，建议尺寸 800x600</el-text>
+          </el-space>
+        </el-form-item>
 
-        <n-form-item label="描述" path="description">
-          <n-input v-model:value="form.description" type="textarea" :rows="3" placeholder="请输入课程描述" />
-        </n-form-item>
-        <n-form-item>
-          <n-space>
-            <n-button type="primary" :loading="submitting" @click="handleSubmit">提交</n-button>
-            <n-button @click="showModal = false">取消</n-button>
-          </n-space>
-        </n-form-item>
-      </n-form>
-    </n-modal>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入课程描述" />
+        </el-form-item>
+        <el-form-item>
+          <el-space>
+            <el-button type="primary" :loading="submitting" @click="handleSubmit">提交</el-button>
+            <el-button @click="showModal = false">取消</el-button>
+          </el-space>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
 
     <!-- 课程详情弹窗 -->
-    <n-modal v-model:show="showDetailModal" preset="card" title="课程详情" style="width: 700px">
+    <el-dialog v-model="showDetailModal" title="课程详情" width="700px" destroy-on-close>
       <div class="course-detail" v-if="currentCourse">
         <!-- 课程封面区域 -->
         <div class="course-header">
           <div class="course-image-section">
-            <n-image
+            <el-image
               v-if="currentCourse.imageUrl"
               :src="currentCourse.imageUrl"
-              width="200"
-              height="150"
-              style="border-radius: 8px; object-fit: cover;"
-              :fallback-src="'/default-course.png'"
+              style="width: 200px; height: 150px; border-radius: 8px; object-fit: cover;"
+              :preview-src-list="[currentCourse.imageUrl]"
             />
             <div v-else class="no-image-placeholder">
-              <n-icon size="48" depth="3"><ImageOutline /></n-icon>
+              <el-icon :size="48"><Picture /></el-icon>
               <span>暂无课程图片</span>
             </div>
           </div>
           <div class="course-basic-info">
             <h2 class="course-title">{{ currentCourse.courseName }}</h2>
-            <n-tag :type="getCategoryType(currentCourse.category)" size="large">
+            <el-tag :type="getCategoryType(currentCourse.category)" size="large">
               {{ getCategoryLabel(currentCourse.category) }}
-            </n-tag>
+            </el-tag>
             <div class="course-meta">
               <div class="meta-item">
-                <n-icon size="16"><TimeOutline /></n-icon>
+                <el-icon><Clock /></el-icon>
                 <span>{{ formatTime(currentCourse.startTime) }}</span>
               </div>
               <div class="meta-item">
-                <n-icon size="16"><PeopleOutline /></n-icon>
+                <el-icon><User /></el-icon>
                 <span>容量 {{ currentCourse.capacity }} 人</span>
               </div>
               <div class="meta-item">
-                <n-icon size="16"><CalendarOutline /></n-icon>
+                <el-icon><Calendar /></el-icon>
                 <span>已预约 {{ currentCourse.bookingCount || 0 }} 人</span>
               </div>
             </div>
           </div>
         </div>
 
-        <n-divider />
+        <el-divider />
 
         <!-- 教练信息区域 -->
         <div class="coach-section">
           <h3 class="section-title">
-            <n-icon size="20" color="#2080f0"><PersonCircleOutline /></n-icon>
+            <el-icon color="#409EFF"><UserFilled /></el-icon>
             教练信息
           </h3>
           <div class="coach-card">
             <div class="coach-avatar">
-              <n-image
+              <el-image
                 v-if="currentCourse.coachAvatar"
                 :src="currentCourse.coachAvatar"
-                width="80"
-                height="80"
-                style="border-radius: 50%; object-fit: cover;"
-                :fallback-src="'/default-avatar.png'"
+                style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;"
               />
-              <div v-else class="no-avatar">
-                <n-icon size="32" depth="3"><PersonOutline /></n-icon>
+              <div v-else class="no-avatar-large">
+                <el-icon :size="32"><User /></el-icon>
               </div>
             </div>
             <div class="coach-info">
@@ -210,36 +274,34 @@
           </div>
         </div>
 
-        <n-divider />
+        <el-divider />
 
         <!-- 课程描述区域 -->
         <div class="description-section">
           <h3 class="section-title">
-            <n-icon size="20" color="#2080f0"><DocumentTextOutline /></n-icon>
+            <el-icon color="#409EFF"><Document /></el-icon>
             课程描述
           </h3>
           <div class="description-content">
             {{ currentCourse.description || '暂无课程描述' }}
           </div>
         </div>
-
       </div>
-    </n-modal>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, h, reactive, onMounted, computed } from 'vue'
-import { NTag, NButton, NSpace, NIcon, NImage, useMessage, useDialog, NText, NDivider } from 'naive-ui'
-import { SearchOutline, AddOutline, CloudUploadOutline, TimeOutline, PeopleOutline, CalendarOutline, PersonCircleOutline, PersonOutline, DocumentTextOutline, ImageOutline } from '@vicons/ionicons5'
-import { createCourse, updateCourse, deleteCourse } from '@/api/course'
-import request from '@/utils/request'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Clock, User, Calendar, UserFilled, Document, Picture } from '@element-plus/icons-vue'
+import { getCourseList, createCourse, updateCourse, deleteCourse } from '@/api/course'
+import { getCoachList } from '@/api/coach'
 import { getToken } from '@/utils/auth'
 
 const coachOptions = ref([])
 
-const message = useMessage()
-const dialog = useDialog()
+const message = ElMessage
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
@@ -258,7 +320,7 @@ const uploadHeaders = computed(() => ({
 const fileList = ref([])
 
 // 上传前校验
-function handleBeforeUpload({ file }) {
+function handleBeforeUpload(file) {
   // 校验文件类型
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
@@ -279,14 +341,6 @@ const paginationReactive = reactive({
   pageSize: 5,
   itemCount: 0
 })
-
-const pagination = computed(() => ({
-  ...paginationReactive,
-  onChange: (page) => {
-    paginationReactive.page = page
-    fetchCourses()
-  }
-}))
 
 const form = reactive({
   courseName: '',
@@ -310,10 +364,10 @@ const searchForm = reactive({
 const rules = {
   courseName: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
   category: [{ required: true, message: '请选择分类', trigger: 'change' }],
-  coachId: [{ required: true, message: '请选择教练', trigger: 'change', type: 'number' }],
-  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change', type: 'number' }],
-  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change', type: 'number' }],
-  capacity: [{ required: true, message: '请输入容量', trigger: 'blur', type: 'number' }]
+  coachId: [{ required: true, message: '请选择教练', trigger: 'change' }],
+  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  capacity: [{ required: true, message: '请输入容量', trigger: 'blur' }]
 }
 
 const categoryOptions = [
@@ -324,69 +378,15 @@ const categoryOptions = [
   { label: '动感单车', value: 'SPINNING' }
 ]
 
-const columns = [
-  {
-    title: '课程图片',
-    key: 'imageUrl',
-    width: 120,
-    render: (row) => {
-      if (row.imageUrl) {
-        return h(NImage, {
-          src: row.imageUrl,
-          width: 80,
-          height: 80,
-          style: 'border-radius: 4px; object-fit: cover;',
-          fallbackSrc: '/default-course.png'
-        })
-      }
-      return h('div', {
-        style: 'width: 80px; height: 80px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
-      }, '无图片')
-    }
-  },
-  { title: '课程名称', key: 'courseName' },
-  {
-    title: '分类',
-    key: 'category',
-    render: (row) => {
-      const item = categoryOptions.find(c => c.value === row.category)
-      return h(NTag, { type: 'info' }, () => item?.label || row.category)
-    }
-  },
-  {
-    title: '教练头像',
-    key: 'coachAvatar',
-    width: 100,
-    render: (row) => {
-      if (row.coachAvatar) {
-        return h(NImage, {
-          src: row.coachAvatar,
-          width: 60,
-          height: 60,
-          style: 'border-radius: 50%; object-fit: cover;',
-          fallbackSrc: '/default-avatar.png'
-        })
-      }
-      return h('div', {
-        style: 'width: 60px; height: 60px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;'
-      }, '无')
-    }
-  },
-  { title: '教练名称', key: 'coachName' },
-  { title: '开始时间', key: 'startTime', render: (row) => formatTime(row.startTime) },
-  { title: '容量', key: 'capacity' },
-  { title: '预约数', key: 'bookingCount' },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 200,
-    render: (row) => h(NSpace, null, () => [
-      h(NButton, { size: 'small', onClick: () => handleView(row) }, () => '查看'),
-      h(NButton, { size: 'small', type: 'primary', onClick: () => handleEdit(row) }, () => '编辑'),
-      h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, () => '删除')
-    ])
-  }
-]
+function handleSizeChange(size) {
+  paginationReactive.pageSize = size
+  fetchCourses()
+}
+
+function handlePageChange(page) {
+  paginationReactive.page = page
+  fetchCourses()
+}
 
 onMounted(() => {
   fetchCoachList()
@@ -395,10 +395,7 @@ onMounted(() => {
 
 async function fetchCoachList() {
   try {
-    const res = await request({
-      url: '/coaches/list',
-      method: 'get'
-    })
+    const res = await getCoachList()
     coachOptions.value = (res || []).map(coach => ({
       label: coach.name,
       value: coach.id
@@ -416,11 +413,7 @@ async function fetchCourses() {
       pageSize: paginationReactive.pageSize,
       ...buildSearchParams()
     }
-    const res = await request({
-      url: '/courses/list',
-      method: 'get',
-      params
-    })
+    const res = await getCourseList(params)
     courses.value = res.records || []
     paginationReactive.itemCount = res.total || 0
   } catch (error) {
@@ -442,10 +435,10 @@ function buildSearchParams() {
     params.coachId = searchForm.coachId
   }
   if (searchForm.startDate) {
-    params.startDate = new Date(searchForm.startDate).toISOString().split('T')[0]
+    params.startDate = searchForm.startDate
   }
   if (searchForm.endDate) {
-    params.endDate = new Date(searchForm.endDate).toISOString().split('T')[0]
+    params.endDate = searchForm.endDate
   }
   return params
 }
@@ -478,11 +471,6 @@ function handleView(row) {
   showDetailModal.value = true
 }
 
-function handleEditFromDetail() {
-  showDetailModal.value = false
-  handleEdit(currentCourse.value)
-}
-
 function handleEdit(row) {
   isEdit.value = true
   currentId.value = row.id
@@ -490,8 +478,8 @@ function handleEdit(row) {
     courseName: row.courseName,
     category: row.category,
     coachId: row.coachId,
-    startTime: row.startTime ? new Date(row.startTime).getTime() : null,
-    endTime: row.endTime ? new Date(row.endTime).getTime() : null,
+    startTime: row.startTime,
+    endTime: row.endTime,
     capacity: row.capacity,
     description: row.description || '',
     imageUrl: row.imageUrl || ''
@@ -499,9 +487,7 @@ function handleEdit(row) {
   // 设置图片文件列表
   if (row.imageUrl) {
     fileList.value = [{
-      id: 'existing',
       name: '课程图片',
-      status: 'finished',
       url: row.imageUrl
     }]
   } else {
@@ -510,46 +496,26 @@ function handleEdit(row) {
   showModal.value = true
 }
 
-// 上传完成回调
-function handleUploadFinish({ file, event }) {
-  try {
-    const response = JSON.parse(event.target.response)
-    if (response.code === 200) {
-      form.imageUrl = response.data.fileUrl
-      message.success('图片上传成功')
-    } else {
-      message.error(response.message || '上传失败')
-      // 上传失败时清空文件列表
-      fileList.value = []
-    }
-  } catch (error) {
-    console.error('解析上传响应失败:', error)
-    message.error('上传响应解析失败')
+// 上传成功回调
+function handleUploadSuccess(response, file) {
+  if (response.code === 200) {
+    form.imageUrl = response.data.fileUrl
+    message.success('图片上传成功')
+  } else {
+    message.error(response.message || '上传失败')
     fileList.value = []
   }
 }
 
 // 上传失败回调
-function handleUploadError({ file, event }) {
+function handleUploadError() {
   message.error('图片上传失败')
 }
 
 // 移除图片回调
-function handleUploadRemove({ file, fileList: newFileList }) {
+function handleUploadRemove() {
   form.imageUrl = ''
-  fileList.value = newFileList
-}
-
-function formatDateTimeLocal(date) {
-  if (!date) return null
-  const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
-  const seconds = String(d.getSeconds()).padStart(2, '0')
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
+  fileList.value = []
 }
 
 async function handleSubmit() {
@@ -557,10 +523,11 @@ async function handleSubmit() {
     await formRef.value?.validate()
     submitting.value = true
 
+    // 转换数据类型以匹配后端要求
     const data = {
       ...form,
-      startTime: formatDateTimeLocal(form.startTime),
-      endTime: formatDateTimeLocal(form.endTime)
+      coachId: form.coachId ? Number(form.coachId) : null,
+      capacity: form.capacity ? Number(form.capacity) : null
     }
 
     if (isEdit.value) {
@@ -581,21 +548,23 @@ async function handleSubmit() {
 }
 
 function handleDelete(row) {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除课程 "${row.courseName}" 吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteCourse(row.id)
-        message.success('删除成功')
-        fetchCourses()
-      } catch (error) {
-        message.error('删除失败')
-      }
+  ElMessageBox.confirm(
+    `确定要删除课程 "${row.courseName}" 吗？`,
+    '确认删除',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     }
-  })
+  ).then(async () => {
+    try {
+      await deleteCourse(row.id)
+      message.success('删除成功')
+      fetchCourses()
+    } catch (error) {
+      message.error('删除失败')
+    }
+  }).catch(() => {})
 }
 
 function formatTime(time) {
@@ -610,18 +579,56 @@ function getCategoryLabel(category) {
 
 function getCategoryType(category) {
   const typeMap = {
-    'YOGA': 'success',
-    'HIIT': 'error',
-    'STRENGTH': 'warning',
-    'SPINNING': 'info'
+    'YOGA': 'success',      // 瑜伽 - 绿色
+    'PILATES': 'primary',   // 普拉提 - 蓝色
+    'HIIT': 'danger',       // HIIT - 红色
+    'STRENGTH': 'warning',  // 力量训练 - 橙色
+    'SPINNING': 'info'      // 动感单车 - 青色
   }
-  return typeMap[category] || 'default'
+  return typeMap[category] || 'info'
 }
 </script>
 
 <style scoped>
 .admin-courses {
   padding: 0;
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.no-image {
+  width: 80px;
+  height: 80px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+  margin: 0 auto;
+}
+
+.no-avatar {
+  width: 50px;
+  height: 50px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+  margin: 0 auto;
 }
 
 /* 课程详情样式 */
@@ -702,14 +709,10 @@ function getCategoryType(category) {
   gap: 16px;
   padding: 16px;
   background: #f8f9fa;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 
-.coach-avatar {
-  flex-shrink: 0;
-}
-
-.no-avatar {
+.no-avatar-large {
   width: 80px;
   height: 80px;
   background: #e0e0e0;
@@ -717,6 +720,7 @@ function getCategoryType(category) {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #999;
 }
 
 .coach-info {
@@ -733,10 +737,10 @@ function getCategoryType(category) {
 
 .coach-label {
   font-size: 14px;
-  color: #999;
+  color: #666;
 }
 
-/* 课程描述样式 */
+/* 描述区域样式 */
 .description-section {
   margin: 16px 0;
 }
@@ -747,14 +751,11 @@ function getCategoryType(category) {
   border-radius: 8px;
   color: #666;
   line-height: 1.6;
-  min-height: 60px;
+  white-space: pre-wrap;
 }
 
-/* 底部操作按钮 */
-.detail-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-  padding-top: 16px;
+/* 上传成功后隐藏上传按钮 */
+:deep(.hide-upload .el-upload--picture-card) {
+  display: none;
 }
 </style>

@@ -48,7 +48,7 @@
         </el-menu-item>
         <el-menu-item index="/admin/knowledge-base">
           <el-icon><Collection /></el-icon>
-          <span>知识库管理</span>
+          <span>AI客服-知识库管理</span>
         </el-menu-item>
         <el-menu-item index="/admin/equipment">
           <el-icon><Box /></el-icon>

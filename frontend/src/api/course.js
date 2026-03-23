@@ -8,6 +8,14 @@ export function getPublicCourses(params) {
   })
 }
 
+export function getCourseList(params) {
+  return request({
+    url: '/courses/list',
+    method: 'get',
+    params
+  })
+}
+
 export function getCourseDetail(id) {
   return request({
     url: `/courses/${id}`,
