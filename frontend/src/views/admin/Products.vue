@@ -1,0 +1,887 @@
+<template>
+  <div class="products-page">
+    <!-- 统计卡片 -->
+    <el-row :gutter="20" class="stats-row">
+      <el-col :span="6" v-for="stat in stats" :key="stat.title">
+        <el-card class="stat-card" :body-style="{ padding: '20px' }">
+          <div class="stat-content">
+            <div class="stat-icon" :style="{ background: stat.color }">
+              <el-icon :size="24"><component :is="stat.icon" /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ stat.value }}</div>
+              <div class="stat-title">{{ stat.title }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 搜索和操作区域 -->
+    <el-card class="search-card" :body-style="{ padding: '20px' }">
+      <el-row :gutter="20" align="middle">
+        <el-col :span="18">
+          <el-space>
+            <el-input
+              v-model="searchForm.keyword"
+              placeholder="商品名称/编号"
+              clearable
+              style="width: 200px"
+              @keyup.enter="handleSearch"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-select
+              v-model="searchForm.category"
+              placeholder="全部分类"
+              clearable
+              style="width: 150px"
+            >
+              <el-option label="健身器材" value="EQUIPMENT" />
+              <el-option label="运动服饰" value="CLOTHING" />
+              <el-option label="营养补剂" value="SUPPLEMENT" />
+              <el-option label="运动配件" value="ACCESSORY" />
+            </el-select>
+            <el-select
+              v-model="searchForm.status"
+              placeholder="全部状态"
+              clearable
+              style="width: 150px"
+            >
+              <el-option label="上架中" value="ACTIVE" />
+              <el-option label="已下架" value="INACTIVE" />
+            </el-select>
+            <el-button type="primary" @click="handleSearch">
+              <el-icon><Search /></el-icon>搜索
+            </el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </el-space>
+        </el-col>
+        <el-col :span="6" style="text-align: right">
+          <el-button type="primary" @click="handleAdd">
+            <el-icon><Plus /></el-icon>新增商品
+          </el-button>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <!-- 数据表格 -->
+    <el-card class="table-card">
+      <el-table
+        :data="tableData"
+        v-loading="loading"
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column type="index" width="50" />
+        <el-table-column label="商品信息" min-width="280">
+          <template #default="{ row }">
+            <div class="product-info">
+              <el-image
+                :src="row.image"
+                :preview-src-list="[row.image]"
+                fit="cover"
+                class="product-image"
+              >
+                <template #error>
+                  <div class="image-placeholder">
+                    <el-icon :size="24"><Goods /></el-icon>
+                  </div>
+                </template>
+              </el-image>
+              <div class="product-detail">
+                <div class="product-name">{{ row.name }}</div>
+                <div class="product-code">编号: {{ row.code }}</div>
+                <div class="product-tags">
+                  <el-tag v-if="row.isHot" type="danger" size="small" effect="plain">热销</el-tag>
+                  <el-tag v-if="row.isNew" type="success" size="small" effect="plain">新品</el-tag>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="分类" width="120">
+          <template #default="{ row }">
+            <el-tag :type="getCategoryType(row.category)" effect="light">
+              {{ getCategoryLabel(row.category) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="价格" width="150">
+          <template #default="{ row }">
+            <div class="price-info">
+              <div class="current-price">¥{{ row.price }}</div>
+              <div v-if="row.originalPrice" class="original-price">¥{{ row.originalPrice }}</div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="库存" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.stock > 10 ? 'success' : row.stock > 0 ? 'warning' : 'danger'" size="small">
+              {{ row.stock }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="销量" width="100" align="center" prop="sales" />
+        <el-table-column label="积分" width="100" align="center">
+          <template #default="{ row }">
+            <span v-if="row.points">{{ row.points }} 分</span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-switch
+              v-model="row.status"
+              active-value="ACTIVE"
+              inactive-value="INACTIVE"
+              @change="handleStatusChange(row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" link @click="handleEdit(row)">
+              <el-icon><Edit /></el-icon>编辑
+            </el-button>
+            <el-button type="primary" link @click="handleStock(row)">
+              <el-icon><Box /></el-icon>库存
+            </el-button>
+            <el-button type="danger" link @click="handleDelete(row)">
+              <el-icon><Delete /></el-icon>删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="isEdit ? '编辑商品' : '新增商品'"
+      width="800px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        class="product-form"
+      >
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="商品图片" prop="image">
+              <el-upload
+                class="product-uploader"
+                action="#"
+                :auto-upload="false"
+                :show-file-list="false"
+                :on-change="handleImageChange"
+                accept="image/*"
+              >
+                <img v-if="form.image" :src="form.image" class="product-preview" />
+                <div v-else class="upload-placeholder">
+                  <el-icon :size="28"><Plus /></el-icon>
+                  <span>点击上传</span>
+                </div>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="商品名称" prop="name">
+              <el-input v-model="form.name" placeholder="请输入商品名称" maxlength="50" show-word-limit />
+            </el-form-item>
+            <el-form-item label="商品编号" prop="code">
+              <el-input v-model="form.code" placeholder="请输入商品编号" />
+            </el-form-item>
+            <el-form-item label="所属分类" prop="category">
+              <el-select v-model="form.category" placeholder="请选择分类" style="width: 100%">
+                <el-option label="健身器材" value="EQUIPMENT" />
+                <el-option label="运动服饰" value="CLOTHING" />
+                <el-option label="营养补剂" value="SUPPLEMENT" />
+                <el-option label="运动配件" value="ACCESSORY" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="售价" prop="price">
+              <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="原价" prop="originalPrice">
+              <el-input-number v-model="form.originalPrice" :min="0" :precision="2" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="库存" prop="stock">
+              <el-input-number v-model="form.stock" :min="0" :precision="0" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="积分兑换" prop="points">
+              <el-input-number v-model="form.points" :min="0" :precision="0" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="排序" prop="sort">
+              <el-input-number v-model="form.sort" :min="0" :max="999" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="form.status">
+                <el-radio label="ACTIVE">上架</el-radio>
+                <el-radio label="INACTIVE">下架</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="商品标签">
+          <el-checkbox v-model="form.isHot">热销</el-checkbox>
+          <el-checkbox v-model="form.isNew">新品</el-checkbox>
+          <el-checkbox v-model="form.isRecommend">推荐</el-checkbox>
+        </el-form-item>
+
+        <el-form-item label="商品描述" prop="description">
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入商品描述"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitting">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 库存管理弹窗 -->
+    <el-dialog
+      v-model="stockDialogVisible"
+      title="库存管理"
+      width="500px"
+    >
+      <div v-if="currentProduct" class="stock-info">
+        <div class="product-brief">
+          <el-image :src="currentProduct.image" class="brief-image" fit="cover">
+            <template #error>
+              <div class="brief-placeholder">
+                <el-icon><Goods /></el-icon>
+              </div>
+            </template>
+          </el-image>
+          <div class="brief-info">
+            <div class="brief-name">{{ currentProduct.name }}</div>
+            <div class="brief-stock">当前库存: {{ currentProduct.stock }}</div>
+          </div>
+        </div>
+
+        <el-form :model="stockForm" label-width="100px">
+          <el-form-item label="操作类型">
+            <el-radio-group v-model="stockForm.type">
+              <el-radio label="IN">入库</el-radio>
+              <el-radio label="OUT">出库</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="数量">
+            <el-input-number v-model="stockForm.quantity" :min="1" :precision="0" style="width: 100%" />
+          </el-form-item>
+          <el-form-item label="备注">
+            <el-input
+              v-model="stockForm.remark"
+              type="textarea"
+              :rows="2"
+              placeholder="请输入操作备注"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <template #footer>
+        <el-button @click="stockDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleStockSubmit" :loading="stockSubmitting">确定</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Search, Plus, Edit, Delete, Goods, Box
+} from '@element-plus/icons-vue'
+
+// 统计数据
+const stats = ref([
+  { title: '商品总数', value: 86, icon: 'Goods', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { title: '上架商品', value: 72, icon: 'Box', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+  { title: '本月销量', value: 328, icon: 'TrendCharts', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+  { title: '库存预警', value: 5, icon: 'Warning', color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }
+])
+
+// 搜索表单
+const searchForm = reactive({
+  keyword: '',
+  category: '',
+  status: ''
+})
+
+// 表格数据
+const loading = ref(false)
+const tableData = ref([
+  {
+    id: 1,
+    name: '专业瑜伽垫',
+    code: 'YP-001',
+    category: 'EQUIPMENT',
+    image: '',
+    price: 128.00,
+    originalPrice: 168.00,
+    stock: 156,
+    sales: 89,
+    points: 1280,
+    status: 'ACTIVE',
+    isHot: true,
+    isNew: false,
+    isRecommend: true,
+    description: '高品质TPE材质瑜伽垫，防滑耐用'
+  },
+  {
+    id: 2,
+    name: '乳清蛋白粉 5磅',
+    code: 'SP-001',
+    category: 'SUPPLEMENT',
+    image: '',
+    price: 398.00,
+    originalPrice: 458.00,
+    stock: 88,
+    sales: 156,
+    points: 3980,
+    status: 'ACTIVE',
+    isHot: true,
+    isNew: false,
+    isRecommend: true,
+    description: '进口乳清蛋白，快速补充蛋白质'
+  },
+  {
+    id: 3,
+    name: '运动水壶 1L',
+    code: 'AC-001',
+    category: 'ACCESSORY',
+    image: '',
+    price: 68.00,
+    originalPrice: null,
+    stock: 8,
+    sales: 234,
+    points: 680,
+    status: 'ACTIVE',
+    isHot: false,
+    isNew: true,
+    isRecommend: false,
+    description: '大容量运动水壶，便携设计'
+  },
+  {
+    id: 4,
+    name: '速干运动T恤',
+    code: 'CL-001',
+    category: 'CLOTHING',
+    image: '',
+    price: 99.00,
+    originalPrice: 129.00,
+    stock: 0,
+    sales: 67,
+    points: 990,
+    status: 'INACTIVE',
+    isHot: false,
+    isNew: true,
+    isRecommend: false,
+    description: '透气速干面料，舒适运动体验'
+  },
+  {
+    id: 5,
+    name: '可调节哑铃 20kg',
+    code: 'YP-002',
+    category: 'EQUIPMENT',
+    image: '',
+    price: 568.00,
+    originalPrice: 698.00,
+    stock: 23,
+    sales: 45,
+    points: 5680,
+    status: 'ACTIVE',
+    isHot: true,
+    isNew: false,
+    isRecommend: true,
+    description: '家用可调节哑铃，多档重量调节'
+  }
+])
+
+// 分页
+const pagination = reactive({
+  page: 1,
+  pageSize: 10,
+  total: 5
+})
+
+// 弹窗控制
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const formRef = ref(null)
+const submitting = ref(false)
+
+// 表单数据
+const form = reactive({
+  id: null,
+  name: '',
+  code: '',
+  category: '',
+  image: '',
+  price: 0,
+  originalPrice: 0,
+  stock: 0,
+  points: 0,
+  status: 'ACTIVE',
+  sort: 0,
+  isHot: false,
+  isNew: false,
+  isRecommend: false,
+  description: ''
+})
+
+// 表单验证规则
+const rules = {
+  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入商品编号', trigger: 'blur' }],
+  category: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  price: [{ required: true, message: '请输入售价', trigger: 'blur' }],
+  stock: [{ required: true, message: '请输入库存', trigger: 'blur' }]
+}
+
+// 库存弹窗
+const stockDialogVisible = ref(false)
+const currentProduct = ref(null)
+const stockSubmitting = ref(false)
+const stockForm = reactive({
+  type: 'IN',
+  quantity: 1,
+  remark: ''
+})
+
+// 分类映射
+const categoryMap = {
+  EQUIPMENT: { label: '健身器材', type: 'primary' },
+  CLOTHING: { label: '运动服饰', type: 'success' },
+  SUPPLEMENT: { label: '营养补剂', type: 'warning' },
+  ACCESSORY: { label: '运动配件', type: 'info' }
+}
+
+function getCategoryLabel(category) {
+  return categoryMap[category]?.label || category
+}
+
+function getCategoryType(category) {
+  return categoryMap[category]?.type || ''
+}
+
+// 搜索
+function handleSearch() {
+  loading.value = true
+  setTimeout(() => {
+    loading.value = false
+    ElMessage.success('搜索完成')
+  }, 500)
+}
+
+function handleReset() {
+  searchForm.keyword = ''
+  searchForm.category = ''
+  searchForm.status = ''
+  handleSearch()
+}
+
+// 新增
+function handleAdd() {
+  isEdit.value = false
+  Object.assign(form, {
+    id: null,
+    name: '',
+    code: '',
+    category: '',
+    image: '',
+    price: 0,
+    originalPrice: 0,
+    stock: 0,
+    points: 0,
+    status: 'ACTIVE',
+    sort: 0,
+    isHot: false,
+    isNew: false,
+    isRecommend: false,
+    description: ''
+  })
+  dialogVisible.value = true
+}
+
+// 编辑
+function handleEdit(row) {
+  isEdit.value = true
+  Object.assign(form, { ...row })
+  dialogVisible.value = true
+}
+
+// 删除
+function handleDelete(row) {
+  ElMessageBox.confirm(
+    `确定要删除商品"${row.name}"吗？删除后将无法恢复。`,
+    '确认删除',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(() => {
+    const index = tableData.value.findIndex(item => item.id === row.id)
+    if (index > -1) {
+      tableData.value.splice(index, 1)
+      pagination.total--
+    }
+    ElMessage.success('删除成功')
+  })
+}
+
+// 状态切换
+function handleStatusChange(row) {
+  const statusText = row.status === 'ACTIVE' ? '上架' : '下架'
+  ElMessage.success(`商品已${statusText}`)
+}
+
+// 提交表单
+function handleSubmit() {
+  formRef.value.validate((valid) => {
+    if (valid) {
+      submitting.value = true
+      setTimeout(() => {
+        if (isEdit.value) {
+          const index = tableData.value.findIndex(item => item.id === form.id)
+          if (index > -1) {
+            tableData.value[index] = { ...form }
+          }
+          ElMessage.success('编辑成功')
+        } else {
+          const newProduct = {
+            ...form,
+            id: Date.now(),
+            sales: 0
+          }
+          tableData.value.unshift(newProduct)
+          pagination.total++
+          ElMessage.success('新增成功')
+        }
+        submitting.value = false
+        dialogVisible.value = false
+      }, 500)
+    }
+  })
+}
+
+// 图片上传
+function handleImageChange(file) {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.image = e.target.result
+  }
+  reader.readAsDataURL(file.raw)
+}
+
+// 库存管理
+function handleStock(row) {
+  currentProduct.value = row
+  stockForm.type = 'IN'
+  stockForm.quantity = 1
+  stockForm.remark = ''
+  stockDialogVisible.value = true
+}
+
+// 提交库存操作
+function handleStockSubmit() {
+  stockSubmitting.value = true
+  setTimeout(() => {
+    if (stockForm.type === 'IN') {
+      currentProduct.value.stock += stockForm.quantity
+      ElMessage.success(`成功入库 ${stockForm.quantity} 件`)
+    } else {
+      if (currentProduct.value.stock < stockForm.quantity) {
+        ElMessage.error('库存不足')
+        stockSubmitting.value = false
+        return
+      }
+      currentProduct.value.stock -= stockForm.quantity
+      ElMessage.success(`成功出库 ${stockForm.quantity} 件`)
+    }
+    stockSubmitting.value = false
+    stockDialogVisible.value = false
+  }, 500)
+}
+
+// 分页
+function handleSizeChange(val) {
+  pagination.pageSize = val
+  handleSearch()
+}
+
+function handlePageChange(val) {
+  pagination.page = val
+  handleSearch()
+}
+
+onMounted(() => {
+  handleSearch()
+})
+</script>
+
+<style scoped>
+.products-page {
+  padding: 20px;
+}
+
+.stats-row {
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.2;
+}
+
+.stat-title {
+  font-size: 14px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.search-card {
+  margin-bottom: 20px;
+}
+
+.table-card {
+  margin-bottom: 20px;
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.image-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+}
+
+.product-detail {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name {
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.product-code {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.product-tags {
+  display: flex;
+  gap: 6px;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.current-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+.original-price {
+  font-size: 12px;
+  color: #909399;
+  text-decoration: line-through;
+}
+
+.text-gray {
+  color: #909399;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ebeef5;
+}
+
+.product-form :deep(.el-form-item__label) {
+  font-weight: 500;
+}
+
+.product-uploader {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+  width: 120px;
+  height: 120px;
+}
+
+.product-uploader:hover {
+  border-color: var(--el-color-primary);
+}
+
+.product-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #8c939d;
+  gap: 8px;
+}
+
+.stock-info {
+  padding: 10px 0;
+}
+
+.product-brief {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 8px;
+}
+
+.brief-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+}
+
+.brief-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  background: #e4e7ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+}
+
+.brief-info {
+  flex: 1;
+}
+
+.brief-name {
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.brief-stock {
+  font-size: 14px;
+  color: #606266;
+}
+</style>

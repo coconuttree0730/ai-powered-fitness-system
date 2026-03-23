@@ -24,6 +24,32 @@
           <el-icon><Calendar /></el-icon>
           <span>课程管理</span>
         </el-menu-item>
+        <el-sub-menu index="/admin/business">
+          <template #title>
+            <el-icon><ShoppingBag /></el-icon>
+            <span>业务管理</span>
+          </template>
+          <el-menu-item index="/admin/membership-cards">
+            <el-icon><CreditCard /></el-icon>
+            <span>会员卡管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/products">
+            <el-icon><Goods /></el-icon>
+            <span>商品管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/order-management">
+            <el-icon><ShoppingCart /></el-icon>
+            <span>订单管理</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="/admin/content-management">
+          <el-icon><Document /></el-icon>
+          <span>内容管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/knowledge-base">
+          <el-icon><Collection /></el-icon>
+          <span>知识库管理</span>
+        </el-menu-item>
         <el-menu-item index="/admin/equipment">
           <el-icon><Box /></el-icon>
           <span>器材管理</span>
@@ -81,7 +107,10 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { DataAnalysis, User, Calendar, Box, Tools, TrendCharts } from '@element-plus/icons-vue'
+import {
+  DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
+  CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection
+} from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

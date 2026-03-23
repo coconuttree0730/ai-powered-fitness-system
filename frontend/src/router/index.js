@@ -158,6 +158,36 @@ const routes = [
         meta: { title: '课程管理' }
       },
       {
+        path: 'membership-cards',
+        name: 'MembershipCardManagement',
+        component: () => import('@/views/admin/MembershipCards.vue'),
+        meta: { title: '会员卡管理' }
+      },
+      {
+        path: 'content-management',
+        name: 'ContentManagement',
+        component: () => import('@/views/admin/ContentManagement.vue'),
+        meta: { title: '内容管理' }
+      },
+      {
+        path: 'order-management',
+        name: 'OrderManagement',
+        component: () => import('@/views/admin/OrderManagement.vue'),
+        meta: { title: '订单管理' }
+      },
+      {
+        path: 'products',
+        name: 'ProductManagement',
+        component: () => import('@/views/admin/Products.vue'),
+        meta: { title: '商品管理' }
+      },
+      {
+        path: 'knowledge-base',
+        name: 'KnowledgeBaseManagement',
+        component: () => import('@/views/admin/KnowledgeBase.vue'),
+        meta: { title: '知识库管理' }
+      },
+      {
         path: 'equipment',
         name: 'EquipmentManagement',
         component: () => import('@/views/admin/Equipment.vue'),
