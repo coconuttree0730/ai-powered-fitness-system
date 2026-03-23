@@ -89,9 +89,9 @@
                           <circle cx="12" cy="7" r="4"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.username" 
-                        type="text" 
+                      <input
+                        v-model="form.username"
+                        type="text"
                         placeholder="请输入用户名（3-20个字符）"
                         @keyup.enter="handleRegister"
                       />
@@ -107,15 +107,64 @@
                           <path d="M12 18h.01"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.phone" 
-                        type="text" 
+                      <input
+                        v-model="form.phone"
+                        type="text"
                         placeholder="请输入手机号"
                         maxlength="11"
                         @keyup.enter="handleRegister"
                       />
                     </div>
                   </div>
+
+                  <!-- 验证码输入框 -->
+                  <div class="form-group">
+                    <label>验证码</label>
+                    <div class="input-wrapper code-input-wrapper">
+                      <span class="input-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                          <circle cx="12" cy="16" r="1"/>
+                        </svg>
+                      </span>
+                      <input
+                        v-model="form.code"
+                        type="text"
+                        placeholder="请输入验证码"
+                        maxlength="6"
+                        @keyup.enter="handleRegister"
+                      />
+                      <button
+                        type="button"
+                        class="send-code-btn"
+                        :disabled="countdown > 0 || !isPhoneValid || isSendingCode"
+                        @click="sendCode"
+                      >
+                        {{ countdown > 0 ? `${countdown}s` : (isSliderVerified ? '重新获取' : '获取验证码') }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 滑块验证（嵌入表单） -->
+                  <Transition name="slider-fade">
+                    <div v-if="showSliderVerify && !isSliderVerified" class="slider-verify-container">
+                      <div class="slider-track" :style="{ width: sliderBoxWidth + 'px' }">
+                        <div class="slider-progress" :style="{ width: sliderLeft + sliderBtnWidth + 'px' }"></div>
+                        <div
+                          class="slider-handle"
+                          :class="{ moving: isSliderMoving }"
+                          :style="{ left: sliderLeft + 'px' }"
+                          @mousedown="startSliderDrag"
+                          @touchstart="startSliderDrag"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </Transition>
 
                   <div class="form-group">
                     <label>密码</label>
@@ -126,9 +175,9 @@
                           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.password" 
-                        :type="showPassword ? 'text' : 'password'" 
+                      <input
+                        v-model="form.password"
+                        :type="showPassword ? 'text' : 'password'"
                         placeholder="请输入密码（6-20个字符）"
                         @keyup.enter="handleRegister"
                       />
@@ -155,9 +204,9 @@
                           <circle cx="12" cy="16" r="1"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.confirmPassword" 
-                        :type="showConfirmPassword ? 'text' : 'password'" 
+                      <input
+                        v-model="form.confirmPassword"
+                        :type="showConfirmPassword ? 'text' : 'password'"
                         placeholder="请再次输入密码"
                         @keyup.enter="handleRegister"
                       />
@@ -174,8 +223,8 @@
                     </div>
                   </div>
 
-                  <button 
-                    class="login-submit-btn" 
+                  <button
+                    class="login-submit-btn"
                     :disabled="loading"
                     @click="handleRegister"
                   >
@@ -220,10 +269,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { register } from '@/api/auth'
+import { register, getSliderVerifyToken, verifySlider, sendSmsCode } from '@/api/auth'
 
 const props = defineProps({
   visible: {
@@ -240,6 +289,21 @@ const message = useMessage()
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const loading = ref(false)
+const countdown = ref(0)
+
+// 滑块验证相关（嵌入表单）
+const showSliderVerify = ref(false)
+const sliderVerifyToken = ref('')
+const isSliderVerified = ref(false)
+const isSliderSuccess = ref(false)
+const isSliderMoving = ref(false)
+const sliderLeft = ref(0)
+const sliderStartX = ref(0)
+const sliderCurrentX = ref(0)
+const sliderBoxWidth = ref(320)
+const sliderBtnWidth = 40
+const pendingPhone = ref('')
+const isSendingCode = ref(false)
 
 // 表单数据
 const form = reactive({
@@ -247,7 +311,13 @@ const form = reactive({
   password: '',
   confirmPassword: '',
   phone: '',
+  code: '',
   roleCode: 'MEMBER'
+})
+
+// 计算属性
+const isPhoneValid = computed(() => {
+  return /^1[3-9]\d{9}$/.test(form.phone)
 })
 
 // 监听visible变化
@@ -270,6 +340,165 @@ function goToLogin() {
   emit('go-login')
 }
 
+// 发送验证码 - 显示滑块验证
+async function sendCode() {
+  if (!isPhoneValid.value) return
+  if (isSendingCode.value) return
+
+  // 如果已经验证过，直接发送
+  if (isSliderVerified.value) {
+    await doSendSmsCode()
+    return
+  }
+
+  // 保存当前手机号
+  pendingPhone.value = form.phone
+
+  // 显示滑块验证（嵌入表单）
+  showSliderVerify.value = true
+
+  try {
+    // 获取滑块验证令牌
+    const data = await getSliderVerifyToken()
+    if (data && data.token) {
+      sliderVerifyToken.value = data.token
+    } else {
+      message.error('获取验证令牌失败，请重试')
+      showSliderVerify.value = false
+    }
+  } catch (error) {
+    console.error('获取滑块验证令牌失败:', error)
+    message.error('验证服务暂不可用，请稍后重试')
+    showSliderVerify.value = false
+  }
+}
+
+// 滑块拖动开始
+function startSliderDrag(e) {
+  if (isSliderSuccess.value) return
+  isSliderMoving.value = true
+  sliderStartX.value = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  sliderCurrentX.value = sliderLeft.value
+
+  document.addEventListener('mousemove', onSliderDrag)
+  document.addEventListener('mouseup', endSliderDrag)
+  document.addEventListener('touchmove', onSliderDrag)
+  document.addEventListener('touchend', endSliderDrag)
+}
+
+// 滑块拖动中
+function onSliderDrag(e) {
+  if (!isSliderMoving.value) return
+  e.preventDefault()
+
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const diff = clientX - sliderStartX.value
+  let newLeft = sliderCurrentX.value + diff
+
+  // 限制滑动范围
+  const maxLeft = sliderBoxWidth.value - sliderBtnWidth
+  newLeft = Math.max(0, Math.min(newLeft, maxLeft))
+
+  sliderLeft.value = newLeft
+}
+
+// 滑块拖动结束
+async function endSliderDrag() {
+  if (!isSliderMoving.value) return
+  isSliderMoving.value = false
+
+  const maxLeft = sliderBoxWidth.value - sliderBtnWidth
+  const progress = sliderLeft.value / maxLeft
+
+  if (progress >= 0.9) {
+    // 滑动到位，执行后端验证
+    sliderLeft.value = maxLeft
+    await verifySliderWithBackend()
+  } else {
+    // 未到位，回弹
+    resetSlider()
+    message.error('请拖动滑块到最右侧')
+  }
+
+  document.removeEventListener('mousemove', onSliderDrag)
+  document.removeEventListener('mouseup', endSliderDrag)
+  document.removeEventListener('touchmove', onSliderDrag)
+  document.removeEventListener('touchend', endSliderDrag)
+}
+
+// 后端验证滑块
+async function verifySliderWithBackend() {
+  try {
+    const result = await verifySlider({
+      token: sliderVerifyToken.value,
+      sliderValue: Math.round(sliderLeft.value),
+      timestamp: Date.now()
+    })
+
+    if (result && result.verified) {
+      // 验证成功
+      isSliderSuccess.value = true
+      isSliderVerified.value = true
+      message.success('验证成功，正在发送验证码...')
+
+      // 自动发送短信验证码
+      await doSendSmsCode()
+    } else {
+      // 验证失败
+      message.error(result?.message || '验证失败，请重新尝试')
+      resetSlider()
+    }
+  } catch (error) {
+    console.error('滑块验证请求失败:', error)
+    message.error('验证请求失败，请重试')
+    resetSlider()
+  }
+}
+
+// 重置滑块
+function resetSlider() {
+  sliderLeft.value = 0
+  isSliderSuccess.value = false
+  isSliderMoving.value = false
+}
+
+// 实际发送短信验证码
+async function doSendSmsCode() {
+  if (isSendingCode.value) return
+  isSendingCode.value = true
+
+  try {
+    // 调用发送短信验证码接口
+    const data = await sendSmsCode({
+      phone: pendingPhone.value,
+      verifyToken: sliderVerifyToken.value
+    })
+
+    if (data && data.sent) {
+      // 开始倒计时
+      countdown.value = 60
+      const timer = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+
+      message.success('验证码已发送，请注意查收')
+    } else {
+      message.error(data?.message || '验证码发送失败，请重试')
+    }
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    message.error('验证码发送失败，请稍后重试')
+  } finally {
+    isSendingCode.value = false
+    // 清理验证令牌
+    sliderVerifyToken.value = ''
+    pendingPhone.value = ''
+  }
+}
+
 // 注册
 async function handleRegister() {
   // 表单验证
@@ -289,6 +518,10 @@ async function handleRegister() {
     message.error('请输入正确的手机号')
     return
   }
+  if (!form.code || form.code.length !== 6) {
+    message.error('请输入6位验证码')
+    return
+  }
   if (!form.password) {
     message.error('请输入密码')
     return
@@ -303,15 +536,16 @@ async function handleRegister() {
   }
 
   loading.value = true
-  
+
   try {
     const res = await register({
       username: form.username,
       password: form.password,
       phone: form.phone,
+      code: form.code,
       roleCode: form.roleCode
     })
-    
+
     if (res.code === 200) {
       message.success('注册成功，请登录')
       emit('register-success')
@@ -337,6 +571,14 @@ function handleWechatLogin() {
 function handleAlipayLogin() {
   message.info('支付宝登录功能开发中...')
 }
+
+// 清理事件监听
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onSliderDrag)
+  document.removeEventListener('mouseup', endSliderDrag)
+  document.removeEventListener('touchmove', onSliderDrag)
+  document.removeEventListener('touchend', endSliderDrag)
+})
 </script>
 
 <style scoped>
@@ -361,7 +603,7 @@ function handleAlipayLogin() {
   display: flex;
   width: 900px;
   max-width: 100%;
-  height: 580px;
+  height: 720px;
   background: #1A1A25;
   border-radius: 24px;
   overflow: hidden;
@@ -638,6 +880,132 @@ function handleAlipayLogin() {
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* 验证码输入框 */
+.code-input-wrapper {
+  position: relative;
+}
+
+.code-input-wrapper input {
+  padding-right: 100px;
+}
+
+.send-code-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  padding: 0 12px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.send-code-btn:hover:not(:disabled) {
+  transform: translateY(-50%) scale(1.02);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.send-code-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+/* 滑块验证 - 现代简洁设计 */
+.slider-verify-container {
+  margin: 12px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.slider-track {
+  height: 44px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 22px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.slider-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+    rgba(255, 107, 53, 0.1) 0%,
+    rgba(255, 107, 53, 0.3) 100%);
+  border-radius: 22px;
+  transition: width 0.05s linear;
+}
+
+.slider-handle {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #fff;
+  z-index: 2;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+  box-shadow:
+    0 2px 8px rgba(255, 107, 53, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.slider-handle:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 4px 12px rgba(255, 107, 53, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.slider-handle.moving {
+  cursor: grabbing;
+  transform: scale(0.95);
+  box-shadow:
+    0 1px 4px rgba(255, 107, 53, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.slider-handle svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* 滑块出现/消失动画 */
+.slider-fade-enter-active,
+.slider-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.slider-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.slider-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
 /* 角色选择器 */
 .role-selector {
   display: flex;
@@ -841,19 +1209,19 @@ function handleAlipayLogin() {
     max-height: 90vh;
     overflow-y: auto;
   }
-  
+
   .login-modal-left {
     display: none;
   }
-  
+
   .login-modal-right {
     padding: 32px 24px;
   }
-  
+
   .right-header {
     margin-bottom: 24px;
   }
-  
+
   .login-form {
     gap: 16px;
   }

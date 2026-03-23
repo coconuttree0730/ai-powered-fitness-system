@@ -54,6 +54,9 @@ public class SecurityConfig {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
             "/api/v1/auth/refresh",
+            // 滑块验证（登录前使用，需要匿名访问）
+            "/api/v1/auth/slider-verify/**",
+            "/api/v1/auth/sms-code",
             // 公开课程
             "/api/v1/courses/public/**",
             // Swagger文档

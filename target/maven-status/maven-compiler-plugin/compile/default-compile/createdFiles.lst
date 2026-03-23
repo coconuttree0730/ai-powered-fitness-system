@@ -90,6 +90,7 @@ com\fitness\integration\ai\controller\AIController$NutritionAdviceRequest.class
 com\fitness\modules\equipment\model\entity\EquipmentRepair.class
 com\fitness\modules\course\model\enums\CourseCategory.class
 com\fitness\modules\dashboard\service\impl\DashboardServiceImpl.class
+com\fitness\config\JacksonConfig.class
 com\fitness\modules\course\model\vo\CourseVO.class
 com\fitness\modules\plan\model\entity\FitnessPlanDetail.class
 com\fitness\modules\course\service\impl\CourseServiceImpl.class

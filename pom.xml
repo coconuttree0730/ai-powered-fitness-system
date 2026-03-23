@@ -153,6 +153,12 @@
             <version>${minio.version}</version>
         </dependency>
 
+        <!-- Spring Data Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Spring Boot DevTools - 开发热重启 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
