@@ -2,28 +2,25 @@ package com.fitness.common.exception;
 
 import com.fitness.common.constants.ErrorCode;
 import lombok.Getter;
+import lombok.EqualsAndHashCode;
 
+/**
+ * 业务异常类
+ * 用于业务逻辑错误，如：参数校验失败、业务规则冲突等
+ */
 @Getter
-public class BusinessException extends RuntimeException {
-
-    private final Integer code;
-    private final String message;
+@EqualsAndHashCode(callSuper = true) //确保 equals/hashCode 包含父类字段（可有可无）
+public class BusinessException extends BaseException {
 
     public BusinessException(String message) {
-        super(message);
-        this.code = ErrorCode.INTERNAL_ERROR.getCode();
-        this.message = message;
+        super(ErrorCode.INTERNAL_ERROR.getCode(), message);
     }
 
     public BusinessException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.code = errorCode.getCode();
-        this.message = errorCode.getMessage();
+        super(errorCode.getCode(), errorCode.getMessage());
     }
 
     public BusinessException(Integer code, String message) {
-        super(message);
-        this.code = code;
-        this.message = message;
+        super(code, message);
     }
 }

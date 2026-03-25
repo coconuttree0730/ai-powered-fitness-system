@@ -1,9 +1,10 @@
 package com.fitness.integration.security;
 
+import com.fitness.common.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -22,19 +23,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:your-256-bit-secret-key-for-jwt-signing-must-be-at-least-32-characters-long}")
-    private String jwtSecret;
-
-    @Value("${jwt.expiration:86400000}")
-    private long jwtExpiration;
-
-    @Value("${jwt.issuer:ai-fitness-system}")
-    private String jwtIssuer;
-
-    @Value("${jwt.audience:fitness-users}")
-    private String jwtAudience;
+    private final JwtProperties jwtProperties;
 
     private static final String CLAIM_USER_ID = "userId";
     private static final String CLAIM_ROLES = "roles";
@@ -44,7 +36,7 @@ public class JwtTokenProvider {
      * 获取签名密钥
      */
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -65,7 +57,7 @@ public class JwtTokenProvider {
      */
     public String generateToken(UserDetailsImpl userDetails) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpiration);
+        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
 
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_USER_ID, userDetails.getId());
@@ -79,9 +71,9 @@ public class JwtTokenProvider {
                 .subject(userDetails.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .issuer(jwtIssuer)
+                .issuer(jwtProperties.getIssuer())
                 .audience()
-                .add(jwtAudience)
+                .add(jwtProperties.getAudience())
                 .and()
                 .signWith(getSigningKey())
                 .compact();
@@ -97,7 +89,7 @@ public class JwtTokenProvider {
      */
     public String generateToken(Long userId, String username, List<String> roles) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpiration);
+        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
 
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_USER_ID, userId);
@@ -109,9 +101,9 @@ public class JwtTokenProvider {
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .issuer(jwtIssuer)
+                .issuer(jwtProperties.getIssuer())
                 .audience()
-                .add(jwtAudience)
+                .add(jwtProperties.getAudience())
                 .and()
                 .signWith(getSigningKey())
                 .compact();
@@ -221,6 +213,6 @@ public class JwtTokenProvider {
      * @return 过期时间（毫秒）
      */
     public long getExpirationTime() {
-        return jwtExpiration;
+        return jwtProperties.getExpiration();
     }
 }

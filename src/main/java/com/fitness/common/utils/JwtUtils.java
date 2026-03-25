@@ -1,9 +1,10 @@
 package com.fitness.common.utils;
 
+import com.fitness.common.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,53 +15,53 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
 
-    @Value("${jwt.secret:your-256-bit-secret-key-for-jwt-signing-must-be-at-least-32-characters-long}")
-    private String secret;
-
-    @Value("${jwt.expiration:86400000}")
-    private Long expiration;
+    private final JwtProperties jwtProperties;
 
     /**
-     * 获取签名密钥
+     * 获取签名密钥 ：生成签名密钥，用于签名JWT Token
      * @return 签名密钥
      *
      */
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
     /**
-     * 生成JWT Token 单参数
+     * 生成JWT Token 单参数方案
      * @param username 用户名
      * @return JWT Token
      */
     public String generateToken(String username) {
+        //调用有参数的生成方法
         return generateToken(username, new HashMap<>());
     }
 
     /**
-     * 生成JWT Token 多参数
+     * 生成JWT Token 多参数方案
      * @param username 用户名
      * @param claims 自定义声明
      * @return JWT Token
      */
     public String generateToken(String username, Map<String, Object> claims) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration);
+        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
 
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
+                .issuer(jwtProperties.getIssuer())
+                .audience().add(jwtProperties.getAudience()).and()
                 .signWith(getSigningKey())
                 .compact();
     }
 
     /**
-     * 解析Token的打包数据（例如用户id号）
+     * 解析Token的打包数据（例如用户id号）;claims:map打包
      * @param token JWT Token
      * @return 用户名
      */
@@ -107,7 +108,7 @@ public class JwtUtils {
     }
 
     /* *
-     * 解析Token 获取Claims（打包数据，包含 用户id）
+     * __解析Token__ 获取Claims（打包数据，包含 用户id）
      */
     public Claims parseToken(String token) {
         return Jwts.parser()
@@ -122,7 +123,15 @@ public class JwtUtils {
      * @return 过期时间（毫秒）
      */
     public long getExpirationTime() {
-        return expiration;
+        return jwtProperties.getExpiration();
+    }
+
+    /**
+     * 获取刷新Token过期时间
+     * @return 刷新过期时间（毫秒）
+     */
+    public long getRefreshExpirationTime() {
+        return jwtProperties.getRefreshExpiration();
     }
 
 }

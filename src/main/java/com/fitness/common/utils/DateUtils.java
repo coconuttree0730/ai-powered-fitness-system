@@ -6,6 +6,17 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * 日期工具类
+ * 提供日期相关的工具方法，如日期格式化、日期解析等
+ * 例：
+ * <pre>
+ *     // 格式化日期
+ *     String formattedDate = DateUtils.formatDate(LocalDate.now());
+ *     // 解析日期
+ *     LocalDate parsedDate = DateUtils.parseDate("2023-12-31");
+ * </pre>
+ */
 public class DateUtils {
 
     public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";

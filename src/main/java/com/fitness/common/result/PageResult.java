@@ -13,7 +13,7 @@ import java.util.List;
 public class PageResult<T> {
 
     /**
-     * 数据列表
+     * 数据列表：data数据...
      */
     private List<T> records;
 
@@ -36,6 +36,8 @@ public class PageResult<T> {
      * @param records 数据列表
      * @param total   总记录数
      * @param <T>     数据类型
+     * 例：
+     * PageResult<User> pageResult = PageResult.of(users, total);
      * @return 分页结果
      */
     public static <T> PageResult<T> of(List<T> records, Long total) {

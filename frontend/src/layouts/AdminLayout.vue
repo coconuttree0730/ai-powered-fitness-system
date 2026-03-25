@@ -24,6 +24,10 @@
           <el-icon><Calendar /></el-icon>
           <span>课程管理</span>
         </el-menu-item>
+        <el-menu-item index="/admin/equipment">
+          <el-icon><Box /></el-icon>
+          <span>器材管理</span>
+        </el-menu-item>
         <el-sub-menu index="/admin/business">
           <template #title>
             <el-icon><ShoppingBag /></el-icon>
@@ -46,21 +50,17 @@
           <el-icon><Document /></el-icon>
           <span>内容管理</span>
         </el-menu-item>
+        <el-menu-item index="/admin/analysis">
+          <el-icon><TrendCharts /></el-icon>
+          <span>数据分析</span>
+        </el-menu-item>
         <el-menu-item index="/admin/knowledge-base">
           <el-icon><Collection /></el-icon>
-          <span>AI客服-知识库管理</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/equipment">
-          <el-icon><Box /></el-icon>
-          <span>器材管理</span>
+          <span>客服知识库管理</span>
         </el-menu-item>
         <el-menu-item index="/admin/repairs">
           <el-icon><Tools /></el-icon>
           <span>报修管理</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/analysis">
-          <el-icon><TrendCharts /></el-icon>
-          <span>数据分析</span>
         </el-menu-item>
       </el-menu>
     </el-aside>

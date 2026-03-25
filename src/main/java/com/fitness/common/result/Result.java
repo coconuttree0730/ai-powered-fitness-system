@@ -5,6 +5,20 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 结果封装类
+ *
+ * @param <T> 数据类型
+ * 例：
+ * Result<User> result = Result.success(user);
+ * Result<User> result = Result.success();
+ * Result<User> result = Result.error("错误信息");
+ * Result<User> result = Result.error(ErrorCode.INTERNAL_ERROR);
+ * Result<User> result = Result.error(400, "参数错误");
+ * Result<User> result = Result.error(404, "资源不存在");
+ * Result<User> result = Result.error(500, "服务器错误");
+ * Result<User> result = Result.error(500, "服务器错误", null);
+ */
 @Data
 public class Result<T> {
 

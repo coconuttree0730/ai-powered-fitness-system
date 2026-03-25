@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class FitnessApplication {
 
     public static void main(String[] args) {
-        //System.setProperty("nacos.logging.default.config.enabled", "false");
         SpringApplication.run(FitnessApplication.class, args);
     }
 

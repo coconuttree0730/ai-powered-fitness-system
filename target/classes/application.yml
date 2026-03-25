@@ -67,7 +67,7 @@ mybatis-plus:
       logic-not-delete-value: false
 
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-signing-must-be-at-least-32-characters-long}
+  secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-signing-must-be-at-least-32-characters-long} # JWT 密钥；可环境变量配置；默认
   expiration: ${JWT_EXPIRATION:86400000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   issuer: ai-fitness-system

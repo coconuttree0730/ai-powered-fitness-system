@@ -64,7 +64,7 @@ public final class RoleConstants {
     /**
      * 获取带前缀的角色编码
      *
-     * @param roleCode 角色编码
+     * @param roleCode 角色编码（原理：消除前缀）
      * @return 带前缀的角色编码
      */
     public static String withPrefix(String roleCode) {
