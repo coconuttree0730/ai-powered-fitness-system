@@ -465,7 +465,6 @@ async function verifySliderWithBackend() {
       // 验证成功
       isSliderSuccess.value = true
       isSliderVerified.value = true
-      message.success('验证成功，正在发送验证码...')
 
       // 自动发送短信验证码
       await doSendSmsCode()

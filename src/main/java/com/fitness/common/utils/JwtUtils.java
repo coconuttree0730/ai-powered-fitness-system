@@ -18,6 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtUtils {
 
+    //注入JwtProperties:用于获取配置文件中的JWT相关属性
     private final JwtProperties jwtProperties;
 
     /**
