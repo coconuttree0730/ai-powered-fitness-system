@@ -102,4 +102,14 @@ public interface UserService {
      * @return 教练列表
      */
     java.util.List<com.fitness.modules.user.model.vo.CoachVO> getCoachList();
+
+    /**
+     * 短信验证码登录
+     * 如果手机号未注册，自动创建新用户
+     *
+     * @param phone   手机号
+     * @param smsCode 短信验证码
+     * @return Token信息
+     */
+    Map<String, Object> loginBySmsCode(String phone, String smsCode);
 }

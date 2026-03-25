@@ -282,7 +282,7 @@ import { ref, reactive, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
-import { getSliderVerifyToken, verifySlider, sendSmsCode } from '@/api/auth'
+import { getSliderVerifyToken, verifySlider, sendSmsCode, loginBySms } from '@/api/auth'
 
 const props = defineProps({
   visible: {
@@ -559,12 +559,24 @@ async function handleLogin() {
   loading.value = true
   
   try {
-    // 构建登录凭证
-    const credentials = loginType.value === 'password' 
-      ? { username: form.username, password: form.password }
-      : { phone: form.phone, code: form.code }
+    let result
     
-    const result = await authStore.login(credentials)
+    if (loginType.value === 'password') {
+      // 密码登录
+      const credentials = { username: form.username, password: form.password }
+      result = await authStore.login(credentials)
+    } else {
+      // 短信验证码登录
+      const data = await loginBySms({ phone: form.phone, smsCode: form.code })
+      console.log('短信登录返回数据:', data)
+      if (data && data.token) {
+        // 保存登录状态
+        await authStore.setLoginState(data)
+        result = { success: true }
+      } else {
+        result = { success: false, message: '登录失败，未获取到token' }
+      }
+    }
     
     if (result.success) {
       emit('login-success')
@@ -574,7 +586,7 @@ async function handleLogin() {
     }
   } catch (error) {
     console.error('登录失败:', error)
-    message.error('登录失败，请重试')
+    message.error(error.response?.data?.message || '登录失败，请重试')
   } finally {
     loading.value = false
   }

@@ -67,6 +67,25 @@ export const useAuthStore = defineStore('auth', () => {
     return userRoles.value.includes(role)
   }
 
+  // 设置登录状态（用于短信登录等直接返回token的场景）
+  async function setLoginState(data) {
+    if (data && data.token) {
+      token.value = data.token
+      localStorage.setItem('token', data.token)
+      
+      if (data.userInfo) {
+        userInfo.value = data.userInfo
+        localStorage.setItem('userInfo', JSON.stringify(data.userInfo))
+      }
+      
+      const roles = data.userInfo?.roles || []
+      const redirect = router.currentRoute.value.query.redirect || getDashboardPathByRoles(roles)
+      router.push(redirect)
+      return { success: true }
+    }
+    return { success: false, message: '登录数据无效' }
+  }
+
   return {
     token,
     userInfo,
@@ -78,6 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     fetchUserInfo,
     logout,
-    hasRole
+    hasRole,
+    setLoginState
   }
 })

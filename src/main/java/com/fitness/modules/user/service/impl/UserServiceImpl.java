@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final FileService fileService;
+    private final com.fitness.modules.user.service.SmsCodeService smsCodeService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -104,6 +106,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<Role> roles = userMapper.selectRolesByUserId(user.getId());
         List<String> roleCodes = roles.stream()
                 .map(Role::getRoleCode) //角色编码：ROLE_USER 、 ROLE_ADMIN 、 ROLE_MANAGER
+
                 .collect(Collectors.toList()); //一个用户可以有多个角色：list
 
         // 生成JWT Token
@@ -345,5 +348,101 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public List<com.fitness.modules.user.model.vo.CoachVO> getCoachList() {
         return userMapper.selectCoachList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> loginBySmsCode(String phone, String smsCode) {
+        // 1. 验证短信验证码
+        if (!smsCodeService.verifySmsCode(phone, smsCode)) {
+            throw new BusinessException(ErrorCode.SMS_CODE_ERROR);
+        }
+
+        // 2. 根据手机号查询用户
+        User user = userMapper.selectByPhone(phone);
+
+        // 3. 如果用户不存在，自动注册
+        if (user == null) {
+            user = new User();
+            user.setUsername(generateUsernameFromPhone(phone));
+            user.setPhone(phone);
+            // 短信登录用户设置随机密码（用户后续可通过密码重置修改）
+            user.setPassword(passwordEncoder.encode(generateRandomPassword()));
+            user.setStatus(1);
+            user.setCreateTime(LocalDateTime.now());
+            user.setUpdateTime(LocalDateTime.now());
+
+            userMapper.insert(user);
+
+            // 赋予默认角色 MEMBER（普通会员）
+            Role role = roleMapper.selectByRoleCode("MEMBER");
+            if (role != null) {
+                userMapper.insertUserRole(user.getId(), role.getId());
+                log.info("新用户自动赋予 MEMBER 角色: userId={}, roleId={}", user.getId(), role.getId());
+            } else {
+                log.error("无法找到 MEMBER 角色，用户注册后没有角色: userId={}", user.getId());
+            }
+
+            log.info("短信登录自动注册新用户: phone={}, userId={}", phone, user.getId());
+        }
+
+        // 4. 检查用户状态
+        if (user.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        // 5. 获取用户角色
+        List<Role> roles = userMapper.selectRolesByUserId(user.getId());
+        List<String> roleCodes = roles.stream()
+                .map(Role::getRoleCode)
+                .collect(Collectors.toList());
+
+        // 6. 生成JWT Token
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("roles", roleCodes);
+        String token = jwtUtils.generateToken(user.getUsername(), claims);
+
+        // 7. 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", token);
+        result.put("tokenType", "Bearer");
+        result.put("expiresIn", jwtUtils.getExpirationTime());
+
+        UserVO userVO = convertToVO(user);
+        userVO.setRoles(roleCodes);
+        result.put("userInfo", userVO);
+
+        log.info("短信验证码登录成功: phone={}, userId={}", phone, user.getId());
+        return result;
+    }
+
+    /**
+     * 根据手机号生成用户名
+     * 格式：user_手机号后8位_随机4位
+     *
+     * @param phone 手机号
+     * @return 用户名
+     */
+    private String generateUsernameFromPhone(String phone) {
+        String phoneSuffix = phone.substring(phone.length() - 8);
+        Random random = new Random();
+        int randomSuffix = random.nextInt(10000);
+        return String.format("user_%s_%04d", phoneSuffix, randomSuffix);
+    }
+
+    /**
+     * 生成随机密码
+     *
+     * @return 随机密码
+     */
+    private String generateRandomPassword() {
+        Random random = new Random();
+        StringBuilder password = new StringBuilder();
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+        for (int i = 0; i < 16; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return password.toString();
     }
 }

@@ -11,7 +11,11 @@
     </div>
 
     <!-- 导航栏 -->
-    <nav :class="['navbar', { scrolled: isScrolled, 'has-announcement': showAnnouncement }]">
+    <nav :class="['navbar', { 
+      scrolled: isScrolled, 
+      'has-announcement': showAnnouncement && !authStore.isLoggedIn,
+      'is-logged-in': authStore.isLoggedIn 
+    }]">
       <div class="navbar-container">
         <router-link to="/" class="logo">
           <div class="logo-icon">💪</div>
@@ -31,9 +35,11 @@
             <button class="btn btn-primary btn-glow" @click="goToRegister">免费体验</button>
           </template>
           <template v-else>
-            <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link">管理后台</router-link>
-            <router-link v-else-if="authStore.isCoach" to="/coach" class="nav-link">教练中心</router-link>
-            <router-link v-else-if="authStore.isMember" to="/member" class="nav-link">会员中心</router-link>
+            <div class="user-menu">
+              <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link admin-link">管理后台</router-link>
+              <router-link v-else-if="authStore.isCoach" to="/coach" class="nav-link coach-link">教练中心</router-link>
+              <router-link v-else-if="authStore.isMember" to="/member" class="nav-link member-link">会员中心</router-link>
+            </div>
           </template>
           <button class="mobile-menu-btn" :class="{ active: mobileMenuOpen }" @click="mobileMenuOpen = !mobileMenuOpen">
             <span></span>
@@ -233,8 +239,8 @@
       </div>
     </section>
 
-    <!-- 会员方案 -->
-    <section id="membership" class="section membership-section">
+    <!-- 会员方案 - 仅未登录用户可见 -->
+    <section v-if="!authStore.isLoggedIn" id="membership" class="section membership-section">
       <div class="membership-container">
         <div class="section-header" v-intersect="onReveal">
           <div class="section-tag">Membership</div>
@@ -1252,7 +1258,7 @@ const vIntersect = {
   background-size: 200% 100%;
   animation: gradient-shift 3s ease infinite;
   z-index: 1001;
-  padding: 12px 0;
+  padding: 14px 0;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
 }
@@ -1299,24 +1305,46 @@ const vIntersect = {
 /* Navbar */
 .navbar {
   position: fixed;
-  top: 40px;
+  top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  padding: 20px 0;
+  z-index: 1002;
+  padding: 16px 0;
   transition: all var(--transition-normal);
+  background: transparent;
 }
 
 .navbar.scrolled {
-  background: rgba(10, 10, 15, 0.92);
+  background: rgba(10, 10, 15, 0.95);
   backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 14px 0;
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 0;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* 未登录且有公告栏时，导航栏下移 */
+.navbar.has-announcement {
+  top: 48px;
+}
+
+.navbar.has-announcement.scrolled {
   top: 0;
 }
 
-.navbar.has-announcement {
-  top: 40px;
+/* 登录状态导航栏始终置顶且有背景 */
+.navbar.is-logged-in {
+  top: 0 !important;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.navbar.is-logged-in.scrolled {
+  background: rgba(10, 10, 15, 0.98);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .navbar-container {
@@ -1437,6 +1465,31 @@ const vIntersect = {
 
 .nav-link:hover::after {
   width: 100%;
+}
+
+/* User Menu - 登录后用户菜单样式 */
+.user-menu {
+  display: flex;
+  align-items: center;
+}
+
+.user-menu .nav-link {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FF6B35;
+  transition: all var(--transition-normal);
+}
+
+.user-menu .nav-link:hover {
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.user-menu .nav-link::after {
+  display: none;
 }
 
 /* Buttons */
@@ -1577,7 +1630,7 @@ const vIntersect = {
 .hero-section {
   min-height: auto;
   height: auto;
-  padding: 160px 0 80px;
+  padding: 120px 0 80px;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -1585,8 +1638,9 @@ const vIntersect = {
   background: var(--bg-dark);
 }
 
+/* 未登录且有公告栏时，Hero区域增加顶部padding */
 .hero-section.has-announcement {
-  padding-top: 200px;
+  padding-top: 168px;
 }
 
 .hero-bg {
@@ -3643,8 +3697,19 @@ const vIntersect = {
   .navbar-container { padding: 0 20px; }
   .nav-links { display: none; }
   .mobile-menu-btn { display: flex; }
-  .hero-section { padding: 120px 0 60px; }
-  .hero-section.has-announcement { padding-top: 160px; }
+  .navbar { padding: 12px 0; }
+  .navbar.scrolled { padding: 10px 0; }
+  .navbar.has-announcement { top: 44px; }
+  .navbar.has-announcement.scrolled { top: 0; }
+  .user-menu .nav-link {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .user-menu .user-icon {
+    font-size: 14px;
+  }
+  .hero-section { padding: 100px 0 60px; }
+  .hero-section.has-announcement { padding-top: 144px; }
   .hero-container { padding: 0 20px; }
   .hero-title { font-size: 36px; }
   .hero-actions { flex-direction: column; }

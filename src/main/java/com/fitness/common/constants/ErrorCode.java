@@ -15,9 +15,18 @@ public enum ErrorCode {
     USER_NOT_FOUND(1001, "用户不存在"),
     USER_ALREADY_EXISTS(1002, "用户已存在"),
     PASSWORD_ERROR(1003, "密码错误"),
+    SMS_CODE_ERROR(1004, "短信验证码错误"),
+    SMS_CODE_EXPIRED(1005, "短信验证码已过期"),
+    SMS_CODE_SEND_TOO_FREQUENT(1006, "短信验证码发送过于频繁"),
+    PHONE_NOT_BOUND(1007, "手机号未绑定用户"),
 
     COURSE_NOT_FOUND(2001, "课程不存在"),
     COURSE_FULL(2002, "课程已满"),
+
+    BOOKING_NOT_FOUND(2101, "预约记录不存在"),
+    BOOKING_ALREADY_EXISTS(2102, "已预约该课程"),
+    BOOKING_CANNOT_CANCEL(2103, "预约无法取消"),
+    BOOKING_STATUS_ERROR(2104, "预约状态错误"),
 
     EQUIPMENT_NOT_FOUND(3001, "器材不存在"),
     EQUIPMENT_IN_USE(3002, "器材正在使用中，无法删除"),

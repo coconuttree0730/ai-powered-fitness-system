@@ -52,6 +52,7 @@ public class SecurityConfig {
     private static final String[] WHITE_LIST_URLS = {
             // 认证相关
             "/api/v1/auth/login",
+            "/api/v1/auth/login/sms",
             "/api/v1/auth/register",
             "/api/v1/auth/refresh",
             // 滑块验证（登录前使用，需要匿名访问）

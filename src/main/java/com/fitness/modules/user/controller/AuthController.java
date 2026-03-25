@@ -4,11 +4,13 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.LoginDTO;
 import com.fitness.modules.user.model.dto.SliderVerifyDTO;
 import com.fitness.modules.user.model.dto.SmsCodeDTO;
+import com.fitness.modules.user.model.dto.SmsCodeLoginDTO;
 import com.fitness.modules.user.model.dto.UserDTO;
 import com.fitness.modules.user.model.vo.SliderVerifyResultVO;
 import com.fitness.modules.user.model.vo.SliderVerifyTokenVO;
 import com.fitness.modules.user.model.vo.UserVO;
 import com.fitness.modules.user.service.SliderVerifyService;
+import com.fitness.modules.user.service.SmsCodeService;
 import com.fitness.modules.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class AuthController {
 
     private final UserService userService;
     private final SliderVerifyService sliderVerifyService;
+    private final SmsCodeService smsCodeService;
 
     /**
      * 用户注册
@@ -108,19 +111,41 @@ public class AuthController {
             return Result.error(400, "请先完成滑块验证");
         }
 
-        // 2. 使验证令牌失效（一次性使用）
+        // 2. 检查发送频率
+        if (!smsCodeService.canSend(dto.getPhone())) {
+            long remainingSeconds = smsCodeService.getRemainingCooldown(dto.getPhone());
+            log.warn("发送短信验证码失败: 发送过于频繁, phone={}, remaining={}s", dto.getPhone(), remainingSeconds);
+            return Result.error(429, "发送过于频繁，请" + remainingSeconds + "秒后再试");
+        }
+
+        // 3. 使验证令牌失效（一次性使用）
         sliderVerifyService.invalidateToken(dto.getVerifyToken());
 
-        // 3. 模拟发送短信验证码（后续接入真实短信服务）
-        // TODO: 接入真实短信服务，生成并发送验证码 ；后续接入短信服务
-        log.info(": phone={}，短信验证码发送成功", dto.getPhone());
+        // 4. 发送短信验证码
+        boolean sent = smsCodeService.sendSmsCode(dto.getPhone());
+
+        if (!sent) {
+            return Result.error(500, "验证码发送失败，请稍后重试");
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("sent", true);
         result.put("message", "验证码已发送");
-        // 开发环境返回模拟验证码，生产环境应移除！ 使用短信服务取代
-        result.put("demoCode", "123456");
 
         return Result.success(result);
+    }
+
+    /**
+     * 短信验证码登录
+     * 如果手机号未注册，自动创建新用户
+     *
+     * @param dto 登录信息
+     * @return Token信息
+     */
+    @PostMapping("/login/sms")
+    public Result<Map<String, Object>> loginBySmsCode(@Valid @RequestBody SmsCodeLoginDTO dto) {
+        log.info("短信验证码登录请求: phone={}", dto.getPhone());
+        Map<String, Object> tokenInfo = userService.loginBySmsCode(dto.getPhone(), dto.getSmsCode());
+        return Result.success(tokenInfo);
     }
 }

@@ -64,3 +64,15 @@ export function sendSmsCode(data) {
     data
   })
 }
+
+/**
+ * 短信验证码登录
+ * @param {Object} data - {phone, smsCode}
+ */
+export function loginBySms(data) {
+  return request({
+    url: '/auth/login/sms',
+    method: 'post',
+    data
+  })
+}
