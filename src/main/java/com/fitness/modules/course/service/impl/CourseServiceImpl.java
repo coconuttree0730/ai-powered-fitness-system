@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 课程服务实现类
@@ -137,6 +138,11 @@ public class CourseServiceImpl implements CourseService {
         // 公开列表只显示未开始和进行中的课程
         Page<Course> page = new Page<>(query.getPageNum(), query.getPageSize());
         return courseMapper.selectCourseList(page, query);
+    }
+
+    @Override
+    public List<String> getCourseCategories() {
+        return courseMapper.selectDistinctCategories();
     }
 
     /**

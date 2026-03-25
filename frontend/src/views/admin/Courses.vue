@@ -295,11 +295,12 @@
 import { ref, h, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Clock, User, Calendar, UserFilled, Document, Picture } from '@element-plus/icons-vue'
-import { getCourseList, createCourse, updateCourse, deleteCourse } from '@/api/course'
+import { getCourseList, createCourse, updateCourse, deleteCourse, getCourseCategories } from '@/api/course'
 import { getCoachList } from '@/api/coach'
 import { getToken } from '@/utils/auth'
 
 const coachOptions = ref([])
+const categoryOptions = ref([])
 
 const message = ElMessage
 const loading = ref(false)
@@ -370,14 +371,6 @@ const rules = {
   capacity: [{ required: true, message: '请输入容量', trigger: 'blur' }]
 }
 
-const categoryOptions = [
-  { label: '瑜伽', value: 'YOGA' },
-  { label: '普拉提', value: 'PILATES' },
-  { label: 'HIIT', value: 'HIIT' },
-  { label: '力量训练', value: 'STRENGTH' },
-  { label: '动感单车', value: 'SPINNING' }
-]
-
 function handleSizeChange(size) {
   paginationReactive.pageSize = size
   fetchCourses()
@@ -390,6 +383,7 @@ function handlePageChange(page) {
 
 onMounted(() => {
   fetchCoachList()
+  fetchCategories()
   fetchCourses()
 })
 
@@ -405,6 +399,18 @@ async function fetchCoachList() {
   }
 }
 
+async function fetchCategories() {
+  try {
+    const res = await getCourseCategories()
+    categoryOptions.value = (res || []).map(category => ({
+      label: category,
+      value: category
+    }))
+  } catch (error) {
+    console.error('获取课程分类列表失败', error)
+  }
+}
+
 async function fetchCourses() {
   loading.value = true
   try {
@@ -414,8 +420,8 @@ async function fetchCourses() {
       ...buildSearchParams()
     }
     const res = await getCourseList(params)
-    courses.value = res.records || []
-    paginationReactive.itemCount = res.total || 0
+    courses.value = res?.records || []
+    paginationReactive.itemCount = res?.total || 0
   } catch (error) {
     message.error('获取课程列表失败')
   } finally {
@@ -573,7 +579,7 @@ function formatTime(time) {
 }
 
 function getCategoryLabel(category) {
-  const item = categoryOptions.find(c => c.value === category)
+  const item = categoryOptions.value.find(c => c.value === category)
   return item?.label || category
 }
 

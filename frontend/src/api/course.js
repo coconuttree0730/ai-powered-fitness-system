@@ -67,3 +67,10 @@ export function getMyBookings() {
     method: 'get'
   })
 }
+
+export function getCourseCategories() {
+  return request({
+    url: '/courses/categories',
+    method: 'get'
+  })
+}

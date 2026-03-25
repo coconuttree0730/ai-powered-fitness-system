@@ -6,7 +6,10 @@ import com.fitness.modules.course.model.dto.CourseQueryDTO;
 import com.fitness.modules.course.model.entity.Course;
 import com.fitness.modules.course.model.vo.CourseVO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 /**
  * 课程数据访问层
@@ -39,4 +42,12 @@ public interface CourseMapper extends BaseMapper<Course> {
      */
     @Update("UPDATE fitness_course SET booked_count = booked_count + #{delta} WHERE id = #{courseId}")
     int updateBookedCount(@Param("courseId") Long courseId, @Param("delta") Integer delta);
+
+    /**
+     * 查询所有不重复的课程分类
+     *
+     * @return 分类列表
+     */
+    @Select("SELECT DISTINCT category FROM fitness_course WHERE deleted = false AND category IS NOT NULL ORDER BY category")
+    List<String> selectDistinctCategories();
 }

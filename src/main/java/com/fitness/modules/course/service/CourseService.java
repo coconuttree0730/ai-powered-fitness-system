@@ -56,4 +56,11 @@ public interface CourseService {
      * @return 分页结果
      */
     Page<CourseVO> getPublicCourseList(CourseQueryDTO query);
+
+    /**
+     * 获取所有课程分类列表
+     *
+     * @return 分类列表
+     */
+    java.util.List<String> getCourseCategories();
 }

@@ -61,4 +61,16 @@ public class CourseController {
         Page<CourseVO> page = courseService.getPublicCourseList(query);
         return Result.success(page);
     }
+
+    /**
+     * 获取所有课程分类列表
+     *
+     * @return 分类列表
+     */
+    @GetMapping("/categories")
+    public Result<java.util.List<String>> getCourseCategories() {
+        log.info("获取课程分类列表请求");
+        java.util.List<String> categories = courseService.getCourseCategories();
+        return Result.success(categories);
+    }
 }

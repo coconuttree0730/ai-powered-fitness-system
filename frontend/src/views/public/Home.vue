@@ -11,14 +11,14 @@
     </div>
 
     <!-- 导航栏 -->
-    <nav :class="['navbar', { 
-      scrolled: isScrolled, 
+    <nav :class="['navbar', {
+      scrolled: isScrolled,
       'has-announcement': showAnnouncement && !authStore.isLoggedIn,
-      'is-logged-in': authStore.isLoggedIn 
+      'is-logged-in': authStore.isLoggedIn
     }]">
       <div class="navbar-container">
         <router-link to="/" class="logo">
-          <div class="logo-icon">💪</div>
+          <div class="logo-icon">💪</div>  <!-- logo位置 -->
           <div class="logo-text">智健<span>AI</span></div>
         </router-link>
         <div class="nav-links">
@@ -72,7 +72,7 @@
       <div class="hero-container">
         <div class="hero-content">
           <div class="hero-text">
-            <div class="hero-badge"><span>🚀</span> AI智能健身新时代</div>
+            <div class="hero-badge">AI智能健身新时代</div>
             <h1 class="hero-title">让AI成为你的<br><span>私人健身专家</span></h1>
             <p class="hero-desc">智健AI运用先进的人工智能技术，为您量身定制科学训练计划。无论是减脂塑形、增肌力量还是康复训练，我们让每一次锻炼都精准高效，助您快速达成健身目标。</p>
             <div class="hero-actions">
@@ -105,8 +105,8 @@
               <button class="hero-carousel-nav prev" @click="prevSlide">‹</button>
               <button class="hero-carousel-nav next" @click="nextSlide">›</button>
               <div class="hero-carousel-indicators">
-                <button v-for="(slide, index) in heroSlides" :key="index" 
-                        :class="['hero-carousel-dot', { active: currentSlide === index }]" 
+                <button v-for="(slide, index) in heroSlides" :key="index"
+                        :class="['hero-carousel-dot', { active: currentSlide === index }]"
                         @click="goToSlide(index)"></button>
               </div>
             </div>
@@ -182,8 +182,8 @@
           <p class="section-desc">融合前沿AI技术与专业健身知识，为您打造全方位的智能健身体验</p>
         </div>
         <div class="ai-features-grid">
-          <div v-for="(feature, index) in aiFeatures" :key="index" 
-               class="ai-feature-card" 
+          <div v-for="(feature, index) in aiFeatures" :key="index"
+               class="ai-feature-card"
                :class="`reveal-delay-${index}`"
                v-intersect="onReveal">
             <div class="ai-feature-icon">{{ feature.icon }}</div>
@@ -213,8 +213,8 @@
           </button>
         </div>
         <div class="courses-grid">
-          <div v-for="(course, index) in filteredCourses" :key="index" 
-               class="course-card" 
+          <div v-for="(course, index) in filteredCourses" :key="index"
+               class="course-card"
                v-intersect="onReveal">
             <div class="course-image">
               <img :src="course.image" :alt="course.name">
@@ -239,8 +239,8 @@
       </div>
     </section>
 
-    <!-- 会员方案 - 仅未登录用户可见 -->
-    <section v-if="!authStore.isLoggedIn" id="membership" class="section membership-section">
+    <!-- 会员方案 -->
+    <section id="membership" class="section membership-section">
       <div class="membership-container">
         <div class="section-header" v-intersect="onReveal">
           <div class="section-tag">Membership</div>
@@ -251,7 +251,7 @@
           <button class="membership-slider-btn prev" @click="prevMembershipSlide">‹</button>
           <div class="membership-slider-track">
             <div class="membership-slider-content" :style="{ transform: `translateX(-${membershipSlide * 33.333}%)` }">
-              <div v-for="(plan, index) in membershipPlans" :key="index" 
+              <div v-for="(plan, index) in membershipPlans" :key="index"
                    class="membership-slide"
                    :class="{ featured: plan.featured }">
                 <div class="membership-card">
@@ -268,7 +268,7 @@
                       {{ feature.included ? '✓' : '×' }} {{ feature.text }}
                     </li>
                   </ul>
-                  <button :class="['btn', plan.featured ? 'btn-primary' : 'btn-outline', 'btn-block']" 
+                  <button :class="['btn', plan.featured ? 'btn-primary' : 'btn-outline', 'btn-block']"
                           @click="goToRegister">
                     {{ plan.featured ? '立即开通' : '选择方案' }}
                   </button>
@@ -387,8 +387,8 @@
             </div>
           </div>
           <div class="equipment-list">
-            <div v-for="(item, index) in equipmentList" :key="index" 
-                 class="equipment-item" 
+            <div v-for="(item, index) in equipmentList" :key="index"
+                 class="equipment-item"
                  :class="{ active: activeEquipment === index }"
                  @click="activeEquipment = index"
                  v-intersect="onReveal">
@@ -460,18 +460,18 @@
         <h2 class="cta-title" v-intersect="onReveal">开启您的<span>智能健身之旅</span></h2>
         <p class="cta-desc" v-intersect="onReveal">立即注册，免费体验7天VIP会员服务，感受AI智能健身的魅力</p>
         <form class="cta-form" v-intersect="onReveal" @submit.prevent="handleCTASubmit">
-          <input 
+          <input
             ref="ctaInputRef"
-            v-model="ctaPhone" 
-            type="tel" 
-            class="cta-input" 
-            placeholder="请输入您的手机号" 
+            v-model="ctaPhone"
+            type="tel"
+            class="cta-input"
+            placeholder="请输入您的手机号"
             maxlength="11"
             :disabled="ctaLoading"
           >
-          <button 
-            type="submit" 
-            class="btn btn-primary btn-large" 
+          <button
+            type="submit"
+            class="btn btn-primary btn-large"
             :disabled="ctaLoading"
           >
             {{ ctaLoading ? '提交中...' : '立即领取' }}
@@ -567,15 +567,15 @@
     </footer>
 
     <!-- 登录模态框 -->
-    <LoginModal 
-      v-model:visible="showLoginModal" 
+    <LoginModal
+      v-model:visible="showLoginModal"
       @login-success="handleLoginSuccess"
       @go-register="goToRegisterFromModal"
     />
 
     <!-- 注册模态框 -->
-    <RegisterModal 
-      v-model:visible="showRegisterModal" 
+    <RegisterModal
+      v-model:visible="showRegisterModal"
       @register-success="handleRegisterSuccess"
       @go-login="goToLoginFromModal"
     />
@@ -595,9 +595,9 @@
         </div>
         <n-form ref="registerFormRef" :model="registerForm" :rules="registerRules" class="register-form">
           <n-form-item path="phone" :show-label="false">
-            <n-input 
-              v-model:value="registerForm.phone" 
-              placeholder="请输入手机号" 
+            <n-input
+              v-model:value="registerForm.phone"
+              placeholder="请输入手机号"
               size="large"
               :maxlength="11"
               class="phone-input"
@@ -612,9 +612,9 @@
           </n-form-item>
           <n-form-item path="code" :show-label="false">
             <div class="code-input-group">
-              <n-input 
-                v-model:value="registerForm.code" 
-                placeholder="请输入验证码" 
+              <n-input
+                v-model:value="registerForm.code"
+                placeholder="请输入验证码"
                 size="large"
                 :maxlength="6"
                 class="code-input"
@@ -627,8 +627,8 @@
                   </svg>
                 </template>
               </n-input>
-              <n-button 
-                :disabled="countdown > 0 || !isPhoneValid" 
+              <n-button
+                :disabled="countdown > 0 || !isPhoneValid"
                 :loading="sendingCode"
                 @click="sendVerificationCode"
                 class="send-code-btn"
@@ -639,11 +639,11 @@
             </div>
           </n-form-item>
           <n-form-item :show-label="false">
-            <n-button 
-              type="primary" 
-              block 
+            <n-button
+              type="primary"
+              block
               size="large"
-              @click="handleRegisterSubmit" 
+              @click="handleRegisterSubmit"
               :loading="registerLoading"
               class="submit-btn"
             >
@@ -1045,7 +1045,7 @@ async function handleCTASubmit() {
     message.error('请输入正确的11位手机号')
     return
   }
-  
+
   ctaLoading.value = true
   try {
     // 模拟请求延迟
@@ -1064,13 +1064,13 @@ async function sendVerificationCode() {
     message.error('请输入正确的手机号')
     return
   }
-  
+
   sendingCode.value = true
   try {
     // 模拟发送验证码请求
     await new Promise(resolve => setTimeout(resolve, 1000))
     message.success('验证码已发送')
-    
+
     // 开始倒计时
     countdown.value = 60
     countdownTimer = setInterval(() => {
@@ -1091,19 +1091,19 @@ async function handleRegisterSubmit() {
   try {
     await registerFormRef.value?.validate()
     registerLoading.value = true
-    
+
     // 模拟注册/登录请求
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     // 模拟登录成功
     message.success('领取成功！欢迎加入智健AI')
     showCTARegisterModal.value = false
-    
+
     // 清空表单
     registerForm.phone = ''
     registerForm.code = ''
     ctaPhone.value = ''
-    
+
     // 这里可以添加实际的登录逻辑
     // await authStore.loginWithPhone(registerForm.phone, registerForm.code)
   } catch (error) {
@@ -1144,7 +1144,7 @@ function animateNumbers() {
     step++
     const progress = step / steps
     const easeOut = 1 - Math.pow(1 - progress, 3)
-
+    //TODO ： 替换成后台获取数据
     animatedStats.members = Math.floor(targetStats.members * easeOut)
     animatedStats.satisfaction = Math.floor(targetStats.satisfaction * easeOut)
     animatedStats.coaches = Math.floor(targetStats.coaches * easeOut)
@@ -1238,7 +1238,7 @@ const vIntersect = {
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  
+
   font-family: 'Noto Sans SC', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #0A0A0F;
   background-color: #0A0A0F;
@@ -1649,7 +1649,7 @@ const vIntersect = {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(ellipse at 20% 80%, rgba(255, 107, 53, 0.2) 0%, transparent 55%),
     radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(46, 196, 182, 0.1) 0%, transparent 60%),
@@ -3459,15 +3459,15 @@ const vIntersect = {
   .register-modal-content {
     padding: 40px 24px 32px;
   }
-  
+
   .register-title {
     font-size: 20px;
   }
-  
+
   .code-input-group {
     flex-direction: column;
   }
-  
+
   .send-code-btn {
     width: 100%;
   }
