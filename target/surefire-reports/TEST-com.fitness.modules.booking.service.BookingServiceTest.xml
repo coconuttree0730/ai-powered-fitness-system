@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.fitness.modules.booking.service.BookingServiceTest" time="0.026" tests="1" errors="1" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.fitness.modules.booking.service.BookingServiceTest" time="17.398" tests="13" errors="13" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
     <property name="sun.jnu.encoding" value="GBK"/>
-    <property name="java.class.path" value="C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\test-classes;C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\classes;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-actuator\3.5.0\spring-boot-starter-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter\3.5.0\spring-boot-starter-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-logging\3.5.0\spring-boot-starter-logging-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-classic\1.5.18\logback-classic-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-core\1.5.18\logback-core-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator-autoconfigure\3.5.0\spring-boot-actuator-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator\3.5.0\spring-boot-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.0\jackson-datatype-jsr310-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-observation\1.15.0\micrometer-observation-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-commons\1.15.0\micrometer-commons-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-jakarta9\1.15.0\micrometer-jakarta9-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-core\1.15.0\micrometer-core-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hdrhistogram\HdrHistogram\2.2.2\HdrHistogram-2.2.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\latencyutils\LatencyUtils\2.0.3\LatencyUtils-2.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-web\3.5.0\spring-boot-starter-web-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-json\3.5.0\spring-boot-starter-json-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.0\jackson-datatype-jdk8-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.0\jackson-module-parameter-names-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-tomcat\3.5.0\spring-boot-starter-tomcat-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.41\tomcat-embed-core-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.41\tomcat-embed-websocket-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-web\6.2.7\spring-web-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-beans\6.2.7\spring-beans-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webmvc\6.2.7\spring-webmvc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context\6.2.7\spring-context-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-expression\6.2.7\spring-expression-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-security\3.5.0\spring-boot-starter-security-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-aop\6.2.7\spring-aop-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-config\6.5.0\spring-security-config-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-web\6.5.0\spring-security-web-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-validation\3.5.0\spring-boot-starter-validation-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.41\tomcat-embed-el-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hibernate\validator\hibernate-validator\8.0.2.Final\hibernate-validator-8.0.2.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-starter-dashscope\1.1.2.0\spring-ai-alibaba-starter-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-autoconfigure-dashscope\1.1.2.0\spring-ai-alibaba-autoconfigure-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-dashscope\1.1.2.0\spring-ai-alibaba-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-commons\1.1.2\spring-ai-commons-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\context-propagation\1.1.3\context-propagation-1.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-jsonSchema\2.19.0\jackson-module-jsonSchema-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\javax\validation\validation-api\1.1.0.Final\validation-api-1.1.0.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\knuddels\jtokkit\1.1.0\jtokkit-1.1.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-model\1.1.2\spring-ai-model-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-template-st\1.1.2\spring-ai-template-st-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\ST4\4.3.4\ST4-4.3.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr-runtime\3.5.3\antlr-runtime-3.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-messaging\6.2.7\spring-messaging-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr4-runtime\4.13.1\antlr4-runtime-4.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-generator\4.38.0\jsonschema-generator-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-jackson\4.38.0\jsonschema-module-jackson-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-swagger-2\4.38.0\jsonschema-module-swagger-2-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\swagger\core\v3\swagger-annotations-jakarta\2.2.38\swagger-annotations-jakarta-2.2.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-rag\1.1.2\spring-ai-rag-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-vector-store\1.1.2\spring-ai-vector-store-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-retry\1.1.2\spring-ai-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\retry\spring-retry\2.0.12\spring-retry-2.0.12.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webflux\6.2.7\spring-webflux-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\logging-interceptor\4.12.0\logging-interceptor-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\opennlp\opennlp-tools\2.3.3\opennlp-tools-2.3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-retry\1.1.2\spring-ai-autoconfigure-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-tool\1.1.2\spring-ai-autoconfigure-model-tool-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-client\1.1.2\spring-ai-autoconfigure-model-chat-client-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-client-chat\1.1.2\spring-ai-client-chat-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json-jackson2\0.17.0\mcp-json-jackson2-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json\0.17.0\mcp-json-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\networknt\json-schema-validator\2.0.0\json-schema-validator-2.0.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\ethlo\time\itu\1.14.0\itu-1.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.19.0\jackson-dataformat-yaml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-observation\1.1.2\spring-ai-autoconfigure-model-chat-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-embedding-observation\1.1.2\spring-ai-autoconfigure-model-embedding-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-image-observation\1.1.2\spring-ai-autoconfigure-model-image-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot3-starter\3.5.7\mybatis-plus-spring-boot3-starter-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus\3.5.7\mybatis-plus-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-core\3.5.7\mybatis-plus-core-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-annotation\3.5.7\mybatis-plus-annotation-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-extension\3.5.7\mybatis-plus-extension-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis\3.5.16\mybatis-3.5.16.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\jsqlparser\jsqlparser\4.9\jsqlparser-4.9.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis-spring\3.0.3\mybatis-spring-3.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot-autoconfigure\3.5.7\mybatis-plus-spring-boot-autoconfigure-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-autoconfigure\3.5.0\spring-boot-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-jdbc\3.5.0\spring-boot-starter-jdbc-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\zaxxer\HikariCP\6.3.0\HikariCP-6.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jdbc\6.2.7\spring-jdbc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\postgresql\postgresql\42.7.5\postgresql-42.7.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\checkerframework\checker-qual\3.48.3\checker-qual-3.48.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-core\10.14.0\flyway-core-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-toml\2.19.0\jackson-dataformat-toml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\gson\gson\2.13.1\gson-2.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\errorprone\error_prone_annotations\2.38.0\error_prone_annotations-2.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-database-postgresql\10.14.0\flyway-database-postgresql-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-api\0.12.6\jjwt-api-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-impl\0.12.6\jjwt-impl-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-jackson\0.12.6\jjwt-jackson-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-databind\2.19.0\jackson-databind-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\minio\minio\8.5.11\minio-8.5.11.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\carrotsearch\thirdparty\simple-xml-safe\2.7.1\simple-xml-safe-2.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\guava\33.0.0-jre\guava-33.0.0-jre.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\failureaccess\1.0.2\failureaccess-1.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\findbugs\jsr305\3.0.2\jsr305-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\j2objc\j2objc-annotations\2.8\j2objc-annotations-2.8.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\okhttp\4.12.0\okhttp-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio\3.6.0\okio-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio-jvm\3.6.0\okio-jvm-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-common\1.9.25\kotlin-stdlib-common-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk8\1.9.25\kotlin-stdlib-jdk8-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib\1.9.25\kotlin-stdlib-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\annotations\13.0\annotations-13.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk7\1.9.25\kotlin-stdlib-jdk7-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-annotations\2.19.0\jackson-annotations-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-core\2.19.0\jackson-core-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\bouncycastle\bcprov-jdk18on\1.78\bcprov-jdk18on-1.78.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-compress\1.26.0\commons-compress-1.26.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-io\commons-io\2.15.1\commons-io-2.15.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-lang3\3.17.0\commons-lang3-3.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-codec\commons-codec\1.18.0\commons-codec-1.18.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xerial\snappy\snappy-java\1.1.10.5\snappy-java-1.1.10.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-data-redis\3.5.0\spring-boot-starter-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\lettuce\lettuce-core\6.5.5.RELEASE\lettuce-core-6.5.5.RELEASE.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-common\4.1.121.Final\netty-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-handler\4.1.121.Final\netty-handler-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-resolver\4.1.121.Final\netty-resolver-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-buffer\4.1.121.Final\netty-buffer-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport-native-unix-common\4.1.121.Final\netty-transport-native-unix-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-codec\4.1.121.Final\netty-codec-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport\4.1.121.Final\netty-transport-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\projectreactor\reactor-core\3.7.6\reactor-core-3.7.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\reactivestreams\reactive-streams\1.0.4\reactive-streams-1.0.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-redis\3.5.0\spring-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-keyvalue\3.5.0\spring-data-keyvalue-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-commons\3.5.0\spring-data-commons-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-tx\6.2.7\spring-tx-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-oxm\6.2.7\spring-oxm-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context-support\6.2.7\spring-context-support-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-devtools\3.5.0\spring-boot-devtools-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot\3.5.0\spring-boot-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-test\3.5.0\spring-boot-starter-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test\3.5.0\spring-boot-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.5.0\spring-boot-test-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\assertj\assertj-core\3.27.3\assertj-core-3.27.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy\1.17.5\byte-buddy-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\awaitility\awaitility\4.3.0\awaitility-4.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-core\6.2.7\spring-core-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jcl\6.2.7\spring-jcl-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-test\6.2.7\spring-test-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xmlunit\xmlunit-core\2.10.1\xmlunit-core-2.10.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-test\6.5.0\spring-security-test-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-core\6.5.0\spring-security-core-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-crypto\6.5.0\spring-security-crypto-6.5.0.jar;"/>
+    <property name="java.class.path" value="C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\test-classes;C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\classes;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-actuator\3.5.0\spring-boot-starter-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter\3.5.0\spring-boot-starter-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-logging\3.5.0\spring-boot-starter-logging-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-classic\1.5.18\logback-classic-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-core\1.5.18\logback-core-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator-autoconfigure\3.5.0\spring-boot-actuator-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator\3.5.0\spring-boot-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.0\jackson-datatype-jsr310-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-observation\1.15.0\micrometer-observation-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-commons\1.15.0\micrometer-commons-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-jakarta9\1.15.0\micrometer-jakarta9-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-core\1.15.0\micrometer-core-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hdrhistogram\HdrHistogram\2.2.2\HdrHistogram-2.2.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\latencyutils\LatencyUtils\2.0.3\LatencyUtils-2.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-web\3.5.0\spring-boot-starter-web-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-json\3.5.0\spring-boot-starter-json-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.0\jackson-datatype-jdk8-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.0\jackson-module-parameter-names-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-tomcat\3.5.0\spring-boot-starter-tomcat-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.41\tomcat-embed-core-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.41\tomcat-embed-websocket-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-web\6.2.7\spring-web-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-beans\6.2.7\spring-beans-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webmvc\6.2.7\spring-webmvc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context\6.2.7\spring-context-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-expression\6.2.7\spring-expression-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-security\3.5.0\spring-boot-starter-security-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-aop\6.2.7\spring-aop-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-config\6.5.0\spring-security-config-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-web\6.5.0\spring-security-web-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-validation\3.5.0\spring-boot-starter-validation-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.41\tomcat-embed-el-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hibernate\validator\hibernate-validator\8.0.2.Final\hibernate-validator-8.0.2.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-starter-dashscope\1.1.2.0\spring-ai-alibaba-starter-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-autoconfigure-dashscope\1.1.2.0\spring-ai-alibaba-autoconfigure-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-dashscope\1.1.2.0\spring-ai-alibaba-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-commons\1.1.2\spring-ai-commons-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\context-propagation\1.1.3\context-propagation-1.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-jsonSchema\2.19.0\jackson-module-jsonSchema-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\javax\validation\validation-api\1.1.0.Final\validation-api-1.1.0.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\knuddels\jtokkit\1.1.0\jtokkit-1.1.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-model\1.1.2\spring-ai-model-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-template-st\1.1.2\spring-ai-template-st-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\ST4\4.3.4\ST4-4.3.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr-runtime\3.5.3\antlr-runtime-3.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-messaging\6.2.7\spring-messaging-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr4-runtime\4.13.1\antlr4-runtime-4.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-generator\4.38.0\jsonschema-generator-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-jackson\4.38.0\jsonschema-module-jackson-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-swagger-2\4.38.0\jsonschema-module-swagger-2-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\swagger\core\v3\swagger-annotations-jakarta\2.2.38\swagger-annotations-jakarta-2.2.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-rag\1.1.2\spring-ai-rag-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-vector-store\1.1.2\spring-ai-vector-store-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-retry\1.1.2\spring-ai-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\retry\spring-retry\2.0.12\spring-retry-2.0.12.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webflux\6.2.7\spring-webflux-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\logging-interceptor\4.12.0\logging-interceptor-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\opennlp\opennlp-tools\2.3.3\opennlp-tools-2.3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-retry\1.1.2\spring-ai-autoconfigure-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-tool\1.1.2\spring-ai-autoconfigure-model-tool-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-client\1.1.2\spring-ai-autoconfigure-model-chat-client-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-client-chat\1.1.2\spring-ai-client-chat-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json-jackson2\0.17.0\mcp-json-jackson2-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json\0.17.0\mcp-json-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\networknt\json-schema-validator\2.0.0\json-schema-validator-2.0.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\ethlo\time\itu\1.14.0\itu-1.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.19.0\jackson-dataformat-yaml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-observation\1.1.2\spring-ai-autoconfigure-model-chat-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-embedding-observation\1.1.2\spring-ai-autoconfigure-model-embedding-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-image-observation\1.1.2\spring-ai-autoconfigure-model-image-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot3-starter\3.5.7\mybatis-plus-spring-boot3-starter-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus\3.5.7\mybatis-plus-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-core\3.5.7\mybatis-plus-core-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-annotation\3.5.7\mybatis-plus-annotation-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-extension\3.5.7\mybatis-plus-extension-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis\3.5.16\mybatis-3.5.16.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\jsqlparser\jsqlparser\4.9\jsqlparser-4.9.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis-spring\3.0.3\mybatis-spring-3.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot-autoconfigure\3.5.7\mybatis-plus-spring-boot-autoconfigure-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-autoconfigure\3.5.0\spring-boot-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-jdbc\3.5.0\spring-boot-starter-jdbc-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\zaxxer\HikariCP\6.3.0\HikariCP-6.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jdbc\6.2.7\spring-jdbc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\postgresql\postgresql\42.7.5\postgresql-42.7.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\checkerframework\checker-qual\3.48.3\checker-qual-3.48.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-core\10.14.0\flyway-core-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-toml\2.19.0\jackson-dataformat-toml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\gson\gson\2.13.1\gson-2.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\errorprone\error_prone_annotations\2.38.0\error_prone_annotations-2.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-database-postgresql\10.14.0\flyway-database-postgresql-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-api\0.12.6\jjwt-api-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-impl\0.12.6\jjwt-impl-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-jackson\0.12.6\jjwt-jackson-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-databind\2.19.0\jackson-databind-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\minio\minio\8.5.11\minio-8.5.11.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\carrotsearch\thirdparty\simple-xml-safe\2.7.1\simple-xml-safe-2.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\guava\33.0.0-jre\guava-33.0.0-jre.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\failureaccess\1.0.2\failureaccess-1.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\findbugs\jsr305\3.0.2\jsr305-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\j2objc\j2objc-annotations\2.8\j2objc-annotations-2.8.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\okhttp\4.12.0\okhttp-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio\3.6.0\okio-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio-jvm\3.6.0\okio-jvm-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-common\1.9.25\kotlin-stdlib-common-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk8\1.9.25\kotlin-stdlib-jdk8-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib\1.9.25\kotlin-stdlib-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\annotations\13.0\annotations-13.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk7\1.9.25\kotlin-stdlib-jdk7-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-annotations\2.19.0\jackson-annotations-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-core\2.19.0\jackson-core-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\bouncycastle\bcprov-jdk18on\1.78\bcprov-jdk18on-1.78.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-compress\1.26.0\commons-compress-1.26.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-io\commons-io\2.15.1\commons-io-2.15.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-lang3\3.17.0\commons-lang3-3.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-codec\commons-codec\1.18.0\commons-codec-1.18.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xerial\snappy\snappy-java\1.1.10.5\snappy-java-1.1.10.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-data-redis\3.5.0\spring-boot-starter-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\lettuce\lettuce-core\6.5.5.RELEASE\lettuce-core-6.5.5.RELEASE.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-common\4.1.121.Final\netty-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-handler\4.1.121.Final\netty-handler-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-resolver\4.1.121.Final\netty-resolver-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-buffer\4.1.121.Final\netty-buffer-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport-native-unix-common\4.1.121.Final\netty-transport-native-unix-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-codec\4.1.121.Final\netty-codec-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport\4.1.121.Final\netty-transport-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\projectreactor\reactor-core\3.7.6\reactor-core-3.7.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\reactivestreams\reactive-streams\1.0.4\reactive-streams-1.0.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-redis\3.5.0\spring-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-keyvalue\3.5.0\spring-data-keyvalue-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-commons\3.5.0\spring-data-commons-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-tx\6.2.7\spring-tx-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-oxm\6.2.7\spring-oxm-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context-support\6.2.7\spring-context-support-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\cn\hutool\hutool-all\5.8.25\hutool-all-5.8.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-devtools\3.5.0\spring-boot-devtools-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot\3.5.0\spring-boot-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-test\3.5.0\spring-boot-starter-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test\3.5.0\spring-boot-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.5.0\spring-boot-test-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\assertj\assertj-core\3.27.3\assertj-core-3.27.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy\1.17.5\byte-buddy-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\awaitility\awaitility\4.3.0\awaitility-4.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-core\6.2.7\spring-core-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jcl\6.2.7\spring-jcl-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-test\6.2.7\spring-test-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xmlunit\xmlunit-core\2.10.1\xmlunit-core-2.10.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-test\6.5.0\spring-security-test-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-core\6.5.0\spring-security-core-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-crypto\6.5.0\spring-security-crypto-6.5.0.jar;"/>
     <property name="java.vm.vendor" value="Oracle Corporation"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="user.variant" value=""/>
@@ -15,9 +15,9 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="CN"/>
     <property name="sun.boot.library.path" value="D:\__my_dev_tools\javaJDK\jdk17\bin"/>
-    <property name="sun.java.command" value="C:\Users\admin\AppData\Local\Temp\surefire1692394951621921241\surefirebooter-20260325152434349_3.jar C:\Users\admin\AppData\Local\Temp\surefire1692394951621921241 2026-03-25T15-24-33_841-jvmRun1 surefire-20260325152434349_1tmp surefire_0-20260325152434349_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\admin\AppData\Local\Temp\surefire11863721496268531897\surefirebooter-20260326003707825_3.jar C:\Users\admin\AppData\Local\Temp\surefire11863721496268531897 2026-03-26T00-37-07_107-jvmRun1 surefire-20260326003707825_1tmp surefire_0-20260326003707825_2tmp"/>
     <property name="jdk.debug" value="release"/>
-    <property name="surefire.test.class.path" value="C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\test-classes;C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\classes;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-actuator\3.5.0\spring-boot-starter-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter\3.5.0\spring-boot-starter-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-logging\3.5.0\spring-boot-starter-logging-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-classic\1.5.18\logback-classic-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-core\1.5.18\logback-core-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator-autoconfigure\3.5.0\spring-boot-actuator-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator\3.5.0\spring-boot-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.0\jackson-datatype-jsr310-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-observation\1.15.0\micrometer-observation-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-commons\1.15.0\micrometer-commons-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-jakarta9\1.15.0\micrometer-jakarta9-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-core\1.15.0\micrometer-core-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hdrhistogram\HdrHistogram\2.2.2\HdrHistogram-2.2.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\latencyutils\LatencyUtils\2.0.3\LatencyUtils-2.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-web\3.5.0\spring-boot-starter-web-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-json\3.5.0\spring-boot-starter-json-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.0\jackson-datatype-jdk8-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.0\jackson-module-parameter-names-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-tomcat\3.5.0\spring-boot-starter-tomcat-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.41\tomcat-embed-core-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.41\tomcat-embed-websocket-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-web\6.2.7\spring-web-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-beans\6.2.7\spring-beans-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webmvc\6.2.7\spring-webmvc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context\6.2.7\spring-context-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-expression\6.2.7\spring-expression-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-security\3.5.0\spring-boot-starter-security-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-aop\6.2.7\spring-aop-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-config\6.5.0\spring-security-config-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-web\6.5.0\spring-security-web-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-validation\3.5.0\spring-boot-starter-validation-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.41\tomcat-embed-el-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hibernate\validator\hibernate-validator\8.0.2.Final\hibernate-validator-8.0.2.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-starter-dashscope\1.1.2.0\spring-ai-alibaba-starter-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-autoconfigure-dashscope\1.1.2.0\spring-ai-alibaba-autoconfigure-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-dashscope\1.1.2.0\spring-ai-alibaba-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-commons\1.1.2\spring-ai-commons-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\context-propagation\1.1.3\context-propagation-1.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-jsonSchema\2.19.0\jackson-module-jsonSchema-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\javax\validation\validation-api\1.1.0.Final\validation-api-1.1.0.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\knuddels\jtokkit\1.1.0\jtokkit-1.1.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-model\1.1.2\spring-ai-model-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-template-st\1.1.2\spring-ai-template-st-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\ST4\4.3.4\ST4-4.3.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr-runtime\3.5.3\antlr-runtime-3.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-messaging\6.2.7\spring-messaging-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr4-runtime\4.13.1\antlr4-runtime-4.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-generator\4.38.0\jsonschema-generator-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-jackson\4.38.0\jsonschema-module-jackson-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-swagger-2\4.38.0\jsonschema-module-swagger-2-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\swagger\core\v3\swagger-annotations-jakarta\2.2.38\swagger-annotations-jakarta-2.2.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-rag\1.1.2\spring-ai-rag-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-vector-store\1.1.2\spring-ai-vector-store-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-retry\1.1.2\spring-ai-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\retry\spring-retry\2.0.12\spring-retry-2.0.12.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webflux\6.2.7\spring-webflux-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\logging-interceptor\4.12.0\logging-interceptor-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\opennlp\opennlp-tools\2.3.3\opennlp-tools-2.3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-retry\1.1.2\spring-ai-autoconfigure-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-tool\1.1.2\spring-ai-autoconfigure-model-tool-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-client\1.1.2\spring-ai-autoconfigure-model-chat-client-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-client-chat\1.1.2\spring-ai-client-chat-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json-jackson2\0.17.0\mcp-json-jackson2-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json\0.17.0\mcp-json-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\networknt\json-schema-validator\2.0.0\json-schema-validator-2.0.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\ethlo\time\itu\1.14.0\itu-1.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.19.0\jackson-dataformat-yaml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-observation\1.1.2\spring-ai-autoconfigure-model-chat-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-embedding-observation\1.1.2\spring-ai-autoconfigure-model-embedding-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-image-observation\1.1.2\spring-ai-autoconfigure-model-image-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot3-starter\3.5.7\mybatis-plus-spring-boot3-starter-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus\3.5.7\mybatis-plus-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-core\3.5.7\mybatis-plus-core-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-annotation\3.5.7\mybatis-plus-annotation-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-extension\3.5.7\mybatis-plus-extension-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis\3.5.16\mybatis-3.5.16.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\jsqlparser\jsqlparser\4.9\jsqlparser-4.9.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis-spring\3.0.3\mybatis-spring-3.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot-autoconfigure\3.5.7\mybatis-plus-spring-boot-autoconfigure-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-autoconfigure\3.5.0\spring-boot-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-jdbc\3.5.0\spring-boot-starter-jdbc-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\zaxxer\HikariCP\6.3.0\HikariCP-6.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jdbc\6.2.7\spring-jdbc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\postgresql\postgresql\42.7.5\postgresql-42.7.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\checkerframework\checker-qual\3.48.3\checker-qual-3.48.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-core\10.14.0\flyway-core-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-toml\2.19.0\jackson-dataformat-toml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\gson\gson\2.13.1\gson-2.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\errorprone\error_prone_annotations\2.38.0\error_prone_annotations-2.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-database-postgresql\10.14.0\flyway-database-postgresql-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-api\0.12.6\jjwt-api-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-impl\0.12.6\jjwt-impl-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-jackson\0.12.6\jjwt-jackson-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-databind\2.19.0\jackson-databind-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\minio\minio\8.5.11\minio-8.5.11.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\carrotsearch\thirdparty\simple-xml-safe\2.7.1\simple-xml-safe-2.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\guava\33.0.0-jre\guava-33.0.0-jre.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\failureaccess\1.0.2\failureaccess-1.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\findbugs\jsr305\3.0.2\jsr305-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\j2objc\j2objc-annotations\2.8\j2objc-annotations-2.8.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\okhttp\4.12.0\okhttp-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio\3.6.0\okio-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio-jvm\3.6.0\okio-jvm-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-common\1.9.25\kotlin-stdlib-common-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk8\1.9.25\kotlin-stdlib-jdk8-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib\1.9.25\kotlin-stdlib-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\annotations\13.0\annotations-13.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk7\1.9.25\kotlin-stdlib-jdk7-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-annotations\2.19.0\jackson-annotations-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-core\2.19.0\jackson-core-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\bouncycastle\bcprov-jdk18on\1.78\bcprov-jdk18on-1.78.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-compress\1.26.0\commons-compress-1.26.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-io\commons-io\2.15.1\commons-io-2.15.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-lang3\3.17.0\commons-lang3-3.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-codec\commons-codec\1.18.0\commons-codec-1.18.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xerial\snappy\snappy-java\1.1.10.5\snappy-java-1.1.10.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-data-redis\3.5.0\spring-boot-starter-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\lettuce\lettuce-core\6.5.5.RELEASE\lettuce-core-6.5.5.RELEASE.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-common\4.1.121.Final\netty-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-handler\4.1.121.Final\netty-handler-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-resolver\4.1.121.Final\netty-resolver-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-buffer\4.1.121.Final\netty-buffer-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport-native-unix-common\4.1.121.Final\netty-transport-native-unix-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-codec\4.1.121.Final\netty-codec-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport\4.1.121.Final\netty-transport-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\projectreactor\reactor-core\3.7.6\reactor-core-3.7.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\reactivestreams\reactive-streams\1.0.4\reactive-streams-1.0.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-redis\3.5.0\spring-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-keyvalue\3.5.0\spring-data-keyvalue-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-commons\3.5.0\spring-data-commons-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-tx\6.2.7\spring-tx-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-oxm\6.2.7\spring-oxm-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context-support\6.2.7\spring-context-support-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-devtools\3.5.0\spring-boot-devtools-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot\3.5.0\spring-boot-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-test\3.5.0\spring-boot-starter-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test\3.5.0\spring-boot-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.5.0\spring-boot-test-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\assertj\assertj-core\3.27.3\assertj-core-3.27.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy\1.17.5\byte-buddy-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\awaitility\awaitility\4.3.0\awaitility-4.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-core\6.2.7\spring-core-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jcl\6.2.7\spring-jcl-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-test\6.2.7\spring-test-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xmlunit\xmlunit-core\2.10.1\xmlunit-core-2.10.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-test\6.5.0\spring-security-test-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-core\6.5.0\spring-security-core-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-crypto\6.5.0\spring-security-crypto-6.5.0.jar;"/>
+    <property name="surefire.test.class.path" value="C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\test-classes;C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\target\classes;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-actuator\3.5.0\spring-boot-starter-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter\3.5.0\spring-boot-starter-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-logging\3.5.0\spring-boot-starter-logging-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-classic\1.5.18\logback-classic-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\ch\qos\logback\logback-core\1.5.18\logback-core-1.5.18.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator-autoconfigure\3.5.0\spring-boot-actuator-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-actuator\3.5.0\spring-boot-actuator-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.0\jackson-datatype-jsr310-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-observation\1.15.0\micrometer-observation-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-commons\1.15.0\micrometer-commons-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-jakarta9\1.15.0\micrometer-jakarta9-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\micrometer-core\1.15.0\micrometer-core-1.15.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hdrhistogram\HdrHistogram\2.2.2\HdrHistogram-2.2.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\latencyutils\LatencyUtils\2.0.3\LatencyUtils-2.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-web\3.5.0\spring-boot-starter-web-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-json\3.5.0\spring-boot-starter-json-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.0\jackson-datatype-jdk8-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.0\jackson-module-parameter-names-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-tomcat\3.5.0\spring-boot-starter-tomcat-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.41\tomcat-embed-core-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.41\tomcat-embed-websocket-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-web\6.2.7\spring-web-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-beans\6.2.7\spring-beans-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webmvc\6.2.7\spring-webmvc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context\6.2.7\spring-context-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-expression\6.2.7\spring-expression-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-security\3.5.0\spring-boot-starter-security-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-aop\6.2.7\spring-aop-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-config\6.5.0\spring-security-config-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-web\6.5.0\spring-security-web-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-validation\3.5.0\spring-boot-starter-validation-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.41\tomcat-embed-el-10.1.41.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hibernate\validator\hibernate-validator\8.0.2.Final\hibernate-validator-8.0.2.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-starter-dashscope\1.1.2.0\spring-ai-alibaba-starter-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-autoconfigure-dashscope\1.1.2.0\spring-ai-alibaba-autoconfigure-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\alibaba\cloud\ai\spring-ai-alibaba-dashscope\1.1.2.0\spring-ai-alibaba-dashscope-1.1.2.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-commons\1.1.2\spring-ai-commons-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\micrometer\context-propagation\1.1.3\context-propagation-1.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\module\jackson-module-jsonSchema\2.19.0\jackson-module-jsonSchema-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\javax\validation\validation-api\1.1.0.Final\validation-api-1.1.0.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\knuddels\jtokkit\1.1.0\jtokkit-1.1.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-model\1.1.2\spring-ai-model-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-template-st\1.1.2\spring-ai-template-st-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\ST4\4.3.4\ST4-4.3.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr-runtime\3.5.3\antlr-runtime-3.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-messaging\6.2.7\spring-messaging-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\antlr\antlr4-runtime\4.13.1\antlr4-runtime-4.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-generator\4.38.0\jsonschema-generator-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-jackson\4.38.0\jsonschema-module-jackson-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\victools\jsonschema-module-swagger-2\4.38.0\jsonschema-module-swagger-2-4.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\swagger\core\v3\swagger-annotations-jakarta\2.2.38\swagger-annotations-jakarta-2.2.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-rag\1.1.2\spring-ai-rag-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-vector-store\1.1.2\spring-ai-vector-store-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-retry\1.1.2\spring-ai-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\retry\spring-retry\2.0.12\spring-retry-2.0.12.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-webflux\6.2.7\spring-webflux-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\logging-interceptor\4.12.0\logging-interceptor-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\opennlp\opennlp-tools\2.3.3\opennlp-tools-2.3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-retry\1.1.2\spring-ai-autoconfigure-retry-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-tool\1.1.2\spring-ai-autoconfigure-model-tool-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-client\1.1.2\spring-ai-autoconfigure-model-chat-client-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-client-chat\1.1.2\spring-ai-client-chat-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json-jackson2\0.17.0\mcp-json-jackson2-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\modelcontextprotocol\sdk\mcp-json\0.17.0\mcp-json-0.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\networknt\json-schema-validator\2.0.0\json-schema-validator-2.0.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\ethlo\time\itu\1.14.0\itu-1.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.19.0\jackson-dataformat-yaml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-chat-observation\1.1.2\spring-ai-autoconfigure-model-chat-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-embedding-observation\1.1.2\spring-ai-autoconfigure-model-embedding-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\ai\spring-ai-autoconfigure-model-image-observation\1.1.2\spring-ai-autoconfigure-model-image-observation-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot3-starter\3.5.7\mybatis-plus-spring-boot3-starter-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus\3.5.7\mybatis-plus-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-core\3.5.7\mybatis-plus-core-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-annotation\3.5.7\mybatis-plus-annotation-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-extension\3.5.7\mybatis-plus-extension-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis\3.5.16\mybatis-3.5.16.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\github\jsqlparser\jsqlparser\4.9\jsqlparser-4.9.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mybatis\mybatis-spring\3.0.3\mybatis-spring-3.0.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\baomidou\mybatis-plus-spring-boot-autoconfigure\3.5.7\mybatis-plus-spring-boot-autoconfigure-3.5.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-autoconfigure\3.5.0\spring-boot-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-jdbc\3.5.0\spring-boot-starter-jdbc-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\zaxxer\HikariCP\6.3.0\HikariCP-6.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jdbc\6.2.7\spring-jdbc-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\postgresql\postgresql\42.7.5\postgresql-42.7.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\checkerframework\checker-qual\3.48.3\checker-qual-3.48.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-core\10.14.0\flyway-core-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-toml\2.19.0\jackson-dataformat-toml-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\gson\gson\2.13.1\gson-2.13.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\errorprone\error_prone_annotations\2.38.0\error_prone_annotations-2.38.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\flywaydb\flyway-database-postgresql\10.14.0\flyway-database-postgresql-10.14.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-api\0.12.6\jjwt-api-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-impl\0.12.6\jjwt-impl-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\jsonwebtoken\jjwt-jackson\0.12.6\jjwt-jackson-0.12.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-databind\2.19.0\jackson-databind-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\minio\minio\8.5.11\minio-8.5.11.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\carrotsearch\thirdparty\simple-xml-safe\2.7.1\simple-xml-safe-2.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\guava\33.0.0-jre\guava-33.0.0-jre.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\failureaccess\1.0.2\failureaccess-1.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\code\findbugs\jsr305\3.0.2\jsr305-3.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\google\j2objc\j2objc-annotations\2.8\j2objc-annotations-2.8.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okhttp3\okhttp\4.12.0\okhttp-4.12.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio\3.6.0\okio-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\squareup\okio\okio-jvm\3.6.0\okio-jvm-3.6.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-common\1.9.25\kotlin-stdlib-common-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk8\1.9.25\kotlin-stdlib-jdk8-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib\1.9.25\kotlin-stdlib-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\annotations\13.0\annotations-13.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk7\1.9.25\kotlin-stdlib-jdk7-1.9.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-annotations\2.19.0\jackson-annotations-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\fasterxml\jackson\core\jackson-core\2.19.0\jackson-core-2.19.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\bouncycastle\bcprov-jdk18on\1.78\bcprov-jdk18on-1.78.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-compress\1.26.0\commons-compress-1.26.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-io\commons-io\2.15.1\commons-io-2.15.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apache\commons\commons-lang3\3.17.0\commons-lang3-3.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\commons-codec\commons-codec\1.18.0\commons-codec-1.18.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xerial\snappy\snappy-java\1.1.10.5\snappy-java-1.1.10.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-data-redis\3.5.0\spring-boot-starter-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\lettuce\lettuce-core\6.5.5.RELEASE\lettuce-core-6.5.5.RELEASE.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-common\4.1.121.Final\netty-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-handler\4.1.121.Final\netty-handler-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-resolver\4.1.121.Final\netty-resolver-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-buffer\4.1.121.Final\netty-buffer-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport-native-unix-common\4.1.121.Final\netty-transport-native-unix-common-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-codec\4.1.121.Final\netty-codec-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\netty\netty-transport\4.1.121.Final\netty-transport-4.1.121.Final.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\io\projectreactor\reactor-core\3.7.6\reactor-core-3.7.6.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\reactivestreams\reactive-streams\1.0.4\reactive-streams-1.0.4.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-redis\3.5.0\spring-data-redis-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-keyvalue\3.5.0\spring-data-keyvalue-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\data\spring-data-commons\3.5.0\spring-data-commons-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-tx\6.2.7\spring-tx-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-oxm\6.2.7\spring-oxm-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-context-support\6.2.7\spring-context-support-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\cn\hutool\hutool-all\5.8.25\hutool-all-5.8.25.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-devtools\3.5.0\spring-boot-devtools-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot\3.5.0\spring-boot-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-starter-test\3.5.0\spring-boot-starter-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test\3.5.0\spring-boot-test-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.5.0\spring-boot-test-autoconfigure-3.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\assertj\assertj-core\3.27.3\assertj-core-3.27.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy\1.17.5\byte-buddy-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\awaitility\awaitility\4.3.0\awaitility-4.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-core\6.2.7\spring-core-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-jcl\6.2.7\spring-jcl-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\spring-test\6.2.7\spring-test-6.2.7.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\xmlunit\xmlunit-core\2.10.1\xmlunit-core-2.10.1.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-test\6.5.0\spring-security-test-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-core\6.5.0\spring-security-core-6.5.0.jar;D:\__my_dev_tools\apache-maven-3.9.9\repository\org\springframework\security\spring-security-crypto\6.5.0\spring-security-crypto-6.5.0.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
     <property name="user.home" value="C:\Users\admin"/>
     <property name="user.language" value="zh"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\admin\AppData\Local\Temp\surefire1692394951621921241\surefirebooter-20260325152434349_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\admin\AppData\Local\Temp\surefire11863721496268531897\surefirebooter-20260326003707825_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="17.0.6+9-LTS-190"/>
@@ -43,30 +43,1149 @@
     <property name="localRepository" value="D:\__my_dev_tools\apache-maven-3.9.9\repository"/>
     <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
     <property name="java.io.tmpdir" value="C:\Users\admin\AppData\Local\Temp\"/>
+    <property name="idea.version" value="2025.1.7"/>
     <property name="java.version" value="17.0.6"/>
     <property name="user.dir" value="C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3"/>
     <property name="os.arch" value="amd64"/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
     <property name="sun.os.patch.level" value=""/>
     <property name="native.encoding" value="GBK"/>
-    <property name="java.library.path" value="D:\__my_dev_tools\javaJDK\jdk17\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;D:\\__my_dev_tools\\javaJDK\\jdk17\\bin;C:\\Users\\admin\\.trae-cn\\tools\\maven\\latest\\bin;C:\\Users\\admin\\.trae-cn\\tools\\gradle\\latest\\bin;c:\\Users\\admin\\.trae-cn\\tools\\trae-gopls\\current;c:\\Users\\admin\\.trae-cn\\sdks\\workspaces\\22c28ebd\\versions\\node\\current;c:\\Users\\admin\\.trae-cn\\sdks\\versions\\node\\current;D:\__my_dev_tools\javaJDK\jdk17\bin;C:\Users\admin\.trae-cn\tools\maven\latest\bin;C:\Users\admin\.trae-cn\tools\gradle\latest\bin;c:\Users\admin\.trae-cn\tools\trae-gopls\current;c:\Users\admin\.trae-cn\sdks\workspaces\22c28ebd\versions\node\current;c:\Users\admin\.trae-cn\sdks\versions\node\current;D:\__my_dev_tools\vmware\bin\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\__my_dev_tools\javaJDK\jdk17\bin;D:\__my_dev_tools\apache-maven-3.9.9\bin;D:\__my_dev_tools\Git\bin;C:\Program Files\Neovim\bin;D:\__my_dev_tools\apache-jmeter-5.6.3\apache-jmeter-5.6.3\bin;D:\__my_dev_tools\微信web开发者工具\dll;D:\__my_dev_tools\cpolar-tools;D:\__my_dev_tools\nvm;D:\__my_dev_tools\active_version_node\nodejs;D:\__my_dev_tools\nvm;D:\__my_dev_tools\ffmpeg-7.1.1-full_build\bin\;C:\Program Files\Google\Chrome\Application\;C:\Program Files (x86)\Microsoft\Edge\Application\;C:\Program Files\Mozilla Firefox\;C:\Program Files\dotnet\;C:\Users\admin\.cargo\bin;C:\Users\admin\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\admin\AppData\Local\Programs\Python\Python313\;C:\Program Files\MySQL\MySQL Shell 8.4\bin\;C:\Users\admin\AppData\Local\Microsoft\WindowsApps;D:\__my_application__\Microsoft_VS_Code\bin;D:\__my_dev_tools\IntelliJ_IDEA_2025.1.3\bin;C:\Users\admin\AppData\Local\Microsoft\WinGet\Packages\Fastfetch-cli.Fastfetch_Microsoft.Winget.Source_8wekyb3d8bbwe;D:\__my_dev_tools\cpolar-tools\;D:\__my_dev_tools\nvm;D:\__my_dev_tools\active_version_node\nodejs;D:\__my_dev_tools\WebStorm_2025.2.1\bin;D:\__my_dev_tools\PyCharm 2025.2.2\bin;C:\Users\admin\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin;D:\__my_dev_tools\cursor\resources\app\bin;D:\__my_dev_tools\active_version_node\nodejs\;;c:\Users\admin\.trae-cn\extensions\vscjava.vscode-java-debug-0.58.5-universal\bundled\scripts\noConfigScripts;."/>
+    <property name="java.library.path" value="D:\__my_dev_tools\javaJDK\jdk17\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;D:\__my_dev_tools\vmware\bin\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\__my_dev_tools\javaJDK\jdk17\bin;D:\__my_dev_tools\apache-maven-3.9.9\bin;D:\__my_dev_tools\Git\bin;C:\Program Files\Neovim\bin;D:\__my_dev_tools\apache-jmeter-5.6.3\apache-jmeter-5.6.3\bin;D:\__my_dev_tools\微信web开发者工具\dll;D:\__my_dev_tools\cpolar-tools;D:\__my_dev_tools\nvm;D:\__my_dev_tools\active_version_node\nodejs;D:\__my_dev_tools\nvm;D:\__my_dev_tools\ffmpeg-7.1.1-full_build\bin\;C:\Program Files\Google\Chrome\Application\;C:\Program Files (x86)\Microsoft\Edge\Application\;C:\Program Files\Mozilla Firefox\;C:\Program Files\dotnet\;C:\Users\admin\.cargo\bin;C:\Users\admin\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\admin\AppData\Local\Programs\Python\Python313\;C:\Program Files\MySQL\MySQL Shell 8.4\bin\;C:\Users\admin\AppData\Local\Microsoft\WindowsApps;D:\__my_application__\Microsoft_VS_Code\bin;D:\__my_dev_tools\IntelliJ_IDEA_2025.1.3\bin;C:\Users\admin\AppData\Local\Microsoft\WinGet\Packages\Fastfetch-cli.Fastfetch_Microsoft.Winget.Source_8wekyb3d8bbwe;D:\__my_dev_tools\cpolar-tools\;D:\__my_dev_tools\nvm;D:\__my_dev_tools\active_version_node\nodejs;D:\__my_dev_tools\WebStorm_2025.2.1\bin;D:\__my_dev_tools\PyCharm 2025.2.2\bin;C:\Users\admin\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin;D:\__my_dev_tools\cursor\resources\app\bin;D:\__my_dev_tools\active_version_node\nodejs\;;."/>
     <property name="java.vm.info" value="mixed mode, sharing"/>
     <property name="java.vendor" value="Oracle Corporation"/>
     <property name="java.vm.version" value="17.0.6+9-LTS-190"/>
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="61.0"/>
   </properties>
-  <testcase name="" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.026">
-    <error message="CourseMapper" type="java.lang.NoClassDefFoundError"><![CDATA[java.lang.NoClassDefFoundError: CourseMapper
-	at java.base/java.lang.Class.getDeclaredFields0(Native Method)
-	at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3297)
-	at java.base/java.lang.Class.getDeclaredFields(Class.java:2371)
+  <testcase name="completeBooking_Success" classname="com.fitness.modules.booking.service.BookingServiceTest" time="15.808">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-Caused by: java.lang.ClassNotFoundException: CourseMapper
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
 	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
-	... 4 more
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="confirmBooking_WrongStatus" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.214">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="createBooking_CourseNotFound" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.147">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="cancelBooking_Success" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.121">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="createBooking_CourseAlreadyStarted" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.117">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="createBooking_CourseFull" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.109">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="cancelBooking_NotFound" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.119">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="cancelBooking_NotOwner" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.106">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="rejectBooking_Success" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.104">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="createBooking_AlreadyExists" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.103">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="createBooking_Success" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.101">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="cancelBooking_AlreadyCancelled" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.095">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
+]]></error>
+  </testcase>
+  <testcase name="confirmBooking_Success" classname="com.fitness.modules.booking.service.BookingServiceTest" time="0.081">
+    <error message="&#10;Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.&#10;&#10;If you&apos;re not sure why you&apos;re getting this error, please open an issue on GitHub.&#10;&#10;&#10;Java               : 17&#10;JVM vendor name    : Oracle Corporation&#10;JVM vendor version : 17.0.6+9-LTS-190&#10;JVM name           : Java HotSpot(TM) 64-Bit Server VM&#10;JVM version        : 17.0.6+9-LTS-190&#10;JVM info           : mixed mode, sharing&#10;OS name            : Windows 11&#10;OS version         : 10.0&#10;&#10;&#10;You are seeing this disclaimer because Mockito is configured to create inlined mocks.&#10;You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.&#10;&#10;Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]" type="org.mockito.exceptions.base.MockitoException"><![CDATA[org.mockito.exceptions.base.MockitoException: 
+
+Mockito cannot mock this class: interface com.fitness.modules.booking.mapper.BookingMapper.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 17
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 17.0.6+9-LTS-190
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 17.0.6+9-LTS-190
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.fitness.modules.booking.mapper.BookingMapper, interface com.baomidou.mybatisplus.core.mapper.Mapper, interface com.baomidou.mybatisplus.core.mapper.BaseMapper]
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	... 3 more
+Caused by: java.lang.IllegalStateException: 
+Byte Buddy could not instrument all classes within the mock's type hierarchy
+
+This problem should never occur for javac-compiled classes. This problem has been observed for classes that are:
+ - Compiled by older versions of scalac
+ - Classes that are part of the Android distribution
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:291)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.mockClass(InlineBytecodeGenerator.java:220)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.lambda$mockClass$0(TypeCachingBytecodeGenerator.java:78)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)
+	at net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)
+	at net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)
+	at org.mockito.internal.creation.bytebuddy.TypeCachingBytecodeGenerator.mockClass(TypeCachingBytecodeGenerator.java:75)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMockType(InlineDelegateByteBuddyMockMaker.java:429)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.doCreateMock(InlineDelegateByteBuddyMockMaker.java:388)
+	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.createMock(InlineDelegateByteBuddyMockMaker.java:367)
+	at org.mockito.internal.creation.bytebuddy.InlineByteBuddyMockMaker.createMock(InlineByteBuddyMockMaker.java:56)
+	at org.mockito.internal.util.MockUtil.createMock(MockUtil.java:99)
+	at org.mockito.internal.MockitoCore.mock(MockitoCore.java:84)
+	at org.mockito.Mockito.mock(Mockito.java:2198)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.processAnnotationForMock(MockAnnotationProcessor.java:79)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:28)
+	at org.mockito.internal.configuration.MockAnnotationProcessor.process(MockAnnotationProcessor.java:25)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.createMockFor(IndependentAnnotationEngine.java:44)
+	at org.mockito.internal.configuration.IndependentAnnotationEngine.process(IndependentAnnotationEngine.java:72)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.processIndependentAnnotations(InjectingAnnotationEngine.java:62)
+	at org.mockito.internal.configuration.InjectingAnnotationEngine.process(InjectingAnnotationEngine.java:47)
+	at org.mockito.MockitoAnnotations.openMocks(MockitoAnnotations.java:81)
+	at org.mockito.internal.framework.DefaultMockitoSession.<init>(DefaultMockitoSession.java:43)
+	at org.mockito.internal.session.DefaultMockitoSessionBuilder.startMocking(DefaultMockitoSessionBuilder.java:83)
+	... 3 more
+Caused by: java.lang.NoClassDefFoundError: com/fitness/modules/booking/model/vo/BookingVO
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504)
+	at net.bytebuddy.description.method.MethodList$ForLoadedMethods.<init>(MethodList.java:152)
+	at net.bytebuddy.description.type.TypeDescription$ForLoadedType.getDeclaredMethods(TypeDescription.java:9006)
+	at net.bytebuddy.dynamic.scaffold.InstrumentedType$Factory$Default$1.represent(InstrumentedType.java:439)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:923)
+	at net.bytebuddy.ByteBuddy.redefine(ByteBuddy.java:898)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.transform(InlineBytecodeGenerator.java:396)
+	at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+	at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+	at java.instrument/sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:169)
+	at org.mockito.internal.creation.bytebuddy.InlineBytecodeGenerator.triggerRetransformation(InlineBytecodeGenerator.java:287)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: com.fitness.modules.booking.model.vo.BookingVO
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)
+	... 42 more
 ]]></error>
   </testcase>
 </testsuite>

@@ -156,6 +156,20 @@
               {{ userInfo.verified ? '查看' : '去认证' }}
             </n-button>
           </div>
+
+          <!-- 登录密码 -->
+          <div class="info-item">
+            <div class="info-main">
+              <span class="info-label">登录密码</span>
+              <div class="info-value-wrapper">
+                <n-tag type="success" size="small">已设置</n-tag>
+                <span class="info-value">********</span>
+              </div>
+            </div>
+            <n-button text type="primary" @click="showChangePasswordModal = true">
+              修改密码
+            </n-button>
+          </div>
         </div>
       </div>
 
@@ -388,6 +402,42 @@
         </n-space>
       </template>
     </n-modal>
+
+    <!-- 修改密码弹窗 -->
+    <n-modal v-model:show="showChangePasswordModal" title="修改密码" preset="card" style="width: 400px">
+      <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules">
+        <n-form-item label="当前密码" path="oldPassword">
+          <n-input
+            v-model:value="passwordForm.oldPassword"
+            type="password"
+            placeholder="请输入当前密码"
+            show-password-on="mousedown"
+          />
+        </n-form-item>
+        <n-form-item label="新密码" path="newPassword">
+          <n-input
+            v-model:value="passwordForm.newPassword"
+            type="password"
+            placeholder="请输入新密码（6-20位）"
+            show-password-on="mousedown"
+          />
+        </n-form-item>
+        <n-form-item label="确认新密码" path="confirmPassword">
+          <n-input
+            v-model:value="passwordForm.confirmPassword"
+            type="password"
+            placeholder="请再次输入新密码"
+            show-password-on="mousedown"
+          />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showChangePasswordModal = false">取消</n-button>
+          <n-button type="primary" :loading="changingPassword" @click="confirmChangePassword">确认修改</n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -406,6 +456,7 @@ import {
   InformationCircleOutline
 } from '@vicons/ionicons5'
 import { getProfile, updateProfile } from '@/api/plan'
+import request from '@/utils/request'
 
 const router = useRouter()
 const message = useMessage()
@@ -450,12 +501,20 @@ const showBindPhoneModal = ref(false)
 const showBindEmailModal = ref(false)
 const showVerifyModal = ref(false)
 const showRechargeModal = ref(false)
+const showChangePasswordModal = ref(false)
 
 // 表单数据
 const phoneForm = reactive({ phone: '', code: '' })
 const emailForm = reactive({ email: '', code: '' })
 const verifyForm = reactive({ realName: '', idCard: '' })
 const rechargeForm = reactive({ amount: 100, payment: 'alipay' })
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+const passwordFormRef = ref(null)
+const changingPassword = ref(false)
 
 // 倒计时
 const countdown = ref(0)
@@ -497,6 +556,26 @@ const goalOptions = [
 const phoneRules = {
   phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
   code: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
+}
+
+const passwordRules = {
+  oldPassword: [
+    { required: true, message: '请输入当前密码', trigger: 'blur' }
+  ],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度应为6-20位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule, value) => {
+        return value === passwordForm.newPassword
+      },
+      message: '两次输入的密码不一致',
+      trigger: 'blur'
+    }
+  ]
 }
 
 // 初始化
@@ -676,6 +755,46 @@ function confirmRecharge() {
   message.success(`成功充值 ¥${rechargeForm.amount}`)
   walletInfo.balance = (parseFloat(walletInfo.balance) + rechargeForm.amount).toFixed(2)
   showRechargeModal.value = false
+}
+
+// 修改密码
+async function confirmChangePassword() {
+  try {
+    await passwordFormRef.value?.validate()
+    changingPassword.value = true
+
+    // 调用修改密码API
+    const { data } = await request({
+      url: '/api/v1/users/password',
+      method: 'put',
+      data: {
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword
+      }
+    })
+
+    if (data.code === 200) {
+      message.success('密码修改成功，请使用新密码重新登录')
+      showChangePasswordModal.value = false
+      // 清空表单
+      passwordForm.oldPassword = ''
+      passwordForm.newPassword = ''
+      passwordForm.confirmPassword = ''
+      // 可选：退出登录
+      // authStore.logout()
+      // router.push('/login')
+    } else {
+      message.error(data.message || '密码修改失败')
+    }
+  } catch (error) {
+    if (error.response?.data?.message) {
+      message.error(error.response.data.message)
+    } else if (error.message) {
+      message.error(error.message)
+    }
+  } finally {
+    changingPassword.value = false
+  }
 }
 </script>
 
