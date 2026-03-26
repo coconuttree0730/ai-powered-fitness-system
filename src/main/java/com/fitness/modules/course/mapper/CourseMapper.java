@@ -45,6 +45,16 @@ public interface CourseMapper extends BaseMapper<Course> {
     int updateBookedCount(@Param("courseId") Long courseId, @Param("delta") Integer delta);
 
     /**
+     * 原子性增加总预约人数
+     * 用于统计所有预约过该课程的独立会员数量
+     *
+     * @param courseId 课程ID
+     * @return 影响行数
+     */
+    @Update("UPDATE fitness_course SET total_booking_count = total_booking_count + 1 WHERE id = #{courseId}")
+    int incrementTotalBookingCount(@Param("courseId") Long courseId);
+
+    /**
      * 查询所有不重复的课程分类
      *
      * @return 分类列表
@@ -61,10 +71,10 @@ public interface CourseMapper extends BaseMapper<Course> {
     @Select("SELECT id, course_name as name, category, difficulty_level as level, " +
             "duration_minutes as duration, " +
             "CONCAT(calories_min, '-', calories_max, '卡') as calories, " +
-            "booked_count as bookings, image_url as image, description as desc " +
+            "total_booking_count as totalBookings, image_url as image, description as desc " +
             "FROM fitness_course " +
             "WHERE deleted = false AND status = 1 " +
-            "ORDER BY booked_count DESC " +
+            "ORDER BY total_booking_count DESC " +
             "LIMIT #{limit}")
     List<CourseCardVO> selectHomePageCourses(@Param("limit") Integer limit);
 
@@ -78,10 +88,10 @@ public interface CourseMapper extends BaseMapper<Course> {
     @Select("SELECT id, course_name as name, category, difficulty_level as level, " +
             "duration_minutes as duration, " +
             "CONCAT(calories_min, '-', calories_max, '卡') as calories, " +
-            "booked_count as bookings, image_url as image, description as desc " +
+            "total_booking_count as totalBookings, image_url as image, description as desc " +
             "FROM fitness_course " +
             "WHERE deleted = false AND status = 1 AND category = #{category} " +
-            "ORDER BY booked_count DESC " +
+            "ORDER BY total_booking_count DESC " +
             "LIMIT #{limit}")
     List<CourseCardVO> selectHomePageCoursesByCategory(@Param("category") String category, @Param("limit") Integer limit);
 }

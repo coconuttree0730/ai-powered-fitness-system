@@ -104,6 +104,12 @@ public class Course {
     private Integer caloriesMax;
 
     /**
+     * 总预约人数（统计所有预约过该课程的独立会员数量）
+     */
+    @TableField("total_booking_count")
+    private Integer totalBookingCount;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

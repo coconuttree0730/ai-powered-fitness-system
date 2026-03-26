@@ -108,6 +108,13 @@
         </el-table-column>
         <el-table-column prop="capacity" label="容量" />
         <el-table-column prop="bookingCount" label="预约数" />
+        <el-table-column label="状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getStatusType(row.status)" size="small">
+              {{ getStatusLabel(row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
             <el-space>
@@ -200,6 +207,16 @@
           <el-col :span="8">
             <el-form-item label="最大卡路里" prop="caloriesMax">
               <el-input-number v-model="form.caloriesMax" :min="50" :max="2000" placeholder="最大值" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
+                <el-option label="已取消" :value="0" />
+                <el-option label="可预约" :value="1" />
+                <el-option label="已满员" :value="2" />
+                <el-option label="已结束" :value="3" />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -401,7 +418,8 @@ const form = reactive({
   difficultyLevel: null,
   durationMinutes: null,
   caloriesMin: null,
-  caloriesMax: null
+  caloriesMax: null,
+  status: 1
 })
 
 const searchForm = reactive({
@@ -517,19 +535,20 @@ function handleReset() {
 function handleAdd() {
   isEdit.value = false
   currentId.value = null
-  Object.assign(form, { 
-    courseName: '', 
-    category: null, 
-    coachId: null, 
-    startTime: null, 
-    endTime: null, 
-    capacity: 20, 
-    description: '', 
+  Object.assign(form, {
+    courseName: '',
+    category: null,
+    coachId: null,
+    startTime: null,
+    endTime: null,
+    capacity: 20,
+    description: '',
     imageUrl: '',
     difficultyLevel: null,
     durationMinutes: null,
     caloriesMin: null,
-    caloriesMax: null
+    caloriesMax: null,
+    status: 1
   })
   fileList.value = []
   showModal.value = true
@@ -555,7 +574,8 @@ function handleEdit(row) {
     difficultyLevel: row.difficultyLevel || null,
     durationMinutes: row.durationMinutes || null,
     caloriesMin: row.caloriesMin || null,
-    caloriesMax: row.caloriesMax || null
+    caloriesMax: row.caloriesMax || null,
+    status: row.status !== undefined ? row.status : 1
   })
   // 设置图片文件列表
   if (row.imageUrl) {
@@ -603,7 +623,8 @@ async function handleSubmit() {
       capacity: form.capacity ? Number(form.capacity) : null,
       durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
       caloriesMin: form.caloriesMin ? Number(form.caloriesMin) : null,
-      caloriesMax: form.caloriesMax ? Number(form.caloriesMax) : null
+      caloriesMax: form.caloriesMax ? Number(form.caloriesMax) : null,
+      status: form.status !== undefined ? Number(form.status) : 1
     }
 
     if (isEdit.value) {
@@ -662,6 +683,26 @@ function getCategoryType(category) {
     'SPINNING': 'info'      // 动感单车 - 青色
   }
   return typeMap[category] || 'info'
+}
+
+function getStatusLabel(status) {
+  const labelMap = {
+    0: '已取消',
+    1: '可预约',
+    2: '已满员',
+    3: '已结束'
+  }
+  return labelMap[status] || '未知'
+}
+
+function getStatusType(status) {
+  const typeMap = {
+    0: 'info',      // 已取消 - 灰色
+    1: 'success',   // 可预约 - 绿色
+    2: 'warning',   // 已满员 - 橙色
+    3: 'danger'     // 已结束 - 红色
+  }
+  return typeMap[status] || 'info'
 }
 
 function getDifficultyType(level) {

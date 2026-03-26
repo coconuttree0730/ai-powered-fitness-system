@@ -229,9 +229,9 @@
                  class="course-card"
                  v-intersect="onReveal">
               <div class="course-image">
-                <img v-if="!course.imageError && course.image" 
-                     :src="course.image" 
-                     :alt="course.name" 
+                <img v-if="!course.imageError && course.image"
+                     :src="course.image"
+                     :alt="course.name"
                      @error="handleImageError(course)">
                 <div v-else class="course-image-placeholder">
                   <span class="placeholder-icon">💪</span>
@@ -247,7 +247,7 @@
                 <p class="course-desc">{{ course.desc }}</p>
                 <div class="course-meta">
                   <span class="course-calories">🔥 {{ course.calories || '200-400卡' }}</span>
-                  <span class="course-bookings">{{ course.bookings || 0 }}人已预约</span>
+                  <span class="course-bookings">课程累计参与人数：{{ course.totalBookings || 0 }} 人</span>
                 </div>
               </div>
             </div>

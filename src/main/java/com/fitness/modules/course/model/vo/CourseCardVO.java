@@ -39,9 +39,9 @@ public class CourseCardVO {
     private String calories;
 
     /**
-     * 已预约人数
+     * 总预约人数（统计所有预约过该课程的独立会员数量）
      */
-    private Integer bookings;
+    private Integer totalBookings;
 
     /**
      * 课程图片URL

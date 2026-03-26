@@ -59,13 +59,16 @@ public class BookingServiceImpl implements BookingService {
             throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS);
         }
 
-        // 5. 增加课程预约人数
+        // 5. 增加课程预约人数（当前预约数）
         int updated = courseMapper.updateBookedCount(dto.getCourseId(), 1);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.COURSE_FULL);
         }
 
-        // 6. 创建预约记录
+        // 6. 原子性增加总预约人数（统计所有预约过该课程的独立会员数量）
+        courseMapper.incrementTotalBookingCount(dto.getCourseId());
+
+        // 7. 创建预约记录
         Booking booking = new Booking();
         booking.setUserId(userId);
         booking.setCourseId(dto.getCourseId());
