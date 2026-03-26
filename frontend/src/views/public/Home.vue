@@ -205,34 +205,54 @@
           <h2 class="section-title">多元化课程体系<br><span>满足全场景健身需求</span></h2>
           <p class="section-desc">从入门到专业，从团体到私教，总有一款课程适合您</p>
         </div>
-        <div class="courses-tabs">
-          <button v-for="tab in courseTabs" :key="tab.key"
-                  :class="['course-tab', { active: activeCourseTab === tab.key }]"
-                  @click="activeCourseTab = tab.key">
-            {{ tab.label }}
-          </button>
+        <!-- 加载状态 -->
+        <div v-if="coursesLoading" class="courses-loading">
+          <div class="loading-spinner"></div>
+          <p>正在加载课程数据...</p>
         </div>
-        <div class="courses-grid">
-          <div v-for="(course, index) in filteredCourses" :key="index"
-               class="course-card"
-               v-intersect="onReveal">
-            <div class="course-image">
-              <img :src="course.image" :alt="course.name">
-              <div class="course-overlay">
-                <span class="course-level">{{ course.level }}</span>
-                <span class="course-duration">⏱ {{ course.duration }}</span>
+        <!-- 错误状态 -->
+        <div v-else-if="coursesError" class="courses-error">
+          <p>⚠️ {{ coursesError }}</p>
+          <button class="btn btn-outline" @click="fetchHomePageCourses">重新加载</button>
+        </div>
+        <!-- 数据展示 -->
+        <template v-else>
+          <div class="courses-tabs">
+            <button v-for="tab in courseTabs" :key="tab.key"
+                    :class="['course-tab', { active: activeCourseTab === tab.key }]"
+                    @click="activeCourseTab = tab.key">
+              {{ tab.label }}
+            </button>
+          </div>
+          <div class="courses-grid">
+            <div v-for="(course, index) in filteredCourses" :key="course.id || index"
+                 class="course-card"
+                 v-intersect="onReveal">
+              <div class="course-image">
+                <img v-if="!course.imageError && course.image" 
+                     :src="course.image" 
+                     :alt="course.name" 
+                     @error="handleImageError(course)">
+                <div v-else class="course-image-placeholder">
+                  <span class="placeholder-icon">💪</span>
+                  <span class="placeholder-text">智健AI</span>
+                </div>
+                <div class="course-overlay">
+                  <span class="course-level">{{ course.level || '初级' }}</span>
+                  <span class="course-duration">⏱ {{ course.duration }}分钟</span>
+                </div>
               </div>
-            </div>
-            <div class="course-content">
-              <h3 class="course-name">{{ course.name }}</h3>
-              <p class="course-desc">{{ course.desc }}</p>
-              <div class="course-meta">
-                <span class="course-calories">🔥 {{ course.calories }}</span>
-                <span class="course-bookings">{{ course.bookings }}人已预约</span>
+              <div class="course-content">
+                <h3 class="course-name">{{ course.name }}</h3>
+                <p class="course-desc">{{ course.desc }}</p>
+                <div class="course-meta">
+                  <span class="course-calories">🔥 {{ course.calories || '200-400卡' }}</span>
+                  <span class="course-bookings">{{ course.bookings || 0 }}人已预约</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
         <div class="courses-more">
           <router-link to="/courses" class="btn btn-outline">查看全部课程</router-link>
         </div>
@@ -669,6 +689,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
+import { getHomePageCourses } from '@/api/course'
 import LoginModal from '@/components/LoginModal.vue'
 import RegisterModal from '@/components/RegisterModal.vue'
 
@@ -799,29 +820,83 @@ const aiFeatures = [
 ]
 
 // 课程标签
-const courseTabs = [
+const courseTabs = ref([
   { key: 'all', label: '全部课程' },
   { key: 'strength', label: '力量训练' },
   { key: 'cardio', label: '有氧燃脂' },
   { key: 'yoga', label: '瑜伽普拉提' },
   { key: 'boxing', label: '拳击格斗' }
-]
+])
 
 const activeCourseTab = ref('all')
 
-const courses = [
-  { name: 'HIIT燃脂特训', category: 'cardio', level: '中级', duration: '45分钟', calories: '500-700卡', bookings: 2341, image: 'https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=400&h=300&fit=crop', desc: '高强度间歇训练，快速燃烧脂肪，提升心肺功能' },
-  { name: '力量基础入门', category: 'strength', level: '初级', duration: '60分钟', calories: '300-450卡', bookings: 1856, image: 'https://images.unsplash.com/photo-1581009146145-b5ef050c149a?w=400&h=300&fit=crop', desc: '系统学习基础力量训练动作，建立正确运动模式' },
-  { name: '流瑜伽', category: 'yoga', level: '全级别', duration: '75分钟', calories: '200-350卡', bookings: 3124, image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop', desc: '通过流畅的体式串联，提升柔韧性与身心平衡' },
-  { name: '拳击格斗', category: 'boxing', level: '中级', duration: '50分钟', calories: '600-800卡', bookings: 1567, image: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=400&h=300&fit=crop', desc: '学习拳击技巧，释放压力，提升协调性与爆发力' },
-  { name: '普拉提核心', category: 'yoga', level: '初级', duration: '55分钟', calories: '250-400卡', bookings: 2789, image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop', desc: '强化核心肌群，改善体态，塑造修长线条' },
-  { name: 'CrossFit挑战', category: 'strength', level: '高级', duration: '60分钟', calories: '700-900卡', bookings: 987, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop', desc: '功能性训练，全面提升力量、耐力与爆发力' }
-]
+// 课程体系数据
+const coursesData = ref([])
+const coursesLoading = ref(false)
+const coursesError = ref(null)
 
+// 获取首页课程体系数据
+async function fetchHomePageCourses() {
+  coursesLoading.value = true
+  coursesError.value = null
+  try {
+    const data = await getHomePageCourses()
+    // 响应拦截器已提取res.data，直接判断返回数据是否为数组
+    if (Array.isArray(data)) {
+      coursesData.value = data
+      // 更新标签（根据返回的数据动态调整）
+      const dynamicTabs = data.map(item => ({
+        key: item.key,
+        label: item.label
+      }))
+      if (dynamicTabs.length > 0) {
+        courseTabs.value = dynamicTabs
+      }
+    } else {
+      coursesData.value = []
+    }
+  } catch (error) {
+    console.error('获取课程体系数据失败:', error)
+    coursesError.value = error.message || '获取课程数据失败，请稍后重试'
+    // 使用默认数据作为降级方案
+    coursesData.value = getDefaultCoursesData()
+  } finally {
+    coursesLoading.value = false
+  }
+}
+
+// 默认课程数据（降级方案）
+function getDefaultCoursesData() {
+  return [
+    {
+      key: 'all',
+      label: '全部课程',
+      courses: [
+        { id: 1, name: 'HIIT燃脂特训', category: 'cardio', level: '中级', duration: 45, calories: '500-700卡', bookings: 2341, image: 'https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=400&h=300&fit=crop', desc: '高强度间歇训练，快速燃烧脂肪，提升心肺功能' },
+        { id: 2, name: '力量基础入门', category: 'strength', level: '初级', duration: 60, calories: '300-450卡', bookings: 1856, image: 'https://images.unsplash.com/photo-1581009146145-b5ef050c149a?w=400&h=300&fit=crop', desc: '系统学习基础力量训练动作，建立正确运动模式' },
+        { id: 3, name: '流瑜伽', category: 'yoga', level: '全级别', duration: 75, calories: '200-350卡', bookings: 3124, image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop', desc: '通过流畅的体式串联，提升柔韧性与身心平衡' }
+      ]
+    }
+  ]
+}
+
+// 根据当前选中的标签过滤课程
 const filteredCourses = computed(() => {
-  if (activeCourseTab.value === 'all') return courses
-  return courses.filter(c => c.category === activeCourseTab.value)
+  const category = coursesData.value.find(c => c.key === activeCourseTab.value)
+  if (category && category.courses) {
+    return category.courses
+  }
+  // 如果没有找到对应分类，返回第一个分类的课程或空数组
+  if (coursesData.value.length > 0 && coursesData.value[0].courses) {
+    return coursesData.value[0].courses
+  }
+  return []
 })
+
+// 图片加载失败处理
+function handleImageError(course) {
+  course.imageError = true
+}
 
 // 会员方案
 const membershipSlide = ref(0)
@@ -1168,6 +1243,9 @@ onMounted(() => {
   heroInterval = setInterval(() => {
     nextSlide()
   }, 5000)
+
+  // 获取首页课程体系数据
+  fetchHomePageCourses()
 })
 
 onUnmounted(() => {
@@ -2512,6 +2590,69 @@ const vIntersect = {
 
 .courses-more {
   text-align: center;
+}
+
+/* 课程体系加载状态 */
+.courses-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 107, 53, 0.2);
+  border-top-color: #FF6B35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 课程体系错误状态 */
+.courses-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.courses-error p {
+  color: #FF6B35;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* 课程图片占位符 */
+.course-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1A1A25 0%, #2A2A35 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  opacity: 0.8;
+}
+
+.placeholder-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 /* Membership Section */

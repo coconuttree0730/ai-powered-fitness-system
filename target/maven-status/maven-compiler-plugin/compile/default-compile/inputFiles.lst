@@ -54,6 +54,8 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\model\dto\CourseQueryDTO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\model\entity\Course.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\model\enums\CourseCategory.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\model\vo\CourseCardVO.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\model\vo\CourseCategoryVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\model\vo\CourseVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\service\CourseService.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\course\service\impl\CourseServiceImpl.java

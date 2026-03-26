@@ -7,6 +7,8 @@ import com.fitness.modules.course.mapper.CourseMapper;
 import com.fitness.modules.course.model.dto.CourseDTO;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
 import com.fitness.modules.course.model.entity.Course;
+import com.fitness.modules.course.model.vo.CourseCardVO;
+import com.fitness.modules.course.model.vo.CourseCategoryVO;
 import com.fitness.modules.course.model.vo.CourseVO;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.course.service.CourseService;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,6 +50,10 @@ public class CourseServiceImpl implements CourseService {
         course.setBookedCount(0);
         course.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
         course.setImageUrl(dto.getImageUrl());
+        course.setDifficultyLevel(dto.getDifficultyLevel());
+        course.setDurationMinutes(dto.getDurationMinutes());
+        course.setCaloriesMin(dto.getCaloriesMin());
+        course.setCaloriesMax(dto.getCaloriesMax());
         course.setCreateTime(LocalDateTime.now());
         course.setUpdateTime(LocalDateTime.now());
 
@@ -90,6 +97,10 @@ public class CourseServiceImpl implements CourseService {
             existingCourse.setStatus(dto.getStatus());
         }
         existingCourse.setImageUrl(dto.getImageUrl());
+        existingCourse.setDifficultyLevel(dto.getDifficultyLevel());
+        existingCourse.setDurationMinutes(dto.getDurationMinutes());
+        existingCourse.setCaloriesMin(dto.getCaloriesMin());
+        existingCourse.setCaloriesMax(dto.getCaloriesMax());
         existingCourse.setUpdateTime(LocalDateTime.now());
 
         courseMapper.updateById(existingCourse);
@@ -143,6 +154,62 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public List<String> getCourseCategories() {
         return courseMapper.selectDistinctCategories();
+    }
+
+    @Override
+    public List<CourseCategoryVO> getHomePageCourses() {
+        // 定义固定的分类映射（与前端保持一致）- 使用数据库中的中文分类名称
+        List<CourseCategoryVO> result = new ArrayList<>();
+
+        // 全部课程
+        CourseCategoryVO allCategory = new CourseCategoryVO();
+        allCategory.setKey("all");
+        allCategory.setLabel("全部课程");
+        allCategory.setCourses(courseMapper.selectHomePageCourses(6));
+        result.add(allCategory);
+
+        // 力量训练
+        CourseCategoryVO strengthCategory = new CourseCategoryVO();
+        strengthCategory.setKey("strength");
+        strengthCategory.setLabel("力量训练");
+        strengthCategory.setCourses(courseMapper.selectHomePageCoursesByCategory("力量训练", 6));
+        result.add(strengthCategory);
+
+        // 有氧燃脂
+        CourseCategoryVO cardioCategory = new CourseCategoryVO();
+        cardioCategory.setKey("cardio");
+        cardioCategory.setLabel("有氧燃脂");
+        cardioCategory.setCourses(courseMapper.selectHomePageCoursesByCategory("有氧燃脂", 6));
+        result.add(cardioCategory);
+
+        // 瑜伽普拉提
+        CourseCategoryVO yogaCategory = new CourseCategoryVO();
+        yogaCategory.setKey("yoga");
+        yogaCategory.setLabel("瑜伽普拉提");
+        List<CourseCardVO> yogaCourses = new ArrayList<>();
+        yogaCourses.addAll(courseMapper.selectHomePageCoursesByCategory("瑜伽普拉提", 6));
+        yogaCategory.setCourses(yogaCourses);
+        result.add(yogaCategory);
+
+        // 拳击格斗
+        CourseCategoryVO boxingCategory = new CourseCategoryVO();
+        boxingCategory.setKey("boxing");
+        boxingCategory.setLabel("拳击格斗");
+        boxingCategory.setCourses(courseMapper.selectHomePageCoursesByCategory("拳击格斗", 6));
+        result.add(boxingCategory);
+
+        log.info("获取首页课程体系数据成功，共{}个分类", result.size());
+        return result;
+    }
+
+    @Override
+    public List<CourseCardVO> getHomePageCourseCards(Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 6;
+        }
+        List<CourseCardVO> courses = courseMapper.selectHomePageCourses(limit);
+        log.info("获取首页课程卡片数据成功，共{}条", courses.size());
+        return courses;
     }
 
     /**

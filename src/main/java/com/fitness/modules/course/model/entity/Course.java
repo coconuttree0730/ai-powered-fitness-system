@@ -80,6 +80,30 @@ public class Course {
     private String imageUrl;
 
     /**
+     * 难度等级：入门/初级/中级/高级/进阶
+     */
+    @TableField("difficulty_level")
+    private String difficultyLevel;
+
+    /**
+     * 课程时长（分钟）
+     */
+    @TableField("duration_minutes")
+    private Integer durationMinutes;
+
+    /**
+     * 最小卡路里消耗
+     */
+    @TableField("calories_min")
+    private Integer caloriesMin;
+
+    /**
+     * 最大卡路里消耗
+     */
+    @TableField("calories_max")
+    private Integer caloriesMax;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

@@ -65,4 +65,24 @@ public class CourseDTO {
      * 课程图片URL
      */
     private String imageUrl;
+
+    /**
+     * 难度等级：入门/初级/中级/高级/进阶
+     */
+    private String difficultyLevel;
+
+    /**
+     * 课程时长（分钟）
+     */
+    private Integer durationMinutes;
+
+    /**
+     * 最小卡路里消耗
+     */
+    private Integer caloriesMin;
+
+    /**
+     * 最大卡路里消耗
+     */
+    private Integer caloriesMax;
 }

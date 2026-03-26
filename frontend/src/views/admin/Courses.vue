@@ -172,6 +172,38 @@
           </el-col>
         </el-row>
 
+        <!-- 新增字段：难度等级、课程时长、卡路里消耗 -->
+        <el-row :gutter="12">
+          <el-col :span="8">
+            <el-form-item label="难度等级" prop="difficultyLevel">
+              <el-select v-model="form.difficultyLevel" placeholder="请选择难度等级" style="width: 100%">
+                <el-option label="入门" value="入门" />
+                <el-option label="初级" value="初级" />
+                <el-option label="中级" value="中级" />
+                <el-option label="高级" value="高级" />
+                <el-option label="进阶" value="进阶" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="课程时长" prop="durationMinutes">
+              <el-input-number v-model="form.durationMinutes" :min="10" :max="180" placeholder="分钟" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="卡路里消耗" prop="caloriesMin">
+              <el-input-number v-model="form.caloriesMin" :min="50" :max="2000" placeholder="最小值" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="8">
+            <el-form-item label="最大卡路里" prop="caloriesMax">
+              <el-input-number v-model="form.caloriesMax" :min="50" :max="2000" placeholder="最大值" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <!-- 课程图片上传 -->
         <el-form-item label="课程图片" prop="imageUrl">
           <el-space direction="vertical" alignment="flex-start">
@@ -245,6 +277,20 @@
                 <span>已预约 {{ currentCourse.bookingCount || 0 }} 人</span>
               </div>
             </div>
+            <!-- 新增字段显示 -->
+            <div class="course-extra-info" v-if="currentCourse.difficultyLevel || currentCourse.durationMinutes || currentCourse.caloriesMin">
+              <el-tag v-if="currentCourse.difficultyLevel" :type="getDifficultyType(currentCourse.difficultyLevel)" size="small">
+                {{ currentCourse.difficultyLevel }}
+              </el-tag>
+              <span v-if="currentCourse.durationMinutes" class="extra-item">
+                <el-icon><Timer /></el-icon>
+                {{ currentCourse.durationMinutes }}分钟
+              </span>
+              <span v-if="currentCourse.caloriesMin && currentCourse.caloriesMax" class="extra-item">
+                <el-icon><Aim /></el-icon>
+                {{ currentCourse.caloriesMin }}-{{ currentCourse.caloriesMax }}千卡
+              </span>
+            </div>
           </div>
         </div>
 
@@ -294,7 +340,7 @@
 <script setup>
 import { ref, h, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Clock, User, Calendar, UserFilled, Document, Picture } from '@element-plus/icons-vue'
+import { Search, Plus, Clock, User, Calendar, UserFilled, Document, Picture, Timer, Aim } from '@element-plus/icons-vue'
 import { getCourseList, createCourse, updateCourse, deleteCourse, getCourseCategories } from '@/api/course'
 import { getCoachList } from '@/api/coach'
 import { getToken } from '@/utils/auth'
@@ -351,7 +397,11 @@ const form = reactive({
   endTime: null,
   capacity: 20,
   description: '',
-  imageUrl: ''
+  imageUrl: '',
+  difficultyLevel: null,
+  durationMinutes: null,
+  caloriesMin: null,
+  caloriesMax: null
 })
 
 const searchForm = reactive({
@@ -467,7 +517,20 @@ function handleReset() {
 function handleAdd() {
   isEdit.value = false
   currentId.value = null
-  Object.assign(form, { courseName: '', category: null, coachId: null, startTime: null, endTime: null, capacity: 20, description: '', imageUrl: '' })
+  Object.assign(form, { 
+    courseName: '', 
+    category: null, 
+    coachId: null, 
+    startTime: null, 
+    endTime: null, 
+    capacity: 20, 
+    description: '', 
+    imageUrl: '',
+    difficultyLevel: null,
+    durationMinutes: null,
+    caloriesMin: null,
+    caloriesMax: null
+  })
   fileList.value = []
   showModal.value = true
 }
@@ -488,7 +551,11 @@ function handleEdit(row) {
     endTime: row.endTime,
     capacity: row.capacity,
     description: row.description || '',
-    imageUrl: row.imageUrl || ''
+    imageUrl: row.imageUrl || '',
+    difficultyLevel: row.difficultyLevel || null,
+    durationMinutes: row.durationMinutes || null,
+    caloriesMin: row.caloriesMin || null,
+    caloriesMax: row.caloriesMax || null
   })
   // 设置图片文件列表
   if (row.imageUrl) {
@@ -533,7 +600,10 @@ async function handleSubmit() {
     const data = {
       ...form,
       coachId: form.coachId ? Number(form.coachId) : null,
-      capacity: form.capacity ? Number(form.capacity) : null
+      capacity: form.capacity ? Number(form.capacity) : null,
+      durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
+      caloriesMin: form.caloriesMin ? Number(form.caloriesMin) : null,
+      caloriesMax: form.caloriesMax ? Number(form.caloriesMax) : null
     }
 
     if (isEdit.value) {
@@ -592,6 +662,17 @@ function getCategoryType(category) {
     'SPINNING': 'info'      // 动感单车 - 青色
   }
   return typeMap[category] || 'info'
+}
+
+function getDifficultyType(level) {
+  const typeMap = {
+    '入门': 'success',
+    '初级': 'primary',
+    '中级': 'warning',
+    '高级': 'danger',
+    '进阶': 'info'
+  }
+  return typeMap[level] || 'info'
 }
 </script>
 
@@ -690,6 +771,23 @@ function getCategoryType(category) {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.course-extra-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e0e0e0;
+}
+
+.extra-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: #666;
   font-size: 14px;
 }

@@ -74,3 +74,27 @@ export function getCourseCategories() {
     method: 'get'
   })
 }
+
+/**
+ * 获取首页课程体系数据（按分类分组）
+ * @returns {Promise} 课程体系分类列表
+ */
+export function getHomePageCourses() {
+  return request({
+    url: '/courses/homepage/categories',
+    method: 'get'
+  })
+}
+
+/**
+ * 获取首页课程卡片列表
+ * @param {number} limit 限制数量（默认6）
+ * @returns {Promise} 课程卡片列表
+ */
+export function getHomePageCourseCards(limit = 6) {
+  return request({
+    url: '/courses/homepage/cards',
+    method: 'get',
+    params: { limit }
+  })
+}

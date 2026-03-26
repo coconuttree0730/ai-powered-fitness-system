@@ -18,6 +18,10 @@
         <result column="remaining_count" property="remainingCount"/>
         <result column="status" property="status"/>
         <result column="image_url" property="imageUrl"/>
+        <result column="difficulty_level" property="difficultyLevel"/>
+        <result column="duration_minutes" property="durationMinutes"/>
+        <result column="calories_min" property="caloriesMin"/>
+        <result column="calories_max" property="caloriesMax"/>
     </resultMap>
 
     <!-- 分页查询课程列表 -->
@@ -36,7 +40,11 @@
             c.booked_count,
             (c.capacity - c.booked_count) AS remaining_count,
             c.status,
-            c.image_url
+            c.image_url,
+            c.difficulty_level,
+            c.duration_minutes,
+            c.calories_min,
+            c.calories_max
         FROM fitness_course c
         LEFT JOIN sys_user u ON c.coach_id = u.id
         WHERE c.deleted = false
@@ -77,7 +85,11 @@
             c.booked_count,
             (c.capacity - c.booked_count) AS remaining_count,
             c.status,
-            c.image_url
+            c.image_url,
+            c.difficulty_level,
+            c.duration_minutes,
+            c.calories_min,
+            c.calories_max
         FROM fitness_course c
         LEFT JOIN sys_user u ON c.coach_id = u.id
         WHERE c.id = #{courseId}

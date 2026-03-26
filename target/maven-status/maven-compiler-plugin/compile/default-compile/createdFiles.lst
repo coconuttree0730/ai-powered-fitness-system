@@ -76,6 +76,7 @@ com\fitness\modules\equipment\mapper\EquipmentTypeMapper.class
 com\fitness\modules\user\model\vo\SliderVerifyTokenVO.class
 com\fitness\common\result\Result.class
 com\fitness\modules\user\mapper\RoleMapper.class
+com\fitness\modules\course\model\vo\CourseCategoryVO.class
 com\fitness\integration\security\UserDetailsImpl.class
 com\fitness\modules\course\controller\CourseController.class
 com\fitness\integration\minio\model\vo\FileUploadVO.class
@@ -139,6 +140,7 @@ com\fitness\modules\equipment\model\vo\MyRepairVO.class
 com\fitness\modules\plan\controller\FitnessPlanController.class
 com\fitness\modules\user\model\vo\SliderVerifyResultVO$SliderVerifyResultVOBuilder.class
 com\fitness\common\constants\RoleConstants.class
+com\fitness\modules\course\model\vo\CourseCardVO.class
 com\fitness\modules\equipment\mapper\EquipmentRepairMapper.class
 com\fitness\modules\plan\model\vo\PlanVO.class
 com\fitness\modules\dashboard\model\vo\DashboardStatsVO.class
