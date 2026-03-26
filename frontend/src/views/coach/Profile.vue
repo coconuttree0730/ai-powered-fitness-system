@@ -30,6 +30,7 @@
             <span>基本信息</span>
           </div>
           
+          <!-- 头像区域 -->
           <div class="avatar-section">
             <div class="avatar-wrapper">
               <img v-if="profileForm.avatar" :src="profileForm.avatar" class="profile-avatar" />
@@ -76,6 +77,47 @@
               <span v-if="!isEditing" class="info-value">{{ profile.email || '-' }}</span>
               <n-input v-else v-model:value="profileForm.email" placeholder="请输入邮箱" />
             </div>
+          </div>
+        </div>
+
+        <!-- 个人展示图片 -->
+        <div class="profile-card personal-image-card">
+          <div class="card-header">
+            <n-icon :component="ImageOutline" size="20" />
+            <span>个人展示图片</span>
+            <n-tag v-if="profileForm.personalImageUrl" type="success" size="small">已上传</n-tag>
+            <n-tag v-else type="warning" size="small">未上传</n-tag>
+          </div>
+          <div class="personal-image-section">
+            <div v-if="profileForm.personalImageUrl" class="personal-image-preview">
+              <img :src="profileForm.personalImageUrl" alt="个人展示图片" />
+              <div v-if="isEditing" class="image-actions">
+                <n-button type="primary" size="small" @click="triggerPersonalImageUpload">
+                  <template #icon>
+                    <n-icon :component="RefreshOutline" />
+                  </template>
+                  更换图片
+                </n-button>
+                <n-button type="error" size="small" @click="handleDeletePersonalImage">
+                  <template #icon>
+                    <n-icon :component="TrashOutline" />
+                  </template>
+                  删除
+                </n-button>
+              </div>
+            </div>
+            <div v-else class="personal-image-upload" @click="triggerPersonalImageUpload">
+              <n-icon :component="CloudUploadOutline" size="48" />
+              <span>点击上传个人展示图片</span>
+              <span class="upload-hint">支持 JPG、PNG、GIF 格式，最大 10MB</span>
+            </div>
+            <input 
+              type="file" 
+              ref="personalImageInput" 
+              style="display: none" 
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              @change="handlePersonalImageUpload"
+            />
           </div>
         </div>
 
@@ -152,6 +194,77 @@
                 <span v-else>-</span>
               </span>
               <n-select v-else v-model:value="profileForm.languages" :options="languageOptions" multiple placeholder="请选择语言能力" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 教练标签管理 -->
+        <div class="profile-card tags-card">
+          <div class="card-header">
+            <n-icon :component="PricetagsOutline" size="20" />
+            <span>个人标签</span>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-icon :component="InformationCircleOutline" size="16" class="info-icon" />
+              </template>
+              最多可添加5个标签，每个标签最多10个字符。标签将展示在首页教练介绍中。
+            </n-tooltip>
+          </div>
+          <div class="tags-section">
+            <div v-if="!isEditing" class="tags-display">
+              <n-space v-if="profile.tags?.length" size="small" wrap>
+                <n-tag 
+                  v-for="tag in profile.tags" 
+                  :key="tag" 
+                  type="warning"
+                  size="medium"
+                  class="coach-tag"
+                >
+                  {{ tag }}
+                </n-tag>
+              </n-space>
+              <n-empty v-else description="暂无标签" />
+            </div>
+            <div v-else class="tags-edit">
+              <n-space size="small" wrap class="selected-tags">
+                <n-tag
+                  v-for="(tag, index) in profileForm.tags"
+                  :key="index"
+                  type="warning"
+                  size="medium"
+                  closable
+                  @close="removeTag(index)"
+                >
+                  {{ tag }}
+                </n-tag>
+              </n-space>
+              <div v-if="profileForm.tags.length < 5" class="tag-input-section">
+                <n-input
+                  v-model:value="newTag"
+                  placeholder="输入标签后按回车添加"
+                  :maxlength="10"
+                  @keyup.enter="addTag"
+                />
+                <n-button type="primary" size="small" @click="addTag">添加</n-button>
+              </div>
+              <n-text v-else type="warning" class="tag-limit-hint">
+                已达到最大标签数量（5个）
+              </n-text>
+              <div class="preset-tags">
+                <n-text depth="3">推荐标签：</n-text>
+                <n-space size="small" wrap>
+                  <n-tag
+                    v-for="tag in presetTags"
+                    :key="tag"
+                    size="small"
+                    :disabled="profileForm.tags.includes(tag) || profileForm.tags.length >= 5"
+                    @click="addPresetTag(tag)"
+                    class="preset-tag"
+                  >
+                    + {{ tag }}
+                  </n-tag>
+                </n-space>
+              </div>
             </div>
           </div>
         </div>
@@ -287,7 +400,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
   PersonOutline,
@@ -299,14 +412,27 @@ import {
   CreateOutline,
   CameraOutline,
   AddOutline,
-  TrophyOutline
+  TrophyOutline,
+  ImageOutline,
+  CloudUploadOutline,
+  RefreshOutline,
+  TrashOutline,
+  PricetagsOutline
 } from '@vicons/ionicons5'
+import {
+  getCurrentCoachDetail,
+  updateCoachDetail,
+  uploadPersonalImage,
+  deletePersonalImage,
+  updateTags
+} from '@/api/coachDetail'
 
 const message = useMessage()
 
 // 编辑状态
 const isEditing = ref(false)
 const saving = ref(false)
+const loading = ref(false)
 
 // 弹窗状态
 const showCertModal = ref(false)
@@ -316,40 +442,52 @@ const currentDay = ref('')
 // 头像上传
 const avatarInput = ref(null)
 
+// 个人展示图片上传
+const personalImageInput = ref(null)
+
+// 标签输入
+const newTag = ref('')
+
+// 预设标签
+const presetTags = [
+  '增肌塑形', '减脂瘦身', '体态矫正', '运动康复',
+  '力量训练', '瑜伽冥想', '普拉提', 'CrossFit',
+  '体能训练', '产后恢复', '青少年体适能', '老年健身'
+]
+
 // 表单数据
 const profileForm = reactive({
   avatar: '',
-  realName: '张教练',
+  realName: '',
   gender: 'male',
-  age: 32,
-  phone: '13800138000',
-  email: 'coach@example.com',
-  workYears: 8,
-  specialties: ['健身', '力量训练', '减脂'],
-  teachingStyle: 'encouraging',
-  education: '北京体育大学 运动训练专业 本科',
-  training: '2018年 ACE认证培训\n2019年 NSCA-CPT认证培训\n2021年 运动康复专业进修',
-  languages: ['中文', '英语'],
-  bio: '拥有8年健身教练经验，专注于帮助学员实现健康目标。相信每个人都有潜力成为更好的自己，我的职责是引导你发现并释放这种潜力。',
-  experience: '曾任职于多家知名健身俱乐部，累计指导学员超过500人。擅长制定个性化训练计划，帮助学员安全高效地达成目标。',
-  honors: ['2022年度最佳教练', '2023年健身大赛优秀指导奖'],
+  age: null,
+  phone: '',
+  email: '',
+  personalImageUrl: '',
+  tags: [],
+  workYears: 0,
+  specialties: [],
+  teachingStyle: '',
+  education: '',
+  training: '',
+  languages: [],
+  bio: '',
+  experience: '',
+  honors: [],
   emergencyContact: {
-    name: '李家属',
-    relation: 'spouse',
-    phone: '13900139000'
+    name: '',
+    relation: '',
+    phone: ''
   },
-  certifications: [
-    { name: 'ACE认证私人教练', number: 'ACE-2020-12345', validDate: '2025-12-31', status: 'valid' },
-    { name: 'NSCA-CPT认证', number: 'NSCA-2021-67890', validDate: '2024-06-30', status: 'expiring' }
-  ],
+  certifications: [],
   availability: {
-    monday: [{ start: '09:00', end: '12:00' }, { start: '14:00', end: '20:00' }],
-    tuesday: [{ start: '09:00', end: '12:00' }, { start: '14:00', end: '20:00' }],
-    wednesday: [{ start: '09:00', end: '12:00' }, { start: '14:00', end: '20:00' }],
-    thursday: [{ start: '09:00', end: '12:00' }, { start: '14:00', end: '20:00' }],
-    friday: [{ start: '09:00', end: '12:00' }, { start: '14:00', end: '20:00' }],
-    saturday: [{ start: '10:00', end: '18:00' }],
-    sunday: [{ start: '10:00', end: '16:00' }]
+    monday: [],
+    tuesday: [],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: []
   }
 })
 
@@ -443,6 +581,35 @@ const timeForm = reactive({
   end: null
 })
 
+// 获取教练详情
+async function fetchCoachDetail() {
+  loading.value = true
+  try {
+    const res = await getCurrentCoachDetail()
+    if (res.data) {
+      Object.assign(profileForm, res.data)
+      // 确保数组字段存在
+      if (!profileForm.tags) profileForm.tags = []
+      if (!profileForm.specialties) profileForm.specialties = []
+      if (!profileForm.languages) profileForm.languages = []
+      if (!profileForm.honors) profileForm.honors = []
+      if (!profileForm.certifications) profileForm.certifications = []
+      if (!profileForm.emergencyContact) profileForm.emergencyContact = { name: '', relation: '', phone: '' }
+      if (!profileForm.availability) {
+        profileForm.availability = {
+          monday: [], tuesday: [], wednesday: [], thursday: [],
+          friday: [], saturday: [], sunday: []
+        }
+      }
+    }
+  } catch (error) {
+    message.error('获取教练信息失败')
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
+
 // 方法
 function startEdit() {
   originalProfile.value = JSON.parse(JSON.stringify(profileForm))
@@ -458,11 +625,37 @@ function cancelEdit() {
 
 async function saveProfile() {
   saving.value = true
-  // 模拟保存
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  saving.value = false
-  isEditing.value = false
-  message.success('个人资料保存成功')
+  try {
+    // 先保存基本信息
+    const detailData = {
+      workYears: profileForm.workYears,
+      specialties: profileForm.specialties,
+      teachingStyle: profileForm.teachingStyle,
+      education: profileForm.education,
+      training: profileForm.training,
+      languages: profileForm.languages,
+      bio: profileForm.bio,
+      experience: profileForm.experience,
+      honors: profileForm.honors,
+      emergencyContact: profileForm.emergencyContact,
+      certifications: profileForm.certifications,
+      availability: profileForm.availability
+    }
+    await updateCoachDetail(detailData)
+    
+    // 保存标签
+    await updateTags(profileForm.tags)
+    
+    message.success('个人资料保存成功')
+    isEditing.value = false
+    // 重新获取数据
+    await fetchCoachDetail()
+  } catch (error) {
+    message.error('保存失败：' + (error.message || '未知错误'))
+    console.error(error)
+  } finally {
+    saving.value = false
+  }
 }
 
 function triggerAvatarUpload() {
@@ -481,9 +674,97 @@ function handleAvatarUpload(event) {
   const reader = new FileReader()
   reader.onload = (e) => {
     profileForm.avatar = e.target.result
-    message.success('头像上传成功')
+    message.success('头像上传成功（仅本地预览，需后端支持保存）')
   }
   reader.readAsDataURL(file)
+}
+
+// 个人展示图片上传
+function triggerPersonalImageUpload() {
+  personalImageInput.value?.click()
+}
+
+async function handlePersonalImageUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // 校验文件类型
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    message.error('请上传 JPG、PNG、GIF 或 WebP 格式的图片')
+    return
+  }
+  
+  // 校验文件大小（10MB）
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    message.error('图片大小不能超过 10MB')
+    return
+  }
+  
+  try {
+    const res = await uploadPersonalImage(file)
+    if (res.data) {
+      profileForm.personalImageUrl = res.data
+      message.success('个人展示图片上传成功')
+    }
+  } catch (error) {
+    message.error('上传失败：' + (error.message || '未知错误'))
+    console.error(error)
+  }
+  
+  // 清空input，允许重复选择同一文件
+  event.target.value = ''
+}
+
+async function handleDeletePersonalImage() {
+  try {
+    await deletePersonalImage()
+    profileForm.personalImageUrl = ''
+    message.success('个人展示图片已删除')
+  } catch (error) {
+    message.error('删除失败：' + (error.message || '未知错误'))
+    console.error(error)
+  }
+}
+
+// 标签管理
+function addTag() {
+  const tag = newTag.value.trim()
+  if (!tag) {
+    message.warning('请输入标签内容')
+    return
+  }
+  if (tag.length > 10) {
+    message.warning('标签长度不能超过10个字符')
+    return
+  }
+  if (profileForm.tags.includes(tag)) {
+    message.warning('该标签已存在')
+    return
+  }
+  if (profileForm.tags.length >= 5) {
+    message.warning('最多只能添加5个标签')
+    return
+  }
+  profileForm.tags.push(tag)
+  newTag.value = ''
+}
+
+function addPresetTag(tag) {
+  if (profileForm.tags.includes(tag)) {
+    message.warning('该标签已存在')
+    return
+  }
+  if (profileForm.tags.length >= 5) {
+    message.warning('最多只能添加5个标签')
+    return
+  }
+  profileForm.tags.push(tag)
+}
+
+function removeTag(index) {
+  profileForm.tags.splice(index, 1)
 }
 
 function addCertification() {
@@ -547,6 +828,11 @@ function confirmAddTimeSlot() {
 function removeTimeSlot(day, index) {
   profileForm.availability[day].splice(index, 1)
 }
+
+// 页面加载时获取数据
+onMounted(() => {
+  fetchCoachDetail()
+})
 </script>
 
 <style scoped>
@@ -608,6 +894,11 @@ function removeTimeSlot(day, index) {
   color: #52c41a;
 }
 
+.card-header .info-icon {
+  color: #8c8c8c;
+  cursor: help;
+}
+
 /* 头像区域 */
 .avatar-section {
   display: flex;
@@ -661,6 +952,121 @@ function removeTimeSlot(day, index) {
 
 .avatar-wrapper:hover .avatar-overlay {
   opacity: 1;
+}
+
+/* 个人展示图片区域 */
+.personal-image-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.personal-image-section {
+  padding: 8px 0;
+}
+
+.personal-image-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.personal-image-preview img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.personal-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 20px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #8c8c8c;
+}
+
+.personal-image-upload:hover {
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+.personal-image-upload .upload-hint {
+  font-size: 12px;
+  color: #bfbfbf;
+}
+
+/* 标签区域 */
+.tags-card .card-header :deep(.n-icon) {
+  color: #faad14;
+}
+
+.tags-section {
+  padding: 8px 0;
+}
+
+.tags-display {
+  min-height: 40px;
+}
+
+.coach-tag {
+  font-size: 14px;
+  padding: 4px 12px;
+}
+
+.tags-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.selected-tags {
+  min-height: 32px;
+}
+
+.tag-input-section {
+  display: flex;
+  gap: 8px;
+}
+
+.tag-input-section .n-input {
+  flex: 1;
+}
+
+.tag-limit-hint {
+  font-size: 13px;
+}
+
+.preset-tags {
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.preset-tags .n-text {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.preset-tag {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.preset-tag:hover:not(.n-tag--disabled) {
+  background-color: #52c41a;
+  color: white;
 }
 
 /* 信息列表 */

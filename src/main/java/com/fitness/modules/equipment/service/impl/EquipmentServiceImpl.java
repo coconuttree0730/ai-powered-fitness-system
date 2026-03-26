@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import cn.hutool.core.bean.BeanUtil;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,14 +46,8 @@ public class EquipmentServiceImpl implements EquipmentService {
     public Long createEquipment(EquipmentDTO dto) {
 
         Equipment equipment = new Equipment();
-        equipment.setEquipmentName(dto.getEquipmentName());
-        equipment.setLocation(dto.getLocation());
+        BeanUtil.copyProperties(dto, equipment);
         equipment.setStatus(dto.getStatus() != null ? dto.getStatus() : EquipmentStatus.NORMAL.getCode());
-        equipment.setDescription(dto.getDescription());
-        equipment.setImageUrl(dto.getImageUrl());
-        equipment.setPurchaseDate(dto.getPurchaseDate());
-        equipment.setTypeCode(dto.getTypeCode());
-        equipment.setEquipmentNo(dto.getEquipmentNo());
         equipment.setCreateTime(LocalDateTime.now());
         equipment.setUpdateTime(LocalDateTime.now());
         equipment.setDeleted(false);
@@ -83,16 +78,11 @@ public class EquipmentServiceImpl implements EquipmentService {
             }
         }
 
-        existingEquipment.setEquipmentName(dto.getEquipmentName());
-        existingEquipment.setLocation(dto.getLocation());
-        if (dto.getStatus() != null) {
-            existingEquipment.setStatus(dto.getStatus());
+        Integer originalStatus = existingEquipment.getStatus();
+        BeanUtil.copyProperties(dto, existingEquipment);
+        if (dto.getStatus() == null) {
+            existingEquipment.setStatus(originalStatus);
         }
-        existingEquipment.setDescription(dto.getDescription());
-        existingEquipment.setImageUrl(dto.getImageUrl());
-        existingEquipment.setPurchaseDate(dto.getPurchaseDate());
-        existingEquipment.setTypeCode(dto.getTypeCode());
-        existingEquipment.setEquipmentNo(dto.getEquipmentNo());
         existingEquipment.setUpdateTime(LocalDateTime.now());
 
         equipmentMapper.updateById(existingEquipment);

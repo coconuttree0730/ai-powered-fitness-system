@@ -309,14 +309,20 @@
           <h2 class="section-title">专业教练团队<br><span>引领您的健身之路</span></h2>
           <p class="section-desc">每一位教练都经过严格筛选与专业认证</p>
         </div>
-        <div class="coaches-slider">
+        <!-- 加载状态 -->
+        <div v-if="coachesLoading" class="coaches-loading">
+          <div class="loading-spinner"></div>
+          <p>正在加载教练信息...</p>
+        </div>
+        <!-- 教练列表 -->
+        <div v-else class="coaches-slider">
           <button class="coaches-slider-btn prev" @click="prevCoachSlide">‹</button>
           <div class="coaches-slider-track">
             <div class="coaches-slider-content" :style="{ transform: `translateX(-${coachSlide * 25}%)` }">
               <div v-for="(coach, index) in coaches" :key="index" class="coaches-slide">
                 <div class="coach-card">
                   <div class="coach-image">
-                    <img :src="coach.image" :alt="coach.name">
+                    <img :src="coach.image" :alt="coach.name" @error="handleCoachImageError">
                     <div class="coach-overlay">
                       <div class="coach-stats">
                         <div class="coach-stat">
@@ -690,6 +696,8 @@ import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import { getHomePageCourses } from '@/api/course'
+import { getHomePageCoaches } from '@/api/coachDetail'
+import { getActiveBanners } from '@/api/banner'
 import LoginModal from '@/components/LoginModal.vue'
 import RegisterModal from '@/components/RegisterModal.vue'
 
@@ -743,12 +751,50 @@ const isPhoneValid = computed(() => {
 
 // Hero轮播图
 const currentSlide = ref(0)
-const heroSlides = [
-  { image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=1000&fit=crop', alt: '智能健身房' },
-  { image: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&h=1000&fit=crop', alt: '专业训练' },
-  { image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&h=1000&fit=crop', alt: '团体课程' },
-  { image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=800&h=1000&fit=crop', alt: '器械区' }
-]
+const heroSlides = ref([])
+const bannersLoading = ref(false)
+
+// 获取轮播图数据
+async function fetchBanners() {
+  bannersLoading.value = true
+  try {
+    const data = await getActiveBanners()
+    if (Array.isArray(data) && data.length > 0) {
+      // 将后端数据映射为前端需要的格式
+      heroSlides.value = data.map(banner => ({
+        image: banner.imageUrl,
+        alt: banner.title || '轮播图',
+        title: banner.title,
+        subtitle: banner.subtitle,
+        link: banner.link
+      }))
+    } else {
+      // 如果没有数据，使用默认图片
+      heroSlides.value = getDefaultHeroSlides()
+    }
+    // 数据加载后启动自动轮播
+    if (heroSlides.value.length > 1) {
+      heroInterval = setInterval(() => {
+        nextSlide()
+      }, 5000)
+    }
+  } catch (error) {
+    console.error('获取轮播图数据失败:', error)
+    heroSlides.value = getDefaultHeroSlides()
+  } finally {
+    bannersLoading.value = false
+  }
+}
+
+// 默认轮播图数据
+function getDefaultHeroSlides() {
+  return [
+    { image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=850&h=1050&fit=crop', alt: '智能健身房' },
+    { image: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=850&h=1050&fit=crop', alt: '专业训练' },
+    { image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=850&h=1050&fit=crop', alt: '团体课程' },
+    { image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=850&h=1050&fit=crop', alt: '器械区' }
+  ]
+}
 
 // 统计数据动画
 const animatedStats = reactive({
@@ -898,6 +944,16 @@ function handleImageError(course) {
   course.imageError = true
 }
 
+// 教练图片加载失败处理 - 使用data URI避免额外HTTP请求
+const defaultCoachImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iIzJBMkEzNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM2QjcyODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7nlLXlrZDlhYnvvIzlpKnkuK3nvZHnu5zlvaLlj5Y8L3RleHQ+PC9zdmc+'
+
+function handleCoachImageError(event) {
+  // 防止重复设置导致的无限循环
+  if (!event.target.src.startsWith('data:')) {
+    event.target.src = defaultCoachImage
+  }
+}
+
 // 会员方案
 const membershipSlide = ref(0)
 const membershipPlans = [
@@ -969,12 +1025,54 @@ const membershipPlans = [
 
 // 教练团队
 const coachSlide = ref(0)
-const coaches = [
-  { name: '王强', title: '高级私人教练', experience: '8+', students: '2000+', rating: '99%', image: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400&h=500&fit=crop', tags: ['增肌塑形', '体态矫正', '运动康复'] },
-  { name: '李雪', title: '瑜伽认证导师', experience: '10+', students: '3500+', rating: '98%', image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=500&fit=crop', tags: ['流瑜伽', '普拉提', '冥想'] },
-  { name: '张伟', title: 'CrossFit教练', experience: '6+', students: '1500+', rating: '97%', image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=500&fit=crop', tags: ['CrossFit', '体能训练', '减脂'] },
-  { name: '陈龙', title: '拳击格斗教练', experience: '12+', students: '3000+', rating: '99%', image: 'https://images.unsplash.com/photo-1609899464926-209bc8a4c6f0?w=400&h=500&fit=crop', tags: ['职业拳手', '拳击', '防身术'] }
-]
+const coaches = ref([])
+const coachesLoading = ref(false)
+const coachesLoaded = ref(false) // 标记是否已加载，防止重复请求
+
+// 获取首页教练数据
+async function fetchHomePageCoaches() {
+  // 如果已经加载过，不再重复请求
+  if (coachesLoaded.value) {
+    return
+  }
+  
+  coachesLoading.value = true
+  try {
+    const res = await getHomePageCoaches(8)
+    if (res.data && res.data.length > 0) {
+      // 转换后端数据格式为前端所需格式
+      coaches.value = res.data.map(coach => ({
+        name: coach.name,
+        title: coach.title,
+        experience: coach.experience,
+        students: coach.students,
+        rating: coach.rating,
+        image: coach.image || defaultCoachImage,
+        tags: coach.tags || []
+      }))
+    } else {
+      // 使用默认数据
+      coaches.value = getDefaultCoaches()
+    }
+    coachesLoaded.value = true // 标记已加载
+  } catch (error) {
+    console.error('获取教练数据失败:', error)
+    coaches.value = getDefaultCoaches()
+    coachesLoaded.value = true // 即使失败也标记为已加载，避免重复请求
+  } finally {
+    coachesLoading.value = false
+  }
+}
+
+// 默认教练数据
+function getDefaultCoaches() {
+  return [
+    { name: '王强', title: '高级私人教练', experience: '8+', students: '2000+', rating: '99%', image: defaultCoachImage, tags: ['增肌塑形', '体态矫正', '运动康复'] },
+    { name: '李雪', title: '瑜伽认证导师', experience: '10+', students: '3500+', rating: '98%', image: defaultCoachImage, tags: ['流瑜伽', '普拉提', '冥想'] },
+    { name: '张伟', title: 'CrossFit教练', experience: '6+', students: '1500+', rating: '97%', image: defaultCoachImage, tags: ['CrossFit', '体能训练', '减脂'] },
+    { name: '陈龙', title: '拳击格斗教练', experience: '12+', students: '3000+', rating: '99%', image: defaultCoachImage, tags: ['职业拳手', '拳击', '防身术'] }
+  ]
+}
 
 // 成功案例
 const testimonialSlide = ref(0)
@@ -1026,11 +1124,13 @@ function scrollToSection(sectionId) {
 }
 
 function nextSlide() {
-  currentSlide.value = (currentSlide.value + 1) % heroSlides.length
+  if (heroSlides.value.length === 0) return
+  currentSlide.value = (currentSlide.value + 1) % heroSlides.value.length
 }
 
 function prevSlide() {
-  currentSlide.value = (currentSlide.value - 1 + heroSlides.length) % heroSlides.length
+  if (heroSlides.value.length === 0) return
+  currentSlide.value = (currentSlide.value - 1 + heroSlides.value.length) % heroSlides.value.length
 }
 
 function goToSlide(index) {
@@ -1050,7 +1150,7 @@ function prevCoachSlide() {
 }
 
 function nextCoachSlide() {
-  coachSlide.value = Math.min(coaches.length - 4, coachSlide.value + 1)
+  coachSlide.value = Math.min(coaches.value.length - 4, coachSlide.value + 1)
 }
 
 function prevTestimonial() {
@@ -1239,13 +1339,14 @@ onMounted(() => {
   window.addEventListener('scroll', handleScroll)
   animateNumbers()
 
-  // Hero轮播自动播放
-  heroInterval = setInterval(() => {
-    nextSlide()
-  }, 5000)
+  // 获取轮播图数据
+  fetchBanners()
 
   // 获取首页课程体系数据
   fetchHomePageCourses()
+  
+  // 获取首页教练数据
+  fetchHomePageCoaches()
 })
 
 onUnmounted(() => {
@@ -1777,9 +1878,9 @@ const vIntersect = {
 }
 
 .hero-container {
-  max-width: 1440px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 50px;
   width: 100%;
   position: relative;
   z-index: 2;
@@ -1787,8 +1888,8 @@ const vIntersect = {
 
 .hero-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 80px;
   align-items: center;
 }
 
@@ -1909,7 +2010,7 @@ const vIntersect = {
 
 .hero-visual {
   position: relative;
-  height: 580px;
+  height: 630px;
   width: 100%;
 }
 
@@ -2962,6 +3063,26 @@ const vIntersect = {
 .coaches-slider-btn.prev { left: -24px; }
 .coaches-slider-btn.next { right: -24px; }
 
+/* 教练加载状态 */
+.coaches-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.coaches-loading .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 107, 53, 0.2);
+  border-top-color: #FF6B35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
 /* Testimonials Section */
 .testimonials-section {
   background: var(--bg-dark-secondary);
@@ -3828,7 +3949,7 @@ const vIntersect = {
 
 @media (max-width: 992px) {
   .hero-title { font-size: 48px; }
-  .hero-visual { height: 400px; }
+  .hero-visual { height: 600px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .stat-item:not(:last-child)::after { display: none; }
   .section-title { font-size: 36px; }

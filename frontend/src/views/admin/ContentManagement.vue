@@ -38,8 +38,8 @@
                     style="width: 200px"
                   />
                   <el-select v-model="bannerSearch.status" placeholder="全部状态" clearable style="width: 120px">
-                    <el-option label="显示中" value="ACTIVE" />
-                    <el-option label="已隐藏" value="INACTIVE" />
+                    <el-option label="显示中" :value="1" />
+                    <el-option label="已隐藏" :value="0" />
                   </el-select>
                   <el-button type="primary" @click="fetchBannerData">
                     <el-icon><Search /></el-icon>搜索
@@ -47,13 +47,17 @@
                 </el-space>
               </el-col>
               <el-col :span="6" style="text-align: right">
+                <el-button type="danger" @click="handleBatchDelete" :disabled="selectedBanners.length === 0" style="margin-right: 10px">
+                  <el-icon><Delete /></el-icon>批量删除
+                </el-button>
                 <el-button type="primary" @click="handleAddBanner">
                   <el-icon><Plus /></el-icon>新增轮播图
                 </el-button>
               </el-col>
             </el-row>
 
-            <el-table :data="bannerData" v-loading="loading" stripe>
+            <el-table :data="filteredBannerData" v-loading="loading" stripe @selection-change="handleSelectionChange">
+              <el-table-column type="selection" width="55" />
               <el-table-column type="index" width="50" />
               <el-table-column label="轮播图" width="200">
                 <template #default="{ row }">
@@ -73,8 +77,8 @@
                 <template #default="{ row }">
                   <el-switch
                     v-model="row.status"
-                    :active-value="'ACTIVE'"
-                    :inactive-value="'INACTIVE'"
+                    :active-value="1"
+                    :inactive-value="0"
                     @change="handleBannerStatusChange(row)"
                   />
                 </template>
@@ -302,25 +306,33 @@
           <el-upload
             class="banner-uploader"
             action="/api/v1/files/upload"
+            :data="{ folder: 'banner' }"
+            :headers="uploadHeaders"
             :show-file-list="false"
             :on-success="handleBannerUploadSuccess"
+            :on-error="handleBannerUploadError"
             :before-upload="beforeBannerUpload"
+            accept="image/jpeg,image/png,image/gif,image/webp"
           >
             <img v-if="bannerForm.imageUrl" :src="bannerForm.imageUrl" class="banner-preview" />
-            <el-icon v-else class="banner-uploader-icon"><Plus /></el-icon>
+            <div v-else class="banner-uploader-placeholder">
+              <el-icon class="banner-uploader-icon"><Plus /></el-icon>
+              <div class="upload-text">点击上传图片</div>
+            </div>
           </el-upload>
-          <div class="upload-tip">建议尺寸 1920x600，支持 JPG、PNG 格式</div>
+          <div class="upload-tip">建议尺寸 800x1000，支持 JPG、PNG、GIF、WebP 格式，最大 10MB</div>
         </el-form-item>
         <el-form-item label="链接" prop="link">
-          <el-input v-model="bannerForm.link" placeholder="请输入跳转链接" />
+          <el-input v-model="bannerForm.link" placeholder="请输入跳转链接（可选）" />
         </el-form-item>
         <el-form-item label="排序" prop="sortOrder">
-          <el-input-number v-model="bannerForm.sortOrder" :min="0" />
+          <el-input-number v-model="bannerForm.sortOrder" :min="0" :max="999" />
+          <span class="form-tip">数字越小排序越靠前</span>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="bannerForm.status">
-            <el-radio label="ACTIVE">显示</el-radio>
-            <el-radio label="INACTIVE">隐藏</el-radio>
+            <el-radio :label="1">显示</el-radio>
+            <el-radio :label="0">隐藏</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -373,16 +385,31 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Picture, Bell, CreditCard, ShoppingCart, Search, Plus, Edit, Delete,
   Promotion, Coin
 } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
+import {
+  getAllBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+  deleteBanners,
+  updateBannerStatus
+} from '@/api/banner'
+
+// 获取认证信息
+const authStore = useAuthStore()
+const uploadHeaders = computed(() => ({
+  Authorization: authStore.token ? `Bearer ${authStore.token}` : ''
+}))
 
 // 统计数据
 const stats = ref([
-  { title: '轮播图数量', value: 5, icon: 'Picture', color: '#1890ff' },
+  { title: '轮播图数量', value: 0, icon: 'Picture', color: '#1890ff' },
   { title: '公告数量', value: 12, icon: 'Bell', color: '#52c41a' },
   { title: '会员卡展示', value: 4, icon: 'CreditCard', color: '#faad14' },
   { title: '商城商品展示', value: 8, icon: 'ShoppingCart', color: '#722ed1' }
@@ -395,6 +422,7 @@ const loading = ref(false)
 // ========== 轮播图管理 ==========
 const bannerSearch = reactive({ title: '', status: '' })
 const bannerData = ref([])
+const selectedBanners = ref([])
 const bannerDialogVisible = ref(false)
 const bannerFormRef = ref(null)
 const bannerForm = reactive({
@@ -404,102 +432,168 @@ const bannerForm = reactive({
   imageUrl: '',
   link: '',
   sortOrder: 0,
-  status: 'ACTIVE'
+  status: 1
 })
 const bannerRules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  imageUrl: [{ required: true, message: '请上传图片', trigger: 'change' }]
+  imageUrl: [{ required: true, message: '请上传图片', trigger: 'change' }],
+  sortOrder: [{ required: true, message: '请输入排序', trigger: 'blur' }],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
-function fetchBannerData() {
+// 过滤后的轮播图数据
+const filteredBannerData = computed(() => {
+  return bannerData.value.filter(item => {
+    const matchTitle = !bannerSearch.title || item.title.toLowerCase().includes(bannerSearch.title.toLowerCase())
+    const matchStatus = bannerSearch.status === '' || item.status === bannerSearch.status
+    return matchTitle && matchStatus
+  })
+})
+
+// 获取轮播图数据
+async function fetchBannerData() {
   loading.value = true
-  setTimeout(() => {
-    bannerData.value = [
-      {
-        id: 1,
-        title: '夏季健身狂欢节',
-        subtitle: '限时特惠，年卡低至5折',
-        imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=300&fit=crop',
-        link: '/promotion/summer',
-        sortOrder: 1,
-        status: 'ACTIVE'
-      },
-      {
-        id: 2,
-        title: '新会员首月半价',
-        subtitle: '注册即享超值优惠',
-        imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=300&fit=crop',
-        link: '/promotion/new-member',
-        sortOrder: 2,
-        status: 'ACTIVE'
-      },
-      {
-        id: 3,
-        title: '专业私教团队',
-        subtitle: '一对一量身定制健身计划',
-        imageUrl: 'https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=800&h=300&fit=crop',
-        link: '/coach',
-        sortOrder: 3,
-        status: 'ACTIVE'
-      }
-    ]
+  try {
+    const res = await getAllBanners()
+    bannerData.value = res || []
+    // 更新统计
+    stats.value[0].value = bannerData.value.length
+  } catch (error) {
+    ElMessage.error('获取轮播图数据失败')
+    console.error(error)
+  } finally {
     loading.value = false
-  }, 300)
+  }
 }
 
+// 选择变化
+function handleSelectionChange(selection) {
+  selectedBanners.value = selection
+}
+
+// 新增轮播图
 function handleAddBanner() {
   isEdit.value = false
   Object.assign(bannerForm, {
-    id: null, title: '', subtitle: '', imageUrl: '', link: '', sortOrder: 0, status: 'ACTIVE'
+    id: null, title: '', subtitle: '', imageUrl: '', link: '', sortOrder: 0, status: 1
   })
   bannerDialogVisible.value = true
 }
 
+// 编辑轮播图
 function handleEditBanner(row) {
   isEdit.value = true
-  Object.assign(bannerForm, row)
+  Object.assign(bannerForm, {
+    id: row.id,
+    title: row.title,
+    subtitle: row.subtitle,
+    imageUrl: row.imageUrl,
+    link: row.link,
+    sortOrder: row.sortOrder,
+    status: row.status
+  })
   bannerDialogVisible.value = true
 }
 
-function handleDeleteBanner(row) {
-  ElMessageBox.confirm(`确定要删除轮播图 "${row.title}" 吗？`, '提示', { type: 'warning' }).then(() => {
+// 删除轮播图
+async function handleDeleteBanner(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除轮播图 "${row.title}" 吗？`, '提示', { type: 'warning' })
+    await deleteBanner(row.id)
     ElMessage.success('删除成功')
     fetchBannerData()
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+      console.error(error)
+    }
+  }
 }
 
-function handleBannerStatusChange(row) {
-  ElMessage.success(`轮播图已${row.status === 'ACTIVE' ? '显示' : '隐藏'}`)
+// 批量删除
+async function handleBatchDelete() {
+  if (selectedBanners.value.length === 0) {
+    ElMessage.warning('请选择要删除的轮播图')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(`确定要删除选中的 ${selectedBanners.value.length} 个轮播图吗？`, '提示', { type: 'warning' })
+    const ids = selectedBanners.value.map(item => item.id)
+    await deleteBanners(ids)
+    ElMessage.success('批量删除成功')
+    fetchBannerData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('批量删除失败')
+      console.error(error)
+    }
+  }
 }
 
+// 状态变化
+async function handleBannerStatusChange(row) {
+  try {
+    await updateBannerStatus(row.id, row.status)
+    ElMessage.success(`轮播图已${row.status === 1 ? '显示' : '隐藏'}`)
+  } catch (error) {
+    ElMessage.error('状态更新失败')
+    console.error(error)
+    // 恢复状态
+    row.status = row.status === 1 ? 0 : 1
+  }
+}
+
+// 上传成功
 function handleBannerUploadSuccess(res) {
-  bannerForm.imageUrl = res.data?.url || res.url
+  if (res.code === 200 && res.data) {
+    bannerForm.imageUrl = res.data.fileUrl || res.data.url
+    ElMessage.success('图片上传成功')
+  } else {
+    ElMessage.error(res.message || '上传失败')
+  }
 }
 
+// 上传失败
+function handleBannerUploadError() {
+  ElMessage.error('图片上传失败')
+}
+
+// 上传前校验
 function beforeBannerUpload(file) {
   const isImage = file.type.startsWith('image/')
-  const isLt5M = file.size / 1024 / 1024 < 5
+  const isLt10M = file.size / 1024 / 1024 < 10
   if (!isImage) {
     ElMessage.error('请上传图片文件')
     return false
   }
-  if (!isLt5M) {
-    ElMessage.error('图片大小不能超过5MB')
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过10MB')
     return false
   }
   return true
 }
 
-function handleSubmitBanner() {
-  bannerFormRef.value?.validate((valid) => {
-    if (valid) {
-      submitting.value = true
-      setTimeout(() => {
-        ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
-        bannerDialogVisible.value = false
-        fetchBannerData()
-        submitting.value = false
-      }, 500)
+// 提交表单
+async function handleSubmitBanner() {
+  bannerFormRef.value?.validate(async (valid) => {
+    if (!valid) return
+    
+    submitting.value = true
+    try {
+      if (isEdit.value) {
+        await updateBanner(bannerForm.id, bannerForm)
+        ElMessage.success('编辑成功')
+      } else {
+        await createBanner(bannerForm)
+        ElMessage.success('新增成功')
+      }
+      bannerDialogVisible.value = false
+      fetchBannerData()
+    } catch (error) {
+      ElMessage.error(isEdit.value ? '编辑失败' : '新增失败')
+      console.error(error)
+    } finally {
+      submitting.value = false
     }
   })
 }
@@ -824,14 +918,22 @@ onMounted(() => {
   overflow: hidden;
   transition: var(--el-transition-duration-fast);
   width: 100%;
-  height: 150px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--el-fill-color-light);
 }
 
 .banner-uploader:hover {
   border-color: var(--el-color-primary);
+}
+
+.banner-uploader-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .banner-uploader-icon {
@@ -839,9 +941,14 @@ onMounted(() => {
   color: #8c939d;
 }
 
+.upload-text {
+  font-size: 14px;
+  color: #8c939d;
+}
+
 .banner-preview {
   width: 100%;
-  height: 150px;
+  height: 200px;
   object-fit: cover;
 }
 
@@ -849,6 +956,12 @@ onMounted(() => {
   font-size: 12px;
   color: #909399;
   margin-top: 8px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-left: 10px;
 }
 
 /* 会员卡展示卡片 */

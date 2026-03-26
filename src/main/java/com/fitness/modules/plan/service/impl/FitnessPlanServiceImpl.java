@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import cn.hutool.core.bean.BeanUtil;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -136,13 +137,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         List<PlanDetailVO> detailVOs = new ArrayList<>();
         for (FitnessPlanDetail detail : details) {
             PlanDetailVO detailVO = new PlanDetailVO();
-            detailVO.setId(detail.getId());
-            detailVO.setDayOfWeek(detail.getDayOfWeek());
-            detailVO.setExerciseName(detail.getExerciseName());
-            detailVO.setSets(detail.getSets());
-            detailVO.setReps(detail.getReps());
-            detailVO.setDuration(detail.getDuration());
-            detailVO.setNotes(detail.getNotes());
+            BeanUtil.copyProperties(detail, detailVO);
             detailVOs.add(detailVO);
         }
         vo.setDetails(detailVOs);
@@ -235,6 +230,10 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         PlanDetailVO detail = new PlanDetailVO();
         detail.setDayOfWeek(dayOfWeek);
         detail.setExerciseName(exercise);
+        detail.setSets(null);
+        detail.setReps(null);
+        detail.setDuration(null);
+        detail.setNotes(null);
 
         // 尝试提取组数和次数
         Pattern pattern = Pattern.compile("(\\d+)[组]\\s*[xX*]\\s*(\\d+)[次个]");
@@ -329,12 +328,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
      */
     private PlanVO convertToVO(FitnessPlan plan) {
         PlanVO vo = new PlanVO();
-        vo.setId(plan.getId());
-        vo.setPlanName(plan.getPlanName());
-        vo.setGoal(plan.getGoal());
-        vo.setDuration(plan.getDuration());
-        vo.setStatus(plan.getStatus());
-        vo.setCreateTime(plan.getCreateTime());
+        BeanUtil.copyProperties(plan, vo);
         return vo;
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import cn.hutool.core.bean.BeanUtil;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,20 +41,9 @@ public class CourseServiceImpl implements CourseService {
         validateCourseTime(dto.getStartTime(), dto.getEndTime());
 
         Course course = new Course();
-        course.setCourseName(dto.getCourseName());
-        course.setDescription(dto.getDescription());
-        course.setCoachId(dto.getCoachId());
-        course.setCategory(dto.getCategory());
-        course.setStartTime(dto.getStartTime());
-        course.setEndTime(dto.getEndTime());
-        course.setCapacity(dto.getCapacity());
+        BeanUtil.copyProperties(dto, course);
         course.setBookedCount(0);
         course.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
-        course.setImageUrl(dto.getImageUrl());
-        course.setDifficultyLevel(dto.getDifficultyLevel());
-        course.setDurationMinutes(dto.getDurationMinutes());
-        course.setCaloriesMin(dto.getCaloriesMin());
-        course.setCaloriesMax(dto.getCaloriesMax());
         course.setCreateTime(LocalDateTime.now());
         course.setUpdateTime(LocalDateTime.now());
 
@@ -86,21 +76,11 @@ public class CourseServiceImpl implements CourseService {
             }
         }
 
-        existingCourse.setCourseName(dto.getCourseName());
-        existingCourse.setDescription(dto.getDescription());
-        existingCourse.setCoachId(dto.getCoachId());
-        existingCourse.setCategory(dto.getCategory());
-        existingCourse.setStartTime(dto.getStartTime());
-        existingCourse.setEndTime(dto.getEndTime());
-        existingCourse.setCapacity(dto.getCapacity());
-        if (dto.getStatus() != null) {
-            existingCourse.setStatus(dto.getStatus());
+        Integer originalStatus = existingCourse.getStatus();
+        BeanUtil.copyProperties(dto, existingCourse);
+        if (dto.getStatus() == null) {
+            existingCourse.setStatus(originalStatus);
         }
-        existingCourse.setImageUrl(dto.getImageUrl());
-        existingCourse.setDifficultyLevel(dto.getDifficultyLevel());
-        existingCourse.setDurationMinutes(dto.getDurationMinutes());
-        existingCourse.setCaloriesMin(dto.getCaloriesMin());
-        existingCourse.setCaloriesMax(dto.getCaloriesMax());
         existingCourse.setUpdateTime(LocalDateTime.now());
 
         courseMapper.updateById(existingCourse);

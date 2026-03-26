@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import cn.hutool.core.bean.BeanUtil;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -180,12 +181,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     private UserVO convertToVO(User user) {
         UserVO vo = new UserVO();
-        vo.setId(user.getId());
-        vo.setUsername(user.getUsername());
-        vo.setPhone(user.getPhone());
-        vo.setEmail(user.getEmail());
-        vo.setAvatar(user.getAvatar());
-        vo.setCreateTime(user.getCreateTime());
+        BeanUtil.copyProperties(user, vo);
         return vo;
     }
 

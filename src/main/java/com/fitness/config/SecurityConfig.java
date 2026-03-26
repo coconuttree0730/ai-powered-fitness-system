@@ -60,6 +60,8 @@ public class SecurityConfig {
             "/api/v1/auth/sms-code",
             // 公开课程
             "/api/v1/courses/public/**",
+            // 公开轮播图
+            "/api/v1/banners/active",
             // Swagger文档
             "/swagger-ui/**",
             "/swagger-ui.html",
