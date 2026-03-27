@@ -47,7 +47,7 @@
             :bordered="false"
           >
             <div v-if="card.featured" class="featured-badge">推荐</div>
-            <div class="card-icon">{{ card.icon }}</div>
+            <div class="card-icon" v-html="card.icon"></div>
             <div class="card-type">{{ card.name }}</div>
             <div class="card-duration">{{ card.duration }}</div>
             <div class="card-price">
@@ -172,12 +172,20 @@ const gridCols = computed(() => {
   return 4  // 现在有4种卡，用4列
 })
 
+// 会员卡图标
+const cardIcons = {
+  week: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  month: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  quarter: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  year: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
+}
+
 // 会员卡数据 - 支持动态添加，可从API获取
 const membershipCards = ref([
   {
     id: 'week',
     name: '周卡',
-    icon: '📅',
+    icon: cardIcons.week,
     duration: '7天',
     price: 69,
     unit: '周',
@@ -192,7 +200,7 @@ const membershipCards = ref([
   {
     id: 'month',
     name: '月卡',
-    icon: '🌙',
+    icon: cardIcons.month,
     duration: '30天',
     price: 199,
     unit: '月',
@@ -207,7 +215,7 @@ const membershipCards = ref([
   {
     id: 'quarter',
     name: '季卡',
-    icon: '🌟',
+    icon: cardIcons.quarter,
     duration: '90天',
     price: 499,
     unit: '季',
@@ -223,7 +231,7 @@ const membershipCards = ref([
   {
     id: 'year',
     name: '年卡',
-    icon: '👑',
+    icon: cardIcons.year,
     duration: '365天',
     price: 1599,
     unit: '年',

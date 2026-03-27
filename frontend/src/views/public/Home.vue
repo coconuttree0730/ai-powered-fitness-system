@@ -3,7 +3,7 @@
     <!-- 公告栏 -->
     <div v-if="showAnnouncement && !authStore.isLoggedIn" class="announcement-bar">
       <div class="announcement-bar-content">
-        <span>🎉</span>
+        <svg class="emoji-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span>新用户注册即送7天VIP会员体验！</span>
         <a href="#cta" @click.prevent="scrollToSection('cta')">立即领取 →</a>
       </div>
@@ -18,8 +18,16 @@
     }]">
       <div class="navbar-container">
         <router-link to="/" class="logo">
-          <div class="logo-icon">💪</div>  <!-- logo位置 -->
-          <div class="logo-text">智健<span>AI</span></div>
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6.5 6.5l11 11"/>
+              <path d="M21 21l-1-1"/>
+              <path d="M3 3l1 1"/>
+              <path d="M18 22l4-4"/>
+              <path d="M2 6l4-4"/>
+            </svg>
+          </div>  <!-- logo位置 -->
+          <div class="logo-text">FutureFit<span>·未来健身</span></div>
         </router-link>
         <div class="nav-links">
           <a href="#home" :class="{ active: activeSection === 'home' }" @click.prevent="scrollToSection('home')">首页</a>
@@ -74,7 +82,7 @@
           <div class="hero-text">
             <div class="hero-badge">AI智能健身新时代</div>
             <h1 class="hero-title">让AI成为你的<br><span>私人健身专家</span></h1>
-            <p class="hero-desc">智健AI运用先进的人工智能技术，为您量身定制科学训练计划。无论是减脂塑形、增肌力量还是康复训练，我们让每一次锻炼都精准高效，助您快速达成健身目标。</p>
+            <p class="hero-desc">FutureFit 未来健身运用先进的人工智能技术，为您量身定制科学训练计划。无论是减脂塑形、增肌力量还是康复训练，我们让每一次锻炼都精准高效，助您快速达成健身目标。</p>
             <div class="hero-actions">
               <button v-if="!authStore.isLoggedIn" class="btn btn-primary btn-large" @click="goToRegister">开启智能健身之旅</button>
               <a href="#ai-features" class="btn btn-outline btn-large" @click.prevent="scrollToSection('ai-features')">探索AI功能</a>
@@ -118,7 +126,8 @@
     <!-- 醒目滚动公告栏 -->
     <section v-if="showMarquee" class="marquee-notice-section">
       <div class="marquee-notice-container">
-        <div class="marquee-notice-label">重要通知</div>
+        <!-- 公告 -->
+        <div class="marquee-notice-label"><svg class="emoji-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>公告:</div>
         <div class="marquee-notice-wrapper">
           <div class="marquee-notice-track">
             <span v-for="(item, index) in marqueeItems" :key="index" class="marquee-notice-item" v-html="item"></span>
@@ -133,7 +142,7 @@
       <div class="stats-container">
         <div class="stats-grid">
           <div v-for="(stat, index) in stats" :key="index" class="stat-item" v-intersect="onStatIntersect">
-            <div class="stat-icon">{{ stat.icon }}</div>
+            <div class="stat-icon" v-html="stat.icon"></div>
             <div class="stat-value">{{ formatNumber(stat.value) }}</div>
             <div class="stat-label">{{ stat.label }}</div>
           </div>
@@ -149,10 +158,10 @@
             <div class="section-tag">Our Philosophy</div>
             <h2 class="section-title">科技赋能<br><span>让健身更智能</span></h2>
             <p class="philosophy-quote">"我们相信，每个人都值得拥有个性化的健身体验。"</p>
-            <p class="philosophy-text">智健AI诞生于对健身行业痛点的深度思考。传统健身往往面临计划千篇一律、效果难以追踪、动力容易消退等问题。我们融合人工智能技术与专业健身知识，打造真正懂你的智能健身伙伴。</p>
+            <p class="philosophy-text">FutureFit 未来健身诞生于对健身行业痛点的深度思考。传统健身往往面临计划千篇一律、效果难以追踪、动力容易消退等问题。我们融合人工智能技术与专业健身知识，打造真正懂你的智能健身伙伴。</p>
             <div class="philosophy-values">
               <div v-for="(value, index) in philosophyValues" :key="index" class="value-item">
-                <div class="value-icon">{{ value.icon }}</div>
+                <div class="value-icon" v-html="value.icon"></div>
                 <div class="value-content">
                   <h4>{{ value.title }}</h4>
                   <p>{{ value.desc }}</p>
@@ -178,7 +187,7 @@
       <div class="ai-features-container">
         <div class="section-header" v-intersect="onReveal">
           <div class="section-tag">AI Powered</div>
-          <h2 class="section-title">四大核心AI功能<br><span>重新定义智能健身</span></h2>
+          <h2 class="section-title"><!-- 四大 -->核心AI功能<br><span>重新定义智能健身</span></h2>
           <p class="section-desc">融合前沿AI技术与专业健身知识，为您打造全方位的智能健身体验</p>
         </div>
         <div class="ai-features-grid">
@@ -186,7 +195,7 @@
                class="ai-feature-card"
                :class="`reveal-delay-${index}`"
                v-intersect="onReveal">
-            <div class="ai-feature-icon">{{ feature.icon }}</div>
+            <div class="ai-feature-icon" v-html="feature.icon"></div>
             <h3 class="ai-feature-title">{{ feature.title }}</h3>
             <p class="ai-feature-desc">{{ feature.desc }}</p>
             <ul class="ai-feature-list">
@@ -212,7 +221,10 @@
         </div>
         <!-- 错误状态 -->
         <div v-else-if="coursesError" class="courses-error">
-          <p>⚠️ {{ coursesError }}</p>
+          <p>
+            <svg class="emoji-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {{ coursesError }}
+          </p>
           <button class="btn btn-outline" @click="fetchHomePageCourses">重新加载</button>
         </div>
         <!-- 数据展示 -->
@@ -234,8 +246,9 @@
                      :alt="course.name"
                      @error="handleImageError(course)">
                 <div v-else class="course-image-placeholder">
-                  <span class="placeholder-icon">💪</span>
-                  <span class="placeholder-text">智健AI</span>
+<!--                  //图标
+                  <span class="placeholder-icon"></span>-->
+                  <span class="placeholder-text">图片正在加载中...</span>
                 </div>
                 <div class="course-overlay">
                   <span class="course-level">{{ course.level || '初级' }}</span>
@@ -246,7 +259,10 @@
                 <h3 class="course-name">{{ course.name }}</h3>
                 <p class="course-desc">{{ course.desc }}</p>
                 <div class="course-meta">
-                  <span class="course-calories">🔥 {{ course.calories || '200-400卡' }}</span>
+                  <span class="course-calories">
+                    <svg class="emoji-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.072-2.143-2.072-2.143-1.072 2.143.214 4.286 1.286 6.429 1.072 2.143 2.858 3.214 4.286 3.214 2.858 0 4.286-2.143 4.286-4.286 0-2.858-2.143-5.715-5.715-7.144C9.858 3.214 8.5 5.5 8.5 8.5c0 2.5 1.5 4 2 6-.5 2-2 3-2 3"/></svg>
+                    {{ course.calories || '200-400卡' }}
+                  </span>
                   <span class="course-bookings">课程累计参与人数：{{ course.totalBookings || 0 }} 人</span>
                 </div>
               </div>
@@ -285,7 +301,9 @@
                   <p class="membership-desc">{{ plan.desc }}</p>
                   <ul class="membership-features">
                     <li v-for="(feature, i) in plan.features" :key="i" :class="{ included: feature.included }">
-                      {{ feature.included ? '✓' : '×' }} {{ feature.text }}
+                      <svg v-if="feature.included" class="emoji-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg v-else class="emoji-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      {{ feature.text }}
                     </li>
                   </ul>
                   <button :class="['btn', plan.featured ? 'btn-primary' : 'btn-outline', 'btn-block']"
@@ -441,10 +459,10 @@
           <div class="omnichannel-content" v-intersect="onReveal">
             <div class="section-tag">Omnichannel</div>
             <h2 class="section-title">线上线下<br><span>无缝健身体验</span></h2>
-            <p class="section-desc">智健AI APP与线下健身房完美结合，让健身不受时间地点限制</p>
+            <p class="section-desc">FutureFit 未来健身 APP与线下健身房完美结合，让健身不受时间地点限制</p>
             <div class="omnichannel-features">
               <div v-for="(feature, index) in omnichannelFeatures" :key="index" class="omnichannel-feature">
-                <div class="omnichannel-feature-icon">{{ feature.icon }}</div>
+                <div class="omnichannel-feature-icon" v-html="feature.icon"></div>
                 <div class="omnichannel-feature-content">
                   <h4>{{ feature.title }}</h4>
                   <p>{{ feature.desc }}</p>
@@ -462,7 +480,9 @@
               </div>
               <div class="app-floating-card card-left">
                 <div class="app-card-header">
-                  <div class="app-card-icon">🔥</div>
+                  <div class="app-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.072-2.143-2.072-2.143-1.072 2.143.214 4.286 1.286 6.429 1.072 2.143 2.858 3.214 4.286 3.214 2.858 0 4.286-2.143 4.286-4.286 0-2.858-2.143-5.715-5.715-7.144C9.858 3.214 8.5 5.5 8.5 8.5c0 2.5 1.5 4 2 6-.5 2-2 3-2 3"/></svg>
+                  </div>
                   <div class="app-card-title">今日消耗</div>
                 </div>
                 <div class="app-card-value">486 kcal</div>
@@ -504,7 +524,7 @@
           </button>
         </form>
         <div class="cta-guarantee" v-intersect="onReveal">
-          <span>✓</span> 7天免费体验 · <span>✓</span> 随时取消 · <span>✓</span> 无需绑定银行卡
+          <svg class="emoji-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 7天免费体验 · <svg class="emoji-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 随时取消 · <svg class="emoji-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 无需绑定银行卡
         </div>
       </div>
     </section>
@@ -515,15 +535,23 @@
         <div class="footer-grid">
           <div class="footer-brand">
             <div class="footer-logo">
-              <div class="footer-logo-icon">💪</div>
-              <div class="footer-logo-text">智健AI</div>
+              <div class="footer-logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6.5 6.5l11 11"/>
+                  <path d="M21 21l-1-1"/>
+                  <path d="M3 3l1 1"/>
+                  <path d="M18 22l4-4"/>
+                  <path d="M2 6l4-4"/>
+                </svg>
+              </div>
+              <div class="footer-logo-text">FutureFit 未来健身</div>
             </div>
-            <p class="footer-desc">智健AI致力于通过人工智能技术，为每一位用户提供个性化、科学化的健身解决方案，让健身更智能、更高效、更有趣。</p>
+            <p class="footer-desc">FutureFit 未来健身致力于通过人工智能技术，为每一位用户提供个性化、科学化的健身解决方案，让健身更智能、更高效、更有趣。</p>
             <div class="footer-social">
-              <a href="#">📱</a>
-              <a href="#">💬</a>
-              <a href="#">📷</a>
-              <a href="#">▶️</a>
+              <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></a>
+              <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+              <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></a>
+              <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></a>
             </div>
           </div>
           <div class="footer-column">
@@ -559,21 +587,21 @@
           <div class="footer-contact">
             <h4 class="footer-title">联系我们</h4>
             <div class="footer-contact-item">
-              <div class="footer-contact-icon">📍</div>
+              <div class="footer-contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <div class="footer-contact-content">
                 <h4>门店地址</h4>
                 <p>北京市朝阳区建国路88号SOHO现代城A座</p>
               </div>
             </div>
             <div class="footer-contact-item">
-              <div class="footer-contact-icon">📞</div>
+              <div class="footer-contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
               <div class="footer-contact-content">
                 <h4>客服热线</h4>
                 <p>400-888-9999</p>
               </div>
             </div>
             <div class="footer-contact-item">
-              <div class="footer-contact-icon">⏰</div>
+              <div class="footer-contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
               <div class="footer-contact-content">
                 <h4>营业时间</h4>
                 <p>周一至周日 06:00-23:00</p>
@@ -582,7 +610,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2024 智健AI. All rights reserved. | 京ICP备XXXXXXXX号</p>
+          <p>&copy; 2024 FutureFit 未来健身. All rights reserved. | 京ICP备XXXXXXXX号</p>
           <div class="footer-bottom-links">
             <a href="#">隐私政策</a>
             <a href="#">服务条款</a>
@@ -615,7 +643,7 @@
           </svg>
         </button>
         <div class="register-modal-header">
-          <div class="register-icon">🎁</div>
+          <div class="register-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>
           <h3 class="register-title">领取您的7天VIP体验</h3>
           <p class="register-subtitle">已有账号将自动登录，新用户将自动注册</p>
         </div>
@@ -809,12 +837,30 @@ const targetStats = {
   coaches: 200
 }
 
+// SVG 图标定义
+const svgIcons = {
+  users: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  trophy: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>`,
+  book: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  star: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  target: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  trending: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  handshake: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.77.78 7.65 7.65 7.65-7.65.77-.78a5.4 5.4 0 0 0 0-7.65z"/><path d="M12 5.36l-1.9 1.9a2.4 2.4 0 0 0 0 3.4l1.9 1.9"/><path d="M12 5.36l1.9 1.9a2.4 2.4 0 0 1 0 3.4l-1.9 1.9"/></svg>`,
+  sparkles: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
+  robot: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
+  nutrition: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 21.5a4.95 4.95 0 0 0 7 0l8.5-8.5a4.95 4.95 0 0 0 0-7 4.95 4.95 0 0 0-7 0l-8.5 8.5a4.95 4.95 0 0 0 0 7z"/><path d="M8.5 8.5l7 7"/></svg>`,
+  mobile: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+  video: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+  chat: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  trophy2: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>`
+}
+
 // 统计数据
 const stats = [
-  { icon: '👥', value: 50000, label: '活跃会员' },
-  { icon: '🏆', value: 200, label: '专业教练' },
-  { icon: '📚', value: 500, label: '精品课程' },
-  { icon: '⭐', value: 98, label: '% 满意度' }
+  { icon: svgIcons.users, value: 50000, label: '活跃会员' },
+  { icon: svgIcons.trophy, value: 200, label: '专业教练' },
+  { icon: svgIcons.book, value: 500, label: '精品课程' },
+  { icon: svgIcons.star, value: 98, label: '% 满意度' }
 ]
 
 // 滚动公告
@@ -831,34 +877,22 @@ const marqueeItems = [
 
 // 品牌理念
 const philosophyValues = [
-  { icon: '🎯', title: '精准定制', desc: 'AI算法分析身体数据，生成专属训练方案' },
-  { icon: '📈', title: '科学追踪', desc: '实时监测训练数据，动态调整计划强度' },
-  { icon: '🤝', title: '专业陪伴', desc: '认证教练团队全程指导，解答健身疑惑' },
-  { icon: '🌟', title: '持续激励', desc: '成就系统与社群互动，保持健身动力' }
+  { icon: svgIcons.target, title: '精准定制', desc: 'AI算法分析身体数据，生成专属训练方案' },
+  { icon: svgIcons.trending, title: '科学追踪', desc: '实时监测训练数据，动态调整计划强度' },
+  { icon: svgIcons.handshake, title: '专业陪伴', desc: '认证教练团队全程指导，解答健身疑惑' },
+  { icon: svgIcons.sparkles, title: '持续激励', desc: '成就系统与社群互动，保持健身动力' }
 ]
 
 // AI功能
 const aiFeatures = [
   {
-    icon: '🤖',
+    icon: svgIcons.robot,
     title: 'AI智能训练计划',
     desc: '基于您的身体数据、健身目标和时间安排，AI算法自动生成最适合您的个性化训练计划，并随进度动态调整。',
     items: ['智能分析身体成分与运动能力', '根据目标自动规划训练周期', '实时调整强度与容量', '智能推荐动作替代方案']
   },
   {
-    icon: '📊',
-    title: '智能体测分析',
-    desc: '通过AI视觉识别技术，精准测量身体围度、姿态评估，生成详细的身体报告与改善建议。',
-    items: ['3D身体扫描与围度测量', '体态评估与风险预警', '身体成分趋势分析', '个性化改善方案']
-  },
-  {
-    icon: '📱',
-    title: '实时运动追踪',
-    desc: '连接智能穿戴设备，实时监测心率、消耗卡路里、运动轨迹等数据，让每一次训练都有据可依。',
-    items: ['多设备数据同步', '实时心率区间提醒', '运动表现分析报告', '智能训练建议']
-  },
-  {
-    icon: '🥗',
+    icon: svgIcons.nutrition,
     title: 'AI营养指导',
     desc: '根据您的身体数据和训练计划，AI营养师为您定制每日饮食方案，科学搭配营养摄入。',
     items: ['个性化热量计算', '营养素比例优化', '健康食谱推荐', '饮食习惯分析']
@@ -911,7 +945,7 @@ async function fetchHomePageCourses() {
   }
 }
 
-// 默认课程数据（降级方案）
+// 默认课程数据（降级方案：加载失败..）
 function getDefaultCoursesData() {
   return [
     {
@@ -944,7 +978,7 @@ function handleImageError(course) {
   course.imageError = true
 }
 
-// 教练图片加载失败处理 - 使用data URI避免额外HTTP请求
+// 教练图片加载失败处理 - 使用data URI避免额外HTTP请求 *********
 const defaultCoachImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iIzJBMkEzNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM2QjcyODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7nlLXlrZDlhYnvvIzlpKnkuK3nvZHnu5zlvaLlj5Y8L3RleHQ+PC9zdmc+'
 
 function handleCoachImageError(event) {
@@ -1035,13 +1069,13 @@ async function fetchHomePageCoaches() {
   if (coachesLoaded.value) {
     return
   }
-  
+
   coachesLoading.value = true
   try {
-    const res = await getHomePageCoaches(8)
-    if (res.data && res.data.length > 0) {
+    const data = await getHomePageCoaches(8)
+    if (data && data.length > 0) {
       // 转换后端数据格式为前端所需格式
-      coaches.value = res.data.map(coach => ({
+      coaches.value = data.map(coach => ({
         name: coach.name,
         title: coach.title,
         experience: coach.experience,
@@ -1077,26 +1111,26 @@ function getDefaultCoaches() {
 // 成功案例
 const testimonialSlide = ref(0)
 const testimonials = [
-  { name: '李明', occupation: 'IT工程师', duration: '训练12个月', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', before: '85kg', beforeLabel: '减重前', after: '72kg', afterLabel: '现在', quote: '作为一名程序员，长期久坐让我体重飙升。加入智健AI后，AI为我定制了科学的训练计划，配合营养指导，12个月成功减重13kg，现在精力充沛，工作效率也提高了！' },
-  { name: '王芳', occupation: '全职妈妈', duration: '训练8个月', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop', before: '产后', beforeLabel: '开始', after: '马甲线', afterLabel: '现在', quote: '产后身材走形让我很自卑，智健AI的产后恢复课程和教练的专业指导让我重拾自信。现在不仅恢复了产前身材，还练出了马甲线！' },
-  { name: '张浩', occupation: '大学生', duration: '训练6个月', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop', before: '瘦弱', beforeLabel: '增肌前', after: '+8kg', afterLabel: '肌肉增长', quote: '从小就是瘦弱的体质，一直想要增肌。智健AI的AI训练计划非常科学，6个月增肌8kg，现在终于有了理想的身材，感谢智健AI！' },
+  { name: '李明', occupation: 'IT工程师', duration: '训练12个月', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', before: '85kg', beforeLabel: '减重前', after: '72kg', afterLabel: '现在', quote: '作为一名程序员，长期久坐让我体重飙升。加入FutureFit 未来健身后，AI为我定制了科学的训练计划，配合营养指导，12个月成功减重13kg，现在精力充沛，工作效率也提高了！' },
+  { name: '王芳', occupation: '全职妈妈', duration: '训练8个月', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop', before: '产后', beforeLabel: '开始', after: '马甲线', afterLabel: '现在', quote: '产后身材走形让我很自卑，FutureFit 未来健身的产后恢复课程和教练的专业指导让我重拾自信。现在不仅恢复了产前身材，还练出了马甲线！' },
+  { name: '张浩', occupation: '大学生', duration: '训练6个月', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop', before: '瘦弱', beforeLabel: '增肌前', after: '+8kg', afterLabel: '肌肉增长', quote: '从小就是瘦弱的体质，一直想要增肌。FutureFit 未来健身的AI训练计划非常科学，6个月增肌8kg，现在终于有了理想的身材，感谢FutureFit 未来健身！' },
   { name: '刘婷', occupation: '企业高管', duration: '训练10个月', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop', before: '亚健康', beforeLabel: '开始', after: '活力', afterLabel: '现在', quote: '高强度工作让我身心俱疲，瑜伽和普拉提课程帮我找到了工作与健康的平衡。现在睡眠质量好了，工作效率也更高了。' }
 ]
 
 // 健身设备
 const activeEquipment = ref(0)
 const equipmentList = [
-  { name: '有氧训练区', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=200&fit=crop', desc: 'Technogym、Precor顶级有氧设备，支持心率监测与数据同步。', meta: ['🏃 跑步机 x 20', '🚴 单车 x 15'] },
-  { name: '自由重量区', image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=200&h=200&fit=crop', desc: 'Eleiko专业举重器材，从哑铃到杠铃，满足各类力量训练需求。', meta: ['🏋️ 哑铃组 x 30', '💪 杠铃架 x 8'] },
-  { name: '功能训练区', image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=200&h=200&fit=crop', desc: 'TRX、战绳、药球等多样化功能训练器材，提升运动表现。', meta: ['🎯 TRX x 10', '⚡ 战绳 x 6'] }
+  { name: '有氧训练区', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=200&fit=crop', desc: 'Technogym、Precor顶级有氧设备，支持心率监测与数据同步。', meta: ['跑步机 x 20', '单车 x 15'] },
+  { name: '自由重量区', image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=200&h=200&fit=crop', desc: 'Eleiko专业举重器材，从哑铃到杠铃，满足各类力量训练需求。', meta: ['哑铃组 x 30', '杠铃架 x 8'] },
+  { name: '功能训练区', image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=200&h=200&fit=crop', desc: 'TRX、战绳、药球等多样化功能训练器材，提升运动表现。', meta: ['TRX x 10', '战绳 x 6'] }
 ]
 
 // 线上线下
 const omnichannelFeatures = [
-  { icon: '📱', title: '智能预约系统', desc: '一键预约课程、私教、场地，实时查看健身房人流情况，避开高峰。' },
-  { icon: '🎥', title: '线上课程库', desc: '500+精品线上课程，在家也能享受专业指导，随时随地开始训练。' },
-  { icon: '💬', title: '教练在线指导', desc: '训练遇到问题？随时与教练在线沟通，获取专业建议与动作纠正。' },
-  { icon: '🏆', title: '社群挑战赛', desc: '参与线上线下挑战赛，与志同道合的伙伴一起进步，赢取丰厚奖励。' }
+  { icon: svgIcons.mobile, title: '智能预约系统', desc: '一键预约课程、私教、场地，实时查看健身房人流情况，避开高峰。' },
+  { icon: svgIcons.video, title: '线上课程库', desc: '500+精品线上课程，在家也能享受专业指导，随时随地开始训练。' },
+  { icon: svgIcons.chat, title: '教练在线指导', desc: '训练遇到问题？随时与教练在线沟通，获取专业建议与动作纠正。' },
+  { icon: svgIcons.trophy2, title: '社群挑战赛', desc: '参与线上线下挑战赛，与志同道合的伙伴一起进步，赢取丰厚奖励。' }
 ]
 
 // CTA
@@ -1271,7 +1305,7 @@ async function handleRegisterSubmit() {
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     // 模拟登录成功
-    message.success('领取成功！欢迎加入智健AI')
+    message.success('领取成功！欢迎加入FutureFit 未来健身')
     showCTARegisterModal.value = false
 
     // 清空表单
@@ -1344,7 +1378,7 @@ onMounted(() => {
 
   // 获取首页课程体系数据
   fetchHomePageCourses()
-  
+
   // 获取首页教练数据
   fetchHomePageCoaches()
 })
@@ -2179,7 +2213,7 @@ const vIntersect = {
 }
 
 .marquee-notice-item::before {
-  content: '📢';
+  content: '';
   font-size: 20px;
 }
 
@@ -2542,7 +2576,7 @@ const vIntersect = {
 }
 
 .ai-feature-list li::before {
-  content: '✓';
+  content: '';
   position: absolute;
   left: 0;
   color: #FF6B35;

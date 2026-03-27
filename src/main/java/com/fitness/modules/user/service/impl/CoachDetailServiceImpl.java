@@ -12,6 +12,7 @@ import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.entity.CoachDetail;
 import com.fitness.modules.user.model.entity.User;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
+import com.fitness.modules.user.model.vo.CoachHomePageVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
 import lombok.RequiredArgsConstructor;
@@ -48,12 +49,13 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     @Override
     public CoachDetailVO getCoachDetail(Long userId) {
         CoachDetail detail = coachDetailMapper.selectByUserId(userId);
+        User user = userMapper.selectById(userId);
+
         if (detail == null) {
-            // 如果没有详情记录，返回空对象
-            return new CoachDetailVO();
+            // 如果没有详情记录，返回只包含用户信息的空对象
+            return convertToVO(null, user);
         }
 
-        User user = userMapper.selectById(userId);
         return convertToVO(detail, user);
     }
 
@@ -74,6 +76,12 @@ public class CoachDetailServiceImpl implements CoachDetailService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
+        // 校验并更新用户名
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+            validateUsername(dto.getUsername(), userId);
+            updateUsername(userId, dto.getUsername());
+        }
+
         CoachDetail detail = coachDetailMapper.selectByUserId(userId);
         if (detail == null) {
             // 首次更新，创建新记录
@@ -89,6 +97,50 @@ public class CoachDetailServiceImpl implements CoachDetailService {
 
         User user = userMapper.selectById(userId);
         return convertToVO(detail, user);
+    }
+
+    /**
+     * 校验用户名是否可用
+     *
+     * @param username 用户名
+     * @param userId   当前用户ID
+     */
+    private void validateUsername(String username, Long userId) {
+        // 校验用户名长度和格式
+        if (username.length() < 6 || username.length() > 20) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名长度必须在6-20个字符之间");
+        }
+        if (!username.matches("^[a-zA-Z0-9_]+$")) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名只能包含字母、数字和下划线");
+        }
+
+        // 校验用户名唯一性
+        User existingUser = userMapper.selectByUsername(username);
+        if (existingUser != null && !existingUser.getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名已被使用");
+        }
+    }
+
+    /**
+     * 更新用户名
+     *
+     * @param userId   用户ID
+     * @param username 新用户名
+     */
+    private void updateUsername(Long userId, String username) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 如果用户名没有变化，不执行更新
+        if (username.equals(user.getUsername())) {
+            return;
+        }
+
+        user.setUsername(username);
+        userMapper.updateById(user);
+        log.info("更新用户名成功: userId={}, username={}", userId, username);
     }
 
     @Override
@@ -194,14 +246,11 @@ public class CoachDetailServiceImpl implements CoachDetailService {
             limit = 4;
         }
 
-        List<CoachDetail> details = coachDetailMapper.selectHomePageCoaches(limit);
+        List<CoachHomePageVO> details = coachDetailMapper.selectHomePageCoaches(limit);
         List<HomePageCoachVO> result = new ArrayList<>();
 
-        for (CoachDetail detail : details) {
-            User user = userMapper.selectById(detail.getUserId());
-            if (user != null) {
-                result.add(convertToHomePageVO(detail, user));
-            }
+        for (CoachHomePageVO detail : details) {
+            result.add(convertToHomePageVO(detail));
         }
 
         return result;
@@ -306,14 +355,8 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         if (dto.getHonors() != null) {
             detail.setHonors(JSONUtil.toJsonStr(dto.getHonors()));
         }
-        if (dto.getEmergencyContact() != null) {
-            detail.setEmergencyContact(JSONUtil.toJsonStr(dto.getEmergencyContact()));
-        }
         if (dto.getCertifications() != null) {
             detail.setCertifications(JSONUtil.toJsonStr(dto.getCertifications()));
-        }
-        if (dto.getAvailability() != null) {
-            detail.setAvailability(JSONUtil.toJsonStr(dto.getAvailability()));
         }
     }
 
@@ -346,17 +389,21 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         vo.setRating(detail.getRating());
 
         // 解析JSON数组
-        if (detail.getTags() != null) {
-            vo.setTags(JSONUtil.parseArray(detail.getTags()).toList(String.class));
+        String tagsJson = detail.getTagsJson();
+        if (tagsJson != null) {
+            vo.setTags(JSONUtil.parseArray(tagsJson).toList(String.class));
         }
-        if (detail.getSpecialties() != null) {
-            vo.setSpecialties(JSONUtil.parseArray(detail.getSpecialties()).toList(String.class));
+        String specialtiesJson = detail.getSpecialtiesJson();
+        if (specialtiesJson != null) {
+            vo.setSpecialties(JSONUtil.parseArray(specialtiesJson).toList(String.class));
         }
-        if (detail.getLanguages() != null) {
-            vo.setLanguages(JSONUtil.parseArray(detail.getLanguages()).toList(String.class));
+        String languagesJson = detail.getLanguagesJson();
+        if (languagesJson != null) {
+            vo.setLanguages(JSONUtil.parseArray(languagesJson).toList(String.class));
         }
-        if (detail.getHonors() != null) {
-            vo.setHonors(JSONUtil.parseArray(detail.getHonors()).toList(String.class));
+        String honorsJson = detail.getHonorsJson();
+        if (honorsJson != null) {
+            vo.setHonors(JSONUtil.parseArray(honorsJson).toList(String.class));
         }
 
         return vo;
@@ -365,18 +412,20 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     /**
      * 转换为首页展示VO
      */
-    private HomePageCoachVO convertToHomePageVO(CoachDetail detail, User user) {
+    private HomePageCoachVO convertToHomePageVO(CoachHomePageVO detail) {
         HomePageCoachVO vo = new HomePageCoachVO();
 
-        vo.setId(user.getId());
-        vo.setName(user.getUsername());
-        vo.setTitle("专业教练"); // 可以根据需要扩展
+        vo.setId(detail.getUserId());
+        vo.setName(detail.getUsername());
+        
+        // 根据专业领域生成职称
+        vo.setTitle(generateCoachTitle(detail));
 
         // 优先使用个人展示图片，如果没有则使用头像
         if (detail.getPersonalImageUrl() != null && !detail.getPersonalImageUrl().isEmpty()) {
             vo.setImage(detail.getPersonalImageUrl());
         } else {
-            vo.setImage(user.getAvatar());
+            vo.setImage(detail.getAvatar());
         }
 
         // 经验年限
@@ -397,8 +446,9 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         vo.setRating(detail.getRating() != null ? detail.getRating() : "99%");
 
         // 标签
-        if (detail.getTags() != null) {
-            List<String> tags = JSONUtil.parseArray(detail.getTags()).toList(String.class);
+        String tagsJson = detail.getTagsJson();
+        if (tagsJson != null) {
+            List<String> tags = JSONUtil.parseArray(tagsJson).toList(String.class);
             // 最多显示3个标签在首页
             if (tags.size() > 3) {
                 tags = tags.subList(0, 3);
@@ -409,5 +459,53 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         }
 
         return vo;
+    }
+
+    /**
+     * 根据教练详情生成职称
+     */
+    private String generateCoachTitle(CoachHomePageVO detail) {
+        // 根据专业领域生成职称
+        String specialtiesJson = detail.getSpecialtiesJson();
+        if (specialtiesJson != null) {
+            List<String> specialties = JSONUtil.parseArray(specialtiesJson).toList(String.class);
+            if (!specialties.isEmpty()) {
+                String mainSpecialty = specialties.get(0);
+                // 根据主要专业领域返回对应职称
+                return switch (mainSpecialty) {
+                    case "瑜伽" -> "瑜伽认证导师";
+                    case "普拉提" -> "普拉提认证教练";
+                    case "力量训练" -> "力量训练专家";
+                    case "康复训练" -> "运动康复师";
+                    case "CrossFit" -> "CrossFit认证教练";
+                    case "拳击" -> "拳击格斗教练";
+                    case "游泳" -> "游泳教练";
+                    case "减脂" -> "减脂塑形专家";
+                    case "增肌" -> "增肌训练专家";
+                    default -> mainSpecialty + "教练";
+                };
+            }
+        }
+        
+        // 根据教学风格生成职称
+        if (detail.getTeachingStyle() != null) {
+            return switch (detail.getTeachingStyle()) {
+                case "encouraging" -> "激励型私教";
+                case "strict" -> "严格型教练";
+                case "gentle" -> "温和型导师";
+                case "professional" -> "专业认证教练";
+                case "interactive" -> "互动式教练";
+                default -> "专业教练";
+            };
+        }
+        
+        // 根据从业年限生成职称
+        if (detail.getWorkYears() != null && detail.getWorkYears() >= 10) {
+            return "高级私人教练";
+        } else if (detail.getWorkYears() != null && detail.getWorkYears() >= 5) {
+            return "资深健身教练";
+        }
+        
+        return "专业教练";
     }
 }

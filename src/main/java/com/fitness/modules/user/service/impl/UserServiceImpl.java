@@ -48,6 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final JwtUtils jwtUtils;
     private final FileService fileService;
     private final com.fitness.modules.user.service.SmsCodeService smsCodeService;
+    private final com.fitness.modules.user.service.CoachDetailService coachDetailService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -244,6 +245,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             Role role = roleMapper.selectByRoleCode(dto.getRoleCode());
             if (role != null) {
                 userMapper.insertUserRole(user.getId(), role.getId());
+
+                // 如果创建的是教练角色用户，自动初始化教练详情
+                if ("COACH".equals(dto.getRoleCode())) {
+                    coachDetailService.initCoachDetail(user.getId());
+                    log.info("自动初始化教练详情: userId={}", user.getId());
+                }
             }
         }
 

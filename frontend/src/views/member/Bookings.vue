@@ -4,7 +4,7 @@
     <n-grid :cols="4" :x-gap="16" class="stats-grid">
       <n-grid-item>
         <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #FF6B35, #FF8C61);">📅</div>
+          <div class="stat-icon" style="background: linear-gradient(135deg, #FF6B35, #FF8C61);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.total }}</div>
             <div class="stat-label">总预约</div>
@@ -13,7 +13,7 @@
       </n-grid-item>
       <n-grid-item>
         <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #06D6A0, #2EC4B6);">✅</div>
+          <div class="stat-icon" style="background: linear-gradient(135deg, #06D6A0, #2EC4B6);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.upcoming }}</div>
             <div class="stat-label">即将开始</div>
@@ -22,7 +22,7 @@
       </n-grid-item>
       <n-grid-item>
         <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">🎯</div>
+          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.completed }}</div>
             <div class="stat-label">已完成</div>
@@ -31,7 +31,7 @@
       </n-grid-item>
       <n-grid-item>
         <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #EF476F, #FFD166);">❌</div>
+          <div class="stat-icon" style="background: linear-gradient(135deg, #EF476F, #FFD166);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.cancelled }}</div>
             <div class="stat-label">已取消</div>

@@ -55,10 +55,10 @@ public class FileServiceImpl implements FileService {
         String originalFilename = file.getOriginalFilename();
         String extension = getFileExtension(originalFilename);
         String fileName = UUID.randomUUID().toString() + extension;
-        
+
         // 构建对象名称（folder/filename）
-        String objectName = folder.endsWith("/") 
-                ? folder + fileName 
+        String objectName = folder.endsWith("/")
+                ? folder + fileName
                 : folder + "/" + fileName;
 
         try {
@@ -77,7 +77,7 @@ public class FileServiceImpl implements FileService {
             // 获取文件访问URL
             String fileUrl = getFileUrl(objectName);
 
-            // 保存文件记录到数据库
+            // 保存文件记录到数据库 ******* sys_file *******
             SysFile sysFile = new SysFile();
             sysFile.setFileName(fileName);
             sysFile.setOriginalName(originalFilename);
@@ -86,6 +86,7 @@ public class FileServiceImpl implements FileService {
             sysFile.setFileSize(file.getSize());
             sysFile.setCreateBy(SecurityUtils.getCurrentUserId());
             sysFile.setCreateTime(LocalDateTime.now());
+
             fileMapper.insert(sysFile);
 
             log.info("文件上传成功: {}", fileUrl);
@@ -152,21 +153,10 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public String getFileUrl(String objectName) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(minioProperties.getBucketName())
-                            .object(objectName)
-                            .expiry(7, TimeUnit.DAYS)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("获取文件URL失败: {}", e.getMessage(), e);
-            // 返回直接访问URL
-            return minioProperties.getEndpoint() + "/" + 
-                   minioProperties.getBucketName() + "/" + objectName;
-        }
+        // 直接返回公开访问URL，永不过期
+        // 需要确保 MinIO 桶已设置为公开可读
+        return minioProperties.getEndpoint() + "/" +
+               minioProperties.getBucketName() + "/" + objectName;
     }
 
     @Override
@@ -216,30 +206,30 @@ public class FileServiceImpl implements FileService {
         if (fileUrl == null) {
             return null;
         }
-        
+
         String bucketName = minioProperties.getBucketName();
         int bucketIndex = fileUrl.indexOf(bucketName);
         if (bucketIndex == -1) {
             return null;
         }
-        
+
         int startIndex = bucketIndex + bucketName.length();
         if (startIndex >= fileUrl.length()) {
             return null;
         }
-        
+
         // 移除开头的斜杠
         String objectName = fileUrl.substring(startIndex);
         if (objectName.startsWith("/")) {
             objectName = objectName.substring(1);
         }
-        
+
         // 如果URL包含查询参数，移除它们
         int queryIndex = objectName.indexOf("?");
         if (queryIndex > 0) {
             objectName = objectName.substring(0, queryIndex);
         }
-        
+
         return objectName;
     }
 }

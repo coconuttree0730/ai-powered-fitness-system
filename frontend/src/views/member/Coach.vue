@@ -14,7 +14,7 @@
           <h3>张教练</h3>
           <p class="specialty">专长: 增肌训练、减脂塑形、体能提升</p>
           <div class="stats">
-            <span class="rating">⭐⭐⭐⭐⭐ 4.9分</span>
+            <span class="rating">★★★★★ 4.9分</span>
             <span class="stat-item">授课: 1,280节</span>
             <span class="stat-item">学员: 156人</span>
           </div>
@@ -37,7 +37,7 @@
             <div class="coach-info">
               <div class="coach-name">{{ coach.name }}</div>
               <div class="coach-specialty">{{ coach.specialty }}</div>
-              <div class="coach-rating">⭐ {{ coach.rating }}分</div>
+              <div class="coach-rating">★ {{ coach.rating }}分</div>
             </div>
           </div>
         </n-grid-item>

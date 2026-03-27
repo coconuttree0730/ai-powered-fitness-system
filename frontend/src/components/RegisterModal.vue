@@ -26,7 +26,7 @@
                     <h2>加入我们</h2>
                     <h2 class="highlight">开启智能健身</h2>
                   </div>
-                  <p class="left-desc">注册成为智健AI会员，享受AI智能训练计划、专业教练指导和实时数据追踪服务。</p>
+                  <p class="left-desc">注册成为FutureFit 未来健身会员，享受AI智能训练计划、专业教练指导和实时数据追踪服务。</p>
                   <div class="left-features">
                     <div class="feature-item">
                       <div class="feature-icon">

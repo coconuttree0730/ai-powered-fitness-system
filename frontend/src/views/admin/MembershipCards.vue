@@ -286,6 +286,14 @@ const isEdit = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
 
+// 会员卡图标
+const cardTypeIcons = {
+  YEAR: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+  QUARTER: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  MONTH: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  TIMES: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>`
+}
+
 // 表单数据
 const form = reactive({
   id: null,
@@ -337,7 +345,7 @@ async function fetchData() {
         price: 3999,
         validityDays: 365,
         benefits: '全场通用、私教8折、专属储物柜、免费停车',
-        icon: '',
+        icon: cardTypeIcons.YEAR,
         salesCount: 256,
         status: 'ACTIVE',
         sortOrder: 1
@@ -349,7 +357,7 @@ async function fetchData() {
         price: 1299,
         validityDays: 90,
         benefits: '全场通用、团课免费、专属储物柜',
-        icon: '',
+        icon: cardTypeIcons.QUARTER,
         salesCount: 189,
         status: 'ACTIVE',
         sortOrder: 2
@@ -361,7 +369,7 @@ async function fetchData() {
         price: 499,
         validityDays: 30,
         benefits: '器械区、有氧区通用',
-        icon: '',
+        icon: cardTypeIcons.MONTH,
         salesCount: 423,
         status: 'ACTIVE',
         sortOrder: 3
@@ -373,7 +381,7 @@ async function fetchData() {
         price: 899,
         validityDays: 180,
         benefits: '30次入场，不限时段',
-        icon: '',
+        icon: cardTypeIcons.TIMES,
         salesCount: 67,
         status: 'INACTIVE',
         sortOrder: 4

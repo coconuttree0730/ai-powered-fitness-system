@@ -19,7 +19,7 @@
                       <path d="M2 12L12 17L22 12" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <div class="logo-text">智健<span>AI</span></div>
+                  <div class="logo-text">FutureFit<span>未来健身</span></div>
                 </div>
                 <div class="left-main-content">
                   <div class="left-title">

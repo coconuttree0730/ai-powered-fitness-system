@@ -1,5 +1,8 @@
 package com.fitness.modules.user.model.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
@@ -10,6 +13,15 @@ import java.util.List;
  */
 @Data
 public class CoachDetailDTO {
+
+    /**
+     * 用户名
+     * 6-20个字符，只允许字母、数字、下划线
+     */
+    @NotBlank(message = "用户名不能为空")
+    @Size(min = 6, max = 20, message = "用户名长度必须在6-20个字符之间")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "用户名只能包含字母、数字和下划线")
+    private String username;
 
     /**
      * 从业年限
@@ -57,29 +69,9 @@ public class CoachDetailDTO {
     private List<String> honors;
 
     /**
-     * 紧急联系人信息
-     */
-    private EmergencyContactDTO emergencyContact;
-
-    /**
      * 资格认证列表
      */
     private List<CertificationDTO> certifications;
-
-    /**
-     * 可用时间段
-     */
-    private AvailabilityDTO availability;
-
-    /**
-     * 紧急联系人DTO
-     */
-    @Data
-    public static class EmergencyContactDTO {
-        private String name;
-        private String relation;
-        private String phone;
-    }
 
     /**
      * 资格认证DTO
@@ -90,28 +82,5 @@ public class CoachDetailDTO {
         private String number;
         private String validDate;
         private String status;
-    }
-
-    /**
-     * 可用时间段DTO
-     */
-    @Data
-    public static class AvailabilityDTO {
-        private List<TimeSlotDTO> monday;
-        private List<TimeSlotDTO> tuesday;
-        private List<TimeSlotDTO> wednesday;
-        private List<TimeSlotDTO> thursday;
-        private List<TimeSlotDTO> friday;
-        private List<TimeSlotDTO> saturday;
-        private List<TimeSlotDTO> sunday;
-    }
-
-    /**
-     * 时间段DTO
-     */
-    @Data
-    public static class TimeSlotDTO {
-        private String start;
-        private String end;
     }
 }

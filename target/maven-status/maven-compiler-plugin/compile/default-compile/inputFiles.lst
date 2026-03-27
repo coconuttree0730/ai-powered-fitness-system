@@ -5,6 +5,7 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\exception\BaseException.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\exception\BusinessException.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\exception\GlobalExceptionHandler.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\mybatis\JsonbTypeHandler.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\result\PageResult.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\result\Result.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\common\utils\DateUtils.java
@@ -135,6 +136,7 @@ C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-F
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\entity\Role.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\entity\User.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\CoachDetailVO.java
+C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\CoachHomePageVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\CoachVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\HomePageCoachVO.java
 C:\Users\admin\Desktop\graduation-project-space\system-compilations\AI-Powered-Fitness-System-v3\src\main\java\com\fitness\modules\user\model\vo\SliderVerifyResultVO.java

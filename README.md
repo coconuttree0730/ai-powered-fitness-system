@@ -252,4 +252,4 @@ docker run -p 8080:8080 --env-file .env fitness-system
 
 ---
 
-<p align="center">如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！</p>
+<p align="center">如果这个项目对您有帮助，请给个 Star 支持一下！</p>

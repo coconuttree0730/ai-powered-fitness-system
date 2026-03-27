@@ -6,13 +6,7 @@
 
 基于 Spring Boot框架实现 的智能健身房系统，为用户提供一体化的健身服务与运营管理平台。具体实现目标如下（MVP版本）：
 
-- 注册登录管理
-- 课程管理与预约
-- AI 智能健身计划生成
-- 器材管理
-- 运营数据可视化分析
-
-## 1. 技术栈与版本
+# 1. 技术栈与版本
 
 ### 1.1 基础框架
 
@@ -116,6 +110,7 @@ throw new BusinessException("订单金额错误"); // 禁止硬编码
 - 项目使用redis 7.2 作为缓存层，缓存数据必须严格遵守redis的语法和特性
 - 类型转换：
   - 项目全文，使用Hutool工具的`BeanUtil.copyProperties` 对实体对象进行类型转换。例如：
+
 ```java
 // 从数据库查询到的实体对象
 Equipment equipment = equipmentService.getById(id);
@@ -124,7 +119,9 @@ Equipment equipment = equipmentService.getById(id);
 EquipmentVO vo = new EquipmentVO();
 BeanUtil.copyProperties(equipment, vo);
 ```
+
 避免手动编写类型转换代码，如：
+
 ```java
 // 错误示例
 Equipment equipment = equipmentService.getById(id);
@@ -135,15 +132,7 @@ vo.setName(equipment.getName());
 vo.setType(equipment.getType());
 ```
 
-- 后端项目的类文件，必须遵守以下规范：
-  - 类名必须使用驼峰命名法，且首字母大写
-  - 类名必须与类的功能相关，不能与类的实现相关
-  - 类名必须与类的包名相关，不能与类的实现相关相关
-  - 类名必须与类的注释相关，不能与类的实现相关
-  - 类名必须与类的字段相关，不能与类的实现相关
-  - 类名必须与类的方法相关，不能与类的实现相关
-  - 类名必须与类的构造器相关，不能与类的实现相关
-  - 类名必须与类的注解相关，不能与类的实现相关
+- 后端项目的类文件，必须遵守以下规范
   - 注意大小写，严格要求必须大小写分明
 
 ## 6.业务规范
@@ -154,4 +143,8 @@ vo.setType(equipment.getType());
   - 业务删除文件时，必须从MinIO删除对应的文件
 
 ***
+
+### 额外要求：
+
+- request.js 的响应拦截器返回的是 res.data （直接是数据数组）；获取数据请使用正确的接收方式；
 

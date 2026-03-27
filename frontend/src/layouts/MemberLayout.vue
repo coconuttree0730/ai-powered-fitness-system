@@ -3,7 +3,15 @@
     <!-- 移动端顶部导航栏 -->
     <div class="mobile-header" v-if="isMobile">
       <div class="mobile-logo">
-        <div class="logo-icon">💪</div>
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6.5 6.5l11 11"/>
+            <path d="M21 21l-1-1"/>
+            <path d="M3 3l1 1"/>
+            <path d="M18 22l4-4"/>
+            <path d="M2 6l4-4"/>
+          </svg>
+        </div>
         <span>健身会员中心</span>
       </div>
       <div class="mobile-actions">
@@ -66,7 +74,15 @@
         class="sidebar"
       >
         <div class="logo">
-          <div class="logo-icon">💪</div>
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6.5 6.5l11 11"/>
+              <path d="M21 21l-1-1"/>
+              <path d="M3 3l1 1"/>
+              <path d="M18 22l4-4"/>
+              <path d="M2 6l4-4"/>
+            </svg>
+          </div>
           <h3 v-show="!collapsed">健身会员中心</h3>
         </div>
         <div class="custom-menu">

@@ -5,6 +5,7 @@ import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,7 +53,7 @@ public class CoachDetailController {
      * @return 更新后的教练详情
      */
     @PutMapping("/detail")
-    public Result<CoachDetailVO> updateCoachDetail(@RequestBody CoachDetailDTO dto) {
+    public Result<CoachDetailVO> updateCoachDetail(@Valid @RequestBody CoachDetailDTO dto) {
         CoachDetailVO vo = coachDetailService.updateCoachDetail(dto);
         return Result.success(vo);
     }

@@ -1,153 +1,135 @@
-package com.fitness.modules.user.model.entity;
+package com.fitness.modules.user.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fitness.common.mybatis.JsonbTypeHandler;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
-
 /**
- * 教练详情实体类
- * 对应 coach_detail 表
+ * 首页教练展示VO - 用于Mapper查询结果
  */
 @Data
-@TableName("coach_detail")
-public class CoachDetail {
+public class CoachHomePageVO {
 
     /**
-     * 主键ID
+     * 教练详情ID
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 用户ID（关联sys_user）
+     * 用户ID
      */
-    @TableField("user_id")
     private Long userId;
 
     /**
-     * 个人展示图片URL（非头像，用于首页展示）
+     * 个人展示图片URL
      */
-    @TableField("personal_image_url")
     private String personalImageUrl;
 
     /**
-     * 教练标签（JSON数组存储）：
-     * 标签数据存入数据库时，会自动转换为JSON数组存储在stgreSQL jsonb类型字段中
+     * 教练标签JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "tags", typeHandler = JsonbTypeHandler.class)
     private Object tags;
 
     /**
      * 从业年限
      */
-    @TableField("work_years")
     private Integer workYears;
 
     /**
-     * 专业领域（JSON数组）
+     * 专业领域JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "specialties", typeHandler = JsonbTypeHandler.class)
     private Object specialties;
 
     /**
      * 教学风格
      */
-    @TableField("teaching_style")
     private String teachingStyle;
 
     /**
      * 教育背景
      */
-    @TableField("education")
     private String education;
 
     /**
      * 培训经历
      */
-    @TableField("training")
     private String training;
 
     /**
-     * 语言能力（JSON数组）
+     * 语言能力JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "languages", typeHandler = JsonbTypeHandler.class)
     private Object languages;
 
     /**
      * 个人简介
      */
-    @TableField("bio")
     private String bio;
 
     /**
      * 教学经验
      */
-    @TableField("experience")
     private String experience;
 
     /**
-     * 获得荣誉（JSON数组）
+     * 获得荣誉JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "honors", typeHandler = JsonbTypeHandler.class)
     private Object honors;
 
     /**
-     * 紧急联系人信息（JSON对象）
+     * 紧急联系人信息JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "emergency_contact", typeHandler = JsonbTypeHandler.class)
     private Object emergencyContact;
 
     /**
-     * 资格认证（JSON数组）
+     * 资格认证JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "certifications", typeHandler = JsonbTypeHandler.class)
     private Object certifications;
 
     /**
-     * 可用时间段（JSON对象）
+     * 可用时间段JSON
      * 使用Object类型接收PostgreSQL jsonb类型
      */
-    @TableField(value = "availability", typeHandler = JsonbTypeHandler.class)
     private Object availability;
 
     /**
-     * 学员数量（统计）
+     * 学员数量
      */
-    @TableField("student_count")
     private Integer studentCount;
 
     /**
      * 好评率
      */
-    @TableField("rating")
     private String rating;
 
     /**
      * 软删除标志
      */
-    @TableLogic
-    @TableField("deleted")
     private Boolean deleted;
 
+    // 关联sys_user表的字段
     /**
-     * 创建时间
+     * 用户名
      */
-    @TableField("create_time")
-    private OffsetDateTime createTime;
+    private String username;
 
     /**
-     * 更新时间
+     * 头像
      */
-    @TableField("update_time")
-    private OffsetDateTime updateTime;
+    private String avatar;
+
+    /**
+     * 手机号
+     */
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    private String email;
 
     /**
      * 获取标签的JSON字符串
@@ -175,27 +157,6 @@ public class CoachDetail {
      */
     public String getHonorsJson() {
         return convertToJsonString(honors);
-    }
-
-    /**
-     * 获取紧急联系人的JSON字符串
-     */
-    public String getEmergencyContactJson() {
-        return convertToJsonString(emergencyContact);
-    }
-
-    /**
-     * 获取资格认证的JSON字符串
-     */
-    public String getCertificationsJson() {
-        return convertToJsonString(certifications);
-    }
-
-    /**
-     * 获取可用时间段的JSON字符串
-     */
-    public String getAvailabilityJson() {
-        return convertToJsonString(availability);
     }
 
     /**

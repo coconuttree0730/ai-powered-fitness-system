@@ -18,10 +18,10 @@ com\fitness\modules\plan\service\FitnessPlanService.class
 com\fitness\modules\banner\mapper\BannerMapper.class
 com\fitness\modules\booking\mapper\BookingMapper.class
 com\fitness\modules\booking\model\entity\Booking.class
+com\fitness\modules\user\model\vo\CoachHomePageVO.class
 com\fitness\integration\security\UserDetailsServiceImpl.class
 com\fitness\modules\banner\service\impl\BannerServiceImpl.class
 com\fitness\modules\dashboard\mapper\DashboardMapper.class
-com\fitness\modules\user\model\dto\CoachDetailDTO$TimeSlotDTO.class
 com\fitness\modules\equipment\model\enums\RepairStatus.class
 com\fitness\modules\plan\model\vo\PlanDetailVO.class
 com\fitness\integration\ai\controller\AIController$ExerciseGuideRequest.class
@@ -65,7 +65,6 @@ com\fitness\integration\minio\config\MinioProperties.class
 com\fitness\modules\equipment\model\dto\EquipmentDTO.class
 com\fitness\modules\booking\model\dto\BookingDTO.class
 com\fitness\modules\user\model\entity\CoachDetail.class
-com\fitness\modules\user\model\dto\CoachDetailDTO$EmergencyContactDTO.class
 com\fitness\modules\user\service\UserService.class
 com\fitness\modules\dashboard\model\vo\MemberCardStatsVO.class
 com\fitness\modules\user\model\dto\CoachDetailDTO.class
@@ -122,6 +121,7 @@ com\fitness\modules\dashboard\controller\DashboardController.class
 com\fitness\modules\user\model\dto\UserUpdateDTO.class
 com\fitness\modules\user\model\dto\UserDTO.class
 com\fitness\modules\equipment\model\dto\RepairDTO.class
+com\fitness\common\mybatis\JsonbTypeHandler.class
 com\fitness\modules\user\service\CoachDetailService.class
 com\fitness\modules\booking\controller\BookingAdminController.class
 com\fitness\integration\ai\service\AIService.class
@@ -145,7 +145,6 @@ com\fitness\integration\minio\model\vo\FileUploadVO$FileUploadVOBuilder.class
 com\fitness\modules\dashboard\model\dto\AnalysisRequestDTO.class
 com\fitness\modules\user\model\vo\CoachDetailVO.class
 com\fitness\modules\equipment\controller\EquipmentAdminController.class
-com\fitness\modules\user\model\dto\CoachDetailDTO$AvailabilityDTO.class
 com\fitness\integration\minio\mapper\FileMapper.class
 com\fitness\modules\equipment\service\EquipmentService.class
 com\fitness\common\exception\GlobalExceptionHandler.class

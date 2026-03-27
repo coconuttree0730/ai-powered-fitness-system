@@ -417,11 +417,11 @@ const columns = [
       h('button', { 
         class: 'action-btn edit',
         onClick: () => handleEdit(row)
-      }, [h('span', { class: 'btn-icon' }, '✏️'), '编辑']),
+      }, [h('span', { class: 'btn-icon' }, ''), '编辑']),
       h('button', { 
         class: 'action-btn delete',
         onClick: () => handleSingleDelete(row)
-      }, [h('span', { class: 'btn-icon' }, '🗑️'), '删除'])
+      }, [h('span', { class: 'btn-icon' }, ''), '删除'])
     ])
   }
 ]

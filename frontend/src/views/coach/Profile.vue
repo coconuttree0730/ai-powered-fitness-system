@@ -53,6 +53,20 @@
 
           <div class="info-list">
             <div class="info-item">
+              <span class="info-label">用户名</span>
+              <span v-if="!isEditing" class="info-value">{{ profile.username || '-' }}</span>
+              <n-input
+                v-else
+                v-model:value="profileForm.username"
+                placeholder="请输入用户名"
+                :maxlength="20"
+                :status="usernameValidationStatus"
+              />
+              <n-text v-if="isEditing && usernameValidationMsg" type="error" style="font-size: 12px;">
+                {{ usernameValidationMsg }}
+              </n-text>
+            </div>
+            <div class="info-item">
               <span class="info-label">姓名</span>
               <span v-if="!isEditing" class="info-value">{{ profile.realName || '-' }}</span>
               <n-input v-else v-model:value="profileForm.realName" placeholder="请输入姓名" />
@@ -121,30 +135,6 @@
           </div>
         </div>
 
-        <!-- 紧急联系人 -->
-        <div class="profile-card emergency-contact">
-          <div class="card-header">
-            <n-icon :component="WarningOutline" size="20" />
-            <span>紧急联系人</span>
-          </div>
-          <div class="info-list">
-            <div class="info-item">
-              <span class="info-label">联系人姓名</span>
-              <span v-if="!isEditing" class="info-value">{{ profile.emergencyContact?.name || '-' }}</span>
-              <n-input v-else v-model:value="profileForm.emergencyContact.name" placeholder="请输入联系人姓名" />
-            </div>
-            <div class="info-item">
-              <span class="info-label">关系</span>
-              <span v-if="!isEditing" class="info-value">{{ profile.emergencyContact?.relation || '-' }}</span>
-              <n-select v-else v-model:value="profileForm.emergencyContact.relation" :options="relationOptions" placeholder="请选择关系" />
-            </div>
-            <div class="info-item">
-              <span class="info-label">联系电话</span>
-              <span v-if="!isEditing" class="info-value">{{ profile.emergencyContact?.phone || '-' }}</span>
-              <n-input v-else v-model:value="profileForm.emergencyContact.phone" placeholder="请输入联系电话" />
-            </div>
-          </div>
-        </div>
       </n-grid-item>
 
       <!-- 中间：专业信息 -->
@@ -332,29 +322,6 @@
           </div>
         </div>
 
-        <!-- 可用时间段 -->
-        <div class="profile-card availability">
-          <div class="card-header">
-            <n-icon :component="TimeOutline" size="20" />
-            <span>可用教学时间</span>
-          </div>
-          <div class="time-slots">
-            <div v-for="(slots, day) in profileForm.availability" :key="day" class="day-slot">
-              <span class="day-label">{{ dayLabels[day] }}</span>
-              <div class="slots-list">
-                <n-tag v-for="(slot, idx) in slots" :key="idx" size="small" closable @close="removeTimeSlot(day, idx)">
-                  {{ slot.start }} - {{ slot.end }}
-                </n-tag>
-                <n-button v-if="isEditing" text size="small" @click="addTimeSlot(day)">
-                  <template #icon>
-                    <n-icon :component="AddOutline" />
-                  </template>
-                  添加
-                </n-button>
-              </div>
-            </div>
-          </div>
-        </div>
       </n-grid-item>
     </n-grid>
 
@@ -379,23 +346,6 @@
       </template>
     </n-modal>
 
-    <!-- 添加时间段弹窗 -->
-    <n-modal v-model:show="showTimeModal" preset="card" title="添加教学时间" style="width: 400px">
-      <n-form label-placement="left" label-width="80">
-        <n-form-item label="开始时间">
-          <n-time-picker v-model:value="timeForm.start" format="HH:mm" style="width: 100%" />
-        </n-form-item>
-        <n-form-item label="结束时间">
-          <n-time-picker v-model:value="timeForm.end" format="HH:mm" style="width: 100%" />
-        </n-form-item>
-      </n-form>
-      <template #footer>
-        <n-space justify="end">
-          <n-button @click="showTimeModal = false">取消</n-button>
-          <n-button type="primary" @click="confirmAddTimeSlot">确认添加</n-button>
-        </n-space>
-      </template>
-    </n-modal>
   </div>
 </template>
 
@@ -406,9 +356,7 @@ import {
   PersonOutline,
   FitnessOutline,
   InformationCircleOutline,
-  WarningOutline,
   RibbonOutline,
-  TimeOutline,
   CreateOutline,
   CameraOutline,
   AddOutline,
@@ -436,8 +384,6 @@ const loading = ref(false)
 
 // 弹窗状态
 const showCertModal = ref(false)
-const showTimeModal = ref(false)
-const currentDay = ref('')
 
 // 头像上传
 const avatarInput = ref(null)
@@ -458,6 +404,7 @@ const presetTags = [
 // 表单数据
 const profileForm = reactive({
   avatar: '',
+  username: '',
   realName: '',
   gender: 'male',
   age: null,
@@ -474,21 +421,7 @@ const profileForm = reactive({
   bio: '',
   experience: '',
   honors: [],
-  emergencyContact: {
-    name: '',
-    relation: '',
-    phone: ''
-  },
-  certifications: [],
-  availability: {
-    monday: [],
-    tuesday: [],
-    wednesday: [],
-    thursday: [],
-    friday: [],
-    saturday: [],
-    sunday: []
-  }
+  certifications: []
 })
 
 // 原始数据（用于取消编辑时恢复）
@@ -501,6 +434,34 @@ const genderText = computed(() => {
   const map = { male: '男', female: '女', other: '其他' }
   return map[profile.value.gender] || '-'
 })
+
+// 用户名验证
+const usernameValidationStatus = computed(() => {
+  if (!profileForm.username) return undefined
+  const isValid = validateUsernameFormat(profileForm.username)
+  return isValid ? undefined : 'error'
+})
+
+const usernameValidationMsg = computed(() => {
+  if (!profileForm.username) return ''
+  if (profileForm.username.length < 6) {
+    return '用户名长度至少6个字符'
+  }
+  if (profileForm.username.length > 20) {
+    return '用户名长度最多20个字符'
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(profileForm.username)) {
+    return '用户名只能包含字母、数字和下划线'
+  }
+  return ''
+})
+
+// 验证用户名格式
+function validateUsernameFormat(username) {
+  if (!username) return false
+  if (username.length < 6 || username.length > 20) return false
+  return /^[a-zA-Z0-9_]+$/.test(username)
+}
 
 const avatarGradient = computed(() => {
   const gradients = [
@@ -558,16 +519,6 @@ const languageOptions = [
   { label: '德语', value: '德语' }
 ]
 
-const dayLabels = {
-  monday: '周一',
-  tuesday: '周二',
-  wednesday: '周三',
-  thursday: '周四',
-  friday: '周五',
-  saturday: '周六',
-  sunday: '周日'
-}
-
 // 认证表单
 const certForm = reactive({
   name: '',
@@ -575,36 +526,25 @@ const certForm = reactive({
   validDate: null
 })
 
-// 时间表单
-const timeForm = reactive({
-  start: null,
-  end: null
-})
-
 // 获取教练详情
 async function fetchCoachDetail() {
   loading.value = true
+  console.log('开始获取教练详情...')
   try {
-    const res = await getCurrentCoachDetail()
-    if (res.data) {
-      Object.assign(profileForm, res.data)
+    const data = await getCurrentCoachDetail()
+    console.log('获取教练详情成功:', data)
+    if (data) {
+      Object.assign(profileForm, data)
       // 确保数组字段存在
       if (!profileForm.tags) profileForm.tags = []
       if (!profileForm.specialties) profileForm.specialties = []
       if (!profileForm.languages) profileForm.languages = []
       if (!profileForm.honors) profileForm.honors = []
       if (!profileForm.certifications) profileForm.certifications = []
-      if (!profileForm.emergencyContact) profileForm.emergencyContact = { name: '', relation: '', phone: '' }
-      if (!profileForm.availability) {
-        profileForm.availability = {
-          monday: [], tuesday: [], wednesday: [], thursday: [],
-          friday: [], saturday: [], sunday: []
-        }
-      }
     }
   } catch (error) {
-    message.error('获取教练信息失败')
-    console.error(error)
+    console.error('获取教练详情失败:', error)
+    message.error('获取教练信息失败: ' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }
@@ -626,8 +566,16 @@ function cancelEdit() {
 async function saveProfile() {
   saving.value = true
   try {
-    // 先保存基本信息
+    // 验证用户名
+    if (!profileForm.username || !validateUsernameFormat(profileForm.username)) {
+      message.error('请输入有效的用户名（6-20个字符，只能包含字母、数字和下划线）')
+      saving.value = false
+      return
+    }
+
+    // 先保存基本信息（包含用户名）
     const detailData = {
+      username: profileForm.username,
       workYears: profileForm.workYears,
       specialties: profileForm.specialties,
       teachingStyle: profileForm.teachingStyle,
@@ -637,15 +585,13 @@ async function saveProfile() {
       bio: profileForm.bio,
       experience: profileForm.experience,
       honors: profileForm.honors,
-      emergencyContact: profileForm.emergencyContact,
-      certifications: profileForm.certifications,
-      availability: profileForm.availability
+      certifications: profileForm.certifications
     }
     await updateCoachDetail(detailData)
-    
+
     // 保存标签
     await updateTags(profileForm.tags)
-    
+
     message.success('个人资料保存成功')
     isEditing.value = false
     // 重新获取数据
@@ -789,44 +735,6 @@ function confirmAddCert() {
   
   showCertModal.value = false
   message.success('认证添加成功')
-}
-
-function addTimeSlot(day) {
-  currentDay.value = day
-  timeForm.start = null
-  timeForm.end = null
-  showTimeModal.value = true
-}
-
-function confirmAddTimeSlot() {
-  if (!timeForm.start || !timeForm.end) {
-    message.warning('请选择完整时间段')
-    return
-  }
-  
-  const startTime = new Date(timeForm.start)
-  const endTime = new Date(timeForm.end)
-  
-  if (startTime >= endTime) {
-    message.error('结束时间必须晚于开始时间')
-    return
-  }
-  
-  const formatTime = (date) => {
-    return date.toTimeString().slice(0, 5)
-  }
-  
-  profileForm.availability[currentDay.value].push({
-    start: formatTime(startTime),
-    end: formatTime(endTime)
-  })
-  
-  showTimeModal.value = false
-  message.success('时间段添加成功')
-}
-
-function removeTimeSlot(day, index) {
-  profileForm.availability[day].splice(index, 1)
 }
 
 // 页面加载时获取数据

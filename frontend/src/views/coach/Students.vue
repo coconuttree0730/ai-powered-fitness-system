@@ -386,12 +386,12 @@ const sortOptions = [
 
 // 更多操作选项
 const moreOptions = [
-  { label: '添加到日程', key: 'addToSchedule', icon: () => h('span', '📅') },
-  { label: '添加课时', key: 'addCredits', icon: () => h('span', '📈') },
-  { label: '编辑备注', key: 'editNote', icon: () => h('span', '📝') },
-  { label: '查看记录', key: 'viewRecords', icon: () => h('span', '📋') },
+  { label: '添加到日程', key: 'addToSchedule', icon: () => h('span', '') },
+  { label: '添加课时', key: 'addCredits', icon: () => h('span', '') },
+  { label: '编辑备注', key: 'editNote', icon: () => h('span', '') },
+  { label: '查看记录', key: 'viewRecords', icon: () => h('span', '') },
   { type: 'divider', key: 'd1' },
-  { label: '移除学员', key: 'remove', icon: () => h('span', '🗑️') }
+  { label: '移除学员', key: 'remove', icon: () => h('span', '') }
 ]
 
 // 场地选项
