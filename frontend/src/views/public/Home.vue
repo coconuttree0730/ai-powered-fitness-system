@@ -239,20 +239,30 @@
           <div class="courses-grid">
             <div v-for="(course, index) in filteredCourses" :key="course.id || index"
                  class="course-card"
-                 v-intersect="onReveal">
+                 v-intersect="onReveal"
+                 @click="handleCourseClick(course)">
               <div class="course-image">
                 <img v-if="!course.imageError && course.image"
                      :src="course.image"
                      :alt="course.name"
                      @error="handleImageError(course)">
                 <div v-else class="course-image-placeholder">
-<!--                  //图标
-                  <span class="placeholder-icon"></span>-->
                   <span class="placeholder-text">图片正在加载中...</span>
                 </div>
                 <div class="course-overlay">
                   <span class="course-level">{{ course.level || '初级' }}</span>
                   <span class="course-duration">⏱ {{ course.duration }}分钟</span>
+                </div>
+                <!-- 悬浮查看详情提示 -->
+                <div class="course-hover-overlay">
+                  <div class="hover-content">
+                    <span class="hover-text">查看详情</span>
+                    <svg class="hover-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="16" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
               <div class="course-content">
@@ -270,7 +280,13 @@
           </div>
         </template>
         <div class="courses-more">
-          <router-link to="/courses" class="btn btn-outline">查看全部课程</router-link>
+          <router-link to="/courses" class="btn btn-outline btn-view-all">
+            <span>查看全部课程</span>
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </router-link>
         </div>
       </div>
     </section>
@@ -338,7 +354,7 @@
           <div class="coaches-slider-track">
             <div class="coaches-slider-content" :style="{ transform: `translateX(-${coachSlide * 25}%)` }">
               <div v-for="(coach, index) in coaches" :key="index" class="coaches-slide">
-                <div class="coach-card">
+                <div class="coach-card" @click="handleCoachClick(coach)">
                   <div class="coach-image">
                     <img :src="coach.image" :alt="coach.name" @error="handleCoachImageError">
                     <div class="coach-overlay">
@@ -355,6 +371,15 @@
                           <div class="coach-stat-value">{{ coach.rating }}</div>
                           <div class="coach-stat-label">好评</div>
                         </div>
+                      </div>
+                      <!-- 悬浮查看详情提示 -->
+                      <div class="coach-hover-hint">
+                        <span class="hover-text">{{ authStore.isLoggedIn ? '查看详情' : '登录后查看详情' }}</span>
+                        <svg class="hover-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="16" x2="12" y2="12"/>
+                          <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
                       </div>
                     </div>
                   </div>
@@ -1235,10 +1260,66 @@ function goToLoginFromModal() {
 
 function handleLoginSuccess() {
   message.success('登录成功')
+  // 检查是否有待查看的教练
+  const pendingCoachId = sessionStorage.getItem('pendingCoachId')
+  if (pendingCoachId) {
+    // 清除存储的教练ID
+    sessionStorage.removeItem('pendingCoachId')
+    // 跳转到教练详情页
+    router.push(`/coaches/${pendingCoachId}`)
+  }
 }
 
 function handleRegisterSuccess() {
   message.success('注册成功')
+}
+
+// 处理课程卡片点击
+function handleCourseClick(course) {
+  if (!course || !course.id) {
+    message.error('课程信息无效')
+    return
+  }
+
+  // 检查用户登录状态
+  if (authStore.isLoggedIn) {
+    // 已登录用户，跳转到课程详情页
+    router.push(`/courses/${course.id}`)
+  } else {
+    // 未登录用户，显示登录提醒
+    showLoginReminder(course)
+  }
+}
+
+// 处理教练卡片点击
+function handleCoachClick(coach) {
+  if (!coach || !coach.id) {
+    // 如果没有ID，可能是默认数据，显示提示
+    if (!authStore.isLoggedIn) {
+      message.info('请先登录后查看教练详情')
+      showLoginModal.value = true
+    }
+    return
+  }
+
+  // 检查用户登录状态
+  if (authStore.isLoggedIn) {
+    // 已登录用户，跳转到教练详情页
+    router.push(`/coaches/${coach.id}`)
+  } else {
+    // 未登录用户，显示登录模态框
+    message.info('请先登录后查看教练详情')
+    sessionStorage.setItem('pendingCoachId', coach.id)
+    showLoginModal.value = true
+  }
+}
+
+// 显示登录提醒
+function showLoginReminder(course) {
+  // 存储当前想要查看的课程ID，登录后可以跳转
+  sessionStorage.setItem('pendingCourseId', course.id)
+  // 显示登录模态框
+  showLoginModal.value = true
 }
 
 async function handleLogout() {
@@ -2663,6 +2744,63 @@ const vIntersect = {
   transform: scale(1.05);
 }
 
+/* 课程卡片悬浮查看详情提示 */
+.course-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.course-card:hover .course-hover-overlay {
+  opacity: 1;
+}
+
+.hover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 100px;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+}
+
+.course-card:hover .hover-content {
+  transform: translateY(0);
+}
+
+.hover-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.hover-icon {
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
 .course-overlay {
   position: absolute;
   top: 16px;
@@ -2725,6 +2863,32 @@ const vIntersect = {
 
 .courses-more {
   text-align: center;
+}
+
+.btn-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-view-all:hover {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-color: transparent;
+  color: var(--text-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(255, 107, 53, 0.35);
+}
+
+.btn-view-all:hover .btn-icon {
+  transform: translateX(4px);
+}
+
+.btn-icon {
+  transition: transform 0.3s ease;
 }
 
 /* 课程体系加载状态 */
@@ -2975,6 +3139,7 @@ const vIntersect = {
   border-radius: 24px;
   overflow: hidden;
   transition: all 0.4s;
+  cursor: pointer;
 }
 
 .coach-card:hover {
@@ -3037,6 +3202,37 @@ const vIntersect = {
 .coach-stat-label {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* 教练卡片悬浮提示 */
+.coach-hover-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 100px;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+}
+
+.coach-card:hover .coach-hover-hint {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.coach-hover-hint .hover-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.coach-hover-hint .hover-icon {
+  color: white;
+  animation: pulse 2s infinite;
 }
 
 .coach-info {

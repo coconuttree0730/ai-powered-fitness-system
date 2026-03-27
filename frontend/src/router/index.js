@@ -27,6 +27,12 @@ const routes = [
     meta: { title: '课程详情', public: true }
   },
   {
+    path: '/coaches/:id',
+    name: 'CoachDetail',
+    component: () => import('@/views/public/CoachDetail.vue'),
+    meta: { title: '教练详情', public: true }
+  },
+  {
     path: '/member',
     component: () => import('@/layouts/MemberLayout.vue'),
     meta: { requiresAuth: true, roles: ['MEMBER'] },
