@@ -11,7 +11,8 @@ import com.fitness.modules.plan.model.entity.FitnessPlanDetail;
 import com.fitness.modules.plan.model.vo.PlanDetailVO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 import com.fitness.modules.plan.service.FitnessPlanService;
-import com.fitness.modules.plan.service.UserProfileService;
+import com.fitness.modules.user.model.vo.UserFitnessProfileVO;
+import com.fitness.modules.user.service.UserFitnessProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,22 +37,22 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     private final FitnessPlanMapper fitnessPlanMapper;
     private final FitnessPlanDetailMapper fitnessPlanDetailMapper;
     private final AIService aiService;
-    private final UserProfileService userProfileService;
+    private final UserFitnessProfileService userFitnessProfileService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long generatePlan(Long userId, PlanGenerateDTO dto) {
         // 检查用户是否已完善个人信息
-        if (!userProfileService.isProfileComplete(userId)) {
+        if (!userFitnessProfileService.isProfileComplete(userId)) {
             throw new BusinessException(ErrorCode.PROFILE_NOT_COMPLETE);
         }
 
-        // 获取用户个人信息
-        Map<String, Object> profile = userProfileService.getProfile(userId);
-        BigDecimal height = (BigDecimal) profile.get("height");
-        BigDecimal weight = (BigDecimal) profile.get("weight");
-        Integer age = (Integer) profile.get("age");
-        String experience = (String) profile.get("experience");
+        // 获取用户健身档案
+        UserFitnessProfileVO profile = userFitnessProfileService.getProfile(userId);
+        BigDecimal height = profile.getHeight();
+        BigDecimal weight = profile.getWeight();
+        Integer age = profile.getAge();
+        String experience = profile.getExperience();
 
         // 调用AI服务生成计划
         String aiResponse;

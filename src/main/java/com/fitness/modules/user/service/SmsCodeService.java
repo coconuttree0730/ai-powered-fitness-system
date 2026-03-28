@@ -37,4 +37,20 @@ public interface SmsCodeService {
      * @return 剩余秒数，0表示可以发送
      */
     long getRemainingCooldown(String phone);
+
+    /**
+     * 检查是否超过每日发送限制
+     *
+     * @param phone 手机号
+     * @return 是否超过限制
+     */
+    boolean isDailyLimitExceeded(String phone);
+
+    /**
+     * 获取今日剩余发送次数
+     *
+     * @param phone 手机号
+     * @return 剩余次数
+     */
+    int getRemainingDailyCount(String phone);
 }

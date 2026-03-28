@@ -39,10 +39,10 @@
               clearable
               style="width: 150px"
             >
-              <el-option label="健身器材" value="EQUIPMENT" />
-              <el-option label="运动服饰" value="CLOTHING" />
+              <el-option label="运动装备" value="EQUIPMENT" />
               <el-option label="营养补剂" value="SUPPLEMENT" />
-              <el-option label="运动配件" value="ACCESSORY" />
+              <el-option label="课程优惠" value="COURSE" />
+              <el-option label="其他" value="OTHER" />
             </el-select>
             <el-select
               v-model="searchForm.status"
@@ -80,8 +80,8 @@
           <template #default="{ row }">
             <div class="product-info">
               <el-image
-                :src="row.image"
-                :preview-src-list="[row.image]"
+                :src="row.imageUrl"
+                :preview-src-list="[row.imageUrl]"
                 fit="cover"
                 class="product-image"
               >
@@ -111,9 +111,8 @@
         </el-table-column>
         <el-table-column label="价格" width="150">
           <template #default="{ row }">
-            <div class="price-info">
-              <div class="current-price">¥{{ row.price }}</div>
-              <div v-if="row.originalPrice" class="original-price">¥{{ row.originalPrice }}</div>
+              <div class="price-info">
+              <div class="current-price">¥{{ row.originalPrice }}</div>
             </div>
           </template>
         </el-table-column>
@@ -125,10 +124,11 @@
           </template>
         </el-table-column>
         <el-table-column label="销量" width="100" align="center" prop="sales" />
-        <el-table-column label="积分" width="100" align="center">
+        <el-table-column label="积分抵扣" width="120" align="center">
           <template #default="{ row }">
-            <span v-if="row.points">{{ row.points }} 分</span>
-            <span v-else class="text-gray">-</span>
+            <span v-if="row.pointsDiscountType === 'NONE'" class="text-gray">不支持</span>
+            <span v-else-if="row.pointsDiscountType === 'FIXED'">¥{{ row.maxPointsDiscount }}</span>
+            <span v-else-if="row.pointsDiscountType === 'PERCENT'">{{ row.pointsDiscountValue }}%</span>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
@@ -186,7 +186,7 @@
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="商品图片" prop="image">
+            <el-form-item label="商品图片" prop="imageUrl">
               <el-upload
                 class="product-uploader"
                 action="#"
@@ -195,7 +195,7 @@
                 :on-change="handleImageChange"
                 accept="image/*"
               >
-                <img v-if="form.image" :src="form.image" class="product-preview" />
+                <img v-if="form.imageUrl" :src="form.imageUrl" class="product-preview" />
                 <div v-else class="upload-placeholder">
                   <el-icon :size="28"><Plus /></el-icon>
                   <span>点击上传</span>
@@ -212,10 +212,10 @@
             </el-form-item>
             <el-form-item label="所属分类" prop="category">
               <el-select v-model="form.category" placeholder="请选择分类" style="width: 100%">
-                <el-option label="健身器材" value="EQUIPMENT" />
-                <el-option label="运动服饰" value="CLOTHING" />
+                <el-option label="运动装备" value="EQUIPMENT" />
                 <el-option label="营养补剂" value="SUPPLEMENT" />
-                <el-option label="运动配件" value="ACCESSORY" />
+                <el-option label="课程优惠" value="COURSE" />
+                <el-option label="其他" value="OTHER" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -223,12 +223,7 @@
 
         <el-row :gutter="20">
           <el-col :span="8">
-            <el-form-item label="售价" prop="price">
-              <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="原价" prop="originalPrice">
+            <el-form-item label="售价" prop="originalPrice">
               <el-input-number v-model="form.originalPrice" :min="0" :precision="2" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -237,19 +232,44 @@
               <el-input-number v-model="form.stock" :min="0" :precision="0" style="width: 100%" />
             </el-form-item>
           </el-col>
+          <el-col :span="8">
+            <el-form-item label="排序" prop="sortOrder">
+              <el-input-number v-model="form.sortOrder" :min="0" :max="999" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 积分抵扣配置 -->
+        <el-divider content-position="left">积分抵扣配置</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="抵扣类型">
+              <el-select v-model="form.pointsDiscountType" placeholder="请选择" style="width: 100%">
+                <el-option label="固定金额" value="FIXED" />
+                <el-option label="比例抵扣" value="PERCENT" />
+                <el-option label="不支持" value="NONE" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="抵扣值">
+              <el-input-number 
+                v-model="form.pointsDiscountValue" 
+                :min="0" 
+                :precision="form.pointsDiscountType === 'PERCENT' ? 0 : 2" 
+                style="width: 100%" 
+              />
+              <span class="form-tip">{{ form.pointsDiscountType === 'PERCENT' ? '%' : '元' }}</span>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="最大抵扣">
+              <el-input-number v-model="form.maxPointsDiscount" :min="0" :precision="2" style="width: 100%" />
+            </el-form-item>
+          </el-col>
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="积分兑换" prop="points">
-              <el-input-number v-model="form.points" :min="0" :precision="0" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="排序" prop="sort">
-              <el-input-number v-model="form.sort" :min="0" :max="999" style="width: 100%" />
-            </el-form-item>
-          </el-col>
           <el-col :span="8">
             <el-form-item label="状态" prop="status">
               <el-radio-group v-model="form.status">
@@ -292,7 +312,7 @@
     >
       <div v-if="currentProduct" class="stock-info">
         <div class="product-brief">
-          <el-image :src="currentProduct.image" class="brief-image" fit="cover">
+          <el-image :src="currentProduct.imageUrl" class="brief-image" fit="cover">
             <template #error>
               <div class="brief-placeholder">
                 <el-icon><Goods /></el-icon>
@@ -340,6 +360,15 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search, Plus, Edit, Delete, Goods, Box
 } from '@element-plus/icons-vue'
+import {
+  getAdminProducts,
+  createAdminProduct,
+  updateAdminProduct,
+  deleteAdminProduct,
+  updateAdminProductStatus,
+  updateAdminProductStock
+} from '@/api/admin/product'
+import { uploadImage } from '@/api/file'
 
 // 统计数据
 const stats = ref([
@@ -358,99 +387,13 @@ const searchForm = reactive({
 
 // 表格数据
 const loading = ref(false)
-const tableData = ref([
-  {
-    id: 1,
-    name: '专业瑜伽垫',
-    code: 'YP-001',
-    category: 'EQUIPMENT',
-    image: '',
-    price: 128.00,
-    originalPrice: 168.00,
-    stock: 156,
-    sales: 89,
-    points: 1280,
-    status: 'ACTIVE',
-    isHot: true,
-    isNew: false,
-    isRecommend: true,
-    description: '高品质TPE材质瑜伽垫，防滑耐用'
-  },
-  {
-    id: 2,
-    name: '乳清蛋白粉 5磅',
-    code: 'SP-001',
-    category: 'SUPPLEMENT',
-    image: '',
-    price: 398.00,
-    originalPrice: 458.00,
-    stock: 88,
-    sales: 156,
-    points: 3980,
-    status: 'ACTIVE',
-    isHot: true,
-    isNew: false,
-    isRecommend: true,
-    description: '进口乳清蛋白，快速补充蛋白质'
-  },
-  {
-    id: 3,
-    name: '运动水壶 1L',
-    code: 'AC-001',
-    category: 'ACCESSORY',
-    image: '',
-    price: 68.00,
-    originalPrice: null,
-    stock: 8,
-    sales: 234,
-    points: 680,
-    status: 'ACTIVE',
-    isHot: false,
-    isNew: true,
-    isRecommend: false,
-    description: '大容量运动水壶，便携设计'
-  },
-  {
-    id: 4,
-    name: '速干运动T恤',
-    code: 'CL-001',
-    category: 'CLOTHING',
-    image: '',
-    price: 99.00,
-    originalPrice: 129.00,
-    stock: 0,
-    sales: 67,
-    points: 990,
-    status: 'INACTIVE',
-    isHot: false,
-    isNew: true,
-    isRecommend: false,
-    description: '透气速干面料，舒适运动体验'
-  },
-  {
-    id: 5,
-    name: '可调节哑铃 20kg',
-    code: 'YP-002',
-    category: 'EQUIPMENT',
-    image: '',
-    price: 568.00,
-    originalPrice: 698.00,
-    stock: 23,
-    sales: 45,
-    points: 5680,
-    status: 'ACTIVE',
-    isHot: true,
-    isNew: false,
-    isRecommend: true,
-    description: '家用可调节哑铃，多档重量调节'
-  }
-])
+const tableData = ref([])
 
 // 分页
 const pagination = reactive({
   page: 1,
   pageSize: 10,
-  total: 5
+  total: 0
 })
 
 // 弹窗控制
@@ -465,13 +408,14 @@ const form = reactive({
   name: '',
   code: '',
   category: '',
-  image: '',
-  price: 0,
+  imageUrl: '',
   originalPrice: 0,
   stock: 0,
-  points: 0,
+  pointsDiscountType: 'NONE',
+  pointsDiscountValue: 0,
+  maxPointsDiscount: 0,
   status: 'ACTIVE',
-  sort: 0,
+  sortOrder: 0,
   isHot: false,
   isNew: false,
   isRecommend: false,
@@ -483,7 +427,7 @@ const rules = {
   name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
   code: [{ required: true, message: '请输入商品编号', trigger: 'blur' }],
   category: [{ required: true, message: '请选择分类', trigger: 'change' }],
-  price: [{ required: true, message: '请输入售价', trigger: 'blur' }],
+  originalPrice: [{ required: true, message: '请输入售价', trigger: 'blur' }],
   stock: [{ required: true, message: '请输入库存', trigger: 'blur' }]
 }
 
@@ -499,10 +443,10 @@ const stockForm = reactive({
 
 // 分类映射
 const categoryMap = {
-  EQUIPMENT: { label: '健身器材', type: 'primary' },
-  CLOTHING: { label: '运动服饰', type: 'success' },
+  EQUIPMENT: { label: '运动装备', type: 'primary' },
   SUPPLEMENT: { label: '营养补剂', type: 'warning' },
-  ACCESSORY: { label: '运动配件', type: 'info' }
+  COURSE: { label: '课程优惠', type: 'success' },
+  OTHER: { label: '其他', type: 'info' }
 }
 
 function getCategoryLabel(category) {
@@ -514,12 +458,30 @@ function getCategoryType(category) {
 }
 
 // 搜索
-function handleSearch() {
+async function handleSearch() {
   loading.value = true
-  setTimeout(() => {
+  try {
+    const params = {
+      category: searchForm.category,
+      status: searchForm.status,
+      keyword: searchForm.keyword
+    }
+    console.log('开始获取商品列表，参数:', params)
+    const res = await getAdminProducts(params)
+    console.log('获取商品列表成功，数据:', res)
+    tableData.value = res || []
+    pagination.total = tableData.value.length
+    
+    // 更新统计数据
+    updateStats()
+  } catch (error) {
+    console.error('获取商品列表失败:', error)
+    ElMessage.error('获取商品列表失败: ' + (error.message || '未知错误'))
+    tableData.value = []
+    pagination.total = 0
+  } finally {
     loading.value = false
-    ElMessage.success('搜索完成')
-  }, 500)
+  }
 }
 
 function handleReset() {
@@ -527,6 +489,21 @@ function handleReset() {
   searchForm.category = ''
   searchForm.status = ''
   handleSearch()
+}
+
+// 更新统计数据
+function updateStats() {
+  const total = tableData.value.length
+  const active = tableData.value.filter(item => item.status === 'ACTIVE').length
+  const totalSales = tableData.value.reduce((sum, item) => sum + (item.sales || 0), 0)
+  const lowStock = tableData.value.filter(item => item.stock < 10).length
+  
+  stats.value = [
+    { title: '商品总数', value: total, icon: 'Goods', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    { title: '上架商品', value: active, icon: 'Box', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+    { title: '总销量', value: totalSales, icon: 'TrendCharts', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+    { title: '库存预警', value: lowStock, icon: 'Warning', color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }
+  ]
 }
 
 // 新增
@@ -537,13 +514,14 @@ function handleAdd() {
     name: '',
     code: '',
     category: '',
-    image: '',
-    price: 0,
+    imageUrl: '',
     originalPrice: 0,
     stock: 0,
-    points: 0,
+    pointsDiscountType: 'NONE',
+    pointsDiscountValue: 0,
+    maxPointsDiscount: 0,
     status: 'ACTIVE',
-    sort: 0,
+    sortOrder: 0,
     isHot: false,
     isNew: false,
     isRecommend: false,
@@ -555,12 +533,29 @@ function handleAdd() {
 // 编辑
 function handleEdit(row) {
   isEdit.value = true
-  Object.assign(form, { ...row })
+  Object.assign(form, {
+    id: row.id,
+    name: row.name,
+    code: row.code,
+    category: row.category,
+    imageUrl: row.imageUrl,
+    originalPrice: row.originalPrice,
+    stock: row.stock,
+    pointsDiscountType: row.pointsDiscountType,
+    pointsDiscountValue: row.pointsDiscountValue,
+    maxPointsDiscount: row.maxPointsDiscount,
+    status: row.status,
+    sortOrder: row.sortOrder,
+    isHot: row.isHot,
+    isNew: row.isNew,
+    isRecommend: row.isRecommend,
+    description: row.description
+  })
   dialogVisible.value = true
 }
 
 // 删除
-function handleDelete(row) {
+async function handleDelete(row) {
   ElMessageBox.confirm(
     `确定要删除商品"${row.name}"吗？删除后将无法恢复。`,
     '确认删除',
@@ -569,58 +564,100 @@ function handleDelete(row) {
       cancelButtonText: '取消',
       type: 'warning'
     }
-  ).then(() => {
-    const index = tableData.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      tableData.value.splice(index, 1)
-      pagination.total--
+  ).then(async () => {
+    try {
+      await deleteAdminProduct(row.id)
+      const index = tableData.value.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        tableData.value.splice(index, 1)
+        pagination.total--
+      }
+      updateStats()
+      ElMessage.success('删除成功')
+    } catch (error) {
+      ElMessage.error('删除失败')
     }
-    ElMessage.success('删除成功')
   })
 }
 
 // 状态切换
-function handleStatusChange(row) {
-  const statusText = row.status === 'ACTIVE' ? '上架' : '下架'
-  ElMessage.success(`商品已${statusText}`)
+async function handleStatusChange(row) {
+  try {
+    const newStatus = row.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+    await updateAdminProductStatus(row.id, newStatus)
+    row.status = newStatus
+    updateStats()
+    const statusText = newStatus === 'ACTIVE' ? '上架' : '下架'
+    ElMessage.success(`商品已${statusText}`)
+  } catch (error) {
+    ElMessage.error('状态更新失败')
+  }
 }
 
 // 提交表单
 function handleSubmit() {
-  formRef.value.validate((valid) => {
+  formRef.value.validate(async (valid) => {
     if (valid) {
       submitting.value = true
-      setTimeout(() => {
+      try {
+        // 构建提交数据，确保数字字段为数字类型
+        const submitData = {
+          ...form,
+          originalPrice: Number(form.originalPrice),
+          stock: Number(form.stock),
+          sortOrder: Number(form.sortOrder),
+          pointsDiscountValue: Number(form.pointsDiscountValue || 0),
+          maxPointsDiscount: Number(form.maxPointsDiscount || 0)
+        }
+        console.log('提交数据:', submitData)
         if (isEdit.value) {
+          const res = await updateAdminProduct(form.id, submitData)
           const index = tableData.value.findIndex(item => item.id === form.id)
           if (index > -1) {
-            tableData.value[index] = { ...form }
+            tableData.value[index] = { ...tableData.value[index], ...res }
           }
           ElMessage.success('编辑成功')
         } else {
+          const res = await createAdminProduct(submitData)
           const newProduct = {
-            ...form,
-            id: Date.now(),
+            ...res,
             sales: 0
           }
           tableData.value.unshift(newProduct)
           pagination.total++
           ElMessage.success('新增成功')
         }
-        submitting.value = false
+        updateStats()
         dialogVisible.value = false
-      }, 500)
+      } catch (error) {
+        console.error(isEdit.value ? '编辑失败:' : '新增失败:', error)
+        const errorMsg = error.response?.data?.message || error.message || '未知错误'
+        ElMessage.error(isEdit.value ? '编辑失败: ' + errorMsg : '新增失败: ' + errorMsg)
+      } finally {
+        submitting.value = false
+      }
     }
   })
 }
 
 // 图片上传
-function handleImageChange(file) {
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.image = e.target.result
+async function handleImageChange(file) {
+  // 上传图片到服务器
+  try {
+    const formData = new FormData()
+    formData.append('file', file.raw)
+    const res = await uploadImage(formData)
+    if (res && res.fileUrl) {
+      form.imageUrl = res.fileUrl
+      ElMessage.success('图片上传成功')
+    } else {
+      throw new Error('上传响应无效')
+    }
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    ElMessage.error('图片上传失败，请重试')
+    form.imageUrl = ''
   }
-  reader.readAsDataURL(file.raw)
 }
 
 // 库存管理
@@ -633,24 +670,30 @@ function handleStock(row) {
 }
 
 // 提交库存操作
-function handleStockSubmit() {
+async function handleStockSubmit() {
   stockSubmitting.value = true
-  setTimeout(() => {
-    if (stockForm.type === 'IN') {
-      currentProduct.value.stock += stockForm.quantity
-      ElMessage.success(`成功入库 ${stockForm.quantity} 件`)
-    } else {
-      if (currentProduct.value.stock < stockForm.quantity) {
-        ElMessage.error('库存不足')
-        stockSubmitting.value = false
-        return
-      }
-      currentProduct.value.stock -= stockForm.quantity
-      ElMessage.success(`成功出库 ${stockForm.quantity} 件`)
+  try {
+    const res = await updateAdminProductStock(currentProduct.value.id, {
+      type: stockForm.type,
+      quantity: stockForm.quantity,
+      remark: stockForm.remark
+    })
+    
+    // 更新本地数据
+    const index = tableData.value.findIndex(item => item.id === currentProduct.value.id)
+    if (index > -1) {
+      tableData.value[index].stock = res.stock
     }
-    stockSubmitting.value = false
+    
+    const actionText = stockForm.type === 'IN' ? '入库' : '出库'
+    ElMessage.success(`成功${actionText} ${stockForm.quantity} 件`)
     stockDialogVisible.value = false
-  }, 500)
+    updateStats()
+  } catch (error) {
+    ElMessage.error(error.message || '库存操作失败')
+  } finally {
+    stockSubmitting.value = false
+  }
 }
 
 // 分页

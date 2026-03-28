@@ -56,6 +56,12 @@ public class User {
     private Integer status;
 
     /**
+     * 积分余额
+     */
+    @TableField("points")
+    private Integer points;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

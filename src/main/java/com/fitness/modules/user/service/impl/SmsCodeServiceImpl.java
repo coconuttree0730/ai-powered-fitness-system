@@ -22,6 +22,7 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     // Redis键前缀
     private static final String SMS_CODE_KEY_PREFIX = "sms:code:";
     private static final String SMS_CODE_COOLDOWN_KEY_PREFIX = "sms:cooldown:";
+    private static final String SMS_CODE_DAILY_COUNT_KEY_PREFIX = "sms:daily:count:";
 
     // 验证码过期时间（5分钟）
     private static final long CODE_EXPIRE_MINUTES = 5;
@@ -29,6 +30,8 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     private static final long COOLDOWN_SECONDS = 60;
     // 验证码长度
     private static final int CODE_LENGTH = 6;
+    // 每日发送限制次数
+    private static final int DAILY_LIMIT = 5;
 
     @Override
     public boolean sendSmsCode(String phone) {
@@ -38,18 +41,27 @@ public class SmsCodeServiceImpl implements SmsCodeService {
             return false;
         }
 
-        // 2. 生成6位数字验证码
+        // 2. 检查每日发送限制
+        if (isDailyLimitExceeded(phone)) {
+            log.warn("短信验证码发送超过每日限制: phone={}", phone);
+            return false;
+        }
+
+        // 3. 生成6位数字验证码
         String code = generateCode();
 
-        // 3. 存储验证码到Redis
+        // 4. 存储验证码到Redis
         String codeKey = SMS_CODE_KEY_PREFIX + phone;
         redisTemplate.opsForValue().set(codeKey, code, CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
 
-        // 4. 设置冷却时间
+        // 5. 设置冷却时间
         String cooldownKey = SMS_CODE_COOLDOWN_KEY_PREFIX + phone;
         redisTemplate.opsForValue().set(cooldownKey, "1", COOLDOWN_SECONDS, TimeUnit.SECONDS);
 
-        // 5. 模拟发送短信（后续接入真实短信服务）
+        // 6. 增加每日发送次数
+        incrementDailyCount(phone);
+
+        // 7. 模拟发送短信（后续接入真实短信服务）
         log.info("短信验证码发送成功: phone={}, code={}", phone, code);
 
         return true;
@@ -89,6 +101,55 @@ public class SmsCodeServiceImpl implements SmsCodeService {
         String cooldownKey = SMS_CODE_COOLDOWN_KEY_PREFIX + phone;
         Long expire = redisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
         return expire != null && expire > 0 ? expire : 0;
+    }
+
+    @Override
+    public boolean isDailyLimitExceeded(String phone) {
+        String dailyCountKey = SMS_CODE_DAILY_COUNT_KEY_PREFIX + phone;
+        String countStr = redisTemplate.opsForValue().get(dailyCountKey);
+        if (countStr == null) {
+            return false;
+        }
+        int count = Integer.parseInt(countStr);
+        return count >= DAILY_LIMIT;
+    }
+
+    @Override
+    public int getRemainingDailyCount(String phone) {
+        String dailyCountKey = SMS_CODE_DAILY_COUNT_KEY_PREFIX + phone;
+        String countStr = redisTemplate.opsForValue().get(dailyCountKey);
+        if (countStr == null) {
+            return DAILY_LIMIT;
+        }
+        int count = Integer.parseInt(countStr);
+        return Math.max(0, DAILY_LIMIT - count);
+    }
+
+    /**
+     * 增加每日发送次数
+     *
+     * @param phone 手机号
+     */
+    private void incrementDailyCount(String phone) {
+        String dailyCountKey = SMS_CODE_DAILY_COUNT_KEY_PREFIX + phone;
+        String countStr = redisTemplate.opsForValue().get(dailyCountKey);
+        int count = countStr == null ? 0 : Integer.parseInt(countStr);
+
+        // 计算到今天结束剩余的秒数
+        long secondsUntilMidnight = getSecondsUntilMidnight();
+
+        redisTemplate.opsForValue().set(dailyCountKey, String.valueOf(count + 1), secondsUntilMidnight, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 获取距离今天结束剩余的秒数
+     *
+     * @return 剩余秒数
+     */
+    private long getSecondsUntilMidnight() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime midnight = now.toLocalDate().atStartOfDay().plusDays(1);
+        return java.time.Duration.between(now, midnight).getSeconds();
     }
 
     /**

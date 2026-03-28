@@ -96,7 +96,7 @@
       class="buy-modal"
     >
       <div class="buy-modal-content">
-        <div class="modal-card-icon">{{ selectedCard?.icon }}</div>
+        <div class="modal-card-icon" v-html="selectedCard?.icon"></div>
         <h3>{{ selectedCard?.name }}</h3>
         <p class="duration">{{ selectedCard?.duration }}</p>
         <p class="price">¥{{ selectedCard?.price }}</p>
@@ -628,6 +628,10 @@ function confirmPay() {
 .modal-card-icon {
   font-size: 48px;
   margin-bottom: 12px;
+  color: #FF6B35;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .buy-modal-content h3 {

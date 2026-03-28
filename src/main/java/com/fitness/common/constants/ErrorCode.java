@@ -19,6 +19,12 @@ public enum ErrorCode {
     SMS_CODE_EXPIRED(1005, "短信验证码已过期"),
     SMS_CODE_SEND_TOO_FREQUENT(1006, "短信验证码发送过于频繁"),
     PHONE_NOT_BOUND(1007, "手机号未绑定用户"),
+    USERNAME_ALREADY_EXISTS(1008, "用户名已存在"),
+    PHONE_ALREADY_BOUND(1009, "手机号已被其他用户绑定"),
+    EMAIL_ALREADY_BOUND(1010, "邮箱已被其他用户绑定"),
+    EMAIL_CODE_ERROR(1011, "邮箱验证码错误"),
+    OLD_PHONE_VERIFY_REQUIRED(1012, "请先验证原手机号"),
+    SMS_CODE_DAILY_LIMIT_EXCEEDED(1013, "今日短信验证码发送次数已达上限，请明天再试"),
 
     COURSE_NOT_FOUND(2001, "课程不存在"),
     COURSE_FULL(2002, "课程已满"),
@@ -42,7 +48,13 @@ public enum ErrorCode {
     FILE_TOO_LARGE(5003, "文件大小超过限制"),
     FILE_NOT_FOUND(5004, "文件不存在"),
 
-    ANALYSIS_ERROR(6001, "数据分析失败");
+    ANALYSIS_ERROR(6001, "数据分析失败"),
+
+    PRODUCT_NOT_FOUND(7001, "商品不存在"),
+    PRODUCT_STOCK_INSUFFICIENT(7002, "商品库存不足"),
+    POINTS_INSUFFICIENT(7003, "积分不足"),
+    ORDER_NOT_FOUND(7004, "订单不存在"),
+    ORDER_STATUS_ERROR(7005, "订单状态错误");
 
     private final Integer code;
     private final String message;

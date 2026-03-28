@@ -93,7 +93,7 @@ const routes = [
         path: 'store',
         name: 'MemberStore',
         component: () => import('@/views/member/Store.vue'),
-        meta: { title: '积分商城' }
+        meta: { title: '购物中心' }
       }
     ]
   },

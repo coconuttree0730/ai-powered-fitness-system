@@ -131,11 +131,11 @@
           </div>
         </el-tab-pane>
 
-        <!-- 积分兑换管理 -->
-        <el-tab-pane name="points-exchange">
+        <!-- 商品订单管理 -->
+        <el-tab-pane name="product-order">
           <template #label>
             <span class="tab-label">
-              <el-icon><Coin /></el-icon>积分兑换
+              <el-icon><ShoppingCart /></el-icon>商品订单
             </span>
           </template>
           <div class="tab-content">
@@ -186,7 +186,7 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column label="兑换商品" min-width="150">
+              <el-table-column label="商品" min-width="150">
                 <template #default="{ row }">
                   <div class="product-info">
                     <div class="product-name">{{ row.productName }}</div>
@@ -194,12 +194,28 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="points" label="消耗积分" width="120">
+              <el-table-column label="原价" width="100">
                 <template #default="{ row }">
-                  <span class="points">{{ row.points }} 积分</span>
+                  <span style="text-decoration: line-through; color: #999;">¥{{ (row.originalPrice * row.quantity).toFixed(2) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="createTime" label="兑换时间" width="160" />
+              <el-table-column label="积分抵扣" width="100">
+                <template #default="{ row }">
+                  <span v-if="row.pointsDiscount > 0" style="color: #FF6B35;">-¥{{ row.pointsDiscount }}</span>
+                  <span v-else>-</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="实付金额" width="100">
+                <template #default="{ row }">
+                  <span style="color: #FF6B35; font-weight: 600;">¥{{ row.payAmount }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="payMethod" label="支付方式" width="100">
+                <template #default="{ row }">
+                  <el-tag size="small">{{ row.payMethod }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="createTime" label="下单时间" width="160" />
               <el-table-column prop="status" label="状态" width="100">
                 <template #default="{ row }">
                   <el-tag :type="getExchangeStatusType(row.status)">{{ getExchangeStatusLabel(row.status) }}</el-tag>
@@ -211,9 +227,9 @@
                     <el-icon><View /></el-icon>查看
                   </el-button>
                   <el-button v-if="row.status === 'PENDING'" type="success" link @click="handleProcessPointsExchange(row)">
-                    <el-icon><Check /></el-icon>处理
+                    <el-icon><Check /></el-icon>确认
                   </el-button>
-                  <el-button v-if="row.status === 'PROCESSING'" type="warning" link @click="handleShipPointsExchange(row)">
+                  <el-button v-if="row.status === 'PAID'" type="warning" link @click="handleShipPointsExchange(row)">
                     <el-icon><Box /></el-icon>发货
                   </el-button>
                 </template>
@@ -349,7 +365,7 @@ const stats = ref([
   { title: '今日订单', value: 28, icon: 'ShoppingCart', color: '#1890ff' },
   { title: '今日收入', value: '¥12,580', icon: 'TrendCharts', color: '#52c41a' },
   { title: '待处理', value: 5, icon: 'User', color: '#faad14' },
-  { title: '积分兑换', value: 12, icon: 'Coin', color: '#722ed1' }
+  { title: '商品订单', value: 12, icon: 'ShoppingCart', color: '#722ed1' }
 ])
 
 // 当前标签页

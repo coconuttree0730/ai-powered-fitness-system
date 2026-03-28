@@ -751,6 +751,7 @@ import { useAuthStore } from '@/stores/auth'
 import { getHomePageCourses } from '@/api/course'
 import { getHomePageCoaches } from '@/api/coachDetail'
 import { getActiveBanners } from '@/api/banner'
+import { getPublishedAnnouncements } from '@/api/announcement'
 import LoginModal from '@/components/LoginModal.vue'
 import RegisterModal from '@/components/RegisterModal.vue'
 
@@ -889,16 +890,62 @@ const stats = [
 ]
 
 // 滚动公告
-const marqueeItems = [
-  '今日起暂停营业，<strong>3.19 - 3.23</strong> 门店进行设备维护升级',
-  '<span class="marquee-notice-divider">|</span>',
-  '会员有效期将自动顺延 <strong>5天</strong>，给您带来不便敬请谅解',
-  '<span class="marquee-notice-divider">|</span>',
-  '线上课程正常开放，欢迎下载APP继续锻炼',
-  '<span class="marquee-notice-divider">|</span>',
-  '客服热线 <strong>400-888-9999</strong> 全天候为您服务',
-  '<span class="marquee-notice-divider">|</span>'
-]
+const marqueeItems = ref([])
+const announcementsLoading = ref(false)
+
+// 获取公告数据
+async function fetchAnnouncements() {
+  announcementsLoading.value = true
+  try {
+    const data = await getPublishedAnnouncements()
+    if (Array.isArray(data) && data.length > 0) {
+      // 将公告数据转换为跑马灯格式
+      const items = []
+      data.forEach((announcement, index) => {
+        // 根据类型添加标签样式
+        let content = announcement.content
+        // 限制内容长度，避免过长
+        if (content.length > 50) {
+          content = content.substring(0, 50) + '...'
+        }
+        items.push(`<span class="announcement-type type-${announcement.type.toLowerCase()}">[${getAnnouncementTypeLabel(announcement.type)}]</span> ${content}`)
+        // 在每个公告后添加分隔符（除了最后一个）
+        if (index < data.length - 1) {
+          items.push('<span class="marquee-notice-divider">|</span>')
+        }
+      })
+      marqueeItems.value = items
+    } else {
+      // 如果没有公告，使用默认数据
+      marqueeItems.value = getDefaultMarqueeItems()
+    }
+  } catch (error) {
+    console.error('获取公告数据失败:', error)
+    marqueeItems.value = getDefaultMarqueeItems()
+  } finally {
+    announcementsLoading.value = false
+  }
+}
+
+// 获取公告类型标签
+function getAnnouncementTypeLabel(type) {
+  const typeMap = {
+    'SYSTEM': '系统',
+    'ACTIVITY': '活动',
+    'IMPORTANT': '重要'
+  }
+  return typeMap[type] || type
+}
+
+// 默认跑马灯数据
+function getDefaultMarqueeItems() {
+  return [
+    '新用户注册即送7天VIP会员体验！',
+    '<span class="marquee-notice-divider">|</span>',
+    '客服热线 <strong>400-888-9999</strong> 全天候为您服务',
+    '<span class="marquee-notice-divider">|</span>'
+  ]
+}
 
 // 品牌理念
 const philosophyValues = [
@@ -1462,6 +1509,9 @@ onMounted(() => {
 
   // 获取首页教练数据
   fetchHomePageCoaches()
+
+  // 获取公告数据
+  fetchAnnouncements()
 })
 
 onUnmounted(() => {
@@ -2301,6 +2351,34 @@ const vIntersect = {
 .marquee-notice-divider {
   color: rgba(255, 255, 255, 0.4);
   font-weight: 300;
+}
+
+/* 公告类型标签样式 */
+.announcement-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.announcement-type.type-system {
+  background: rgba(59, 130, 246, 0.3);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+.announcement-type.type-activity {
+  background: rgba(34, 197, 94, 0.3);
+  color: #4ADE80;
+  border: 1px solid rgba(34, 197, 94, 0.5);
+}
+
+.announcement-type.type-important {
+  background: rgba(239, 68, 68, 0.3);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
 .marquee-notice-close {

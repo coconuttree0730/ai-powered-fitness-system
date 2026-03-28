@@ -314,16 +314,36 @@
       </div>
     </div>
 
-    <!-- 绑定手机弹窗 -->
-    <n-modal v-model:show="showBindPhoneModal" title="绑定手机号" preset="card" style="width: 400px">
-      <n-form :model="phoneForm" :rules="phoneRules">
-        <n-form-item label="手机号" path="phone">
-          <n-input v-model:value="phoneForm.phone" placeholder="请输入手机号" />
+    <!-- 绑定/更换手机弹窗 -->
+    <n-modal v-model:show="showBindPhoneModal" :title="userInfo.phone ? '更换手机号' : '绑定手机号'" preset="card" style="width: 400px">
+      <n-steps :current="phoneStep" size="small">
+        <n-step title="验证原手机号" v-if="userInfo.phone" />
+        <n-step title="绑定新手机号" />
+      </n-steps>
+      <n-divider />
+      <!-- 步骤1: 验证原手机号 -->
+      <n-form v-if="userInfo.phone && phoneStep === 1" :model="phoneForm">
+        <n-form-item label="原手机号">
+          <n-input :value="maskPhone(userInfo.phone)" disabled />
+        </n-form-item>
+        <n-form-item label="验证码">
+          <n-input-group>
+            <n-input v-model:value="phoneForm.oldCode" placeholder="请输入原手机号验证码" />
+            <n-button :disabled="oldCountdown > 0" @click="sendOldPhoneCodeFn">
+              {{ oldCountdown > 0 ? `${oldCountdown}s` : '获取验证码' }}
+            </n-button>
+          </n-input-group>
+        </n-form-item>
+      </n-form>
+      <!-- 步骤2: 绑定新手机号 -->
+      <n-form v-else :model="phoneForm" :rules="phoneRules">
+        <n-form-item label="新手机号" path="phone">
+          <n-input v-model:value="phoneForm.phone" placeholder="请输入新手机号" />
         </n-form-item>
         <n-form-item label="验证码" path="code">
           <n-input-group>
             <n-input v-model:value="phoneForm.code" placeholder="请输入验证码" />
-            <n-button :disabled="countdown > 0" @click="sendCode">
+            <n-button :disabled="countdown > 0" @click="sendNewPhoneCodeFn">
               {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
             </n-button>
           </n-input-group>
@@ -331,8 +351,11 @@
       </n-form>
       <template #footer>
         <n-space justify="end">
-          <n-button @click="showBindPhoneModal = false">取消</n-button>
-          <n-button type="primary" @click="confirmBindPhone">确认绑定</n-button>
+          <n-button @click="closePhoneModal">取消</n-button>
+          <n-button v-if="userInfo.phone && phoneStep === 1" type="primary" @click="goToNextPhoneStep">
+            下一步
+          </n-button>
+          <n-button v-else type="primary" :loading="bindingPhone" @click="confirmBindPhone">确认绑定</n-button>
         </n-space>
       </template>
     </n-modal>
@@ -346,7 +369,7 @@
         <n-form-item label="验证码">
           <n-input-group>
             <n-input v-model:value="emailForm.code" placeholder="请输入验证码" />
-            <n-button :disabled="emailCountdown > 0" @click="sendEmailCode">
+            <n-button :disabled="emailCountdown > 0" @click="sendEmailCodeFn">
               {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
             </n-button>
           </n-input-group>
@@ -405,36 +428,71 @@
 
     <!-- 修改密码弹窗 -->
     <n-modal v-model:show="showChangePasswordModal" title="修改密码" preset="card" style="width: 400px">
-      <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules">
-        <n-form-item label="当前密码" path="oldPassword">
-          <n-input
-            v-model:value="passwordForm.oldPassword"
-            type="password"
-            placeholder="请输入当前密码"
-            show-password-on="mousedown"
-          />
+      <n-alert v-if="passwordDailyLimitReached" type="warning" style="margin-bottom: 16px;">
+        今日短信验证码发送次数已达上限（5次），请明天再试
+      </n-alert>
+
+      <n-form ref="smsPasswordFormRef" :model="smsPasswordForm" :rules="smsPasswordRules">
+        <n-form-item label="手机号">
+          <n-input :value="maskPhone(userInfo.phone)" disabled />
+        </n-form-item>
+        <n-form-item label="验证码" path="smsCode">
+          <n-input-group>
+            <n-input
+              v-model:value="smsPasswordForm.smsCode"
+              placeholder="请输入短信验证码"
+              :disabled="passwordDailyLimitReached"
+            />
+            <n-button
+              :disabled="passwordSmsCountdown > 0 || passwordDailyLimitReached"
+              @click="sendPasswordSmsCode"
+            >
+              <template v-if="passwordDailyLimitReached">
+                今日已达上限
+              </template>
+              <template v-else-if="passwordSmsCountdown > 0">
+                {{ passwordSmsCountdown }}s
+              </template>
+              <template v-else>
+                获取验证码
+              </template>
+            </n-button>
+          </n-input-group>
+          <div v-if="!passwordDailyLimitReached && passwordRemainingDailyCount > 0" class="daily-limit-hint">
+            今日还可发送 {{ passwordRemainingDailyCount }} 次
+          </div>
         </n-form-item>
         <n-form-item label="新密码" path="newPassword">
           <n-input
-            v-model:value="passwordForm.newPassword"
+            v-model:value="smsPasswordForm.newPassword"
             type="password"
             placeholder="请输入新密码（6-20位）"
             show-password-on="mousedown"
+            :disabled="passwordDailyLimitReached"
           />
         </n-form-item>
         <n-form-item label="确认新密码" path="confirmPassword">
           <n-input
-            v-model:value="passwordForm.confirmPassword"
+            v-model:value="smsPasswordForm.confirmPassword"
             type="password"
             placeholder="请再次输入新密码"
             show-password-on="mousedown"
+            :disabled="passwordDailyLimitReached"
           />
         </n-form-item>
       </n-form>
+
       <template #footer>
         <n-space justify="end">
           <n-button @click="showChangePasswordModal = false">取消</n-button>
-          <n-button type="primary" :loading="changingPassword" @click="confirmChangePassword">确认修改</n-button>
+          <n-button
+            type="primary"
+            :loading="changingPassword"
+            :disabled="passwordDailyLimitReached"
+            @click="confirmChangePassword"
+          >
+            确认修改
+          </n-button>
         </n-space>
       </template>
     </n-modal>
@@ -456,7 +514,17 @@ import {
   InformationCircleOutline
 } from '@vicons/ionicons5'
 import { getProfile, updateProfile } from '@/api/plan'
-import request from '@/utils/request'
+import {
+  getCurrentUser,
+  updateUsername,
+  sendOldPhoneCode,
+  sendNewPhoneCode,
+  updatePhone,
+  sendEmailCode,
+  updateEmail,
+  sendPasswordChangeCode,
+  updatePasswordBySms
+} from '@/api/user'
 
 const router = useRouter()
 const message = useMessage()
@@ -504,20 +572,29 @@ const showRechargeModal = ref(false)
 const showChangePasswordModal = ref(false)
 
 // 表单数据
-const phoneForm = reactive({ phone: '', code: '' })
+const phoneForm = reactive({ phone: '', code: '', oldCode: '' })
 const emailForm = reactive({ email: '', code: '' })
 const verifyForm = reactive({ realName: '', idCard: '' })
 const rechargeForm = reactive({ amount: 100, payment: 'alipay' })
-const passwordForm = reactive({
-  oldPassword: '',
+// 短信验证码修改密码表单
+const smsPasswordForm = reactive({
+  smsCode: '',
   newPassword: '',
   confirmPassword: ''
 })
-const passwordFormRef = ref(null)
+const smsPasswordFormRef = ref(null)
 const changingPassword = ref(false)
+const passwordSmsCountdown = ref(0)
+const passwordDailyLimitReached = ref(false)
+const passwordRemainingDailyCount = ref(5)
+
+// 手机绑定步骤
+const phoneStep = ref(1)
+const bindingPhone = ref(false)
 
 // 倒计时
 const countdown = ref(0)
+const oldCountdown = ref(0)
 const emailCountdown = ref(0)
 
 // 钱包信息
@@ -558,9 +635,9 @@ const phoneRules = {
   code: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
 }
 
-const passwordRules = {
-  oldPassword: [
-    { required: true, message: '请输入当前密码', trigger: 'blur' }
+const smsPasswordRules = {
+  smsCode: [
+    { required: true, message: '请输入短信验证码', trigger: 'blur' }
   ],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
@@ -570,7 +647,7 @@ const passwordRules = {
     { required: true, message: '请确认新密码', trigger: 'blur' },
     {
       validator: (rule, value) => {
-        return value === passwordForm.newPassword
+        return value === smsPasswordForm.newPassword
       },
       message: '两次输入的密码不一致',
       trigger: 'blur'
@@ -580,20 +657,33 @@ const passwordRules = {
 
 // 初始化
 onMounted(() => {
-  // 从 authStore 获取用户信息
-  if (authStore.userInfo) {
-    Object.assign(userInfo, authStore.userInfo)
-  }
+  // 获取最新用户信息
+  fetchUserInfo()
   // 获取健身档案
   fetchFitnessProfile()
 })
 
+// 获取用户信息
+async function fetchUserInfo() {
+  try {
+    const res = await getCurrentUser()
+    if (res) {
+      Object.assign(userInfo, res)
+      // 同步更新 authStore
+      authStore.userInfo = res
+      localStorage.setItem('userInfo', JSON.stringify(res))
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  }
+}
+
 // 获取健身档案
 async function fetchFitnessProfile() {
   try {
-    const res = await getProfile()
-    if (res.data) {
-      Object.assign(fitnessForm, res.data)
+    const data = await getProfile()
+    if (data) {
+      Object.assign(fitnessForm, data)
     }
   } catch (error) {
     console.error('获取健身档案失败:', error)
@@ -626,11 +716,23 @@ function toggleEdit(field) {
 }
 
 // 保存字段
-function saveField(field) {
+async function saveField(field) {
   if (field === 'name') {
     if (editForm.username && editForm.username !== userInfo.username) {
-      userInfo.username = editForm.username
-      message.success('姓名已更新')
+      try {
+        const res = await updateUsername(editForm.username)
+        if (res) {
+          Object.assign(userInfo, res)
+          // 同步更新 authStore
+          authStore.userInfo = res
+          localStorage.setItem('userInfo', JSON.stringify(res))
+          message.success('用户名已更新')
+        }
+      } catch (error) {
+        message.error(error.message || '用户名更新失败')
+        // 恢复原用户名
+        editForm.username = userInfo.username
+      }
     }
   }
   editingField[field] = false
@@ -680,52 +782,170 @@ function handleAvatarUpload(e) {
   reader.readAsDataURL(file)
 }
 
-// 发送验证码
-function sendCode() {
-  if (!phoneForm.phone) {
-    message.error('请输入手机号')
-    return
-  }
-  countdown.value = 60
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
-  message.success('验证码已发送')
+// 关闭手机弹窗
+function closePhoneModal() {
+  showBindPhoneModal.value = false
+  phoneStep.value = 1
+  phoneForm.phone = ''
+  phoneForm.code = ''
+  phoneForm.oldCode = ''
 }
 
-function sendEmailCode() {
+// 进入下一步
+function goToNextPhoneStep() {
+  if (!phoneForm.oldCode) {
+    message.error('请输入原手机号验证码')
+    return
+  }
+  phoneStep.value = 2
+}
+
+// 发送原手机号验证码
+async function sendOldPhoneCodeFn() {
+  try {
+    const res = await sendOldPhoneCode()
+    if (res && res.remainingSeconds) {
+      oldCountdown.value = res.remainingSeconds
+      const timer = setInterval(() => {
+        oldCountdown.value--
+        if (oldCountdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+    }
+    message.success('验证码已发送到原手机号')
+  } catch (error) {
+    message.error(error.message || '验证码发送失败')
+  }
+}
+
+// 发送新手机号验证码
+async function sendNewPhoneCodeFn() {
+  if (!phoneForm.phone) {
+    message.error('请输入新手机号')
+    return
+  }
+  // 简单验证手机号格式
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(phoneForm.phone)) {
+    message.error('手机号格式不正确')
+    return
+  }
+  try {
+    const res = await sendNewPhoneCode(phoneForm.phone)
+    if (res && res.remainingSeconds) {
+      countdown.value = res.remainingSeconds
+      const timer = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+    }
+    message.success('验证码已发送到新手机号')
+  } catch (error) {
+    message.error(error.message || '验证码发送失败')
+  }
+}
+
+// 发送邮箱验证码
+async function sendEmailCodeFn() {
   if (!emailForm.email) {
     message.error('请输入邮箱地址')
     return
   }
-  emailCountdown.value = 60
-  const timer = setInterval(() => {
-    emailCountdown.value--
-    if (emailCountdown.value <= 0) {
-      clearInterval(timer)
+  // 简单验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(emailForm.email)) {
+    message.error('邮箱格式不正确')
+    return
+  }
+  try {
+    const res = await sendEmailCode(emailForm.email)
+    if (res && res.remainingSeconds) {
+      emailCountdown.value = res.remainingSeconds
+      const timer = setInterval(() => {
+        emailCountdown.value--
+        if (emailCountdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
     }
-  }, 1000)
-  message.success('验证码已发送')
+    message.success('验证码已发送到邮箱')
+  } catch (error) {
+    message.error(error.message || '验证码发送失败')
+  }
 }
 
-// 确认绑定
-function confirmBindPhone() {
+// 确认绑定手机号
+async function confirmBindPhone() {
+  if (!phoneForm.phone) {
+    message.error('请输入新手机号')
+    return
+  }
   if (!phoneForm.code) {
     message.error('请输入验证码')
     return
   }
-  userInfo.phone = phoneForm.phone
-  showBindPhoneModal.value = false
-  message.success('手机号绑定成功')
+  // 如果是更换手机号，需要验证原手机号验证码
+  const oldCode = userInfo.phone ? phoneForm.oldCode : ''
+  if (userInfo.phone && !oldCode) {
+    message.error('请先完成原手机号验证')
+    phoneStep.value = 1
+    return
+  }
+
+  try {
+    bindingPhone.value = true
+    const res = await updatePhone({
+      phone: phoneForm.phone,
+      code: phoneForm.code,
+      oldCode: oldCode
+    })
+    if (res) {
+      Object.assign(userInfo, res)
+      // 同步更新 authStore
+      authStore.userInfo = res
+      localStorage.setItem('userInfo', JSON.stringify(res))
+      message.success(userInfo.phone ? '手机号更换成功' : '手机号绑定成功')
+      closePhoneModal()
+    }
+  } catch (error) {
+    message.error(error.message || '手机号绑定失败')
+  } finally {
+    bindingPhone.value = false
+  }
 }
 
-function confirmBindEmail() {
-  userInfo.email = emailForm.email
-  showBindEmailModal.value = false
-  message.success('邮箱绑定成功')
+// 确认绑定邮箱
+async function confirmBindEmail() {
+  if (!emailForm.email) {
+    message.error('请输入邮箱地址')
+    return
+  }
+  if (!emailForm.code) {
+    message.error('请输入验证码')
+    return
+  }
+
+  try {
+    const res = await updateEmail({
+      email: emailForm.email,
+      code: emailForm.code
+    })
+    if (res) {
+      Object.assign(userInfo, res)
+      // 同步更新 authStore
+      authStore.userInfo = res
+      localStorage.setItem('userInfo', JSON.stringify(res))
+      message.success(userInfo.email ? '邮箱更换成功' : '邮箱绑定成功')
+      showBindEmailModal.value = false
+      emailForm.email = ''
+      emailForm.code = ''
+    }
+  } catch (error) {
+    message.error(error.message || '邮箱绑定失败')
+  }
 }
 
 // 微信绑定/解绑
@@ -757,41 +977,60 @@ function confirmRecharge() {
   showRechargeModal.value = false
 }
 
+// 发送修改密码短信验证码
+async function sendPasswordSmsCode() {
+  if (!userInfo.phone) {
+    message.error('当前用户未绑定手机号')
+    return
+  }
+  try {
+    const res = await sendPasswordChangeCode()
+    if (res && res.remainingSeconds) {
+      passwordSmsCountdown.value = res.remainingSeconds
+      const timer = setInterval(() => {
+        passwordSmsCountdown.value--
+        if (passwordSmsCountdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+    }
+    // 更新剩余次数
+    if (res && res.remainingDailyCount !== undefined) {
+      passwordRemainingDailyCount.value = res.remainingDailyCount
+      if (res.remainingDailyCount === 0) {
+        passwordDailyLimitReached.value = true
+      }
+    }
+    message.success('验证码已发送到您的手机号')
+  } catch (error) {
+    // 检查是否是每日限制错误
+    if (error.code === 1013) {
+      passwordDailyLimitReached.value = true
+      passwordRemainingDailyCount.value = 0
+    }
+    message.error(error.message || '验证码发送失败')
+  }
+}
+
 // 修改密码
 async function confirmChangePassword() {
   try {
-    await passwordFormRef.value?.validate()
     changingPassword.value = true
 
-    // 调用修改密码API
-    const { data } = await request({
-      url: '/api/v1/users/password',
-      method: 'put',
-      data: {
-        oldPassword: passwordForm.oldPassword,
-        newPassword: passwordForm.newPassword
-      }
+    await smsPasswordFormRef.value?.validate()
+    await updatePasswordBySms({
+      smsCode: smsPasswordForm.smsCode,
+      newPassword: smsPasswordForm.newPassword
     })
 
-    if (data.code === 200) {
-      message.success('密码修改成功，请使用新密码重新登录')
-      showChangePasswordModal.value = false
-      // 清空表单
-      passwordForm.oldPassword = ''
-      passwordForm.newPassword = ''
-      passwordForm.confirmPassword = ''
-      // 可选：退出登录
-      // authStore.logout()
-      // router.push('/login')
-    } else {
-      message.error(data.message || '密码修改失败')
-    }
+    message.success('密码修改成功')
+    showChangePasswordModal.value = false
+    // 清空表单
+    smsPasswordForm.smsCode = ''
+    smsPasswordForm.newPassword = ''
+    smsPasswordForm.confirmPassword = ''
   } catch (error) {
-    if (error.response?.data?.message) {
-      message.error(error.response.data.message)
-    } else if (error.message) {
-      message.error(error.message)
-    }
+    message.error(error.message || '密码修改失败')
   } finally {
     changingPassword.value = false
   }
@@ -1240,5 +1479,12 @@ async function confirmChangePassword() {
     width: 100%;
     justify-content: flex-end;
   }
+}
+
+/* 每日限制提示 */
+.daily-limit-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
 }
 </style>

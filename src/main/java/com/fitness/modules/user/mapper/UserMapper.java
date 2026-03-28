@@ -33,6 +33,15 @@ public interface UserMapper extends BaseMapper<User> {
     User selectByPhone(@Param("phone") String phone);
 
     /**
+     * 根据邮箱查询用户
+     *
+     * @param email 邮箱
+     * @return 用户信息
+     */
+    @Select("SELECT * FROM sys_user WHERE email = #{email} AND deleted = false")
+    User selectByEmail(@Param("email") String email);
+
+    /**
      * 根据用户ID查询角色列表
      *
      * @param userId 用户ID

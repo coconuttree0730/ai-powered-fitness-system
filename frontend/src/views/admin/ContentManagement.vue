@@ -142,19 +142,22 @@
               <el-table-column prop="publishTime" label="发布时间" width="160" />
               <el-table-column prop="status" label="状态" width="100">
                 <template #default="{ row }">
-                  <el-tag :type="row.status === 'PUBLISHED' ? 'success' : 'info'">
-                    {{ row.status === 'PUBLISHED' ? '已发布' : '草稿' }}
+                  <el-tag :type="row.status === 1 ? 'success' : 'info'">
+                    {{ row.status === 1 ? '已发布' : '草稿' }}
                   </el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="viewCount" label="浏览量" width="100" align="center" />
-              <el-table-column label="操作" width="180" fixed="right">
+              <el-table-column label="操作" width="200" fixed="right">
                 <template #default="{ row }">
                   <el-button type="primary" link @click="handleEditNotice(row)">
                     <el-icon><Edit /></el-icon>编辑
                   </el-button>
-                  <el-button type="success" link v-if="row.status === 'DRAFT'" @click="handlePublishNotice(row)">
+                  <el-button type="success" link v-if="row.status === 0" @click="handlePublishNotice(row)">
                     <el-icon><Promotion /></el-icon>发布
+                  </el-button>
+                  <el-button type="warning" link v-else @click="handleUnpublishNotice(row)">
+                    <el-icon><Promotion /></el-icon>下架
                   </el-button>
                   <el-button type="danger" link @click="handleDeleteNotice(row)">
                     <el-icon><Delete /></el-icon>删除
@@ -226,11 +229,11 @@
           </div>
         </el-tab-pane>
 
-        <!-- 积分商城展示管理 -->
+        <!-- 购物中心展示管理 -->
         <el-tab-pane name="store-display">
           <template #label>
             <span class="tab-label">
-              <el-icon><ShoppingCart /></el-icon>积分商城展示
+              <el-icon><ShoppingCart /></el-icon>购物中心展示
             </span>
           </template>
           <div class="tab-content">
@@ -367,11 +370,17 @@
             placeholder="请输入公告内容"
           />
         </el-form-item>
-        <el-form-item label="发布时间" prop="publishTime">
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="noticeForm.status">
+            <el-radio :label="0">草稿</el-radio>
+            <el-radio :label="1">立即发布</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="发布时间" prop="publishTime" v-if="noticeForm.status === 0">
           <el-date-picker
             v-model="noticeForm.publishTime"
             type="datetime"
-            placeholder="选择发布时间"
+            placeholder="选择定时发布时间"
             style="width: 100%"
           />
         </el-form-item>
@@ -400,6 +409,14 @@ import {
   deleteBanners,
   updateBannerStatus
 } from '@/api/banner'
+import {
+  getAllAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  publishAnnouncement,
+  unpublishAnnouncement
+} from '@/api/announcement'
 
 // 获取认证信息
 const authStore = useAuthStore()
@@ -609,7 +626,7 @@ const noticeForm = reactive({
   type: 'SYSTEM',
   content: '',
   publishTime: null,
-  status: 'DRAFT'
+  status: 0
 })
 const noticeRules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
@@ -631,80 +648,104 @@ function getNoticeTypeTag(type) {
   return noticeTypeMap[type]?.type || ''
 }
 
-function fetchNoticeData() {
+async function fetchNoticeData() {
   loading.value = true
-  setTimeout(() => {
-    noticeData.value = [
-      {
-        id: 1,
-        title: '春节营业时间调整通知',
-        type: 'IMPORTANT',
-        content: '春节期间营业时间调整为...',
-        publishTime: '2024-01-15 10:00:00',
-        status: 'PUBLISHED',
-        viewCount: 1256
-      },
-      {
-        id: 2,
-        title: '新器械上线通知',
-        type: 'SYSTEM',
-        content: '本月新增多台高端有氧器械...',
-        publishTime: '2024-01-10 14:30:00',
-        status: 'PUBLISHED',
-        viewCount: 892
-      },
-      {
-        id: 3,
-        title: '会员积分兑换活动',
-        type: 'ACTIVITY',
-        content: '积分兑换商品8折优惠活动开始...',
-        publishTime: '2024-01-08 09:00:00',
-        status: 'DRAFT',
-        viewCount: 0
-      }
-    ]
+  try {
+    const res = await getAllAnnouncements()
+    noticeData.value = res || []
+    // 更新统计
+    stats.value[1].value = noticeData.value.length
+  } catch (error) {
+    ElMessage.error('获取公告数据失败')
+    console.error(error)
+  } finally {
     loading.value = false
-  }, 300)
+  }
 }
 
 function handleAddNotice() {
   isEdit.value = false
   Object.assign(noticeForm, {
-    id: null, title: '', type: 'SYSTEM', content: '', publishTime: null, status: 'DRAFT'
+    id: null, title: '', type: 'SYSTEM', content: '', publishTime: null, status: 0
   })
   noticeDialogVisible.value = true
 }
 
 function handleEditNotice(row) {
   isEdit.value = true
-  Object.assign(noticeForm, row)
+  Object.assign(noticeForm, {
+    id: row.id,
+    title: row.title,
+    type: row.type,
+    content: row.content,
+    publishTime: row.publishTime,
+    status: row.status
+  })
   noticeDialogVisible.value = true
 }
 
-function handleDeleteNotice(row) {
-  ElMessageBox.confirm(`确定要删除公告 "${row.title}" 吗？`, '提示', { type: 'warning' }).then(() => {
+async function handleDeleteNotice(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除公告 "${row.title}" 吗？`, '提示', { type: 'warning' })
+    await deleteAnnouncement(row.id)
     ElMessage.success('删除成功')
     fetchNoticeData()
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+      console.error(error)
+    }
+  }
 }
 
-function handlePublishNotice(row) {
-  ElMessageBox.confirm(`确定要发布公告 "${row.title}" 吗？`, '提示', { type: 'info' }).then(() => {
+async function handlePublishNotice(row) {
+  try {
+    await ElMessageBox.confirm(`确定要发布公告 "${row.title}" 吗？`, '提示', { type: 'info' })
+    await publishAnnouncement(row.id)
     ElMessage.success('发布成功')
     fetchNoticeData()
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('发布失败')
+      console.error(error)
+    }
+  }
 }
 
-function handleSubmitNotice() {
-  noticeFormRef.value?.validate((valid) => {
-    if (valid) {
-      submitting.value = true
-      setTimeout(() => {
-        ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
-        noticeDialogVisible.value = false
-        fetchNoticeData()
-        submitting.value = false
-      }, 500)
+async function handleUnpublishNotice(row) {
+  try {
+    await ElMessageBox.confirm(`确定要下架公告 "${row.title}" 吗？`, '提示', { type: 'warning' })
+    await unpublishAnnouncement(row.id)
+    ElMessage.success('下架成功')
+    fetchNoticeData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('下架失败')
+      console.error(error)
+    }
+  }
+}
+
+async function handleSubmitNotice() {
+  noticeFormRef.value?.validate(async (valid) => {
+    if (!valid) return
+
+    submitting.value = true
+    try {
+      if (isEdit.value) {
+        await updateAnnouncement(noticeForm.id, noticeForm)
+        ElMessage.success('编辑成功')
+      } else {
+        await createAnnouncement(noticeForm)
+        ElMessage.success('新增成功')
+      }
+      noticeDialogVisible.value = false
+      fetchNoticeData()
+    } catch (error) {
+      ElMessage.error(isEdit.value ? '编辑失败' : '新增失败')
+      console.error(error)
+    } finally {
+      submitting.value = false
     }
   })
 }
@@ -761,7 +802,7 @@ function handleDeleteMembershipDisplay(item) {
   })
 }
 
-// ========== 积分商城展示管理 ==========
+// ========== 购物中心展示管理 ==========
 const storeDisplaySearch = reactive({ name: '', category: '' })
 const storeDisplayData = ref([])
 

@@ -215,7 +215,7 @@ const menuOptions = [
   { label: '在线购卡', key: '/member/cards', iconComponent: CardOutline },
   { label: '我的教练', key: '/member/coach', iconComponent: PeopleOutline },
   { label: '健小助', key: '/member/assistant', iconComponent: ChatbubbleOutline },
-  { label: '积分商城', key: '/member/store', iconComponent: GiftOutline },
+  { label: '购物中心', key: '/member/store', iconComponent: GiftOutline },
   { label: '我的预约', key: '/member/bookings', iconComponent: CalendarOutline },
   { label: '健身计划', key: '/member/plans', iconComponent: DocumentTextOutline },
   { label: '我的报修', key: '/member/repairs', iconComponent: ConstructOutline }

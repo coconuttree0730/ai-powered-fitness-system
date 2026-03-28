@@ -27,27 +27,58 @@
         </div>
         
         <div class="chat-input-area">
-          <n-input 
-            v-model:value="inputMessage"
-            type="text" 
-            class="chat-input"
-            placeholder="输入您的问题..."
-            size="large"
-            :disabled="sending"
-            @keydown.enter="sendMessage"
-          />
-          <n-button 
-            type="primary" 
-            size="large" 
-            class="btn-send"
-            :loading="sending"
-            @click="sendMessage"
-          >
-            <template #icon>
-              <n-icon :component="SendOutline" />
-            </template>
-            发送
-          </n-button>
+          <div class="chat-input-wrapper">
+            <div class="input-glow-layer"></div>
+            <div class="input-content-area">
+              <n-input 
+                v-model:value="inputMessage"
+                type="textarea" 
+                class="chat-input"
+                placeholder="输入您的问题，健小助随时为您服务..."
+                size="large"
+                :disabled="sending"
+                :autosize="{ minRows: 2, maxRows: 8 }"
+                @keydown="handleKeydown"
+              />
+            </div>
+            <div class="chat-input-actions">
+              <div class="input-actions-left">
+                <div class="input-hint">
+                  <span class="hint-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                  </span>
+                  <span class="hint-text">Shift + Enter 换行</span>
+                </div>
+                <div class="btn-plan-wrapper">
+                  <n-button 
+                    size="small"
+                    class="btn-plan"
+                    @click="generatePlan"
+                  >
+                    <template #icon>
+                      <n-icon :component="FitnessOutline" />
+                    </template>
+                    健身计划生成
+                  </n-button>
+                </div>
+              </div>
+              <n-button 
+                type="primary" 
+                size="small"
+                class="btn-send"
+                :loading="sending"
+                :disabled="!inputMessage.trim()"
+                @click="sendMessage"
+              >
+                <template #icon>
+                  <n-icon :component="SendOutline" />
+                </template>
+                发送
+              </n-button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -132,7 +163,8 @@ import {
   SendOutline,
   HelpCircleOutline,
   TrophyOutline,
-  ChevronForwardOutline
+  ChevronForwardOutline,
+  FitnessOutline
 } from '@vicons/ionicons5'
 
 const router = useRouter()
@@ -228,21 +260,40 @@ function scrollToBottom() {
   })
 }
 
+function handleKeydown(e) {
+  if (e.key === 'Enter') {
+    if (e.shiftKey) {
+      // Shift + Enter: 允许默认换行行为，不阻止
+      return
+    } else {
+      // 单独 Enter: 发送消息
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+}
+
 function sendMessage() {
   if (!inputMessage.value.trim()) return
-  
+
   const userMsg = inputMessage.value.trim()
   messages.value.push({ type: 'user', content: userMsg })
   inputMessage.value = ''
   sending.value = true
   scrollToBottom()
-  
+
   setTimeout(() => {
     const aiResponse = generateAIResponse(userMsg)
     messages.value.push(aiResponse)
     sending.value = false
     scrollToBottom()
   }, 1000)
+}
+
+function generatePlan() {
+  const planPrompt = '请为我生成一个个性化的健身训练计划'
+  inputMessage.value = planPrompt
+  sendMessage()
 }
 
 function generateAIResponse(userMsg) {
@@ -438,35 +489,236 @@ function goToCoaches() {
   gap: 12px;
 }
 
-/* 聊天输入区域 */
+/* 聊天输入区域 - 现代精致设计 */
 .chat-input-area {
-  padding: 16px 24px;
-  border-top: 1px solid #E5E7EB;
-  display: flex;
-  gap: 12px;
-  background: white;
+  padding: 20px 24px;
+  background: linear-gradient(180deg, rgba(250, 251, 252, 0) 0%, #FAFBFC 100%);
   flex-shrink: 0;
+  position: relative;
+}
+
+.chat-input-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(229, 231, 235, 0.6) 20%, rgba(229, 231, 235, 0.6) 80%, transparent 100%);
+}
+
+.chat-input-wrapper {
+  position: relative;
+  border-radius: 20px;
+  padding: 0;
+  background: white;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  overflow: hidden;
+}
+
+/* 发光层效果 */
+.input-glow-layer {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 140, 97, 0.1) 50%, rgba(229, 90, 43, 0.15) 100%);
+  border-radius: 22px;
+  opacity: 0;
+  filter: blur(12px);
+  transition: opacity 0.35s ease;
+  z-index: -1;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: rgba(255, 107, 53, 0.4);
+  box-shadow:
+    0 4px 20px rgba(255, 107, 53, 0.1),
+    0 8px 32px rgba(255, 107, 53, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.chat-input-wrapper:focus-within .input-glow-layer {
+  opacity: 1;
+}
+
+/* 输入内容区域 - 与底部操作区平行 */
+.input-content-area {
+  padding: 20px 24px 16px;
+  background: white;
 }
 
 .chat-input {
-  flex: 1;
+  width: 100%;
 }
 
-.chat-input :deep(.n-input__input-el) {
-  border-radius: 12px;
-}
-
-.btn-send {
-  background: linear-gradient(135deg, #FF6B35, #E55A2B);
+.chat-input :deep(.n-input__textarea-el) {
+  background: transparent;
   border: none;
-  border-radius: 12px;
-  font-weight: 600;
+  resize: none;
+  font-size: 16px;
+  line-height: 1.8;
+  padding: 8px 12px;
+  min-height: 72px;
+  color: #1A1A2E;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.btn-send:hover {
-  background: linear-gradient(135deg, #FF8C61, #FF6B35);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+.chat-input :deep(.n-input__textarea-el:hover) {
+  background: rgba(250, 251, 252, 0.8);
+}
+
+.chat-input :deep(.n-input__textarea-el:focus) {
+  background: rgba(250, 251, 252, 1);
+}
+
+.chat-input :deep(.n-input__textarea-el::placeholder) {
+  color: #9CA3AF;
+  font-size: 15px;
+  transition: color 0.3s ease;
+}
+
+.chat-input-wrapper:focus-within :deep(.n-input__textarea-el::placeholder) {
+  color: #D1D5DB;
+}
+
+.chat-input :deep(.n-input__border) {
+  display: none;
+}
+
+.chat-input :deep(.n-input__state-border) {
+  display: none;
+}
+
+/* 输入框底部操作区 */
+.chat-input-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #FAFBFC;
+  border-top: 1px solid #F0F2F5;
+}
+
+.input-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 输入提示 */
+.input-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9CA3AF;
+  transition: all 0.3s ease;
+}
+
+.hint-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  opacity: 0.8;
+}
+
+/* 健身计划生成按钮 - 橙色边框透明背景 */
+.btn-plan-wrapper {
+  position: relative;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-plan-wrapper:hover {
+  transform: translateY(-1px);
+}
+
+.btn-plan {
+  color: #FF6B35 !important;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  padding: 5px 11px;
+  background: transparent;
+  border: 1px solid #FF6B35 !important;
+}
+
+.btn-plan:hover {
+  color: #E55A2B !important;
+  border-color: #E55A2B !important;
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.btn-plan :deep(.n-icon) {
+  color: #FF6B35 !important;
+}
+
+.btn-plan :deep(.n-button__content) {
+  color: #FF6B35 !important;
+}
+
+.btn-plan :deep(.n-button__border) {
+  border: 1px solid #FF6B35 !important;
+}
+
+.btn-plan :deep(.n-button__state-border) {
+  border: none !important;
+}
+
+/* 发送按钮 - 现代药丸形状 */
+.btn-send {
+  background: linear-gradient(135deg, #FF6B35 0%, #E55A2B 50%, #FF6B35 100%);
+  background-size: 200% 200%;
+  border: none !important;
+  border-radius: 12px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.25);
+  animation: gradientShift 3s ease infinite;
+}
+
+.btn-send :deep(.n-button__border) {
+  display: none !important;
+  border: none !important;
+}
+
+.btn-send :deep(.n-button__state-border) {
+  display: none !important;
+  border: none !important;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.btn-send:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.35), 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.btn-send:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px rgba(255, 107, 53, 0.25);
+}
+
+.btn-send:disabled {
+  background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
+  box-shadow: none;
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* 侧边栏 - 固定宽度 */
@@ -735,6 +987,54 @@ function goToCoaches() {
   
   .chat-input-area {
     padding: 12px 16px;
+  }
+
+  .chat-input-area::before {
+    left: 16px;
+    right: 16px;
+  }
+
+  .chat-input-wrapper {
+    border-radius: 16px;
+  }
+
+  .input-content-area {
+    padding: 16px 18px 12px;
+  }
+
+  .chat-input :deep(.n-input__textarea-el) {
+    font-size: 15px;
+    min-height: 60px;
+    line-height: 1.7;
+    padding: 6px 10px;
+  }
+
+  .chat-input-actions {
+    padding: 10px 14px;
+  }
+
+  .input-actions-left {
+    gap: 10px;
+  }
+
+  .input-hint {
+    display: none;
+  }
+
+  .btn-plan-wrapper {
+    border-radius: 8px;
+  }
+
+  .btn-plan {
+    font-size: 12px;
+    padding: 4px 9px;
+    border-radius: 6px;
+  }
+
+  .btn-send {
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 10px;
   }
   
   .plan-message {

@@ -112,4 +112,70 @@ public interface UserService {
      * @return Token信息
      */
     Map<String, Object> loginBySmsCode(String phone, String smsCode);
+
+    /**
+     * 更新用户名
+     *
+     * @param userId   用户ID
+     * @param username 新用户名
+     * @return 更新后的用户信息
+     */
+    UserVO updateUsername(Long userId, String username);
+
+    /**
+     * 更新手机号
+     *
+     * @param userId  用户ID
+     * @param phone   新手机号
+     * @param code    新手机号验证码
+     * @param oldCode 旧手机号验证码
+     * @return 更新后的用户信息
+     */
+    UserVO updatePhone(Long userId, String phone, String code, String oldCode);
+
+    /**
+     * 更新邮箱
+     *
+     * @param userId 用户ID
+     * @param email  新邮箱
+     * @param code   邮箱验证码
+     * @return 更新后的用户信息
+     */
+    UserVO updateEmail(Long userId, String email, String code);
+
+    /**
+     * 检查用户名是否已存在
+     *
+     * @param username 用户名
+     * @return 是否存在
+     */
+    boolean isUsernameExists(String username);
+
+    /**
+     * 检查手机号是否已被其他用户绑定
+     *
+     * @param phone  手机号
+     * @param userId 当前用户ID（排除自己）
+     * @return 是否已被绑定
+     */
+    boolean isPhoneBoundByOther(String phone, Long userId);
+
+    /**
+     * 检查邮箱是否已被其他用户绑定
+     *
+     * @param email  邮箱
+     * @param userId 当前用户ID（排除自己）
+     * @return 是否已被绑定
+     */
+    boolean isEmailBoundByOther(String email, Long userId);
+
+    /**
+     * 通过短信验证码修改密码
+     *
+     * @param userId   用户ID
+     * @param smsCode  短信验证码
+     * @param newPassword 新密码
+     * @return 是否成功
+     */
+    boolean updatePasswordBySmsCode(Long userId, String smsCode, String newPassword);
 }

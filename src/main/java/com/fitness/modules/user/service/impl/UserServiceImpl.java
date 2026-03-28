@@ -48,8 +48,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final JwtUtils jwtUtils;
     private final FileService fileService;
     private final com.fitness.modules.user.service.SmsCodeService smsCodeService;
+    private final com.fitness.modules.user.service.EmailCodeService emailCodeService;
     private final com.fitness.modules.user.service.CoachDetailService coachDetailService;
 
+    /**
+     * 注册（短信校验登录）方法
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserVO register(UserDTO dto) {
@@ -77,7 +81,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (dto.getRoleCode() != null && !dto.getRoleCode().isEmpty()) {
             Role role = roleMapper.selectByRoleCode(dto.getRoleCode());
             if (role != null) {
-                // 插入用户角色关联
+                // 插入用户-角色关联
                 userMapper.insertUserRole(user.getId(), role.getId());
             }
         }
@@ -86,15 +90,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return convertToVO(user);
     }
 
+    /**
+     * 用户名和密码登录方式
+     */
     @Override
     public Map<String, Object> login(LoginDTO dto) {
-        // 查询用户
+        // 查询用户 （改成手机号 + 密码 登录： 只需要 dto.getPhone()）
         User user = userMapper.selectByUsername(dto.getUsername());
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
-
-        // 检查用户状态
+        // 检查用户状态 是否可用
         if (user.getStatus() != 1) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
@@ -191,7 +197,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 使用自定义查询支持角色筛选
         long offset = (long) (query.getPageNum() - 1) * query.getPageSize();
         long limit = query.getPageSize();
-        
+
         List<User> userList = userMapper.selectUserPageWithRole(
             query.getUsername(),
             query.getPhone(),
@@ -200,14 +206,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             offset,
             limit
         );
-        
+
         long total = userMapper.selectUserCountWithRole(
             query.getUsername(),
             query.getPhone(),
             query.getStatus(),
             query.getRole()
         );
-        
+
         Page<UserVO> resultPage = new Page<>(query.getPageNum(), query.getPageSize(), total);
         List<UserVO> voList = userList.stream().map(user -> {
             UserVO vo = convertToVO(user);
@@ -216,7 +222,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             vo.setRoles(roleCodes);
             return vo;
         }).collect(Collectors.toList());
-        
+
         resultPage.setRecords(voList);
         return resultPage;
     }
@@ -244,9 +250,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.hasText(dto.getRoleCode())) {
             Role role = roleMapper.selectByRoleCode(dto.getRoleCode());
             if (role != null) {
+                // 添加角色关联表
                 userMapper.insertUserRole(user.getId(), role.getId());
 
-                // 如果创建的是教练角色用户，自动初始化教练详情
+                // 如果创建的是教练角色用户，自动初始化教练详情 ********
                 if ("COACH".equals(dto.getRoleCode())) {
                     coachDetailService.initCoachDetail(user.getId());
                     log.info("自动初始化教练详情: userId={}", user.getId());
@@ -353,6 +360,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userMapper.selectCoachList();
     }
 
+    /**
+     * 使用短信验证码登录
+     * @param phone 手机号
+     * @return 用户名
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> loginBySmsCode(String phone, String smsCode) {
@@ -369,8 +381,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user = new User();
             user.setUsername(generateUsernameFromPhone(phone));
             user.setPhone(phone);
-            // 短信登录用户设置随机密码（用户后续可通过密码重置修改）
-            user.setPassword(passwordEncoder.encode(generateRandomPassword()));
+            // 新用户设置默认密码 "123456"
+            user.setPassword(passwordEncoder.encode("123456"));
             user.setStatus(1);
             user.setCreateTime(LocalDateTime.now());
             user.setUpdateTime(LocalDateTime.now());
@@ -447,5 +459,131 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             password.append(chars.charAt(random.nextInt(chars.length())));
         }
         return password.toString();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO updateUsername(Long userId, String username) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 检查新用户名是否已存在
+        if (!username.equals(user.getUsername()) && isUsernameExists(username)) {
+            throw new BusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
+        }
+
+        user.setUsername(username);
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("用户修改用户名成功: userId={}, newUsername={}", userId, username);
+        return getUserInfo(userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO updatePhone(Long userId, String phone, String code, String oldCode) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 验证旧手机号验证码
+        String oldPhone = user.getPhone();
+        if (oldPhone != null && !oldPhone.isEmpty()) {
+            if (!smsCodeService.verifySmsCode(oldPhone, oldCode)) {
+                throw new BusinessException(ErrorCode.SMS_CODE_ERROR);
+            }
+        }
+
+        // 验证新手机号验证码
+        if (!smsCodeService.verifySmsCode(phone, code)) {
+            throw new BusinessException(ErrorCode.SMS_CODE_ERROR);
+        }
+
+        // 检查新手机号是否已被其他用户绑定
+        if (isPhoneBoundByOther(phone, userId)) {
+            throw new BusinessException(ErrorCode.PHONE_ALREADY_BOUND);
+        }
+
+        user.setPhone(phone);
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("用户修改手机号成功: userId={}, newPhone={}", userId, phone);
+        return getUserInfo(userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO updateEmail(Long userId, String email, String code) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 验证邮箱验证码
+        if (!emailCodeService.verifyEmailCode(email, code)) {
+            throw new BusinessException(ErrorCode.EMAIL_CODE_ERROR);
+        }
+
+        // 检查新邮箱是否已被其他用户绑定
+        if (isEmailBoundByOther(email, userId)) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_BOUND);
+        }
+
+        user.setEmail(email);
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("用户修改邮箱成功: userId={}, newEmail={}", userId, email);
+        return getUserInfo(userId);
+    }
+
+    @Override
+    public boolean isUsernameExists(String username) {
+        User user = userMapper.selectByUsername(username);
+        return user != null;
+    }
+
+    @Override
+    public boolean isPhoneBoundByOther(String phone, Long userId) {
+        User user = userMapper.selectByPhone(phone);
+        return user != null && !user.getId().equals(userId);
+    }
+
+    @Override
+    public boolean isEmailBoundByOther(String email, Long userId) {
+        User user = userMapper.selectByEmail(email);
+        return user != null && !user.getId().equals(userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updatePasswordBySmsCode(Long userId, String smsCode, String newPassword) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 验证短信验证码
+        String phone = user.getPhone();
+        if (phone == null || phone.isEmpty()) {
+            throw new BusinessException(ErrorCode.PHONE_NOT_BOUND);
+        }
+
+        if (!smsCodeService.verifySmsCode(phone, smsCode)) {
+            throw new BusinessException(ErrorCode.SMS_CODE_ERROR);
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("用户通过短信验证码修改密码成功: userId={}", userId);
+        return true;
     }
 }
