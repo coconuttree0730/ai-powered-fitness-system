@@ -37,12 +37,12 @@
           <n-icon :component="CartOutline" size="20" />
           购买会员卡
         </h3>
-        <n-tag type="info" size="small" round>动态加载</n-tag>
+<!--        <n-tag type="info" size="small" round>动态加载</n-tag>-->
       </div>
       <n-grid :cols="gridCols" :x-gap="16" :y-gap="16" class="membership-cards">
         <n-grid-item v-for="card in membershipCards" :key="card.id">
-          <n-card 
-            class="membership-card" 
+          <n-card
+            class="membership-card"
             :class="{ featured: card.featured }"
             :bordered="false"
           >
@@ -56,10 +56,10 @@
             <ul class="card-features">
               <li v-for="(feature, idx) in card.features" :key="idx">{{ feature }}</li>
             </ul>
-            <n-button 
+            <n-button
               :type="card.featured ? 'primary' : 'default'"
               :class="card.featured ? 'btn-primary' : 'btn-secondary'"
-              size="large" 
+              size="large"
               block
               @click="handleBuy(card)"
             >
@@ -88,10 +88,10 @@
     </div>
 
     <!-- 购买弹窗 -->
-    <n-modal 
-      v-model:show="showBuyModal" 
-      preset="card" 
-      style="width: 90%; max-width: 500px" 
+    <n-modal
+      v-model:show="showBuyModal"
+      preset="card"
+      style="width: 90%; max-width: 500px"
       :show-header="false"
       class="buy-modal"
     >
@@ -134,10 +134,10 @@
       <template #footer>
         <n-space justify="end" size="medium">
           <n-button size="large" @click="showBuyModal = false">取消</n-button>
-          <n-button 
-            type="primary" 
-            size="large" 
-            :loading="payLoading" 
+          <n-button
+            type="primary"
+            size="large"
+            :loading="payLoading"
             @click="confirmPay"
             class="pay-btn"
           >
@@ -268,8 +268,8 @@ const selectedCard = ref(null)
 const columns = [
   { title: '订单号', key: 'orderNo', width: 140 },
   { title: '卡类型', key: 'cardType' },
-  { 
-    title: '金额', 
+  {
+    title: '金额',
     key: 'amount',
     width: 100,
     render(row) {
@@ -277,8 +277,8 @@ const columns = [
     }
   },
   { title: '购买时间', key: 'createTime', width: 120 },
-  { 
-    title: '状态', 
+  {
+    title: '状态',
     key: 'status',
     width: 100,
     render(row) {
@@ -730,15 +730,15 @@ function confirmPay() {
   .card-section {
     padding: 20px;
   }
-  
+
   .membership-card {
     padding: 20px 16px;
   }
-  
+
   .card-icon {
     font-size: 36px;
   }
-  
+
   .card-price {
     font-size: 32px;
   }
@@ -749,23 +749,23 @@ function confirmPay() {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .my-card-status {
     text-align: center;
   }
-  
+
   .auto-renew {
     justify-content: center;
   }
-  
+
   .my-card-info h3 {
     font-size: 24px;
   }
-  
+
   .membership-card {
     padding: 24px 20px;
   }
-  
+
   .featured-badge {
     padding: 3px 28px;
     font-size: 11px;
@@ -778,19 +778,19 @@ function confirmPay() {
     padding: 16px;
     border-radius: 16px;
   }
-  
+
   .my-card-info h3 {
     font-size: 20px;
   }
-  
+
   .section-title {
     font-size: 16px !important;
   }
-  
+
   .card-price {
     font-size: 28px;
   }
-  
+
   .buy-modal-content .price {
     font-size: 36px;
   }
