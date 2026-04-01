@@ -2,8 +2,16 @@
   <div class="assistant-page">
     <div class="chat-wrapper">
       <div class="chat-container">
-        <div class="chat-messages" ref="messageContainer">
-          <div v-for="(msg, index) in messages" :key="index" 
+        <div class="chat-messages" ref="messageContainer" @scroll="handleScroll">
+          <!-- 加载更多提示 -->
+          <div v-if="loadingMore" class="loading-more">
+            <n-spin size="small" />
+            <span>加载中...</span>
+          </div>
+          <div v-if="noMoreMessages" class="no-more-messages">
+            <span>没有更多消息了</span>
+          </div>
+          <div v-for="(msg, index) in messages" :key="msg.id || index"
                :class="['message', msg.type]">
             <div class="message-avatar">{{ msg.type === 'ai' ? 'AI' : userAvatar }}</div>
             <div class="message-content">
@@ -30,9 +38,9 @@
           <div class="chat-input-wrapper">
             <div class="input-glow-layer"></div>
             <div class="input-content-area">
-              <n-input 
+              <n-input
                 v-model:value="inputMessage"
-                type="textarea" 
+                type="textarea"
                 class="chat-input"
                 placeholder="输入您的问题，健小助随时为您服务..."
                 size="large"
@@ -65,10 +73,10 @@
                 </div>
               </div>
               <n-button 
+                v-if="!sending"
                 type="primary" 
                 size="small"
                 class="btn-send"
-                :loading="sending"
                 :disabled="!inputMessage.trim()"
                 @click="sendMessage"
               >
@@ -76,6 +84,18 @@
                   <n-icon :component="SendOutline" />
                 </template>
                 发送
+              </n-button>
+              <n-button 
+                v-else
+                type="warning" 
+                size="small"
+                class="btn-pause"
+                @click="stopMessage"
+              >
+                <template #icon>
+                  <n-icon :component="PauseOutline" />
+                </template>
+                暂停
               </n-button>
             </div>
           </div>
@@ -159,18 +179,40 @@ import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import { useMessage, NIcon } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import {
   SendOutline,
   HelpCircleOutline,
   TrophyOutline,
   ChevronForwardOutline,
-  FitnessOutline
+  FitnessOutline,
+  PauseOutline
 } from '@vicons/ionicons5'
+import {
+  createSession,
+  sendMessage as sendChatMessage,
+  sendMessageStream,
+  getUserSessions,
+  getSessionDetail,
+  getSessionMessages
+} from '@/api/chat'
 
 const router = useRouter()
 const message = useMessage()
 const authStore = useAuthStore()
 const messageContainer = ref(null)
+const currentSessionId = ref(null)
+
+// 调试：检查 marked 是否可用
+console.log('marked import check:', typeof marked, marked ? 'available' : 'not available')
+
+// 消息加载相关状态
+const loadingMore = ref(false)
+const noMoreMessages = ref(false)
+const lastMessageId = ref(null)
+const isFirstLoad = ref(true)
+const scrollHeightBeforeLoad = ref(0)
 
 // 响应式适配
 const isMobile = ref(false)
@@ -182,23 +224,153 @@ function checkScreenSize() {
 onMounted(() => {
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
+  // 加载会话列表并初始化
+  initChat()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkScreenSize)
 })
 
+// 初始化聊天 - 加载用户的会话列表
+async function initChat() {
+  try {
+    const res = await getUserSessions()
+    if (res && res.length > 0) {
+      // 使用最新的会话，确保ID是字符串
+      const latestSession = res[0]
+      currentSessionId.value = String(latestSession.id)
+      // 加载该会话的历史消息
+      await loadMessages()
+    } else {
+      // 没有历史会话，创建新会话
+      await createNewSession()
+    }
+  } catch (error) {
+    console.error('初始化聊天失败:', error)
+    messages.value = [welcomeMessage]
+  }
+}
+
+// 创建新会话
+async function createNewSession() {
+  try {
+    const sessionRes = await createSession()
+    if (sessionRes && sessionRes.id) {
+      currentSessionId.value = String(sessionRes.id)
+      messages.value = [welcomeMessage]
+    } else {
+      messages.value = [welcomeMessage]
+    }
+  } catch (error) {
+    console.error('创建会话失败:', error)
+    messages.value = [welcomeMessage]
+  }
+}
+
+// 加载消息列表
+async function loadMessages(isLoadMore = false) {
+  if (!currentSessionId.value) {
+    messages.value = [welcomeMessage]
+    return
+  }
+
+  if (isLoadMore) {
+    if (loadingMore.value || noMoreMessages.value) return
+    loadingMore.value = true
+    scrollHeightBeforeLoad.value = messageContainer.value?.scrollHeight || 0
+  } else {
+    isFirstLoad.value = true
+  }
+
+  try {
+    const params = {
+      limit: 10
+    }
+    if (isLoadMore && lastMessageId.value) {
+      params.lastMessageId = lastMessageId.value
+    }
+
+    const res = await getSessionMessages(currentSessionId.value, params)
+
+    if (res && res.length > 0) {
+      // 转换消息格式，确保ID是字符串
+      const formattedMessages = res.map(msg => ({
+        id: String(msg.id),
+        type: msg.role === 'user' ? 'user' : 'ai',
+        content: msg.content,
+        createdAt: msg.createdAt
+      }))
+
+      // 更新最后一条消息ID（用于分页），确保是字符串
+      lastMessageId.value = String(res[res.length - 1].id)
+
+      if (isLoadMore) {
+        // 加载更多：在顶部添加消息
+        messages.value = [...formattedMessages.reverse(), ...messages.value]
+        // 恢复滚动位置
+        nextTick(() => {
+          const newScrollHeight = messageContainer.value?.scrollHeight || 0
+          const heightDiff = newScrollHeight - scrollHeightBeforeLoad.value
+          if (messageContainer.value) {
+            messageContainer.value.scrollTop = heightDiff
+          }
+        })
+      } else {
+        // 首次加载：显示历史消息 + 欢迎消息
+        messages.value = [...formattedMessages.reverse(), welcomeMessage]
+        scrollToBottom()
+      }
+
+      // 如果返回的消息数小于limit，说明没有更多消息了
+      if (res.length < 10) {
+        noMoreMessages.value = true
+      }
+    } else {
+      if (isLoadMore) {
+        noMoreMessages.value = true
+      } else {
+        // 没有历史消息，只显示欢迎消息
+        messages.value = [welcomeMessage]
+      }
+    }
+  } catch (error) {
+    console.error('加载消息失败:', error)
+    if (!isLoadMore) {
+      messages.value = [welcomeMessage]
+    }
+  } finally {
+    loadingMore.value = false
+    isFirstLoad.value = false
+  }
+}
+
+// 处理滚动事件 - 下拉加载更多
+function handleScroll() {
+  if (!messageContainer.value) return
+
+  const { scrollTop } = messageContainer.value
+
+  // 当滚动到顶部附近时，加载更多消息
+  if (scrollTop < 50 && !loadingMore.value && !noMoreMessages.value && currentSessionId.value) {
+    loadMessages(true)
+  }
+}
+
 const userAvatar = computed(() => authStore.userInfo?.username?.charAt(0) || '张')
 
 const inputMessage = ref('')
 const sending = ref(false)
+const abortController = ref(null)
 
-const messages = ref([
-  {
-    type: 'ai',
-    content: '您好！我是健小助，您的智能健身助手<br><br>我可以帮您：<br>• 制定个性化训练计划<br>• 解答健身相关问题<br>• 介绍健身房器械使用方法<br>• 提供饮食和营养建议<br><br>有什么可以帮您的吗？'
-  }
-])
+const messages = ref([])
+
+// 欢迎消息
+const welcomeMessage = {
+  id: 'welcome',
+  type: 'ai',
+  content: '您好！我是健小助，您的智能健身助手<br><br>我可以帮您：<br>• 制定个性化训练计划<br>• 解答健身相关问题<br>• 介绍健身房器械使用方法<br>• 提供饮食和营养建议<br><br>有什么可以帮您的吗？'
+}
 
 const quickQuestions = [
   '如何增肌？',
@@ -249,7 +421,18 @@ onMounted(() => {
 })
 
 function formatMessage(content) {
-  return content.replace(/\n/g, '<br>')
+  if (!content) return ''
+  try {
+    const rawHtml = marked.parse(content, {
+      breaks: true,
+      gfm: true,
+      async: false
+    })
+    return DOMPurify.sanitize(rawHtml)
+  } catch (error) {
+    console.error('Markdown parsing error:', error)
+    return content.replace(/\n/g, '<br>')
+  }
 }
 
 function scrollToBottom() {
@@ -273,8 +456,22 @@ function handleKeydown(e) {
   }
 }
 
-function sendMessage() {
-  if (!inputMessage.value.trim()) return
+async function sendMessage() {
+  if (!inputMessage.value.trim() || sending.value) return
+
+  // 如果没有会话ID，先创建会话
+  if (!currentSessionId.value) {
+    try {
+      const sessionRes = await createSession()
+      if (sessionRes && sessionRes.id) {
+        currentSessionId.value = String(sessionRes.id)
+      }
+    } catch (error) {
+      console.error('创建会话失败:', error)
+      message.error('创建会话失败，请刷新页面重试')
+      return
+    }
+  }
 
   const userMsg = inputMessage.value.trim()
   messages.value.push({ type: 'user', content: userMsg })
@@ -282,57 +479,113 @@ function sendMessage() {
   sending.value = true
   scrollToBottom()
 
-  setTimeout(() => {
-    const aiResponse = generateAIResponse(userMsg)
-    messages.value.push(aiResponse)
-    sending.value = false
-    scrollToBottom()
-  }, 1000)
+  const aiMessageIndex = messages.value.length
+  messages.value.push({ type: 'ai', content: '' })
+
+  abortController.value = new AbortController()
+  let isCompleted = false
+
+  const resetSending = () => {
+    if (!isCompleted) {
+      isCompleted = true
+      sending.value = false
+      abortController.value = null
+      scrollToBottom()
+      console.log('发送状态已重置')
+    }
+  }
+
+  // 设置超时保护，30秒后强制重置状态
+  const timeoutId = setTimeout(() => {
+    if (!isCompleted) {
+      console.warn('请求超时，强制重置状态')
+      resetSending()
+    }
+  }, 30000)
+
+  try {
+    const response = await sendMessageStream({
+      sessionId: currentSessionId.value,
+      content: userMsg
+    }, abortController.value.signal)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    if (!response.body) {
+      throw new Error('响应体为空')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let fullContent = ''
+    let chunkCount = 0
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          console.log('SSE 流正常结束')
+          break
+        }
+
+        chunkCount++
+        buffer += decoder.decode(value, { stream: true })
+
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmedLine = line.trim()
+          if (trimmedLine.startsWith('data:')) {
+            const data = trimmedLine.slice(5).trim()
+            if (data) {
+              fullContent += data
+            }
+          }
+        }
+
+        messages.value[aiMessageIndex].content = fullContent
+        scrollToBottom()
+      }
+
+      if (buffer.trim().startsWith('data:')) {
+        fullContent += buffer.trim().slice(5).trim()
+        messages.value[aiMessageIndex].content = fullContent
+        scrollToBottom()
+      }
+
+      console.log(`共接收 ${chunkCount} 个数据块`)
+    } finally {
+      reader.releaseLock()
+    }
+
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('用户暂停了回答')
+    } else {
+      console.error('发送消息失败:', error)
+      message.error('发送消息失败，请稍后重试')
+      messages.value[aiMessageIndex].content = '抱歉，我遇到了一些问题，请稍后再试。'
+    }
+  } finally {
+    clearTimeout(timeoutId)
+    resetSending()
+  }
+}
+
+function stopMessage() {
+  if (abortController.value) {
+    abortController.value.abort()
+  }
 }
 
 function generatePlan() {
-  const planPrompt = '请为我生成一个个性化的健身训练计划'
+  const planPrompt = '请为我制定一个个性化的健身训练计划，包括每周训练安排、训练项目和注意事项。'
   inputMessage.value = planPrompt
   sendMessage()
-}
-
-function generateAIResponse(userMsg) {
-  if (userMsg.includes('减脂') || userMsg.includes('减肥')) {
-    return {
-      type: 'ai',
-      isPlan: true,
-      title: '7天减脂训练计划',
-      planDays: [
-        { day: 'Day 1', content: '有氧燃脂 + 核心训练 (45min)' },
-        { day: 'Day 2', content: '上肢力量训练 (50min)' },
-        { day: 'Day 3', content: '休息或轻度拉伸 (20min)' },
-        { day: 'Day 4', content: 'HIIT高强度间歇 (30min)' },
-        { day: 'Day 5', content: '下肢力量训练 (50min)' },
-        { day: 'Day 6', content: '全身循环训练 (45min)' },
-        { day: 'Day 7', content: '主动恢复 - 瑜伽/散步 (30min)' }
-      ]
-    }
-  } else if (userMsg.includes('增肌')) {
-    return {
-      type: 'ai',
-      isPlan: true,
-      title: '7天增肌训练计划',
-      planDays: [
-        { day: 'Day 1', content: '胸部 + 三头肌训练 (60min)' },
-        { day: 'Day 2', content: '背部 + 二头肌训练 (60min)' },
-        { day: 'Day 3', content: '休息或轻度有氧 (30min)' },
-        { day: 'Day 4', content: '肩部 + 腹部训练 (50min)' },
-        { day: 'Day 5', content: '腿部训练 - 深蹲为主 (70min)' },
-        { day: 'Day 6', content: '全身力量训练 (60min)' },
-        { day: 'Day 7', content: '完全休息或轻度拉伸' }
-      ]
-    }
-  } else {
-    return {
-      type: 'ai',
-      content: '感谢您的提问！关于"' + userMsg + '"，我建议您：<br><br>1. 制定明确的健身目标<br>2. 保持规律的训练频率（每周3-5次）<br>3. 注意饮食营养均衡<br>4. 保证充足的休息时间<br><br>如需更详细的建议，可以告诉我您的具体情况，我会为您量身定制方案！'
-    }
-  }
 }
 
 function askQuestion(question) {
@@ -344,13 +597,11 @@ function usePlan() {
   message.success('训练计划已保存到您的健身计划！')
 }
 
-function regeneratePlan() {
+async function regeneratePlan() {
   message.info('正在重新生成计划...')
-  setTimeout(() => {
-    const newPlan = generateAIResponse('帮我生成一个不同的训练计划')
-    messages.value.push(newPlan)
-    scrollToBottom()
-  }, 1000)
+  const planPrompt = '请为我制定一个不同的个性化健身训练计划。'
+  inputMessage.value = planPrompt
+  await sendMessage()
 }
 
 function viewCoach(coachId) {
@@ -403,6 +654,26 @@ function goToCoaches() {
   min-height: 0;
 }
 
+/* 加载更多提示 */
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  color: #6B7280;
+  font-size: 13px;
+}
+
+.no-more-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  color: #9CA3AF;
+  font-size: 12px;
+}
+
 .message {
   display: flex;
   gap: 12px;
@@ -453,6 +724,130 @@ function goToCoaches() {
   background: #F0F2F5;
   color: #1A1A2E;
   border-bottom-left-radius: 4px;
+}
+
+/* Markdown 样式 */
+.message-content :deep(h1),
+.message-content :deep(h2),
+.message-content :deep(h3),
+.message-content :deep(h4) {
+  margin: 16px 0 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.message-content :deep(h1) {
+  font-size: 18px;
+  border-bottom: 1px solid #E5E7EB;
+  padding-bottom: 8px;
+}
+
+.message-content :deep(h2) {
+  font-size: 16px;
+}
+
+.message-content :deep(h3) {
+  font-size: 15px;
+}
+
+.message-content :deep(p) {
+  margin: 8px 0;
+  line-height: 1.7;
+}
+
+.message-content :deep(ul),
+.message-content :deep(ol) {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.message-content :deep(li) {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+.message-content :deep(code) {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  color: #E55A2B;
+}
+
+.message-content :deep(pre) {
+  background: #1A1A2E;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.message-content :deep(pre code) {
+  background: transparent;
+  color: #E5E7EB;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.message-content :deep(blockquote) {
+  border-left: 4px solid #FF6B35;
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: rgba(255, 107, 53, 0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+.message-content :deep(blockquote p) {
+  margin: 0;
+}
+
+.message-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.message-content :deep(th),
+.message-content :deep(td) {
+  padding: 8px 12px;
+  border: 1px solid #E5E7EB;
+  text-align: left;
+}
+
+.message-content :deep(th) {
+  background: #F8FAFC;
+  font-weight: 600;
+}
+
+.message-content :deep(tr:nth-child(even)) {
+  background: #FAFBFC;
+}
+
+.message-content :deep(a) {
+  color: #FF6B35;
+  text-decoration: none;
+}
+
+.message-content :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.message-content :deep(strong) {
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.message-content :deep(em) {
+  font-style: italic;
+}
+
+.message-content :deep(hr) {
+  border: none;
+  border-top: 1px solid #E5E7EB;
+  margin: 16px 0;
 }
 
 .message.user .message-content {
@@ -719,6 +1114,41 @@ function goToCoaches() {
   box-shadow: none;
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+/* 暂停按钮 */
+.btn-pause {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #F59E0B 100%);
+  background-size: 200% 200%;
+  border: none !important;
+  border-radius: 12px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  animation: gradientShift 3s ease infinite;
+}
+
+.btn-pause :deep(.n-button__border) {
+  display: none !important;
+  border: none !important;
+}
+
+.btn-pause :deep(.n-button__state-border) {
+  display: none !important;
+  border: none !important;
+}
+
+.btn-pause:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35), 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.btn-pause:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.25);
 }
 
 /* 侧边栏 - 固定宽度 */

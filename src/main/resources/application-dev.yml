@@ -50,5 +50,8 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
     com.baomidou.mybatisplus: DEBUG
+    org.springframework.ai: DEBUG
+    com.alibaba.cloud.ai: DEBUG
+    org.springframework.ai.chat: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}:%line - %msg%n"

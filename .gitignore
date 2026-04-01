@@ -1,0 +1,34 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.logs
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven repository (Windows path issue)
+D:\\__my_dev_tools\\apache-maven-3.9.9\\repository/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Application configs with secrets
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+
+# Docker volumes
+docker/volumes/

@@ -29,6 +29,12 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
+        // 如果响应已提交（如SSE流已关闭），则不再处理
+        if (response.isCommitted()) {
+            log.debug("响应已提交，跳过访问拒绝处理: {}", request.getRequestURI());
+            return;
+        }
+
         log.warn("权限不足: {}, URI: {}", accessDeniedException.getMessage(), request.getRequestURI());
 
         response.setStatus(HttpStatus.FORBIDDEN.value()); // 403 Forbidden

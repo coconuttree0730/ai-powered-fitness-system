@@ -29,6 +29,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
+        // 如果响应已提交（如SSE流已关闭），则不再处理
+        if (response.isCommitted()) {
+            log.debug("响应已提交，跳过认证入口点处理: {}", request.getRequestURI());
+            return;
+        }
+
         log.warn("未认证访问: {}, URI: {}", authException.getMessage(), request.getRequestURI());
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401
