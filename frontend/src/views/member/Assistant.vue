@@ -86,6 +86,18 @@
                     健身计划生成
                   </n-button>
                 </div>
+                <div class="btn-plan-wrapper">
+                  <n-button 
+                    size="small"
+                    class="btn-plan btn-nutrition"
+                    @click="generateNutrition"
+                  >
+                    <template #icon>
+                      <n-icon :component="NutritionOutline" />
+                    </template>
+                    营养指导
+                  </n-button>
+                </div>
               </div>
               <n-button 
                 v-if="!sending"
@@ -202,7 +214,8 @@ import {
   TrophyOutline,
   ChevronForwardOutline,
   FitnessOutline,
-  PauseOutline
+  PauseOutline,
+  NutritionOutline
 } from '@vicons/ionicons5'
 import {
   createSession,
@@ -666,6 +679,12 @@ function stopMessage() {
 function generatePlan() {
   const planPrompt = '请为我制定一个个性化的健身训练计划，包括每周训练安排、训练项目和注意事项。'
   inputMessage.value = planPrompt
+  sendMessage()
+}
+
+function generateNutrition() {
+  const nutritionPrompt = '请为我提供个性化的营养指导建议，包括每日饮食搭配、营养素摄入建议和饮食注意事项。'
+  inputMessage.value = nutritionPrompt
   sendMessage()
 }
 
@@ -1200,6 +1219,30 @@ function goToCoaches() {
   border: none !important;
 }
 
+/* 营养指导按钮 - 绿色主题 */
+.btn-nutrition {
+  color: #10B981 !important;
+  border: 1px solid #10B981 !important;
+}
+
+.btn-nutrition:hover {
+  color: #059669 !important;
+  border-color: #059669 !important;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.btn-nutrition :deep(.n-icon) {
+  color: #10B981 !important;
+}
+
+.btn-nutrition :deep(.n-button__content) {
+  color: #10B981 !important;
+}
+
+.btn-nutrition :deep(.n-button__border) {
+  border: 1px solid #10B981 !important;
+}
+
 /* 发送按钮 - 现代药丸形状 */
 .btn-send {
   background: linear-gradient(135deg, #FF6B35 0%, #E55A2B 50%, #FF6B35 100%);
@@ -1587,6 +1630,12 @@ function goToCoaches() {
   }
 
   .btn-plan {
+    font-size: 12px;
+    padding: 4px 9px;
+    border-radius: 6px;
+  }
+
+  .btn-nutrition {
     font-size: 12px;
     padding: 4px 9px;
     border-radius: 6px;

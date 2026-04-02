@@ -15,6 +15,9 @@ import com.fitness.modules.chat.model.vo.ChatSessionVO;
 import com.fitness.modules.chat.prompt.ChatPromptTemplates;
 import com.fitness.modules.chat.service.ChatAssistantService;
 import com.fitness.modules.chat.service.ChatContextService;
+import com.fitness.modules.knowledge.model.dto.RAGQueryDTO;
+import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
+import com.fitness.modules.knowledge.service.RAGService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
@@ -44,6 +47,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     private final ChatContextService chatContextService;
     private final AIService aiService;
     private final ChatPromptTemplates chatPromptTemplates;
+    private final RAGService ragService;
 
     private static final int MAX_CONTEXT_MESSAGES = 10;
 
@@ -86,7 +90,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         chatContextService.saveMessageToDatabase(userMessage);
         chatContextService.addMessage(session.getId(), userMessage);
 
-        String aiResponse = callAI(session.getId(), dto.getContent());
+        String aiResponse = callAIWithRAG(session.getId(), dto.getContent());
 
         ChatMessage assistantMessage = new ChatMessage();
         assistantMessage.setSessionId(session.getId());
@@ -129,7 +133,8 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         chatContextService.saveMessageToDatabase(userMessage);
         chatContextService.addMessage(session.getId(), userMessage);
 
-        String fullPrompt = chatPromptTemplates.getSystemPrompt() + "\n\n用户问题：" + dto.getContent();
+        // 使用RAG检索构建提示词
+        String fullPrompt = buildRAGPrompt(dto.getContent());
 
         StringBuilder fullResponse = new StringBuilder();
 
@@ -251,14 +256,45 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         return session;
     }
 
-    private String callAI(Long sessionId, String userMessage) {
-        List<ChatMessage> contextMessages = chatContextService.getContext(sessionId, MAX_CONTEXT_MESSAGES);
+    private String callAIWithRAG(Long sessionId, String userMessage) {
+        // 使用RAG检索构建提示词
+        String fullPrompt = buildRAGPrompt(userMessage);
         
-        List<Message> messages = buildMessages(contextMessages, userMessage);
+        return aiService.chat(fullPrompt);
+    }
+
+    private String buildRAGPrompt(String userMessage) {
+        log.info("【健小助RAG】开始检索知识库，查询内容: '{}'", userMessage);
         
-        Prompt prompt = new Prompt(messages);
+        // 构建RAG查询参数 - 降低相似度阈值以提高召回率
+        RAGQueryDTO queryDTO = new RAGQueryDTO();
+        queryDTO.setQuery(userMessage);
+        queryDTO.setTopK(5);
+        queryDTO.setSimilarityThreshold(0.3);  // 降低阈值，提高召回率
         
-        return aiService.chat(userMessage);
+        // 调用RAG服务检索相关知识
+        RAGSearchResultVO searchResult = ragService.search(queryDTO);
+        
+        // 构建上下文内容
+        StringBuilder contextBuilder = new StringBuilder();
+        if (searchResult != null && CollUtil.isNotEmpty(searchResult.getChunks())) {
+            log.info("【健小助RAG】检索到 {} 个相关切片", searchResult.getChunks().size());
+            
+            for (int i = 0; i < searchResult.getChunks().size(); i++) {
+                RAGSearchResultVO.RetrievedChunk chunk = searchResult.getChunks().get(i);
+                contextBuilder.append("【参考内容").append(i + 1).append("】\n");
+                contextBuilder.append("来源: ").append(chunk.getDocumentTitle()).append("\n");
+                contextBuilder.append("内容: ").append(chunk.getContent()).append("\n\n");
+            }
+        } else {
+            log.warn("【健小助RAG】未检索到相关知识库内容");
+        }
+        
+        String ragContext = contextBuilder.toString();
+        log.info("【健小助RAG】构建的上下文长度: {} 字符", ragContext.length());
+        
+        // 构建带RAG上下文的提示词
+        return chatPromptTemplates.buildRAGPrompt(userMessage, ragContext);
     }
 
     private List<Message> buildMessages(List<ChatMessage> contextMessages, String currentMessage) {
