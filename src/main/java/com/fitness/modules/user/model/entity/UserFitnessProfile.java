@@ -57,6 +57,12 @@ public class UserFitnessProfile {
     private String fitnessGoal;
 
     /**
+     * 专属教练ID
+     */
+    @TableField("private_coach_id")
+    private Long privateCoachId;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

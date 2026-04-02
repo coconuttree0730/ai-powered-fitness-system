@@ -4,44 +4,116 @@
     <div class="card-section">
       <div class="section-header">
         <h3 class="section-title">我的专属教练</h3>
-        <n-button type="primary" size="small" class="book-btn" @click="showBookingModal = true">
+        <n-button v-if="myPrivateCoach" type="primary" size="small" class="book-btn" @click="showBookingModal = true">
           预约课程
         </n-button>
       </div>
-      <div class="my-coach">
-        <div class="coach-avatar-large">张</div>
-        <div class="coach-details">
-          <h3>张教练</h3>
-          <p class="specialty">专长: 增肌训练、减脂塑形、体能提升</p>
-          <div class="stats">
-            <span class="rating">★★★★★ 4.9分</span>
-            <span class="stat-item">授课: 1,280节</span>
-            <span class="stat-item">学员: 156人</span>
-          </div>
-          <p class="next-class">下次课程: 2024年10月20日 14:00 - 增肌训练</p>
+      
+      <!-- 有专属教练的情况 -->
+      <div v-if="myPrivateCoach" class="my-coach">
+        <div class="coach-avatar-large" :style="getAvatarStyle(myPrivateCoach)">
+          <img v-if="myPrivateCoach.personalImageUrl || myPrivateCoach.avatar" :src="myPrivateCoach.personalImageUrl || myPrivateCoach.avatar" class="avatar-img" />
+          <span v-else>{{ myPrivateCoach.name ? myPrivateCoach.name[0] : '?' }}</span>
         </div>
+        <div class="coach-details">
+          <h3>{{ myPrivateCoach.name }}</h3>
+          <p class="specialty">{{ formatSpecialty(myPrivateCoach) }}</p>
+          <div class="tags" v-if="myPrivateCoach.tags && myPrivateCoach.tags.length > 0">
+            <n-tag v-for="(tag, index) in myPrivateCoach.tags.slice(0, 3)" :key="index" size="small" type="success" class="coach-tag">
+              {{ tag }}
+            </n-tag>
+          </div>
+          <div class="stats">
+            <span v-if="myPrivateCoach.rating" class="rating">★ {{ formatRating(myPrivateCoach.rating) }}分</span>
+            <span v-if="myPrivateCoach.studentCount" class="stat-item">学员: {{ myPrivateCoach.studentCount }}人</span>
+            <span v-if="myPrivateCoach.workYears" class="stat-item">经验: {{ myPrivateCoach.workYears }}年</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 没有专属教练的空白占位符 -->
+      <div v-else class="empty-coach-placeholder">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <h4 class="empty-title">暂无专属教练</h4>
+        <p class="empty-desc">您还没有绑定专属教练，可以从下方推荐教练中选择一位</p>
+        <n-button type="primary" size="small" class="choose-btn" @click="scrollToRecommended">
+          去选择教练
+        </n-button>
       </div>
     </div>
 
     <!-- 推荐教练 -->
-    <div class="card-section">
+    <div class="card-section" ref="recommendedSection">
       <div class="section-header">
         <h3 class="section-title">推荐教练</h3>
       </div>
-      <n-grid :cols="4" :x-gap="20" class="coach-grid">
-        <n-grid-item v-for="coach in recommendedCoaches" :key="coach.id">
-          <div class="coach-card">
-            <div class="coach-avatar" :style="{ background: coach.gradient }">
-              {{ coach.name[0] }}
+      
+      <!-- 教练卡片滑动容器 -->
+      <div class="coach-slider-container">
+        <!-- 左滑动按钮 -->
+        <button 
+          v-show="canScrollLeft" 
+          class="slider-btn slider-btn-left" 
+          @click="scrollLeft"
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        
+        <!-- 右滑动按钮 -->
+        <button 
+          v-show="canScrollRight" 
+          class="slider-btn slider-btn-right" 
+          @click="scrollRight"
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        
+        <!-- 教练卡片滚动区域 -->
+        <div ref="sliderRef" class="coach-slider" @scroll="handleScroll">
+          <div 
+            v-for="coach in recommendedCoaches" 
+            :key="coach.id" 
+            class="coach-card-square"
+            @click="viewCoachDetail(coach)"
+          >
+            <div class="card-image-wrapper">
+              <img 
+                v-if="coach.image" 
+                :src="coach.image" 
+                class="card-image" 
+                :alt="coach.name"
+              />
+              <div v-else class="card-image-placeholder" :style="{ background: getGradient(coach.id) }">
+                <span class="placeholder-text">{{ coach.name ? coach.name[0] : '?' }}</span>
+              </div>
+              <div class="card-overlay">
+                <span class="view-detail">查看详情</span>
+              </div>
             </div>
-            <div class="coach-info">
-              <div class="coach-name">{{ coach.name }}</div>
-              <div class="coach-specialty">{{ coach.specialty }}</div>
-              <div class="coach-rating">★ {{ coach.rating }}分</div>
+            <div class="card-content">
+              <h4 class="card-name">{{ coach.name }}</h4>
+              <p class="card-title">{{ coach.title }}</p>
+              <div class="card-tags" v-if="coach.tags && coach.tags.length > 0">
+                <span v-for="(tag, idx) in coach.tags.slice(0, 2)" :key="idx" class="card-tag">
+                  {{ tag }}
+                </span>
+              </div>
+              <div class="card-stats">
+                <span v-if="coach.experience" class="stat-badge">{{ coach.experience }}年经验</span>
+                <span v-if="coach.rating" class="rating-badge">★ {{ coach.rating }}</span>
+              </div>
             </div>
           </div>
-        </n-grid-item>
-      </n-grid>
+        </div>
+      </div>
     </div>
 
     <!-- 训练记录 -->
@@ -85,13 +157,23 @@
 </template>
 
 <script setup>
-import { ref, h } from 'vue'
+import { ref, h, onMounted, computed, nextTick } from 'vue'
 import { useMessage, NTag } from 'naive-ui'
+import { getHomePageCoaches, getMyPrivateCoach } from '@/api/coachDetail'
 
 const message = useMessage()
+const recommendedSection = ref(null)
+const sliderRef = ref(null)
 
 const showBookingModal = ref(false)
 const bookingLoading = ref(false)
+const myPrivateCoach = ref(null)
+const recommendedCoaches = ref([])
+const loading = ref(false)
+
+// 滚动状态
+const scrollPosition = ref(0)
+const maxScroll = ref(0)
 
 const bookingForm = ref({
   courseType: 'muscle',
@@ -116,11 +198,16 @@ const timeOptions = [
   { label: '19:00 - 20:00', value: '19:00' }
 ]
 
-const recommendedCoaches = [
-  { id: 1, name: '李教练', specialty: '瑜伽 / 普拉提', rating: 4.8, gradient: 'linear-gradient(135deg, #2EC4B6, #06D6A0)' },
-  { id: 2, name: '王教练', specialty: '力量训练 / CrossFit', rating: 4.9, gradient: 'linear-gradient(135deg, #FF6B35, #FFD93D)' },
-  { id: 3, name: '刘教练', specialty: '有氧 / 舞蹈', rating: 4.7, gradient: 'linear-gradient(135deg, #EF476F, #FFD166)' },
-  { id: 4, name: '陈教练', specialty: '康复 / 体态矫正', rating: 4.9, gradient: 'linear-gradient(135deg, #667eea, #764ba2)' }
+// 渐变色数组
+const gradients = [
+  'linear-gradient(135deg, #2EC4B6, #06D6A0)',
+  'linear-gradient(135deg, #FF6B35, #FFD93D)',
+  'linear-gradient(135deg, #EF476F, #FFD166)',
+  'linear-gradient(135deg, #667eea, #764ba2)',
+  'linear-gradient(135deg, #11998e, #38ef7d)',
+  'linear-gradient(135deg, #fc4a1a, #f7b733)',
+  'linear-gradient(135deg, #7F00FF, #E100FF)',
+  'linear-gradient(135deg, #00c6ff, #0072ff)'
 ]
 
 const recordColumns = [
@@ -144,6 +231,114 @@ const trainingRecords = [
   { date: '2024-10-08', coach: '张教练', courseType: '核心训练', duration: '50分钟', calories: '350 kcal', status: 'completed' }
 ]
 
+// 计算属性：是否可以向左滚动
+const canScrollLeft = computed(() => scrollPosition.value > 0)
+
+// 计算属性：是否可以向右滚动
+const canScrollRight = computed(() => {
+  if (!sliderRef.value) return false
+  return scrollPosition.value < maxScroll.value - 10
+})
+
+// 获取渐变色
+function getGradient(id) {
+  const index = (id || 0) % gradients.length
+  return gradients[index]
+}
+
+// 获取头像样式
+function getAvatarStyle(coach) {
+  if (coach.personalImageUrl || coach.avatar) {
+    return { background: 'transparent' }
+  }
+  return { background: 'linear-gradient(135deg, #2EC4B6, #06D6A0)' }
+}
+
+// 格式化专业领域
+function formatSpecialty(coach) {
+  if (coach.specialties && coach.specialties.length > 0) {
+    return '专长: ' + coach.specialties.join('、')
+  }
+  if (coach.bio) {
+    return coach.bio.substring(0, 50) + (coach.bio.length > 50 ? '...' : '')
+  }
+  return '专业健身教练'
+}
+
+// 格式化评分
+function formatRating(rating) {
+  if (!rating) return '4.9'
+  // 如果是百分比格式，转换为分数
+  if (rating.includes('%')) {
+    return (parseInt(rating) / 20).toFixed(1)
+  }
+  return rating
+}
+
+// 滚动到推荐教练区域
+function scrollToRecommended() {
+  recommendedSection.value?.scrollIntoView({ behavior: 'smooth' })
+}
+
+// 处理滚动事件
+function handleScroll() {
+  if (!sliderRef.value) return
+  scrollPosition.value = sliderRef.value.scrollLeft
+  maxScroll.value = sliderRef.value.scrollWidth - sliderRef.value.clientWidth
+}
+
+// 向左滚动
+function scrollLeft() {
+  if (!sliderRef.value) return
+  const cardWidth = sliderRef.value.querySelector('.coach-card-square')?.offsetWidth || 280
+  const gap = 20
+  const scrollAmount = (cardWidth + gap) * 4 // 一次滚动4个卡片
+  sliderRef.value.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
+}
+
+// 向右滚动
+function scrollRight() {
+  if (!sliderRef.value) return
+  const cardWidth = sliderRef.value.querySelector('.coach-card-square')?.offsetWidth || 280
+  const gap = 20
+  const scrollAmount = (cardWidth + gap) * 4 // 一次滚动4个卡片
+  sliderRef.value.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+}
+
+// 查看教练详情
+function viewCoachDetail(coach) {
+  message.info(`查看 ${coach.name} 的详情功能开发中...`)
+}
+
+// 获取推荐教练列表
+async function fetchRecommendedCoaches() {
+  try {
+    // 获取更多教练用于滑动展示
+    const data = await getHomePageCoaches(12)
+    recommendedCoaches.value = data || []
+    
+    // 等待DOM更新后计算滚动状态
+    nextTick(() => {
+      handleScroll()
+    })
+  } catch (error) {
+    console.error('获取推荐教练失败:', error)
+    message.error('获取推荐教练失败')
+  }
+}
+
+// 获取我的专属教练
+async function fetchMyPrivateCoach() {
+  try {
+    const data = await getMyPrivateCoach()
+    myPrivateCoach.value = data
+  } catch (error) {
+    console.error('获取专属教练失败:', error)
+    // 如果返回404或null，说明没有专属教练，不显示错误
+    myPrivateCoach.value = null
+  }
+}
+
 function confirmBooking() {
   bookingLoading.value = true
   setTimeout(() => {
@@ -153,6 +348,14 @@ function confirmBooking() {
     bookingForm.value = { courseType: 'muscle', date: null, timeSlot: '14:00', note: '' }
   }, 1500)
 }
+
+onMounted(() => {
+  fetchRecommendedCoaches()
+  fetchMyPrivateCoach()
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', handleScroll)
+})
 </script>
 
 <style scoped>
@@ -212,6 +415,13 @@ function confirmBooking() {
   font-size: 40px;
   color: white;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .coach-details {
@@ -231,11 +441,23 @@ function confirmBooking() {
   font-size: 14px;
 }
 
+.tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.coach-tag {
+  font-size: 12px;
+}
+
 .stats {
   display: flex;
   gap: 16px;
   margin-bottom: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .rating {
@@ -248,64 +470,259 @@ function confirmBooking() {
   font-size: 14px;
 }
 
-.next-class {
-  color: #FF6B35;
-  font-size: 14px;
-  margin: 0;
+/* 空白占位符样式 */
+.empty-coach-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
 }
 
-.coach-grid {
-  margin-bottom: 0;
-}
-
-.coach-card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-  transition: all 0.3s;
-  cursor: pointer;
-}
-
-.coach-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-}
-
-.coach-avatar {
-  width: 100%;
-  height: 160px;
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  color: white;
+  margin-bottom: 16px;
 }
 
-.coach-info {
-  padding: 16px;
+.empty-icon svg {
+  width: 40px;
+  height: 40px;
+  color: #6366f1;
 }
 
-.coach-name {
-  font-size: 16px;
+.empty-title {
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 4px;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.empty-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px 0;
+  max-width: 300px;
+}
+
+.choose-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+/* 教练滑动容器 */
+.coach-slider-container {
+  position: relative;
+  padding: 0 20px;
+}
+
+/* 滑动按钮 */
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
   color: #1A1A2E;
 }
 
-.coach-specialty {
-  font-size: 13px;
-  color: #6B7280;
-  margin-bottom: 8px;
+.slider-btn:hover {
+  background: #f8fafc;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  transform: translateY(-50%) scale(1.05);
 }
 
-.coach-rating {
+.slider-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.slider-btn-left {
+  left: 0;
+}
+
+.slider-btn-right {
+  right: 0;
+}
+
+.slider-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* 教练滑动区域 */
+.coach-slider {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding: 8px 4px;
+}
+
+.coach-slider::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* 方块教练卡片 */
+.coach-card-square {
+  flex: 0 0 calc(25% - 15px); /* 4个卡片平均分配，减去gap */
+  min-width: 220px;
+  max-width: 280px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.coach-card-square:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* 正方形 */
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.coach-card-square:hover .card-image {
+  transform: scale(1.05);
+}
+
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: #FFD93D;
-  font-size: 14px;
+  justify-content: center;
+}
+
+.placeholder-text {
+  font-size: 64px;
   font-weight: 600;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.coach-card-square:hover .card-overlay {
+  opacity: 1;
+}
+
+.view-detail {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: 2px solid white;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.view-detail:hover {
+  background: white;
+  color: #1A1A2E;
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-title {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0 0 10px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.card-tag {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: #f3f4f6;
+  color: #4b5563;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.card-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-badge {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.rating-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFD93D;
 }
 
 .record-table :deep(.n-data-table-th) {
@@ -320,5 +737,64 @@ function confirmBooking() {
 .record-table :deep(.n-data-table-td) {
   padding: 14px 16px;
   font-size: 14px;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .coach-card-square {
+    flex: 0 0 calc(33.333% - 14px); /* 3个卡片 */
+  }
+}
+
+@media (max-width: 900px) {
+  .coach-card-square {
+    flex: 0 0 calc(50% - 10px); /* 2个卡片 */
+  }
+}
+
+@media (max-width: 768px) {
+  .my-coach {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .coach-avatar-large {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+  
+  .stats {
+    justify-content: center;
+  }
+  
+  .tags {
+    justify-content: center;
+  }
+  
+  .coach-card-square {
+    flex: 0 0 calc(50% - 10px); /* 2个卡片 */
+    min-width: 160px;
+  }
+  
+  .placeholder-text {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .coach-card-square {
+    flex: 0 0 calc(100% - 0px); /* 1个卡片 */
+  }
+  
+  .slider-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .slider-btn svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 </style>

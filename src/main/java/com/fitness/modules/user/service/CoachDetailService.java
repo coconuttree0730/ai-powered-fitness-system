@@ -3,6 +3,7 @@ package com.fitness.modules.user.service;
 import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
+import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -70,4 +71,11 @@ public interface CoachDetailService {
      * @param userId 用户ID
      */
     void initCoachDetail(Long userId);
+
+    /**
+     * 获取当前登录会员的专属教练
+     *
+     * @return 专属教练信息，如果没有则返回null
+     */
+    MyPrivateCoachVO getMyPrivateCoach();
 }

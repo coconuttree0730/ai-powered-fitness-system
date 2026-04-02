@@ -148,3 +148,26 @@ vo.setType(equipment.getType());
 
 - request.js 的响应拦截器返回的是 res.data （直接是数据数组）；获取数据请使用正确的接收方式；
 
+## 7. Spring AI Alibaba 配置规范
+
+### 7.1 核心要点
+- **不要配置 `base-url`**：Spring AI Alibaba 会自动使用默认端点，手动配置会导致 404 错误
+- **模型名称**：API 调用使用 `qwen-plus`（对应控制台 qwen3-5-plus），同理其他模型开发者自定义
+- **配置类**：使用自动配置的 `ChatModel`，通过 `ChatClient.builder(chatModel)` 创建 ChatClient
+
+### 7.2 正确配置示例
+```yaml
+spring:
+  ai:
+    dashscope:
+      api-key: ${AI_DASHSCOPE_API_KEY:your-api-key}
+      chat:
+        enabled: true
+        options:
+          model: ${AI_DASHSCOPE_MODEL:qwen-plus}
+          temperature: 0.7
+```
+
+### 7.3 相关文档
+详细问题排查过程见：`docs/bug-fixes/spring-ai-alibaba-404-fix.md`
+

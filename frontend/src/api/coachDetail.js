@@ -90,3 +90,14 @@ export function getHomePageCoaches(limit = 4) {
     params: { limit }
   })
 }
+
+/**
+ * 获取当前登录会员的专属教练
+ * @returns {Promise}
+ */
+export function getMyPrivateCoach() {
+  return request({
+    url: '/coaches/my-private-coach',
+    method: 'get'
+  })
+}

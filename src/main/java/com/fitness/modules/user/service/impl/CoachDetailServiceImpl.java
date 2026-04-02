@@ -14,7 +14,10 @@ import com.fitness.modules.user.model.entity.User;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.CoachHomePageVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
+import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
+import com.fitness.modules.user.model.entity.UserFitnessProfile;
+import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
 
     private final CoachDetailMapper coachDetailMapper;
     private final UserMapper userMapper;
+    private final UserFitnessProfileMapper userFitnessProfileMapper;
     private final FileService fileService;
 
     /**
@@ -507,5 +511,56 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         }
         
         return "专业教练";
+    }
+
+    @Override
+    public MyPrivateCoachVO getMyPrivateCoach() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 查询用户的健身档案，获取专属教练ID
+        UserFitnessProfile profile = userFitnessProfileMapper.selectByUserId(userId);
+        if (profile == null || profile.getPrivateCoachId() == null) {
+            return null;
+        }
+
+        Long coachId = profile.getPrivateCoachId();
+
+        // 查询教练详情
+        CoachDetail coachDetail = coachDetailMapper.selectByUserId(coachId);
+        User coachUser = userMapper.selectById(coachId);
+
+        if (coachUser == null) {
+            return null;
+        }
+
+        // 转换为VO
+        MyPrivateCoachVO vo = new MyPrivateCoachVO();
+        vo.setId(coachId);
+        vo.setName(coachUser.getUsername());
+        vo.setAvatar(coachUser.getAvatar());
+
+        if (coachDetail != null) {
+            vo.setPersonalImageUrl(coachDetail.getPersonalImageUrl());
+            vo.setWorkYears(coachDetail.getWorkYears());
+            vo.setStudentCount(coachDetail.getStudentCount());
+            vo.setRating(coachDetail.getRating());
+            vo.setBio(coachDetail.getBio());
+            vo.setTeachingStyle(coachDetail.getTeachingStyle());
+
+            // 解析JSON数组
+            String tagsJson = coachDetail.getTagsJson();
+            if (tagsJson != null) {
+                vo.setTags(JSONUtil.parseArray(tagsJson).toList(String.class));
+            }
+            String specialtiesJson = coachDetail.getSpecialtiesJson();
+            if (specialtiesJson != null) {
+                vo.setSpecialties(JSONUtil.parseArray(specialtiesJson).toList(String.class));
+            }
+        }
+
+        return vo;
     }
 }

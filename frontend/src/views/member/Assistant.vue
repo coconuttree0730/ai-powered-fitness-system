@@ -528,6 +528,8 @@ async function sendMessage() {
         const { done, value } = await reader.read()
         if (done) {
           console.log('SSE 流正常结束')
+          // 流结束时立即重置发送状态，避免暂停按钮延迟消失
+          resetSending()
           break
         }
 

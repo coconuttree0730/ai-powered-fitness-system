@@ -4,6 +4,7 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
+import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -104,5 +105,16 @@ public class CoachDetailController {
             @RequestParam(defaultValue = "4") int limit) {
         List<HomePageCoachVO> list = coachDetailService.getHomePageCoaches(limit);
         return Result.success(list);
+    }
+
+    /**
+     * 获取当前登录会员的专属教练
+     *
+     * @return 专属教练信息，如果没有则返回null
+     */
+    @GetMapping("/my-private-coach")
+    public Result<MyPrivateCoachVO> getMyPrivateCoach() {
+        MyPrivateCoachVO vo = coachDetailService.getMyPrivateCoach();
+        return Result.success(vo);
     }
 }

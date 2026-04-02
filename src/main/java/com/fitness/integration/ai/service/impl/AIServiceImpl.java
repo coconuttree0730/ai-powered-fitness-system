@@ -102,7 +102,7 @@ public class AIServiceImpl implements AIService {
                     .user(message)
                     .stream()
                     .content()
-                    .doOnNext(chunk -> log.debug("收到流式响应块"))
+                    //.doOnNext(chunk -> log.debug("收到流式响应块"))
                     .doOnComplete(() -> {
                         long duration = System.currentTimeMillis() - startTime;
                         langSmithService.logOutput(traceId, "Stream completed", duration);
@@ -138,7 +138,7 @@ public class AIServiceImpl implements AIService {
                     .user(renderedPrompt)
                     .stream()
                     .content()
-                    .doOnNext(chunk -> log.debug("收到流式响应块"))
+                    //.doOnNext(chunk -> log.debug("收到流式响应块"))
                     .doOnComplete(() -> {
                         long duration = System.currentTimeMillis() - startTime;
                         langSmithService.logOutput(traceId, "Stream completed", duration);
