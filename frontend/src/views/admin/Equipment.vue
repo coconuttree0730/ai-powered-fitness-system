@@ -131,7 +131,47 @@
           </el-upload>
         </el-form-item>
         <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入描述" />
+          <el-input 
+            v-model="form.description" 
+            type="textarea" 
+            :rows="3" 
+            placeholder="请输入描述，支持ai润色..."
+            maxlength="100"
+            :class="{ 'loading-textarea': polishing }"
+          />
+          
+          <div class="polish-button-group">
+            <el-button 
+              v-if="!hasPolished && !polishing"
+              type="primary" 
+              @click="handlePolish"
+            >
+              <el-icon><MagicStick /></el-icon>
+              AI润色
+            </el-button>
+            
+            <el-button 
+              v-if="polishing"
+              type="primary" 
+              loading
+            >
+              AI润色中...
+            </el-button>
+            <el-button 
+              v-if="polishing"
+              @click="handleCancelPolish"
+            >
+              取消
+            </el-button>
+            
+            <el-button 
+              v-if="hasPolished && !polishing"
+              @click="handleRestore"
+            >
+              <el-icon><RefreshLeft /></el-icon>
+              恢复原文
+            </el-button>
+          </div>
         </el-form-item>
         <el-form-item>
           <el-space>
@@ -181,6 +221,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment, getEquipmentTypes, getEquipmentRepairs, getEquipmentDetail } from '@/api/equipment'
 import { getToken } from '@/utils/auth'
+import { polishDescription } from '@/api/ai'
+import { MagicStick, RefreshLeft } from '@element-plus/icons-vue'
 
 const message = ElMessage
 const loading = ref(false)
@@ -194,6 +236,10 @@ const currentId = ref(null)
 const currentEquipment = ref(null)
 const typeOptions = ref([])
 const fileList = ref([])
+
+const polishing = ref(false)
+const originalText = ref('')
+const hasPolished = ref(false)
 
 const uploadUrl = '/api/v1/files/upload/image'
 const uploadHeaders = { Authorization: 'Bearer ' + getToken() }
@@ -424,6 +470,51 @@ function handleUploadRemove() {
   form.imageUrl = ''
   fileList.value = []
 }
+
+async function handlePolish() {
+  const textLength = form.description.trim().length
+  
+  if (textLength === 0) {
+    message.warning('请先输入描述内容')
+    return
+  }
+  
+  if (textLength < 3) {
+    message.warning('文本内容至少需要3个字')
+    return
+  }
+  
+  if (textLength > 100) {
+    message.warning('文本长度不能超过100字')
+    return
+  }
+  
+  originalText.value = form.description
+  polishing.value = true
+  hasPolished.value = false
+  
+  try {
+    const response = await polishDescription({ text: form.description })
+    form.description = response.polishedText
+    hasPolished.value = true
+    message.success('润色成功')
+  } catch (error) {
+    message.error(error.message || '润色失败，请重试')
+  } finally {
+    polishing.value = false
+  }
+}
+
+function handleCancelPolish() {
+  polishing.value = false
+  message.info('已取消润色')
+}
+
+function handleRestore() {
+  form.description = originalText.value
+  hasPolished.value = false
+  message.success('已恢复原始文本')
+}
 </script>
 
 <style scoped>
@@ -458,5 +549,20 @@ function handleUploadRemove() {
 /* 上传成功后隐藏上传按钮 */
 :deep(.hide-upload .el-upload--picture-card) {
   display: none;
+}
+
+.polish-button-group {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.loading-textarea textarea {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>
