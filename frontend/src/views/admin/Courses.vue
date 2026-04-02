@@ -632,6 +632,10 @@ function handleEdit(row) {
   } else {
     fileList.value = []
   }
+  // 重置润色状态
+  hasPolished.value = false
+  originalText.value = ''
+  polishing.value = false
   showModal.value = true
 }
 

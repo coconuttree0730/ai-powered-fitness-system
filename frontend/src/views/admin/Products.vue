@@ -591,6 +591,10 @@ function handleEdit(row) {
     isRecommend: row.isRecommend,
     description: row.description
   })
+  // 重置润色状态
+  hasPolished.value = false
+  originalText.value = ''
+  polishing.value = false
   dialogVisible.value = true
 }
 
