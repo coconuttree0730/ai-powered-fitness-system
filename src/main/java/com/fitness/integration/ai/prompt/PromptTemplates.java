@@ -115,6 +115,25 @@ public class PromptTemplates {
             """;
 
     /**
+     * 文本润色 Prompt 模板
+     */
+    private static final String TEXT_POLISH_TEMPLATE = """
+            你是一位专业的文案编辑。请对以下文本进行润色：
+
+            %s
+
+            润色要求：
+            1. 保持原有核心信息和事实不变
+            2. 优化语言表述，使其更加流畅、专业、有吸引力
+            3. 改善文本结构和逻辑，提升可读性
+            4. 适当补充细节描述，使内容更丰富完整
+            5. 使用专业、准确、易懂的语言风格
+            6. 控制在50-150字之间
+
+            请直接返回润色后的文本，不要添加任何解释或说明。
+            """;
+
+    /**
      * 生成健身计划
      *
      * @param variables 模板变量
@@ -156,6 +175,16 @@ public class PromptTemplates {
     public String generateExerciseGuide(Map<String, Object> variables) {
         PromptTemplate promptTemplate = new PromptTemplate(EXERCISE_GUIDE_TEMPLATE);
         return promptTemplate.render(variables);
+    }
+
+    /**
+     * 生成文本润色Prompt
+     *
+     * @param text 原始文本
+     * @return 生成的Prompt
+     */
+    public String generateTextPolish(String text) {
+        return String.format(TEXT_POLISH_TEMPLATE, text);
     }
 
     /**
