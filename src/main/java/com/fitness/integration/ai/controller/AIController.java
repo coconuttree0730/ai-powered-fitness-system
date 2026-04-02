@@ -1,6 +1,8 @@
 package com.fitness.integration.ai.controller;
 
 import com.fitness.common.result.Result;
+import com.fitness.integration.ai.model.dto.TextPolishDTO;
+import com.fitness.integration.ai.model.vo.TextPolishVO;
 import com.fitness.integration.ai.service.AIService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -128,6 +130,25 @@ public class AIController {
         log.info("运动动作指导请求，动作: {}", request.getExerciseName());
         String guide = aiService.getExerciseGuide(request.getVariables());
         return Result.success(guide);
+    }
+
+    /**
+     * 文本润色接口
+     *
+     * @param request 润色请求
+     * @return 润色结果
+     */
+    @PostMapping("/polish")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
+    public Result<TextPolishVO> polishText(@Valid @RequestBody TextPolishDTO request) {
+        log.info("文本润色请求，文本长度: {}", request.getText().length());
+        String polishedText = aiService.polishText(request.getText());
+        
+        TextPolishVO vo = new TextPolishVO();
+        vo.setPolishedText(polishedText);
+        vo.setOriginalText(request.getText());
+        
+        return Result.success(vo);
     }
 
     // ==================== 请求 DTO ====================
