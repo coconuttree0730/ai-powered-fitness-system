@@ -1,6 +1,5 @@
 package com.fitness.modules.knowledge.service.impl;
 
-import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.http.HttpRequest;
@@ -17,20 +16,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 public class DocumentProcessorServiceImpl implements DocumentProcessorService {
 
-    private static final int DEFAULT_CHUNK_SIZE = 500;
-    private static final int DEFAULT_CHUNK_OVERLAP = 50;
+    // 增大切片大小，保留更多完整信息
+    private static final int DEFAULT_CHUNK_SIZE = 800;
+    // 增大重叠区域，保持上下文连贯性
+    private static final int DEFAULT_CHUNK_OVERLAP = 150;
     private static final int MIN_CHUNK_SIZE = 100;
 
-    @Value("${knowledge.chunk.size:500}")
+    @Value("${knowledge.chunk.size:800}")
     private int chunkSize;
 
-    @Value("${knowledge.chunk.overlap:50}")
+    @Value("${knowledge.chunk.overlap:150}")
     private int chunkOverlap;
+
+    // Markdown 标题正则
+    private static final Pattern HEADING_PATTERN = Pattern.compile("^(#{1,6}\\s+.+)$", Pattern.MULTILINE);
+    // 列表项正则
+    private static final Pattern LIST_ITEM_PATTERN = Pattern.compile("^([\\s]*[-*+]|\\d+\\.)\\s+(.+)$", Pattern.MULTILINE);
 
     @Override
     public String parseFile(String fileUrl, String fileType) {
@@ -62,7 +70,8 @@ public class DocumentProcessorServiceImpl implements DocumentProcessorService {
             return chunks;
         }
 
-        List<String> textChunks = splitText(content);
+        // 使用语义感知的切分策略
+        List<String> textChunks = splitTextWithSemanticBoundaries(content);
 
         for (int i = 0; i < textChunks.size(); i++) {
             String chunkContent = textChunks.get(i);
@@ -78,13 +87,255 @@ public class DocumentProcessorServiceImpl implements DocumentProcessorService {
             metadata.put("document_id", document.getId());
             metadata.put("document_title", document.getTitle());
             metadata.put("chunk_index", i);
+            metadata.put("chunk_size", chunkSize);
+            metadata.put("chunk_overlap", chunkOverlap);
             chunk.setMetadata(metadata);
 
             chunks.add(chunk);
         }
 
-        log.info("文档切片完成，文档ID: {}, 切片数量: {}", document.getId(), chunks.size());
+        log.info("文档切片完成，文档ID: {}, 切片数量: {}, 平均切片大小: {} 字符",
+                document.getId(), chunks.size(),
+                chunks.isEmpty() ? 0 : content.length() / chunks.size());
         return chunks;
+    }
+
+    /**
+     * 基于语义边界的智能切分
+     * 优先在以下位置切分：
+     * 1. 二级标题 (##)
+     * 2. 段落边界
+     * 3. 列表项边界
+     * 4. 句子边界
+     */
+    private List<String> splitTextWithSemanticBoundaries(String content) {
+        List<String> chunks = new ArrayList<>();
+
+        // 首先尝试按二级标题切分
+        List<String> sections = splitByHeadings(content);
+
+        for (String section : sections) {
+            if (section.length() <= chunkSize) {
+                // 小段落直接作为一个切片
+                if (section.length() >= MIN_CHUNK_SIZE) {
+                    chunks.add(section.trim());
+                } else {
+                    // 小段落合并到前一个切片
+                    mergeToLastChunk(chunks, section);
+                }
+            } else {
+                // 大段落需要进一步切分
+                List<String> subChunks = splitLargeSection(section);
+                chunks.addAll(subChunks);
+            }
+        }
+
+        return chunks;
+    }
+
+    /**
+     * 按标题切分文档
+     */
+    private List<String> splitByHeadings(String content) {
+        List<String> sections = new ArrayList<>();
+
+        // 按二级标题 (##) 切分
+        String[] parts = content.split("(?=\\n##\\s+)");
+
+        for (String part : parts) {
+            part = part.trim();
+            if (StrUtil.isNotBlank(part)) {
+                sections.add(part);
+            }
+        }
+
+        return sections;
+    }
+
+    /**
+     * 切分大的章节
+     */
+    private List<String> splitLargeSection(String section) {
+        List<String> chunks = new ArrayList<>();
+
+        // 按段落切分
+        String[] paragraphs = section.split("\\n\\n+");
+
+        StringBuilder currentChunk = new StringBuilder();
+        int currentSize = 0;
+
+        for (String paragraph : paragraphs) {
+            paragraph = paragraph.trim();
+            if (StrUtil.isBlank(paragraph)) {
+                continue;
+            }
+
+            // 如果当前段落本身超过限制，需要进一步切分
+            if (paragraph.length() > chunkSize) {
+                if (currentSize > 0) {
+                    chunks.add(currentChunk.toString().trim());
+                    currentChunk = new StringBuilder();
+                    currentSize = 0;
+                }
+
+                List<String> subChunks = splitLongParagraph(paragraph);
+                chunks.addAll(subChunks);
+                continue;
+            }
+
+            // 检查是否需要切分（考虑重叠）
+            if (currentSize + paragraph.length() + 2 > chunkSize && currentSize >= MIN_CHUNK_SIZE) {
+                // 保存当前切片
+                chunks.add(currentChunk.toString().trim());
+
+                // 获取重叠文本，保持上下文
+                String overlapText = getOverlapTextWithContext(currentChunk.toString());
+                currentChunk = new StringBuilder(overlapText);
+                currentSize = overlapText.length();
+            }
+
+            // 添加段落
+            if (currentSize > 0) {
+                currentChunk.append("\n\n");
+                currentSize += 2;
+            }
+            currentChunk.append(paragraph);
+            currentSize += paragraph.length();
+        }
+
+        // 保存最后一个切片
+        if (currentSize > 0) {
+            chunks.add(currentChunk.toString().trim());
+        }
+
+        return chunks;
+    }
+
+    /**
+     * 切分长段落（按句子）
+     */
+    private List<String> splitLongParagraph(String paragraph) {
+        List<String> chunks = new ArrayList<>();
+
+        // 按句子切分（保留标点）
+        String[] sentences = paragraph.split("(?<=[。！？.!?])");
+
+        StringBuilder currentChunk = new StringBuilder();
+        int currentSize = 0;
+
+        for (String sentence : sentences) {
+            sentence = sentence.trim();
+            if (StrUtil.isBlank(sentence)) {
+                continue;
+            }
+
+            // 如果单个句子就超过限制，强制切分
+            if (sentence.length() > chunkSize) {
+                if (currentSize > 0) {
+                    chunks.add(currentChunk.toString().trim());
+                    currentChunk = new StringBuilder();
+                    currentSize = 0;
+                }
+
+                // 强制按字符切分
+                for (int i = 0; i < sentence.length(); i += chunkSize - chunkOverlap) {
+                    int end = Math.min(i + chunkSize, sentence.length());
+                    String subChunk = sentence.substring(i, end).trim();
+                    if (subChunk.length() >= MIN_CHUNK_SIZE) {
+                        chunks.add(subChunk);
+                    }
+                }
+                continue;
+            }
+
+            // 检查是否需要切分
+            if (currentSize + sentence.length() > chunkSize && currentSize >= MIN_CHUNK_SIZE) {
+                chunks.add(currentChunk.toString().trim());
+
+                // 保留重叠的句子
+                String overlap = getSentenceOverlap(currentChunk.toString());
+                currentChunk = new StringBuilder(overlap);
+                currentSize = overlap.length();
+            }
+
+            currentChunk.append(sentence);
+            currentSize += sentence.length();
+        }
+
+        if (currentSize > 0) {
+            chunks.add(currentChunk.toString().trim());
+        }
+
+        return chunks;
+    }
+
+    /**
+     * 获取带上下文的重叠文本
+     */
+    private String getOverlapTextWithContext(String text) {
+        if (text.length() <= chunkOverlap) {
+            return text;
+        }
+
+        // 尝试在段落边界切分
+        String overlap = text.substring(text.length() - chunkOverlap);
+        int paragraphBreak = overlap.indexOf("\n\n");
+        if (paragraphBreak > 0 && paragraphBreak < overlap.length() - 20) {
+            return overlap.substring(paragraphBreak + 2);
+        }
+
+        // 尝试在句子边界切分
+        int sentenceBreak = Math.max(
+                overlap.lastIndexOf("。"),
+                Math.max(overlap.lastIndexOf("！"), overlap.lastIndexOf("？"))
+        );
+        if (sentenceBreak > overlap.length() / 2) {
+            return overlap.substring(sentenceBreak + 1).trim();
+        }
+
+        return overlap;
+    }
+
+    /**
+     * 获取句子级别的重叠
+     */
+    private String getSentenceOverlap(String text) {
+        if (text.length() <= chunkOverlap) {
+            return text;
+        }
+
+        String overlap = text.substring(text.length() - chunkOverlap);
+
+        // 找到最后一个完整的句子
+        int lastSentenceEnd = Math.max(
+                overlap.lastIndexOf("。"),
+                Math.max(overlap.lastIndexOf("！"), overlap.lastIndexOf("？"))
+        );
+
+        if (lastSentenceEnd > 0) {
+            return overlap.substring(lastSentenceEnd + 1).trim();
+        }
+
+        return overlap;
+    }
+
+    /**
+     * 合并小段落到最后一个切片
+     */
+    private void mergeToLastChunk(List<String> chunks, String smallText) {
+        if (chunks.isEmpty()) {
+            if (smallText.trim().length() >= MIN_CHUNK_SIZE) {
+                chunks.add(smallText.trim());
+            }
+            return;
+        }
+
+        String lastChunk = chunks.get(chunks.size() - 1);
+        if (lastChunk.length() + smallText.length() + 2 <= chunkSize) {
+            chunks.set(chunks.size() - 1, lastChunk + "\n\n" + smallText.trim());
+        } else if (smallText.trim().length() >= MIN_CHUNK_SIZE) {
+            chunks.add(smallText.trim());
+        }
     }
 
     @Override
@@ -136,99 +387,6 @@ public class DocumentProcessorServiceImpl implements DocumentProcessorService {
         }
 
         return "未命名文档";
-    }
-
-    private List<String> splitText(String content) {
-        List<String> chunks = new ArrayList<>();
-
-        String[] paragraphs = content.split("\n\n+");
-
-        StringBuilder currentChunk = new StringBuilder();
-        int currentSize = 0;
-
-        for (String paragraph : paragraphs) {
-            paragraph = paragraph.trim();
-            if (StrUtil.isBlank(paragraph)) {
-                continue;
-            }
-
-            if (paragraph.length() > chunkSize) {
-                if (currentSize > 0) {
-                    chunks.add(currentChunk.toString().trim());
-                    currentChunk = new StringBuilder();
-                    currentSize = 0;
-                }
-
-                List<String> subChunks = splitLongParagraph(paragraph);
-                chunks.addAll(subChunks);
-            } else {
-                if (currentSize + paragraph.length() + 1 > chunkSize && currentSize >= MIN_CHUNK_SIZE) {
-                    chunks.add(currentChunk.toString().trim());
-
-                    String overlapText = getOverlapText(currentChunk.toString());
-                    currentChunk = new StringBuilder(overlapText);
-                    currentSize = overlapText.length();
-                }
-
-                if (currentSize > 0) {
-                    currentChunk.append("\n\n");
-                    currentSize += 2;
-                }
-                currentChunk.append(paragraph);
-                currentSize += paragraph.length();
-            }
-        }
-
-        if (currentSize > 0) {
-            chunks.add(currentChunk.toString().trim());
-        }
-
-        return chunks;
-    }
-
-    private List<String> splitLongParagraph(String paragraph) {
-        List<String> chunks = new ArrayList<>();
-
-        String[] sentences = paragraph.split("(?<=[。！？.!?])");
-
-        StringBuilder currentChunk = new StringBuilder();
-        int currentSize = 0;
-
-        for (String sentence : sentences) {
-            sentence = sentence.trim();
-            if (StrUtil.isBlank(sentence)) {
-                continue;
-            }
-
-            if (currentSize + sentence.length() > chunkSize && currentSize >= MIN_CHUNK_SIZE) {
-                chunks.add(currentChunk.toString().trim());
-                currentChunk = new StringBuilder();
-                currentSize = 0;
-            }
-
-            currentChunk.append(sentence);
-            currentSize += sentence.length();
-        }
-
-        if (currentSize > 0) {
-            chunks.add(currentChunk.toString().trim());
-        }
-
-        return chunks;
-    }
-
-    private String getOverlapText(String text) {
-        if (text.length() <= chunkOverlap) {
-            return text;
-        }
-
-        int start = text.length() - chunkOverlap;
-        int breakPoint = text.indexOf("\n", start);
-        if (breakPoint > 0 && breakPoint < text.length() - 10) {
-            return text.substring(breakPoint + 1);
-        }
-
-        return text.substring(start);
     }
 
     private String cleanContent(String content) {
