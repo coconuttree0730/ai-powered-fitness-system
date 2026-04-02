@@ -291,10 +291,44 @@
             v-model="form.description"
             type="textarea"
             :rows="4"
-            placeholder="请输入商品描述"
+            placeholder="请输入商品描述，支持AI润色..."
             maxlength="500"
             show-word-limit
+            :class="{ 'loading-textarea': polishing }"
           />
+          
+          <div class="polish-button-group">
+            <el-button 
+              v-if="!hasPolished && !polishing"
+              type="primary" 
+              @click="handlePolish"
+            >
+              <el-icon><MagicStick /></el-icon>
+              AI润色
+            </el-button>
+            
+            <el-button 
+              v-if="polishing"
+              type="primary" 
+              loading
+            >
+              AI润色中...
+            </el-button>
+            <el-button 
+              v-if="polishing"
+              @click="handleCancelPolish"
+            >
+              取消
+            </el-button>
+            
+            <el-button 
+              v-if="hasPolished && !polishing"
+              @click="handleRestore"
+            >
+              <el-icon><RefreshLeft /></el-icon>
+              恢复原文
+            </el-button>
+          </div>
         </el-form-item>
       </el-form>
 
@@ -358,7 +392,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Search, Plus, Edit, Delete, Goods, Box
+  Search, Plus, Edit, Delete, Goods, Box, MagicStick, RefreshLeft
 } from '@element-plus/icons-vue'
 import {
   getAdminProducts,
@@ -369,6 +403,7 @@ import {
   updateAdminProductStock
 } from '@/api/admin/product'
 import { uploadImage } from '@/api/file'
+import { polishDescription } from '@/api/ai'
 
 // 统计数据
 const stats = ref([
@@ -401,6 +436,11 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
+
+// AI润色相关状态
+const polishing = ref(false)
+const originalText = ref('')
+const hasPolished = ref(false)
 
 // 表单数据
 const form = reactive({
@@ -696,6 +736,52 @@ async function handleStockSubmit() {
   }
 }
 
+// AI润色相关方法
+async function handlePolish() {
+  const textLength = form.description.trim().length
+  
+  if (textLength === 0) {
+    ElMessage.warning('请先输入描述内容')
+    return
+  }
+  
+  if (textLength < 3) {
+    ElMessage.warning('文本内容至少需要3个字')
+    return
+  }
+  
+  if (textLength > 500) {
+    ElMessage.warning('文本长度不能超过500字')
+    return
+  }
+  
+  originalText.value = form.description
+  polishing.value = true
+  hasPolished.value = false
+  
+  try {
+    const response = await polishDescription({ text: form.description })
+    form.description = response.polishedText
+    hasPolished.value = true
+    ElMessage.success('润色成功')
+  } catch (error) {
+    ElMessage.error(error.message || '润色失败，请重试')
+  } finally {
+    polishing.value = false
+  }
+}
+
+function handleCancelPolish() {
+  polishing.value = false
+  ElMessage.info('已取消润色')
+}
+
+function handleRestore() {
+  form.description = originalText.value
+  hasPolished.value = false
+  ElMessage.success('已恢复原始文本')
+}
+
 // 分页
 function handleSizeChange(val) {
   pagination.pageSize = val
@@ -926,5 +1012,20 @@ onMounted(() => {
 .brief-stock {
   font-size: 14px;
   color: #606266;
+}
+
+.polish-button-group {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.loading-textarea textarea {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>
