@@ -171,3 +171,5 @@ spring:
 ### 7.3 相关文档
 详细问题排查过程见：`docs/bug-fixes/spring-ai-alibaba-404-fix.md`
 
+- 修改数据库时 不应该既手动改数据库，又写 Flyway 脚本
+- 应该只选择一种方式（推荐 Flyway 脚本，便于版本控制）
