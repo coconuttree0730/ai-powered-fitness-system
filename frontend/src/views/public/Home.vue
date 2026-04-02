@@ -440,40 +440,109 @@
     </section>
 
     <!-- 健身设备 -->
-    <section class="section equipment-section">
+    <section id="equipments" class="section equipment-section">
       <div class="equipment-container">
         <div class="section-header" v-intersect="onReveal">
           <div class="section-tag">Equipment</div>
           <h2 class="section-title">顶级健身设备<br><span>专业级训练体验</span></h2>
           <p class="section-desc">引进国际顶级健身器械，为您提供专业级的训练体验</p>
         </div>
-        <div class="equipment-grid">
-          <div class="equipment-main" v-intersect="onReveal">
-            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=600&fit=crop" alt="力量区">
-            <div class="equipment-info">
-              <h3>力量训练区</h3>
-              <p>配备Hammer Strength、Life Fitness等国际顶级力量训练设备，满足从入门到专业运动员的全方位训练需求。</p>
-            </div>
+
+        <!-- 加载状态 -->
+        <div v-if="equipmentsLoading" class="equipments-loading">
+          <div class="loading-spinner"></div>
+          <p>正在加载器械数据...</p>
+        </div>
+
+        <!-- 错误状态 -->
+        <div v-else-if="equipmentsError" class="equipments-error">
+          <p>
+            <svg class="emoji-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {{ equipmentsError }}
+          </p>
+          <button class="btn btn-outline" @click="fetchHomePageEquipments">重新加载</button>
+        </div>
+
+        <!-- 数据展示 -->
+        <template v-else>
+          <!-- 器械类型标签 -->
+          <div class="equipment-tabs">
+            <button
+              v-for="tab in equipmentTabs"
+              :key="tab.key"
+              :class="['equipment-tab', { active: activeEquipmentTab === tab.key }]"
+              @click="activeEquipmentTab = tab.key"
+            >
+              {{ tab.label }}
+            </button>
           </div>
-          <div class="equipment-list">
-            <div v-for="(item, index) in equipmentList" :key="index"
-                 class="equipment-item"
-                 :class="{ active: activeEquipment === index }"
-                 @click="activeEquipment = index"
-                 v-intersect="onReveal">
-              <div class="equipment-item-image">
-                <img :src="item.image" :alt="item.name">
+
+          <!-- 器械网格 - 瀑布流布局 -->
+          <div class="equipment-showcase-grid">
+            <div
+              v-for="(equipment, index) in filteredEquipments"
+              :key="equipment.id || index"
+              class="equipment-showcase-card"
+              :class="getEquipmentCardClass(index)"
+              @click="handleEquipmentClick(equipment)"
+              v-intersect="onReveal"
+            >
+              <div class="equipment-showcase-image">
+                <img
+                  v-if="!equipment.imageError && equipment.imageUrl"
+                  :src="equipment.imageUrl"
+                  :alt="equipment.equipmentName"
+                  @error="handleEquipmentImageError(equipment)"
+                >
+                <div v-else class="equipment-image-placeholder">
+                  <span class="placeholder-text">图片加载中...</span>
+                </div>
+                <div class="equipment-showcase-overlay">
+                  <span class="equipment-type-badge">{{ equipment.typeName || '其他' }}</span>
+                  <span v-if="equipment.location" class="equipment-location-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    {{ equipment.location }}
+                  </span>
+                </div>
+                <!-- 悬浮查看详情提示 -->
+                <div class="equipment-hover-overlay">
+                  <div class="hover-content">
+                    <span class="hover-text">{{ authStore.isLoggedIn ? '查看详情' : '登录后查看' }}</span>
+                    <svg class="hover-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="16" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
-              <div class="equipment-item-content">
-                <h4>{{ item.name }}</h4>
-                <p>{{ item.desc }}</p>
-                <div class="equipment-item-meta">
-                  <span v-for="(meta, i) in item.meta" :key="i">{{ meta }}</span>
+              <div class="equipment-showcase-content">
+                <h3 class="equipment-showcase-name">{{ equipment.equipmentName }}</h3>
+                <p class="equipment-showcase-desc">{{ equipment.description || '专业健身器材，助力您的训练目标' }}</p>
+                <div class="equipment-showcase-meta">
+                  <span class="equipment-status" :class="getEquipmentStatusClass(equipment.status)">
+                    <span class="status-dot"></span>
+                    {{ getEquipmentStatusLabel(equipment.status) }}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
+          <!-- 查看更多按钮 -->
+          <div class="equipments-more">
+            <router-link to="/equipments" class="btn btn-outline btn-view-all">
+              <span>查看全部器械</span>
+              <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </router-link>
+          </div>
+        </template>
       </div>
     </section>
 
@@ -752,6 +821,7 @@ import { getHomePageCourses } from '@/api/course'
 import { getHomePageCoaches } from '@/api/coachDetail'
 import { getActiveBanners } from '@/api/banner'
 import { getPublishedAnnouncements } from '@/api/announcement'
+import { getHomePageEquipments } from '@/api/equipment'
 import LoginModal from '@/components/LoginModal.vue'
 import RegisterModal from '@/components/RegisterModal.vue'
 
@@ -1190,12 +1260,124 @@ const testimonials = [
 ]
 
 // 健身设备
-const activeEquipment = ref(0)
-const equipmentList = [
-  { name: '有氧训练区', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=200&fit=crop', desc: 'Technogym、Precor顶级有氧设备，支持心率监测与数据同步。', meta: ['跑步机 x 20', '单车 x 15'] },
-  { name: '自由重量区', image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=200&h=200&fit=crop', desc: 'Eleiko专业举重器材，从哑铃到杠铃，满足各类力量训练需求。', meta: ['哑铃组 x 30', '杠铃架 x 8'] },
-  { name: '功能训练区', image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=200&h=200&fit=crop', desc: 'TRX、战绳、药球等多样化功能训练器材，提升运动表现。', meta: ['TRX x 10', '战绳 x 6'] }
-]
+const activeEquipmentTab = ref('all')
+const equipmentsData = ref([])
+const equipmentsLoading = ref(false)
+const equipmentsError = ref(null)
+
+// 器械类型标签
+const equipmentTabs = ref([
+  { key: 'all', label: '全部器械' },
+  { key: 'STRENGTH', label: '力量训练' },
+  { key: 'CARDIO', label: '有氧设备' },
+  { key: 'FREE_WEIGHT', label: '自由重量' },
+  { key: 'FUNCTIONAL', label: '功能训练' }
+])
+
+// 获取首页器械数据
+async function fetchHomePageEquipments() {
+  equipmentsLoading.value = true
+  equipmentsError.value = null
+  try {
+    const data = await getHomePageEquipments()
+    if (data && data.equipments) {
+      equipmentsData.value = data.equipments
+      // 动态更新标签（根据返回的数据动态调整）
+      if (data.groupedByType) {
+        const dynamicTabs = [{ key: 'all', label: '全部器械' }]
+        Object.keys(data.groupedByType).forEach(typeCode => {
+          const typeName = getEquipmentTypeLabel(typeCode)
+          dynamicTabs.push({ key: typeCode, label: typeName })
+        })
+        if (dynamicTabs.length > 1) {
+          equipmentTabs.value = dynamicTabs
+        }
+      }
+    } else {
+      equipmentsData.value = []
+    }
+  } catch (error) {
+    console.error('获取器械数据失败:', error)
+    equipmentsError.value = error.message || '获取器械数据失败，请稍后重试'
+    equipmentsData.value = []
+  } finally {
+    equipmentsLoading.value = false
+  }
+}
+
+// 获取器械类型标签
+function getEquipmentTypeLabel(typeCode) {
+  const typeMap = {
+    'STRENGTH': '力量训练',
+    'CARDIO': '有氧设备',
+    'FREE_WEIGHT': '自由重量',
+    'FUNCTIONAL': '功能训练',
+    'YOGA': '瑜伽器材',
+    'OTHER': '其他'
+  }
+  return typeMap[typeCode] || typeCode
+}
+
+// 获取状态样式类
+function getEquipmentStatusClass(status) {
+  const map = {
+    0: 'status-repair',
+    1: 'status-normal',
+    2: 'status-scrapped'
+  }
+  return map[status] || 'status-normal'
+}
+
+// 获取状态标签
+function getEquipmentStatusLabel(status) {
+  const map = {
+    0: '维修中',
+    1: '正常使用',
+    2: '已报废'
+  }
+  return map[status] || '未知'
+}
+
+// 根据当前选中的标签过滤器械
+const filteredEquipments = computed(() => {
+  if (activeEquipmentTab.value === 'all') {
+    return equipmentsData.value.slice(0, 8) // 首页最多显示8个
+  }
+  return equipmentsData.value
+    .filter(e => e.typeCode === activeEquipmentTab.value)
+    .slice(0, 8)
+})
+
+// 获取卡片尺寸类名（实现瀑布流效果）
+function getEquipmentCardClass(index) {
+  const pattern = index % 6
+  if (pattern === 0 || pattern === 5) return 'card-large'
+  if (pattern === 2 || pattern === 3) return 'card-wide'
+  return 'card-normal'
+}
+
+// 器械图片加载失败处理
+function handleEquipmentImageError(equipment) {
+  equipment.imageError = true
+}
+
+// 处理器械卡片点击
+function handleEquipmentClick(equipment) {
+  if (!equipment || !equipment.id) {
+    message.error('器械信息无效')
+    return
+  }
+
+  // 检查用户登录状态
+  if (authStore.isLoggedIn) {
+    // 已登录用户，跳转到器械详情页
+    router.push(`/equipments/${equipment.id}`)
+  } else {
+    // 未登录用户，显示登录提醒
+    sessionStorage.setItem('pendingEquipmentId', equipment.id)
+    showLoginModal.value = true
+  }
+}
 
 // 线上线下
 const omnichannelFeatures = [
@@ -1509,6 +1691,9 @@ onMounted(() => {
 
   // 获取首页教练数据
   fetchHomePageCoaches()
+
+  // 获取首页器械数据
+  fetchHomePageEquipments()
 
   // 获取公告数据
   fetchAnnouncements()
@@ -3519,103 +3704,368 @@ const vIntersect = {
   padding: 0 40px;
 }
 
-.equipment-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 30px;
-}
-
-.equipment-main {
-  position: relative;
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-.equipment-main img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.equipment-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40px;
-  background: linear-gradient(to top, rgba(10, 10, 15, 0.95) 0%, transparent 100%);
-}
-
-.equipment-info h3 {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.equipment-info p {
-  font-size: 16px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
-.equipment-list {
+/* 器械加载状态 */
+.equipments-loading {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
 }
 
-.equipment-item {
+.equipments-loading .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 107, 53, 0.2);
+  border-top-color: #FF6B35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+/* 器械错误状态 */
+.equipments-error {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.equipments-error p {
+  color: #FF6B35;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* 器械类型标签 */
+.equipment-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.equipment-tab {
+  padding: 14px 28px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.3s;
 }
 
-.equipment-item:hover,
-.equipment-item.active {
-  background: rgba(255, 107, 53, 0.05);
+.equipment-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.equipment-tab.active {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-color: transparent;
+  color: var(--text-primary);
+}
+
+/* 器械展示网格 - 瀑布流布局 */
+.equipment-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 280px;
+  gap: 24px;
+  margin-bottom: 50px;
+}
+
+/* 器械展示卡片 */
+.equipment-showcase-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s;
+  display: flex;
+  flex-direction: column;
+}
+
+.equipment-showcase-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 107, 53, 0.2);
 }
 
-.equipment-item-image {
-  width: 100px;
-  height: 100px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
+/* 卡片尺寸变体 */
+.equipment-showcase-card.card-large {
+  grid-row: span 2;
 }
 
-.equipment-item-image img {
+.equipment-showcase-card.card-wide {
+  grid-column: span 2;
+}
+
+/* 器械图片 */
+.equipment-showcase-image {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.equipment-showcase-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s;
 }
 
-.equipment-item-content h4 {
+.equipment-showcase-card:hover .equipment-showcase-image img {
+  transform: scale(1.05);
+}
+
+.equipment-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1A1A25 0%, #2A2A35 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-text {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.equipment-showcase-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.equipment-type-badge {
+  background: rgba(255, 107, 53, 0.9);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.equipment-location-badge {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 悬浮查看详情提示 */
+.equipment-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.equipment-showcase-card:hover .equipment-hover-overlay {
+  opacity: 1;
+}
+
+.equipment-hover-overlay .hover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 100px;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+}
+
+.equipment-showcase-card:hover .hover-content {
+  transform: translateY(0);
+}
+
+.equipment-hover-overlay .hover-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.equipment-hover-overlay .hover-icon {
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+/* 器械内容 */
+.equipment-showcase-content {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.equipment-showcase-name {
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.equipment-item-content p {
+.equipment-showcase-desc {
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.equipment-item-meta {
+.equipment-showcase-meta {
   display: flex;
-  gap: 16px;
+  align-items: center;
 }
 
-.equipment-item-meta span {
+.equipment-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
-  color: var(--text-muted);
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-normal {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+}
+
+.status-normal .status-dot {
+  background: #22C55E;
+}
+
+.status-repair {
+  background: rgba(255, 193, 7, 0.2);
+  color: #FFC107;
+}
+
+.status-repair .status-dot {
+  background: #FFC107;
+}
+
+.status-scrapped {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.status-scrapped .status-dot {
+  background: #EF4444;
+}
+
+/* 查看更多按钮 */
+.equipments-more {
+  text-align: center;
+}
+
+.equipments-more .btn-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.equipments-more .btn-view-all:hover {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-color: transparent;
+  color: var(--text-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(255, 107, 53, 0.35);
+}
+
+.equipments-more .btn-view-all:hover .btn-icon {
+  transform: translateX(4px);
+}
+
+/* 响应式适配 */
+@media (max-width: 1200px) {
+  .equipment-showcase-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .equipment-showcase-card.card-wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 992px) {
+  .equipment-showcase-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 250px;
+  }
+  
+  .equipment-showcase-card.card-wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .equipment-tabs {
+    gap: 8px;
+  }
+  
+  .equipment-tab {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+  
+  .equipment-showcase-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+  
+  .equipment-showcase-card.card-large,
+  .equipment-showcase-card.card-wide {
+    grid-row: span 1;
+    grid-column: span 1;
+  }
+  
+  .equipment-showcase-image {
+    height: 200px;
+  }
 }
 
 /* Omnichannel Section */

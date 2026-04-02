@@ -33,6 +33,18 @@ const routes = [
     meta: { title: '教练详情', public: true }
   },
   {
+    path: '/equipments',
+    name: 'Equipments',
+    component: () => import('@/views/public/Equipments.vue'),
+    meta: { title: '器械列表', public: true }
+  },
+  {
+    path: '/equipments/:id',
+    name: 'EquipmentDetail',
+    component: () => import('@/views/public/EquipmentDetail.vue'),
+    meta: { title: '器械详情', public: true }
+  },
+  {
     path: '/member',
     component: () => import('@/layouts/MemberLayout.vue'),
     meta: { requiresAuth: true, roles: ['MEMBER'] },

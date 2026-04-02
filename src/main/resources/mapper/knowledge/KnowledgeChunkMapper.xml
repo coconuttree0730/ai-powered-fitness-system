@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.knowledge.mapper.KnowledgeChunkMapper">
+
+    <resultMap id="ChunkVOResultMap" type="com.fitness.modules.knowledge.model.vo.KnowledgeChunkVO">
+        <id column="id" property="id"/>
+        <result column="document_id" property="documentId"/>
+        <result column="document_title" property="documentTitle"/>
+        <result column="chunk_index" property="chunkIndex"/>
+        <result column="content" property="content"/>
+        <result column="char_count" property="charCount"/>
+        <result column="metadata" property="metadata" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="similarity" property="similarity"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="vectorSearch" resultMap="ChunkVOResultMap">
+        SELECT 
+            kc.id,
+            kc.document_id,
+            kd.title as document_title,
+            kc.chunk_index,
+            kc.content,
+            kc.char_count,
+            kc.metadata,
+            1 - (kc.embedding &lt;=&gt; ${embedding}::vector) as similarity,
+            kc.create_time
+        FROM knowledge_chunk kc
+        INNER JOIN knowledge_document kd ON kc.document_id = kd.id AND kd.deleted = false AND kd.status = 1
+        <where>
+            <if test="categoryId != null">
+                AND kd.category_id = #{categoryId}
+            </if>
+            <if test="similarityThreshold != null">
+                AND 1 - (kc.embedding &lt;=&gt; ${embedding}::vector) >= #{similarityThreshold}
+            </if>
+        </where>
+        ORDER BY kc.embedding &lt;=&gt; ${embedding}::vector
+        LIMIT #{topK}
+    </select>
+
+    <select id="keywordSearch" resultMap="ChunkVOResultMap">
+        SELECT 
+            kc.id,
+            kc.document_id,
+            kd.title as document_title,
+            kc.chunk_index,
+            kc.content,
+            kc.char_count,
+            kc.metadata,
+            ts_rank_cd(to_tsvector('simple', kc.content), plainto_tsquery('simple', #{keyword})) as similarity,
+            kc.create_time
+        FROM knowledge_chunk kc
+        INNER JOIN knowledge_document kd ON kc.document_id = kd.id AND kd.deleted = false AND kd.status = 1
+        <where>
+            to_tsvector('simple', kc.content) @@ plainto_tsquery('simple', #{keyword})
+            <if test="categoryId != null">
+                AND kd.category_id = #{categoryId}
+            </if>
+        </where>
+        ORDER BY ts_rank_cd(to_tsvector('simple', kc.content), plainto_tsquery('simple', #{keyword})) DESC
+        LIMIT #{topK}
+    </select>
+
+    <delete id="deleteByDocumentId">
+        DELETE FROM knowledge_chunk WHERE document_id = #{documentId}
+    </delete>
+
+    <update id="updateEmbedding">
+        UPDATE knowledge_chunk 
+        SET embedding = ${embedding}::vector 
+        WHERE id = #{id}
+    </update>
+
+</mapper>

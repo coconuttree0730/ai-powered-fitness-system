@@ -48,6 +48,15 @@ spring:
           temperature: 0.2
           top-p: 0.3
           max-tokens: 512
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      embedding:
+        model: ${OLLAMA_EMBEDDING_MODEL:embeddinggemma:300m}
+
+knowledge:
+  chunk:
+    size: 500
+    overlap: 50
 
 
 # LangSmith Configuration

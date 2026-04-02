@@ -11,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 器材查询控制器（公开接口）
@@ -61,5 +63,43 @@ public class EquipmentController {
         log.info("获取器材报修记录请求：equipmentId={}", id);
         List<RepairVO> repairs = equipmentService.getRepairList(id);
         return Result.success(repairs);
+    }
+
+    /**
+     * 获取首页展示的器材数据
+     * 按类型分组展示，用于官网首页器械区域
+     *
+     * @return 按类型分组的器材列表
+     */
+    @GetMapping("/homepage")
+    public Result<Map<String, Object>> getHomePageEquipments() {
+        log.info("获取首页器材展示数据请求");
+
+        // 查询各类型器材（限制数量）
+        EquipmentQueryDTO query = new EquipmentQueryDTO();
+        query.setPageNum(1);
+        query.setPageSize(100);
+        query.setStatus(1); // 只查询正常状态的器材
+
+        Page<EquipmentVO> page = equipmentService.getEquipmentList(query);
+        List<EquipmentVO> allEquipments = page.getRecords();
+
+        // 按类型分组
+        Map<String, List<EquipmentVO>> groupedByType = new HashMap<>();
+        for (EquipmentVO equipment : allEquipments) {
+            String typeCode = equipment.getTypeCode();
+            if (typeCode == null) {
+                typeCode = "OTHER";
+            }
+            groupedByType.computeIfAbsent(typeCode, k -> new java.util.ArrayList<>()).add(equipment);
+        }
+
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("equipments", allEquipments);
+        result.put("groupedByType", groupedByType);
+        result.put("total", allEquipments.size());
+
+        return Result.success(result);
     }
 }

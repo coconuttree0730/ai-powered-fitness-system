@@ -54,7 +54,10 @@ public enum ErrorCode {
     PRODUCT_STOCK_INSUFFICIENT(7002, "商品库存不足"),
     POINTS_INSUFFICIENT(7003, "积分不足"),
     ORDER_NOT_FOUND(7004, "订单不存在"),
-    ORDER_STATUS_ERROR(7005, "订单状态错误");
+    ORDER_STATUS_ERROR(7005, "订单状态错误"),
+
+    DATA_NOT_FOUND(8001, "数据不存在"),
+    DATA_ALREADY_EXISTS(8002, "数据已存在");
 
     private final Integer code;
     private final String message;

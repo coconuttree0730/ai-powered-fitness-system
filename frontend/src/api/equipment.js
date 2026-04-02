@@ -8,6 +8,17 @@ export function getEquipmentList(params) {
   })
 }
 
+/**
+ * 获取首页展示的器材数据
+ * @returns {Promise} 首页器材数据
+ */
+export function getHomePageEquipments() {
+  return request({
+    url: '/equipment/homepage',
+    method: 'get'
+  })
+}
+
 export function getEquipmentDetail(id) {
   return request({
     url: `/equipment/${id}`,
@@ -87,5 +98,18 @@ export function getEquipmentRepairs(equipmentId) {
   return request({
     url: `/equipment/${equipmentId}/repairs`,
     method: 'get'
+  })
+}
+
+/**
+ * 提交器械报修
+ * @param {Object} data 报修数据
+ * @returns {Promise} 提交结果
+ */
+export function reportEquipmentRepair(data) {
+  return request({
+    url: '/repairs',
+    method: 'post',
+    data
   })
 }
