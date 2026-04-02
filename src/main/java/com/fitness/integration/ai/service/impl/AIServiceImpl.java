@@ -279,4 +279,32 @@ public class AIServiceImpl implements AIService {
             langSmithService.endTrace(traceId);
         }
     }
+
+    @Override
+    public String polishText(String text) {
+        log.info("文本润色请求，文本长度: {}", text.length());
+        String traceId = langSmithService.startTrace("polishText", Map.of("type", "text_polish"));
+        long startTime = System.currentTimeMillis();
+
+        try {
+            String prompt = promptTemplates.generateTextPolish(text);
+            langSmithService.logInput(traceId, prompt, model);
+
+            String response = chatClient.prompt()
+                    .user(prompt)
+                    .call()
+                    .content();
+
+            long duration = System.currentTimeMillis() - startTime;
+            langSmithService.logOutput(traceId, response, duration);
+            log.info("文本润色成功，响应长度: {}, 耗时: {}ms", response != null ? response.length() : 0, duration);
+            return response;
+        } catch (Exception e) {
+            langSmithService.logError(traceId, e.getMessage());
+            log.error("文本润色失败", e);
+            throw new RuntimeException("文本润色失败: " + e.getMessage(), e);
+        } finally {
+            langSmithService.endTrace(traceId);
+        }
+    }
 }
