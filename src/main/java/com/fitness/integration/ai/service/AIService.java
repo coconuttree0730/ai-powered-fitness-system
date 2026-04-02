@@ -81,4 +81,12 @@ public interface AIService {
      * @return 动作指导内容
      */
     String getExerciseGuide(Map<String, Object> variables);
+
+    /**
+     * 文本润色
+     *
+     * @param text 原始文本
+     * @return 润色后的文本
+     */
+    String polishText(String text);
 }
