@@ -1,5 +1,6 @@
 package com.fitness.config;
 
+import com.fitness.config.CustomAuthorizationDeniedHandler;
 import com.fitness.integration.security.CustomPermissionEvaluator;
 import com.fitness.integration.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final AccessDeniedHandler accessDeniedHandler;
+    private final CustomAuthorizationDeniedHandler authorizationDeniedHandler;
 
     /**
      * 白名单URL路径 ******* 全局用户可用
@@ -66,6 +67,8 @@ public class SecurityConfig {
             "/api/v1/coaches/home",
             // 公开教练详情
             "/api/v1/coaches/*/detail",
+            // 公开器械列表（首页展示用，无需登录可查看）
+            "/api/v1/equipment/**",
             // Swagger文档
             "/swagger-ui/**",
             "/swagger-ui.html",
@@ -102,7 +105,7 @@ public class SecurityConfig {
                 .exceptionHandling(exception ->
                         exception
                                 .authenticationEntryPoint(authenticationEntryPoint)
-                                .accessDeniedHandler(accessDeniedHandler)
+                                .accessDeniedHandler(authorizationDeniedHandler)
                 )
 
                 // 配置请求授权

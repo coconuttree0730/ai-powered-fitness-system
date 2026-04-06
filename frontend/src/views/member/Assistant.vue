@@ -35,7 +35,7 @@
               </div>
             </template>
           </div>
-          
+
           <!-- AI 正在输入加载动画 -->
           <div v-if="sending && isAiTyping" class="message ai typing-message">
             <div class="message-avatar">AI</div>
@@ -48,7 +48,77 @@
             </div>
           </div>
         </div>
-        
+
+        <!-- 健身计划卡片固定显示区域 -->
+        <div v-if="currentPlanCard && currentPlanCard.planName" class="plan-card-fixed-area">
+          <div class="plan-card-container">
+            <div class="plan-card-header">
+              <div class="plan-card-title">
+                <n-icon :component="FitnessOutline" size="20" />
+                <span>{{ currentPlanCard.planName }}</span>
+              </div>
+              <n-button text size="small" class="close-plan-btn" @click="dismissPlanCard">
+                <n-icon :component="CloseOutline" size="18" />
+              </n-button>
+            </div>
+            <div class="plan-card-content">
+              <div class="plan-card-summary">{{ currentPlanCard.summary || 'AI为您生成的个性化健身计划' }}</div>
+              <div class="plan-card-details">
+                <div class="plan-detail-item">
+                  <span class="detail-label">目标:</span>
+                  <span class="detail-value">{{ currentPlanCard.goal }}</span>
+                </div>
+                <div class="plan-detail-item">
+                  <span class="detail-label">部位:</span>
+                  <span class="detail-value">{{ currentPlanCard.bodyPart }}</span>
+                </div>
+                <div class="plan-detail-item">
+                  <span class="detail-label">经验:</span>
+                  <span class="detail-value">{{ currentPlanCard.experience }}</span>
+                </div>
+                <div class="plan-detail-item">
+                  <span class="detail-label">周期:</span>
+                  <span class="detail-value">{{ currentPlanCard.duration }}天</span>
+                </div>
+              </div>
+              <!-- 推荐课程 -->
+              <div v-if="currentPlanCard.recommendedCourses && currentPlanCard.recommendedCourses.length > 0" class="plan-recommendations">
+                <div class="recommendation-title">推荐课程</div>
+                <div class="recommendation-list">
+                  <div v-for="(course, idx) in currentPlanCard.recommendedCourses.slice(0, 3)" :key="idx" class="recommendation-item">
+                    <n-avatar :size="32" :src="course.coverImage" fallback-src="https://api.dicebear.com/7.x/initials/svg?seed=course" />
+                    <span class="recommendation-name">{{ course.name }}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 推荐器械 -->
+              <div v-if="currentPlanCard.recommendedEquipment && currentPlanCard.recommendedEquipment.length > 0" class="plan-recommendations">
+                <div class="recommendation-title">推荐器械</div>
+                <div class="recommendation-list">
+                  <div v-for="(equip, idx) in currentPlanCard.recommendedEquipment.slice(0, 3)" :key="idx" class="recommendation-item">
+                    <n-avatar :size="32" :src="equip.image" fallback-src="https://api.dicebear.com/7.x/initials/svg?seed=equip" />
+                    <span class="recommendation-name">{{ equip.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plan-card-actions">
+              <n-button type="primary" size="small" :loading="savingPlan" @click="handleSavePlan">
+                <template #icon>
+                  <n-icon :component="SaveOutline" />
+                </template>
+                保存到我的计划
+              </n-button>
+              <n-button size="small" @click="handleRegeneratePlan">
+                <template #icon>
+                  <n-icon :component="RefreshOutline" />
+                </template>
+                重新生成
+              </n-button>
+            </div>
+          </div>
+        </div>
+
         <div class="chat-input-area">
           <div class="chat-input-wrapper">
             <div class="input-glow-layer"></div>
@@ -75,10 +145,10 @@
                   <span class="hint-text">Shift + Enter 换行</span>
                 </div>
                 <div class="btn-plan-wrapper">
-                  <n-button 
+                  <n-button
                     size="small"
                     class="btn-plan"
-                    @click="generatePlan"
+                    @click="showPlanModal = true"
                   >
                     <template #icon>
                       <n-icon :component="FitnessOutline" />
@@ -87,7 +157,7 @@
                   </n-button>
                 </div>
                 <div class="btn-plan-wrapper">
-                  <n-button 
+                  <n-button
                     size="small"
                     class="btn-plan btn-nutrition"
                     @click="generateNutrition"
@@ -99,9 +169,9 @@
                   </n-button>
                 </div>
               </div>
-              <n-button 
+              <n-button
                 v-if="!sending"
-                type="primary" 
+                type="primary"
                 size="small"
                 class="btn-send"
                 :disabled="!inputMessage.trim()"
@@ -112,9 +182,9 @@
                 </template>
                 发送
               </n-button>
-              <n-button 
+              <n-button
                 v-else
-                type="warning" 
+                type="warning"
                 size="small"
                 class="btn-pause"
                 @click="stopMessage"
@@ -139,8 +209,8 @@
           推荐问题
         </h3>
         <div class="quick-questions">
-          <span 
-            v-for="question in quickQuestions" 
+          <span
+            v-for="question in quickQuestions"
             :key="question"
             class="quick-question"
             @click="askQuestion(question)"
@@ -150,46 +220,50 @@
         </div>
       </div>
 
-      <!-- 人气教练 -->
-      <div class="card-section coaches-section">
+      <!-- 我的健身计划 -->
+      <div class="card-section plans-section">
         <h3 class="section-title">
-          <n-icon :component="TrophyOutline" size="18" />
-          人气教练 TOP3
+          <n-icon :component="FitnessOutline" size="18" />
+          我的健身计划
         </h3>
-        <div class="coach-list">
-          <div v-for="(coach, index) in topCoaches" :key="coach.id" class="coach-item" @click="viewCoach(coach.id)">
-            <div class="coach-rank" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
-            <n-avatar 
-              :size="48" 
-              :src="coach.avatar" 
-              class="coach-avatar"
-              fallback-src="https://api.dicebear.com/7.x/avataaars/svg?seed=coach"
-            />
-            <div class="coach-info">
-              <div class="coach-name">
-                {{ coach.name }}
-                <n-tag v-if="index === 0" type="error" size="tiny" round class="top-tag">金牌</n-tag>
+        <div class="plan-list">
+          <div v-if="loadingPlans" class="plans-loading">
+            <n-spin size="small" />
+            <span>加载中...</span>
+          </div>
+          <div v-else-if="myPlans.length === 0" class="plans-empty">
+            <n-empty description="暂无健身计划" size="small" />
+            <n-button text type="primary" size="small" @click="showPlanModal = true">
+              生成我的第一个计划
+            </n-button>
+          </div>
+          <div v-else class="plan-items">
+            <div
+              v-for="(plan, index) in myPlans"
+              :key="plan.id || index"
+              class="plan-item"
+              @click="viewPlanDetail(plan)"
+            >
+              <div class="plan-item-header">
+                <div class="plan-item-name">{{ plan.planName }}</div>
+                <n-tag v-if="index === 0" type="success" size="tiny" round>最新</n-tag>
               </div>
-              <div class="coach-specialty">{{ coach.specialty }}</div>
-              <div class="coach-stats">
-                <n-rate :value="coach.rating" readonly size="small" allow-half />
-                <span class="rating-score">{{ coach.rating }}分</span>
+              <div class="plan-item-meta">
+                <span class="plan-goal">{{ plan.goal }}</span>
+                <span class="plan-duration">{{ plan.duration }}天</span>
               </div>
+              <div class="plan-item-date">{{ formatDate(plan.createTime) }}</div>
             </div>
           </div>
         </div>
-        <n-button text type="primary" class="view-all-btn" @click="goToCoaches">
-          查看全部教练
-          <n-icon :component="ChevronForwardOutline" />
-        </n-button>
       </div>
     </div>
 
     <!-- 移动端底部快捷问题 -->
     <div v-if="isMobile" class="mobile-quick-questions">
       <div class="quick-questions-scroll">
-        <span 
-          v-for="question in quickQuestions.slice(0, 4)" 
+        <span
+          v-for="question in quickQuestions.slice(0, 4)"
           :key="question"
           class="quick-question"
           @click="askQuestion(question)"
@@ -198,6 +272,85 @@
         </span>
       </div>
     </div>
+
+    <!-- 健身计划生成弹窗 -->
+    <n-modal
+      v-model:show="showPlanModal"
+      title="生成健身计划"
+      preset="card"
+      class="plan-modal"
+      :style="{ width: '480px' }"
+    >
+      <div class="plan-form">
+        <div class="form-item">
+          <label class="form-label">健身目标</label>
+          <n-select
+            v-model:value="planForm.goal"
+            :options="goalOptions"
+            placeholder="请选择健身目标"
+          />
+        </div>
+        <div class="form-item">
+          <label class="form-label">训练部位</label>
+          <n-select
+            v-model:value="planForm.bodyPart"
+            :options="bodyPartOptions"
+            placeholder="请选择训练部位"
+          />
+        </div>
+        <div class="form-item">
+          <label class="form-label">健身经验</label>
+          <n-select
+            v-model:value="planForm.experience"
+            :options="experienceOptions"
+            placeholder="请选择健身经验"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <div class="modal-footer">
+          <n-button @click="showPlanModal = false">取消</n-button>
+          <n-button type="primary" :loading="generatingPlan" @click="generatePlan">
+            生成计划
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
+
+    <!-- 计划详情弹窗 -->
+    <n-modal
+      v-model:show="showPlanDetailModal"
+      :title="selectedPlan?.planName || '计划详情'"
+      preset="card"
+      class="plan-detail-modal"
+      :style="{ width: '600px', maxHeight: '80vh' }"
+    >
+      <div v-if="selectedPlan" class="plan-detail-content">
+        <div class="plan-detail-header">
+          <div class="plan-detail-meta">
+            <n-tag type="primary">{{ selectedPlan.goal }}</n-tag>
+            <n-tag type="info">{{ selectedPlan.bodyPart }}</n-tag>
+            <n-tag type="warning">{{ selectedPlan.experience }}</n-tag>
+            <span class="plan-detail-duration">{{ selectedPlan.duration }}天周期</span>
+          </div>
+        </div>
+        <div class="plan-detail-summary">{{ selectedPlan.summary }}</div>
+        <div v-if="selectedPlan.weeklyPlan && selectedPlan.weeklyPlan.length > 0" class="plan-detail-weekly">
+          <div class="weekly-title">每周训练安排</div>
+          <div class="weekly-list">
+            <div v-for="(day, idx) in selectedPlan.weeklyPlan" :key="idx" class="weekly-item">
+              <div class="weekly-day">{{ day.day }}</div>
+              <div class="weekly-content">{{ day.content }}</div>
+            </div>
+          </div>
+        </div>
+        <div v-if="selectedPlan.weeklyAdvice" class="plan-detail-advice">
+          <div class="advice-title">每周建议</div>
+          <div class="advice-content">{{ selectedPlan.weeklyAdvice.nutrition }}</div>
+          <div class="advice-content">{{ selectedPlan.weeklyAdvice.rest }}</div>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -211,11 +364,12 @@ import DOMPurify from 'dompurify'
 import {
   SendOutline,
   HelpCircleOutline,
-  TrophyOutline,
-  ChevronForwardOutline,
   FitnessOutline,
   PauseOutline,
-  NutritionOutline
+  NutritionOutline,
+  CloseOutline,
+  SaveOutline,
+  RefreshOutline
 } from '@vicons/ionicons5'
 import {
   createSession,
@@ -223,7 +377,10 @@ import {
   sendMessageStream,
   getUserSessions,
   getSessionDetail,
-  getSessionMessages
+  getSessionMessages,
+  generateFitnessPlan,
+  saveFitnessPlan,
+  getMyFitnessPlans
 } from '@/api/chat'
 
 const router = useRouter()
@@ -254,6 +411,10 @@ onMounted(() => {
   window.addEventListener('resize', checkScreenSize)
   // 加载会话列表并初始化
   initChat()
+  // 加载我的健身计划
+  loadMyPlans()
+  // 恢复未保存的计划卡片
+  restorePlanCard()
 })
 
 onUnmounted(() => {
@@ -413,43 +574,7 @@ const quickQuestions = [
   '热身动作推荐'
 ]
 
-// 人气教练 TOP3（评分排名前3）
-const topCoaches = ref([
-  {
-    id: 1,
-    name: '王教练',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wang',
-    specialty: '增肌塑形',
-    rating: 4.9,
-    students: 128
-  },
-  {
-    id: 2,
-    name: '李教练',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=li',
-    specialty: '减脂瘦身',
-    rating: 4.8,
-    students: 96
-  },
-  {
-    id: 3,
-    name: '张教练',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhang',
-    specialty: '瑜伽普拉提',
-    rating: 4.7,
-    students: 85
-  }
-])
-
-// 模拟从API加载人气教练
-async function loadTopCoaches() {
-  // 实际项目中调用后端API获取评分排名前3的教练
-  // const res = await fetch('/api/coaches/top?limit=3&sort=rating')
-  // topCoaches.value = await res.json()
-}
-
 onMounted(() => {
-  loadTopCoaches()
   // 初始化欢迎消息的渲染内容
   welcomeMessage.renderedContent = formatMessage(welcomeMessageRaw)
 })
@@ -676,10 +801,176 @@ function stopMessage() {
   }
 }
 
-function generatePlan() {
-  const planPrompt = '请为我制定一个个性化的健身训练计划，包括每周训练安排、训练项目和注意事项。'
-  inputMessage.value = planPrompt
-  sendMessage()
+// ==================== 健身计划相关功能 ====================
+
+// 计划弹窗显示状态
+const showPlanModal = ref(false)
+const showPlanDetailModal = ref(false)
+const generatingPlan = ref(false)
+const savingPlan = ref(false)
+const loadingPlans = ref(false)
+
+// 当前生成的计划卡片
+const currentPlanCard = ref(null)
+
+// 我的健身计划列表
+const myPlans = ref([])
+
+// 选中的计划（用于详情弹窗）
+const selectedPlan = ref(null)
+
+// 计划表单
+const planForm = ref({
+  goal: '增肌',
+  bodyPart: '全身',
+  experience: '初级'
+})
+
+// 选项
+const goalOptions = [
+  { label: '增肌', value: '增肌' },
+  { label: '减脂', value: '减脂' },
+  { label: '塑形', value: '塑形' },
+  { label: '力量提升', value: '力量提升' },
+  { label: '体能改善', value: '体能改善' }
+]
+
+const bodyPartOptions = [
+  { label: '全身', value: '全身' },
+  { label: '胸部', value: '胸部' },
+  { label: '背部', value: '背部' },
+  { label: '腿部', value: '腿部' },
+  { label: '肩部', value: '肩部' },
+  { label: '手臂', value: '手臂' },
+  { label: '核心', value: '核心' }
+]
+
+const experienceOptions = [
+  { label: '初级', value: '初级' },
+  { label: '中级', value: '中级' },
+  { label: '高级', value: '高级' }
+]
+
+// 生成健身计划
+async function generatePlan() {
+  if (!planForm.value.goal || !planForm.value.bodyPart || !planForm.value.experience) {
+    message.warning('请填写完整的计划信息')
+    return
+  }
+
+  generatingPlan.value = true
+  try {
+    const res = await generateFitnessPlan({
+      goal: planForm.value.goal,
+      bodyPart: planForm.value.bodyPart,
+      experience: planForm.value.experience
+    })
+
+    if (res) {
+      currentPlanCard.value = res
+      // 保存到 sessionStorage
+      savePlanCardToSession()
+      message.success('健身计划生成成功！')
+      showPlanModal.value = false
+    }
+  } catch (error) {
+    console.error('生成计划失败:', error)
+    message.error(error.message || '生成计划失败，请稍后重试')
+  } finally {
+    generatingPlan.value = false
+  }
+}
+
+// 保存计划到 sessionStorage
+function savePlanCardToSession() {
+  if (currentPlanCard.value) {
+    sessionStorage.setItem('currentPlanCard', JSON.stringify(currentPlanCard.value))
+  }
+}
+
+// 从 sessionStorage 恢复计划卡片
+function restorePlanCard() {
+  const saved = sessionStorage.getItem('currentPlanCard')
+  if (saved) {
+    try {
+      currentPlanCard.value = JSON.parse(saved)
+    } catch (e) {
+      console.error('恢复计划卡片失败:', e)
+    }
+  }
+}
+
+// 关闭计划卡片
+function dismissPlanCard() {
+  currentPlanCard.value = null
+  sessionStorage.removeItem('currentPlanCard')
+}
+
+// 保存计划到我的计划列表
+async function handleSavePlan() {
+  if (!currentPlanCard.value) return
+
+  savingPlan.value = true
+  try {
+    const res = await saveFitnessPlan(currentPlanCard.value)
+    if (res) {
+      message.success('计划已保存到我的健身计划！')
+      // 清除当前卡片
+      currentPlanCard.value = null
+      sessionStorage.removeItem('currentPlanCard')
+      // 刷新计划列表
+      await loadMyPlans()
+    }
+  } catch (error) {
+    console.error('保存计划失败:', error)
+    message.error(error.message || '保存计划失败，请稍后重试')
+  } finally {
+    savingPlan.value = false
+  }
+}
+
+// 重新生成计划
+async function handleRegeneratePlan() {
+  if (!planForm.value.goal) {
+    // 如果表单为空，使用当前卡片的参数
+    if (currentPlanCard.value) {
+      planForm.value.goal = currentPlanCard.value.goal
+      planForm.value.bodyPart = currentPlanCard.value.bodyPart
+      planForm.value.experience = currentPlanCard.value.experience
+    }
+  }
+  await generatePlan()
+}
+
+// 加载我的健身计划列表
+async function loadMyPlans() {
+  loadingPlans.value = true
+  try {
+    const res = await getMyFitnessPlans()
+    if (res) {
+      myPlans.value = res
+    }
+  } catch (error) {
+    console.error('加载健身计划失败:', error)
+  } finally {
+    loadingPlans.value = false
+  }
+}
+
+// 查看计划详情
+function viewPlanDetail(plan) {
+  selectedPlan.value = plan
+  showPlanDetailModal.value = true
+}
+
+// 格式化日期
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN', {
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
 function generateNutrition() {
@@ -702,14 +993,6 @@ async function regeneratePlan() {
   const planPrompt = '请为我制定一个不同的个性化健身训练计划。'
   inputMessage.value = planPrompt
   await sendMessage()
-}
-
-function viewCoach(coachId) {
-  router.push(`/member/coach?id=${coachId}`)
-}
-
-function goToCoaches() {
-  router.push('/member/coach')
 }
 </script>
 
@@ -982,6 +1265,121 @@ function goToCoaches() {
 .plan-actions {
   display: flex;
   gap: 12px;
+}
+
+/* 健身计划卡片固定显示区域 */
+.plan-card-fixed-area {
+  background: linear-gradient(135deg, #FFF5F2 0%, #FFF 100%);
+  border-top: 1px solid #FFE8E0;
+  padding: 16px 24px;
+  flex-shrink: 0;
+}
+
+.plan-card-container {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 12px rgba(255, 107, 53, 0.1);
+  border: 1px solid #FFE8E0;
+}
+
+.plan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.plan-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.plan-card-title .n-icon {
+  color: #FF6B35;
+}
+
+.close-plan-btn {
+  color: #9CA3AF;
+}
+
+.close-plan-btn:hover {
+  color: #6B7280;
+}
+
+.plan-card-content {
+  margin-bottom: 12px;
+}
+
+.plan-card-summary {
+  font-size: 14px;
+  color: #6B7280;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.plan-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.plan-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: #9CA3AF;
+}
+
+.detail-value {
+  color: #1A1A2E;
+  font-weight: 500;
+}
+
+.plan-recommendations {
+  margin-top: 12px;
+}
+
+.recommendation-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin-bottom: 8px;
+}
+
+.recommendation-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.recommendation-name {
+  color: #4B5563;
+}
+
+.plan-card-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 /* AI 正在输入加载动画 */
@@ -1352,7 +1750,7 @@ function goToCoaches() {
   flex-shrink: 0;
 }
 
-.coaches-section {
+.plans-section {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1392,109 +1790,85 @@ function goToCoaches() {
   background: white;
 }
 
-/* 教练列表 */
-.coach-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* 我的健身计划列表 */
+.plan-list {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
 
-.coach-item {
+.plans-loading {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
   align-items: center;
-  padding: 12px;
-  background: #F8FAFC;
-  border-radius: 12px;
-  transition: all 0.3s;
-  cursor: pointer;
-  flex-shrink: 0;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: #6B7280;
+  font-size: 13px;
 }
 
-.coach-item:hover {
+.plans-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.plan-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-item {
+  padding: 12px;
+  background: #F8FAFC;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+
+.plan-item:hover {
   background: #F0F2F5;
+  border-color: #FF6B35;
   transform: translateX(4px);
 }
 
-.coach-rank {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.plan-item-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
+  margin-bottom: 6px;
 }
 
-.coach-rank.rank-1 {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: white;
-}
-
-.coach-rank.rank-2 {
-  background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
-  color: white;
-}
-
-.coach-rank.rank-3 {
-  background: linear-gradient(135deg, #CD7F32, #B87333);
-  color: white;
-}
-
-.coach-avatar {
-  flex-shrink: 0;
-  border: 2px solid white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.coach-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.coach-name {
+.plan-item-name {
   font-weight: 600;
   font-size: 14px;
   color: #1A1A2E;
+}
+
+.plan-item-meta {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.top-tag {
-  font-size: 10px;
-  padding: 0 6px;
-  height: 18px;
-}
-
-.coach-specialty {
+.plan-goal,
+.plan-duration {
   font-size: 12px;
   color: #6B7280;
-  margin-top: 2px;
+  background: white;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
-.coach-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.rating-score {
-  font-size: 12px;
-  color: #FF6B35;
-  font-weight: 600;
-}
-
-.view-all-btn {
-  margin-top: 12px;
-  justify-content: center;
-  flex-shrink: 0;
+.plan-item-date {
+  font-size: 11px;
+  color: #9CA3AF;
 }
 
 /* 移动端快捷问题 */
@@ -1525,24 +1899,127 @@ function goToCoaches() {
   flex-shrink: 0;
 }
 
+/* 计划生成弹窗 */
+.plan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 计划详情弹窗 */
+.plan-detail-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.plan-detail-header {
+  margin-bottom: 16px;
+}
+
+.plan-detail-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.plan-detail-duration {
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.plan-detail-summary {
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+}
+
+.plan-detail-weekly {
+  margin-bottom: 16px;
+}
+
+.weekly-title,
+.advice-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin-bottom: 12px;
+}
+
+.weekly-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weekly-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+}
+
+.weekly-day {
+  font-weight: 600;
+  color: #FF6B35;
+  min-width: 50px;
+  font-size: 13px;
+}
+
+.weekly-content {
+  font-size: 13px;
+  color: #4B5563;
+  line-height: 1.5;
+}
+
+.advice-content {
+  font-size: 13px;
+  color: #4B5563;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
 /* 响应式适配 - 折叠侧边栏 */
 @media (max-width: 1024px) {
   .assistant-page {
     left: 64px; /* 折叠后的sidebar宽度 */
   }
-  
+
   .sidebar {
     width: 280px;
   }
-  
+
   .chat-messages {
     padding: 20px;
   }
-  
+
   .message-content {
     max-width: 75%;
   }
-  
+
   .card-section {
     padding: 16px;
   }
@@ -1553,7 +2030,7 @@ function goToCoaches() {
   .sidebar {
     display: none;
   }
-  
+
   .chat-wrapper {
     width: 100%;
   }
@@ -1568,27 +2045,27 @@ function goToCoaches() {
     padding: 12px;
     padding-bottom: 70px; /* 为底部快捷问题留空间 */
   }
-  
+
   .chat-wrapper {
     height: calc(100vh - 56px - 70px - 60px);
   }
-  
+
   .chat-messages {
     padding: 16px;
   }
-  
+
   .message-content {
     max-width: 80%;
     padding: 12px 14px;
     font-size: 14px;
   }
-  
+
   .message-avatar {
     width: 36px;
     height: 36px;
     font-size: 16px;
   }
-  
+
   .chat-input-area {
     padding: 12px 16px;
   }
@@ -1598,19 +2075,13 @@ function goToCoaches() {
     right: 16px;
   }
 
-  .chat-input-wrapper {
-    border-radius: 16px;
-  }
-
   .input-content-area {
-    padding: 16px 18px 12px;
+    padding: 16px 16px 12px;
   }
 
   .chat-input :deep(.n-input__textarea-el) {
-    font-size: 15px;
+    font-size: 16px; /* 防止iOS缩放 */
     min-height: 60px;
-    line-height: 1.7;
-    padding: 6px 10px;
   }
 
   .chat-input-actions {
@@ -1622,69 +2093,28 @@ function goToCoaches() {
   }
 
   .input-hint {
-    display: none;
-  }
-
-  .btn-plan-wrapper {
-    border-radius: 8px;
+    display: none; /* 移动端隐藏提示 */
   }
 
   .btn-plan {
     font-size: 12px;
-    padding: 4px 9px;
-    border-radius: 6px;
+    padding: 4px 10px;
   }
 
-  .btn-nutrition {
+  .plan-card-fixed-area {
+    padding: 12px 16px;
+  }
+
+  .plan-card-container {
+    padding: 12px;
+  }
+
+  .plan-card-details {
+    gap: 8px;
+  }
+
+  .plan-detail-item {
     font-size: 12px;
-    padding: 4px 9px;
-    border-radius: 6px;
-  }
-
-  .btn-send {
-    padding: 6px 14px;
-    font-size: 13px;
-    border-radius: 10px;
-  }
-  
-  .plan-message {
-    padding: 12px;
-  }
-  
-  .plan-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .plan-actions .n-button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .assistant-page {
-    padding: 8px;
-    padding-bottom: 70px;
-  }
-  
-  .chat-messages {
-    padding: 12px;
-  }
-  
-  .message {
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  
-  .message-content {
-    max-width: 85%;
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-  
-  .chat-input-area {
-    padding: 10px 12px;
-    gap: 8px;
   }
 }
 </style>

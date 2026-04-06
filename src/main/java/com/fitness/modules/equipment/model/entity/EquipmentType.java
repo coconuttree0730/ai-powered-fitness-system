@@ -64,7 +64,7 @@ public class EquipmentType {
     /**
      * 逻辑删除标志
      */
-    @TableLogic
+    @TableLogic(value = "false", delval = "true")
     @TableField("deleted")
     private Boolean deleted;
 }

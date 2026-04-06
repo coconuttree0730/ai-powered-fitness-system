@@ -35,7 +35,7 @@ public class AIController {
      * @return AI 回复
      */
     @PostMapping("/chat")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public Result<String> chat(@Valid @RequestBody ChatRequest request) {
         log.info("AI 对话请求: {}", request.getMessage());
         String response = aiService.chat(request.getMessage());
@@ -49,7 +49,7 @@ public class AIController {
      * @return AI 回复
      */
     @PostMapping("/chat/prompt")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public Result<String> chatWithPrompt(@Valid @RequestBody PromptChatRequest request) {
         log.info("AI Prompt 对话请求，模板长度: {}", request.getPrompt().length());
         String response = aiService.chatWithPrompt(request.getPrompt(), request.getVariables());
@@ -63,7 +63,7 @@ public class AIController {
      * @return AI 流式回复
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public Flux<String> streamChat(@Valid @RequestBody ChatRequest request) {
         log.info("AI 流式对话请求: {}", request.getMessage());
         return aiService.streamChat(request.getMessage());
@@ -139,7 +139,7 @@ public class AIController {
      * @return 润色结果
      */
     @PostMapping("/polish")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
+    @PreAuthorize("isAuthenticated()")
     public Result<TextPolishVO> polishText(@Valid @RequestBody TextPolishDTO request) {
         log.info("文本润色请求，文本长度: {}", request.getText().length());
         String polishedText = aiService.polishText(request.getText());

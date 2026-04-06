@@ -27,7 +27,7 @@ public class KnowledgeDocument {
 
     private Long createBy;
 
-    @TableLogic
+    @TableLogic(value = "false", delval = "true")
     private Boolean deleted;
 
     @TableField(fill = FieldFill.INSERT)

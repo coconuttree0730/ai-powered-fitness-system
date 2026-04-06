@@ -35,9 +35,16 @@ request.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
+          // 401错误只清除登录状态，不重定向，让页面自己处理
           const authStore = useAuthStore()
           authStore.logout()
-          router.push('/')
+          // 只在非公开页面时重定向到首页
+          const currentPath = router.currentRoute.value.path
+          const publicPaths = ['/equipments', '/courses', '/coaches']
+          const isPublicPath = publicPaths.some(path => currentPath.startsWith(path))
+          if (!isPublicPath && currentPath !== '/') {
+            router.push('/')
+          }
           break
         case 403:
           router.push('/403')

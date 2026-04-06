@@ -48,7 +48,7 @@ public class Banner {
     /**
      * 软删除标识
      */
-    @TableLogic
+    @TableLogic(value = "false", delval = "true")
     private Boolean deleted;
 
     /**

@@ -55,3 +55,40 @@ export function getSessionMessages(sessionId, params = {}) {
     params
   })
 }
+
+/**
+ * 生成健身计划
+ * @param {Object} data - 计划参数
+ * @param {string} data.goal - 健身目标
+ * @param {string} data.bodyPart - 训练部位
+ * @param {string} data.experience - 健身经验
+ */
+export function generateFitnessPlan(data) {
+  return request({
+    url: '/chat/fitness-plan/generate',
+    method: 'post',
+    params: data
+  })
+}
+
+/**
+ * 保存健身计划
+ * @param {Object} data - 计划数据
+ */
+export function saveFitnessPlan(data) {
+  return request({
+    url: '/chat/fitness-plan/save',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 获取我的健身计划列表
+ */
+export function getMyFitnessPlans() {
+  return request({
+    url: '/chat/fitness-plan/my',
+    method: 'get'
+  })
+}

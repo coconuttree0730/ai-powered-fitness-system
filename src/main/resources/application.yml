@@ -44,10 +44,12 @@ spring:
       chat:
         enabled: true
         options:
-          model: ${AI_DASHSCOPE_MODEL:glm-5}
+          model: ${AI_DASHSCOPE_MODEL:tongyi-xiaomi-analysis-flash}
           temperature: 0.2
           top-p: 0.3
           max-tokens: 512
+      # 添加超时配置
+      timeout: 30s
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       embedding:
@@ -57,15 +59,6 @@ knowledge:
   chunk:
     size: 500
     overlap: 50
-
-
-# LangSmith Configuration
-langsmith:
-  enabled: ${LANGSMITH_ENABLED:true}
-  api-key: ${LANGSMITH_API_KEY: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}
-  endpoint: ${LANGSMITH_ENDPOINT:https://api.smith.langchain.com}
-  project-name: ${LANGSMITH_PROJECT_NAME:ai-fitness-system}
-  tracing-enabled: ${LANGSMITH_TRACING_ENABLED:true}
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml

@@ -34,6 +34,7 @@
           <a href="#philosophy" :class="{ active: activeSection === 'philosophy' }" @click.prevent="scrollToSection('philosophy')">品牌理念</a>
           <a href="#ai-features" :class="{ active: activeSection === 'ai-features' }" @click.prevent="scrollToSection('ai-features')">AI功能</a>
           <a href="#courses" :class="{ active: activeSection === 'courses' }" @click.prevent="scrollToSection('courses')">课程体系</a>
+          <a href="#equipments" :class="{ active: activeSection === 'equipments' }" @click.prevent="scrollToSection('equipments')">健身设备</a>
           <a href="#membership" :class="{ active: activeSection === 'membership' }" @click.prevent="scrollToSection('membership')">会员卡</a>
           <a href="#coaches" :class="{ active: activeSection === 'coaches' }" @click.prevent="scrollToSection('coaches')">教练团队</a>
         </div>
@@ -64,6 +65,7 @@
       <a href="#philosophy" @click.prevent="scrollToSection('philosophy'); mobileMenuOpen = false">品牌理念</a>
       <a href="#ai-features" @click.prevent="scrollToSection('ai-features'); mobileMenuOpen = false">AI功能</a>
       <a href="#courses" @click.prevent="scrollToSection('courses'); mobileMenuOpen = false">课程体系</a>
+      <a href="#equipments" @click.prevent="scrollToSection('equipments'); mobileMenuOpen = false">健身设备</a>
       <a href="#membership" @click.prevent="scrollToSection('membership'); mobileMenuOpen = false">会员卡</a>
       <a href="#coaches" @click.prevent="scrollToSection('coaches'); mobileMenuOpen = false">教练团队</a>
       <button v-if="!authStore.isLoggedIn" class="btn btn-primary" @click="showLoginModal = true; mobileMenuOpen = false">登录</button>
@@ -400,6 +402,7 @@
     </section>
 
     <!-- 成功案例 -->
+<!-- 
     <section class="section testimonials-section">
       <div class="testimonials-container">
         <div class="section-header" v-intersect="onReveal">
@@ -438,6 +441,7 @@
         </div>
       </div>
     </section>
+-->
 
     <!-- 健身设备 -->
     <section id="equipments" class="section equipment-section">
@@ -534,13 +538,28 @@
 
           <!-- 查看更多按钮 -->
           <div class="equipments-more">
-            <router-link to="/equipments" class="btn btn-outline btn-view-all">
+            <button 
+              v-if="authStore.isLoggedIn"
+              class="btn btn-outline btn-view-all"
+              @click="router.push('/equipments')"
+            >
               <span>查看全部器械</span>
               <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
               </svg>
-            </router-link>
+            </button>
+            <button 
+              v-else
+              class="btn btn-outline btn-view-all"
+              @click="showLoginModal = true"
+            >
+              <span>查看全部器械</span>
+              <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
           </div>
         </template>
       </div>
@@ -1338,22 +1357,30 @@ function getEquipmentStatusLabel(status) {
   return map[status] || '未知'
 }
 
-// 根据当前选中的标签过滤器械
+// 根据当前选中的标签过滤器械 - 只显示两行
 const filteredEquipments = computed(() => {
-  if (activeEquipmentTab.value === 'all') {
-    return equipmentsData.value.slice(0, 8) // 首页最多显示8个
+  let filtered = equipmentsData.value
+  if (activeEquipmentTab.value !== 'all') {
+    filtered = equipmentsData.value.filter(e => e.typeCode === activeEquipmentTab.value)
   }
-  return equipmentsData.value
-    .filter(e => e.typeCode === activeEquipmentTab.value)
-    .slice(0, 8)
+  // 只返回前6个（两行，每行3个）
+  return filtered.slice(0, 6)
 })
 
-// 获取卡片尺寸类名（实现瀑布流效果）
+// 获取卡片尺寸类名（实现不规整布局效果）
 function getEquipmentCardClass(index) {
-  const pattern = index % 6
-  if (pattern === 0 || pattern === 5) return 'card-large'
-  if (pattern === 2 || pattern === 3) return 'card-wide'
-  return 'card-normal'
+  // 两行三列的不规整布局
+  // 第一行: 高、矮、高
+  // 第二行: 矮、高、矮
+  const patterns = [
+    'card-tall',   // 第1个 - 高
+    'card-short',  // 第2个 - 矮
+    'card-tall',   // 第3个 - 高
+    'card-short',  // 第4个 - 矮
+    'card-tall',   // 第5个 - 高
+    'card-short'   // 第6个 - 矮
+  ]
+  return patterns[index] || 'card-normal'
 }
 
 // 器械图片加载失败处理
@@ -1639,7 +1666,7 @@ function handleScroll() {
   isScrolled.value = window.scrollY > 50
 
   // 更新当前区域
-  const sections = ['home', 'philosophy', 'ai-features', 'courses', 'membership', 'coaches']
+  const sections = ['home', 'philosophy', 'ai-features', 'courses', 'equipments', 'membership', 'coaches']
   for (const section of sections) {
     const element = document.getElementById(section)
     if (element) {
@@ -3772,40 +3799,81 @@ const vIntersect = {
   color: var(--text-primary);
 }
 
-/* 器械展示网格 - 瀑布流布局 */
+/* 器械展示网格 - 两行不规整布局 */
 .equipment-showcase-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 280px;
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 320px 280px;
+  gap: 20px;
   margin-bottom: 50px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 器械展示卡片 */
 .equipment-showcase-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 24px;
+  border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.4s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
 }
 
 .equipment-showcase-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 107, 53, 0.2);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 107, 53, 0.3);
 }
 
-/* 卡片尺寸变体 */
-.equipment-showcase-card.card-large {
-  grid-row: span 2;
+/* 卡片尺寸变体 - 不规整布局 */
+.equipment-showcase-card.card-tall {
+  grid-row: span 1;
 }
 
-.equipment-showcase-card.card-wide {
-  grid-column: span 2;
+.equipment-showcase-card.card-short {
+  grid-row: span 1;
+}
+
+/* 第一个卡片 - 高 */
+.equipment-showcase-card:nth-child(1) {
+  grid-row: 1 / 2;
+  height: 320px;
+}
+
+/* 第二个卡片 - 矮 */
+.equipment-showcase-card:nth-child(2) {
+  grid-row: 1 / 2;
+  height: 280px;
+  margin-top: 40px;
+}
+
+/* 第三个卡片 - 高 */
+.equipment-showcase-card:nth-child(3) {
+  grid-row: 1 / 2;
+  height: 320px;
+}
+
+/* 第四个卡片 - 矮 */
+.equipment-showcase-card:nth-child(4) {
+  grid-row: 2 / 3;
+  height: 280px;
+}
+
+/* 第五个卡片 - 高 */
+.equipment-showcase-card:nth-child(5) {
+  grid-row: 2 / 3;
+  height: 320px;
+  margin-top: -40px;
+}
+
+/* 第六个卡片 - 矮 */
+.equipment-showcase-card:nth-child(6) {
+  grid-row: 2 / 3;
+  height: 280px;
 }
 
 /* 器械图片 */
@@ -4034,37 +4102,57 @@ const vIntersect = {
 @media (max-width: 992px) {
   .equipment-showcase-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 250px;
+    grid-template-rows: repeat(3, 280px);
+    gap: 16px;
   }
   
-  .equipment-showcase-card.card-wide {
-    grid-column: span 2;
+  /* 平板端重置所有卡片样式 */
+  .equipment-showcase-card:nth-child(1),
+  .equipment-showcase-card:nth-child(2),
+  .equipment-showcase-card:nth-child(3),
+  .equipment-showcase-card:nth-child(4),
+  .equipment-showcase-card:nth-child(5),
+  .equipment-showcase-card:nth-child(6) {
+    grid-row: auto;
+    height: 280px;
+    margin-top: 0;
   }
 }
 
 @media (max-width: 768px) {
   .equipment-tabs {
     gap: 8px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
   }
   
   .equipment-tab {
     padding: 10px 18px;
     font-size: 14px;
+    white-space: nowrap;
   }
   
   .equipment-showcase-grid {
     grid-template-columns: 1fr;
-    grid-auto-rows: auto;
+    grid-template-rows: repeat(6, 240px);
+    gap: 16px;
   }
   
-  .equipment-showcase-card.card-large,
-  .equipment-showcase-card.card-wide {
-    grid-row: span 1;
-    grid-column: span 1;
+  /* 移动端重置所有卡片样式 */
+  .equipment-showcase-card:nth-child(1),
+  .equipment-showcase-card:nth-child(2),
+  .equipment-showcase-card:nth-child(3),
+  .equipment-showcase-card:nth-child(4),
+  .equipment-showcase-card:nth-child(5),
+  .equipment-showcase-card:nth-child(6) {
+    grid-row: auto;
+    height: 240px;
+    margin-top: 0;
   }
   
   .equipment-showcase-image {
-    height: 200px;
+    height: 160px;
   }
 }
 

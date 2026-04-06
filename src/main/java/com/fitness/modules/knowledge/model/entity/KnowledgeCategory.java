@@ -21,7 +21,7 @@ public class KnowledgeCategory {
 
     private Integer sortOrder;
 
-    @TableLogic
+    @TableLogic(value = "false", delval = "true")
     private Boolean deleted;
 
     @TableField(fill = FieldFill.INSERT)

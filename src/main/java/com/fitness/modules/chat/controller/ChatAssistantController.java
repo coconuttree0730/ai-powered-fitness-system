@@ -5,6 +5,7 @@ import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
 import com.fitness.modules.chat.model.vo.ChatMessageVO;
 import com.fitness.modules.chat.model.vo.ChatSessionVO;
+import com.fitness.modules.chat.model.vo.FitnessPlanCardVO;
 import com.fitness.modules.chat.service.ChatAssistantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -80,5 +81,55 @@ public class ChatAssistantController {
         Long userId = SecurityUtils.getCurrentUserId();
         List<ChatMessageVO> messages = chatAssistantService.getSessionMessages(sessionId, userId, lastMessageId, limit);
         return Result.success(messages);
+    }
+
+    /**
+     * 生成健身计划卡片
+     *
+     * @param goal       健身目标
+     * @param bodyPart   训练部位
+     * @param experience 经验水平
+     * @return 健身计划卡片
+     */
+    @PostMapping("/fitness-plan/generate")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<FitnessPlanCardVO> generateFitnessPlan(
+            @RequestParam String goal,
+            @RequestParam String bodyPart,
+            @RequestParam String experience) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("生成健身计划卡片请求: userId={}, goal={}, bodyPart={}, experience={}",
+                userId, goal, bodyPart, experience);
+        FitnessPlanCardVO planCard = chatAssistantService.generateFitnessPlanCard(userId, goal, bodyPart, experience);
+        return Result.success(planCard);
+    }
+
+    /**
+     * 保存健身计划
+     *
+     * @param planCard 健身计划卡片
+     * @return 保存的计划ID
+     */
+    @PostMapping("/fitness-plan/save")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<Long> saveFitnessPlan(@RequestBody FitnessPlanCardVO planCard) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("保存健身计划请求: userId={}, planName={}", userId, planCard.getPlanName());
+        Long planId = chatAssistantService.saveFitnessPlan(userId, planCard);
+        return Result.success(planId);
+    }
+
+    /**
+     * 获取我的健身计划列表
+     *
+     * @return 健身计划卡片列表
+     */
+    @GetMapping("/fitness-plan/my")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<List<FitnessPlanCardVO>> getMyFitnessPlans() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("获取我的健身计划列表: userId={}", userId);
+        List<FitnessPlanCardVO> plans = chatAssistantService.getUserPlans(userId);
+        return Result.success(plans);
     }
 }

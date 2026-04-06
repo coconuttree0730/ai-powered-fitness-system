@@ -4,6 +4,7 @@ import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -65,6 +66,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Void> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("权限不足: {}", e.getMessage());
+        return Result.error(ErrorCode.FORBIDDEN);
+    }
+
+    /**
+     * 处理 Spring Security 6+ 的 AuthorizationDeniedException
+     * 用于 @PreAuthorize 等注解的权限验证失败
+     */
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public Result<Void> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        log.warn("授权被拒绝: {}", e.getMessage());
         return Result.error(ErrorCode.FORBIDDEN);
     }
 
