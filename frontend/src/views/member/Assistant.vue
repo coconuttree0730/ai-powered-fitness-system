@@ -40,7 +40,40 @@
           <div v-if="sending && isAiTyping" class="message ai typing-message">
             <div class="message-avatar">AI</div>
             <div class="message-content typing-content">
-              <div class="typing-indicator">
+              <div v-if="generatingPlanPreview" class="plan-generating-animation">
+                <div class="generating-header">
+                  <n-icon :component="FitnessOutline" size="20" />
+                  <span>正在生成您的专属健身计划...</span>
+                </div>
+                <div class="generating-progress">
+                  <div class="progress-steps">
+                    <div :class="['step', { active: planGenStep >= 1, done: planGenStep > 1 }]">
+                      <div class="step-icon">
+                        <svg v-if="planGenStep <= 1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>分析档案</span>
+                    </div>
+                    <div class="step-line" :class="{ active: planGenStep > 1 }"></div>
+                    <div :class="['step', { active: planGenStep >= 2, done: planGenStep > 2 }]">
+                      <div class="step-icon">
+                        <svg v-if="planGenStep <= 2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>制定方案</span>
+                    </div>
+                    <div class="step-line" :class="{ active: planGenStep > 2 }"></div>
+                    <div :class="['step', { active: planGenStep >= 3, done: planGenStep > 3 }]">
+                      <div class="step-icon">
+                        <svg v-if="planGenStep <= 3" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>生成完成</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="typing-indicator">
                 <span class="dot"></span>
                 <span class="dot"></span>
                 <span class="dot"></span>
@@ -49,73 +82,17 @@
           </div>
         </div>
 
-        <!-- 健身计划卡片固定显示区域 -->
-        <div v-if="currentPlanCard && currentPlanCard.planName" class="plan-card-fixed-area">
-          <div class="plan-card-container">
-            <div class="plan-card-header">
-              <div class="plan-card-title">
-                <n-icon :component="FitnessOutline" size="20" />
-                <span>{{ currentPlanCard.planName }}</span>
-              </div>
-              <n-button text size="small" class="close-plan-btn" @click="dismissPlanCard">
-                <n-icon :component="CloseOutline" size="18" />
-              </n-button>
-            </div>
-            <div class="plan-card-content">
-              <div class="plan-card-summary">{{ currentPlanCard.summary || 'AI为您生成的个性化健身计划' }}</div>
-              <div class="plan-card-details">
-                <div class="plan-detail-item">
-                  <span class="detail-label">目标:</span>
-                  <span class="detail-value">{{ currentPlanCard.goal }}</span>
-                </div>
-                <div class="plan-detail-item">
-                  <span class="detail-label">部位:</span>
-                  <span class="detail-value">{{ currentPlanCard.bodyPart }}</span>
-                </div>
-                <div class="plan-detail-item">
-                  <span class="detail-label">经验:</span>
-                  <span class="detail-value">{{ currentPlanCard.experience }}</span>
-                </div>
-                <div class="plan-detail-item">
-                  <span class="detail-label">周期:</span>
-                  <span class="detail-value">{{ currentPlanCard.duration }}天</span>
-                </div>
-              </div>
-              <!-- 推荐课程 -->
-              <div v-if="currentPlanCard.recommendedCourses && currentPlanCard.recommendedCourses.length > 0" class="plan-recommendations">
-                <div class="recommendation-title">推荐课程</div>
-                <div class="recommendation-list">
-                  <div v-for="(course, idx) in currentPlanCard.recommendedCourses.slice(0, 3)" :key="idx" class="recommendation-item">
-                    <n-avatar :size="32" :src="course.coverImage" fallback-src="https://api.dicebear.com/7.x/initials/svg?seed=course" />
-                    <span class="recommendation-name">{{ course.name }}</span>
-                  </div>
-                </div>
-              </div>
-              <!-- 推荐器械 -->
-              <div v-if="currentPlanCard.recommendedEquipment && currentPlanCard.recommendedEquipment.length > 0" class="plan-recommendations">
-                <div class="recommendation-title">推荐器械</div>
-                <div class="recommendation-list">
-                  <div v-for="(equip, idx) in currentPlanCard.recommendedEquipment.slice(0, 3)" :key="idx" class="recommendation-item">
-                    <n-avatar :size="32" :src="equip.image" fallback-src="https://api.dicebear.com/7.x/initials/svg?seed=equip" />
-                    <span class="recommendation-name">{{ equip.name }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="plan-card-actions">
-              <n-button type="primary" size="small" :loading="savingPlan" @click="handleSavePlan">
-                <template #icon>
-                  <n-icon :component="SaveOutline" />
-                </template>
-                保存到我的计划
-              </n-button>
-              <n-button size="small" @click="handleRegeneratePlan">
-                <template #icon>
-                  <n-icon :component="RefreshOutline" />
-                </template>
-                重新生成
-              </n-button>
-            </div>
+        <!-- 健身计划预览组件 (Tab版详细展示) - 作为聊天消息展示 -->
+        <div v-if="showPlanPreview && fitnessPlanData" class="message ai plan-message-wrapper">
+          <div class="message-avatar">AI</div>
+          <div class="message-content plan-message-content">
+            <FitnessPlanPreview
+              :plan-data="fitnessPlanData"
+              :is-embedded="true"
+              @regenerate="handleRegenerateFromPreview"
+              @save="handleSaveFromPreview"
+              @course-click="handleCourseClick"
+            />
           </div>
         </div>
 
@@ -220,39 +197,48 @@
         </div>
       </div>
 
-      <!-- 我的健身计划 -->
-      <div class="card-section plans-section">
+      <!-- 推荐教练 -->
+      <div class="card-section coaches-section">
         <h3 class="section-title">
-          <n-icon :component="FitnessOutline" size="18" />
-          我的健身计划
+          <n-icon :component="PeopleOutline" size="18" />
+          推荐教练
         </h3>
-        <div class="plan-list">
-          <div v-if="loadingPlans" class="plans-loading">
+        <div class="coaches-list">
+          <div v-if="loadingCoaches" class="coaches-loading">
             <n-spin size="small" />
             <span>加载中...</span>
           </div>
-          <div v-else-if="myPlans.length === 0" class="plans-empty">
-            <n-empty description="暂无健身计划" size="small" />
-            <n-button text type="primary" size="small" @click="showPlanModal = true">
-              生成我的第一个计划
-            </n-button>
+          <div v-else-if="coaches.length === 0" class="coaches-empty">
+            <n-empty description="暂无教练信息" size="small" />
           </div>
-          <div v-else class="plan-items">
+          <div v-else class="coach-items">
             <div
-              v-for="(plan, index) in myPlans"
-              :key="plan.id || index"
-              class="plan-item"
-              @click="viewPlanDetail(plan)"
+              v-for="coach in coaches"
+              :key="coach.id"
+              class="coach-item"
+              @click="openCoachDetail(coach)"
             >
-              <div class="plan-item-header">
-                <div class="plan-item-name">{{ plan.planName }}</div>
-                <n-tag v-if="index === 0" type="success" size="tiny" round>最新</n-tag>
+              <div class="coach-item-avatar">
+                <img :src="coach.image || 'https://via.placeholder.com/100'" :alt="coach.name" />
+                <span class="coach-status online"></span>
               </div>
-              <div class="plan-item-meta">
-                <span class="plan-goal">{{ plan.goal }}</span>
-                <span class="plan-duration">{{ plan.duration }}天</span>
+              <div class="coach-item-info">
+                <div class="coach-item-header">
+                  <span class="coach-item-name">{{ coach.name }}</span>
+                  <span class="coach-item-title">{{ coach.title }}</span>
+                </div>
+                <div class="coach-item-rating">
+                  <div class="rating-stars">
+                    <svg v-for="n in 5" :key="n" viewBox="0 0 24 24" :class="['star', { filled: n <= Math.floor(coach.ratingScore || 4.5) }]">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  </div>
+                  <span class="rating-score">{{ coach.ratingScore || '4.5' }}</span>
+                </div>
+                <div class="coach-item-tags">
+                  <span v-for="(tag, idx) in (coach.tags || []).slice(0, 3)" :key="idx" class="coach-tag">{{ tag }}</span>
+                </div>
               </div>
-              <div class="plan-item-date">{{ formatDate(plan.createTime) }}</div>
             </div>
           </div>
         </div>
@@ -351,6 +337,73 @@
         </div>
       </div>
     </n-modal>
+
+    <!-- 教练详情弹窗 -->
+    <n-modal
+      v-model:show="showCoachDetailModal"
+      :title="selectedCoach?.name || '教练详情'"
+      preset="card"
+      class="coach-detail-modal"
+      :style="{ width: '480px', maxHeight: '80vh' }"
+    >
+      <div v-if="selectedCoach" class="coach-detail-content">
+        <div class="coach-detail-header">
+          <div class="coach-detail-avatar">
+            <img :src="selectedCoach.image || 'https://via.placeholder.com/100'" :alt="selectedCoach.name" />
+          </div>
+          <div class="coach-detail-info">
+            <div class="coach-detail-name">{{ selectedCoach.name }}</div>
+            <div class="coach-detail-title">{{ selectedCoach.title }}</div>
+            <div class="coach-detail-rating">
+              <div class="rating-stars">
+                <svg v-for="n in 5" :key="n" viewBox="0 0 24 24" :class="['star', { filled: n <= Math.floor(selectedCoach.ratingScore || 4.5) }]">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </div>
+              <span class="rating-score">{{ selectedCoach.ratingScore || '4.5' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="coach-detail-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ selectedCoach.experience || '3年' }}</div>
+            <div class="stat-label">从业经验</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ selectedCoach.students || '1000+' }}</div>
+            <div class="stat-label">服务学员</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ selectedCoach.rating || '98%' }}</div>
+            <div class="stat-label">好评率</div>
+          </div>
+        </div>
+        <div class="coach-detail-section">
+          <div class="section-label">专业标签</div>
+          <div class="coach-detail-tags">
+            <n-tag v-for="(tag, idx) in (selectedCoach.tags || [])" :key="idx" type="primary" size="small" round>{{ tag }}</n-tag>
+          </div>
+        </div>
+        <div class="coach-detail-section">
+          <div class="section-label">个人简介</div>
+          <div class="coach-detail-bio">{{ selectedCoach.bio || '暂无简介' }}</div>
+        </div>
+        <div class="coach-detail-actions">
+          <n-button class="btn-chat" @click="startChatWithCoach(selectedCoach)">
+            <template #icon>
+              <n-icon :component="ChatbubbleOutline" />
+            </template>
+            在线咨询
+          </n-button>
+          <n-button type="primary" class="btn-buy" @click="buyCourseFromCoach(selectedCoach)">
+            <template #icon>
+              <n-icon :component="AddCircleOutline" />
+            </template>
+            购买课程
+          </n-button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -369,7 +422,10 @@ import {
   NutritionOutline,
   CloseOutline,
   SaveOutline,
-  RefreshOutline
+  RefreshOutline,
+  PeopleOutline,
+  ChatbubbleOutline,
+  AddCircleOutline
 } from '@vicons/ionicons5'
 import {
   createSession,
@@ -382,6 +438,9 @@ import {
   saveFitnessPlan,
   getMyFitnessPlans
 } from '@/api/chat'
+import { getCurrentUser } from '@/api/user'
+import { getHomePageCoaches, getCoachDetail } from '@/api/coachDetail'
+import FitnessPlanPreview from '@/components/FitnessPlanPreview.vue'
 
 const router = useRouter()
 const message = useMessage()
@@ -415,6 +474,8 @@ onMounted(() => {
   loadMyPlans()
   // 恢复未保存的计划卡片
   restorePlanCard()
+  // 加载推荐教练列表
+  loadCoaches()
 })
 
 onUnmounted(() => {
@@ -813,11 +874,26 @@ const loadingPlans = ref(false)
 // 当前生成的计划卡片
 const currentPlanCard = ref(null)
 
+// 健身计划预览组件相关状态
+const showPlanPreview = ref(false)
+const fitnessPlanData = ref(null)
+const generatingPlanPreview = ref(false)
+const planGenStep = ref(0)
+let planGenTimer = null
+
 // 我的健身计划列表
 const myPlans = ref([])
 
+// 推荐教练列表
+const coaches = ref([])
+const loadingCoaches = ref(false)
+
 // 选中的计划（用于详情弹窗）
 const selectedPlan = ref(null)
+
+// 选中的教练
+const selectedCoach = ref(null)
+const showCoachDetailModal = ref(false)
 
 // 计划表单
 const planForm = ref({
@@ -859,26 +935,276 @@ async function generatePlan() {
   }
 
   generatingPlan.value = true
+
+  // 启用计划生成动画
+  generatingPlanPreview.value = true
+  planGenStep.value = 0
+
+  // 启动步骤动画
+  startPlanGenAnimation()
+
   try {
+    // 获取用户档案数据用于填充计划预览
+    let userProfile = {}
+    try {
+      const userRes = await getCurrentUser()
+      if (userRes && userRes.fitnessProfile) {
+        userProfile = userRes.fitnessProfile
+      }
+    } catch (e) {
+      console.log('获取用户档案失败，使用默认值')
+    }
+
     const res = await generateFitnessPlan({
       goal: planForm.value.goal,
       bodyPart: planForm.value.bodyPart,
       experience: planForm.value.experience
     })
 
+    // 完成步骤动画
+    completePlanGenAnimation()
+
     if (res) {
+      // 构建健身计划预览数据（兼容新旧格式）
+      const previewData = buildFitnessPlanPreviewData(res, userProfile, planForm.value)
+
+      // 设置预览数据
+      fitnessPlanData.value = previewData
+      showPlanPreview.value = true
+
+      // 同时保留旧的卡片格式（向后兼容）
       currentPlanCard.value = res
-      // 保存到 sessionStorage
       savePlanCardToSession()
+
       message.success('健身计划生成成功！')
       showPlanModal.value = false
     }
   } catch (error) {
     console.error('生成计划失败:', error)
+    stopPlanGenAnimation()
     message.error(error.message || '生成计划失败，请稍后重试')
   } finally {
     generatingPlan.value = false
+    generatingPlanPreview.value = false
   }
+}
+
+// 计划生成步骤动画
+function startPlanGenAnimation() {
+  planGenStep.value = 0
+  // 模拟步骤进度
+  planGenTimer = setInterval(() => {
+    if (planGenStep.value < 3) {
+      planGenStep.value++
+    }
+  }, 1500)
+}
+
+function completePlanGenAnimation() {
+  if (planGenTimer) {
+    clearInterval(planGenTimer)
+    planGenTimer = null
+  }
+  planGenStep.value = 3
+}
+
+function stopPlanGenAnimation() {
+  if (planGenTimer) {
+    clearInterval(planGenTimer)
+    planGenTimer = null
+  }
+  planGenStep.value = 0
+}
+
+// 构建健身计划预览数据
+function buildFitnessPlanPreviewData(apiResponse, userProfile, form) {
+  // 计算BMI
+  const height = userProfile?.height || 175
+  const weight = userProfile?.weight || 70
+  const bmi = (weight / ((height / 100) ** 2)).toFixed(1)
+
+  // 如果API返回的是新格式（包含weeklyPlan），直接使用
+  if (apiResponse.weeklyPlan && Array.isArray(apiResponse.weeklyPlan)) {
+    return {
+      subtitle: `AI为您量身定制的7天${form.goal || '增肌塑形'}计划`,
+      userInfo: {
+        height: `${height}cm`,
+        weight: `${weight}kg`,
+        bmi: bmi,
+        goal: form.goal || '增肌塑形',
+        intensity: form.experience || '中等'
+      },
+      weeklyPlan: apiResponse.weeklyPlan
+    }
+  }
+
+  // 否则构建默认格式（基于API返回的数据或使用模板数据）
+  return {
+    subtitle: `AI为您量身定制的7天${form.goal || '增肌塑形'}计划`,
+    userInfo: {
+      height: `${height}cm`,
+      weight: `${weight}kg`,
+      bmi: bmi,
+      goal: form.goal || '增肌塑形',
+      intensity: form.experience || '中等'
+    },
+    weeklyPlan: generateDefaultWeeklyPlan(form, apiResponse)
+  }
+}
+
+// 生成默认的周计划数据（当API未返回结构化数据时使用）
+function generateDefaultWeeklyPlan(form, apiResponse) {
+  const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  const focuses = getFocusByGoal(form.goal)
+
+  return dayNames.map((dayName, index) => {
+    const isRestDay = index === 6
+    const focus = focuses[index] || '休息'
+
+    if (isRestDay) {
+      return {
+        dayName,
+        focus: '休息',
+        tips: ['建议进行轻度拉伸和泡沫轴放松', '保证充足睡眠，促进肌肉恢复', '可以做一些散步或瑜伽等低强度活动']
+      }
+    }
+
+    return {
+      dayName,
+      focus,
+      course: {
+        name: `${focus}专项训练课程`,
+        description: `针对${focus}的高强度训练课程，包含多种训练动作，有效刺激${focus}肌肉生长，适合${form.experience || '中级'}健身者。`,
+        coverImage: getDefaultCourseImage(focus),
+        duration: 45 + Math.floor(Math.random() * 20),
+        id: index + 1
+      },
+      equipment: getDefaultEquipment(focus).map((name, idx) => ({
+        name,
+        image: getDefaultEquipmentImage(name)
+      })),
+      exercises: getDefaultExercises(focus, form.experience),
+      tips: [
+        '训练前进行10分钟热身，避免肌肉拉伤',
+        '保持正确的动作姿势，质量优于数量',
+        '训练后补充蛋白质，促进肌肉恢复'
+      ]
+    }
+  })
+}
+
+// 根据目标获取训练重点
+function getFocusByGoal(goal) {
+  const focusMap = {
+    '增肌': ['胸部', '背部', '腿部', '肩部', '手臂', '核心', '休息'],
+    '减脂': ['全身有氧', 'HIIT训练', '核心燃脂', '上肢塑形', '下肢塑形', '拉伸放松', '休息'],
+    '塑形': ['臀腿', '背部雕塑', '肩臂线条', '核心强化', '全身协调', '柔韧拉伸', '休息'],
+    '力量提升': ['深蹲硬拉', '卧推划船', '推举臂弯举', '核心稳定', '功能性', '恢复训练', '休息'],
+    '体能改善': ['心肺耐力', '速度灵敏', '力量耐力', '爆发力', '综合体能', '主动恢复', '休息']
+  }
+  return focusMap[goal] || focusMap['增肌']
+}
+
+// 获取默认课程图片
+function getDefaultCourseImage(focus) {
+  const imageMap = {
+    '胸部': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=250&fit=crop',
+    '背部': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=250&fit=crop',
+    '腿部': 'https://images.unsplash.com/photo-1434682882158-0d4a9cc89bb3?w=400&h=250&fit=crop',
+    '肩部': 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=400&h=250&fit=crop',
+    '手臂': 'https://images.unsplash.com/photo-1583454110551-21f2fe6907ba?w=400&h=250&fit=crop',
+    '核心': 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=250&fit=crop',
+    '臀腿': 'https://images.unsplash.com/photo-1434682882158-0d4a9cc89bb3?w=400&h=250&fit=crop',
+    '全身有氧': 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&h=250&fit=crop',
+    'HIIT训练': 'https://images.unsplash.com/photo-1517838277539-f91ace7160b8?w=400&h=250&fit=crop'
+  }
+  return imageMap[focus] || 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=250&fit=crop'
+}
+
+// 获取默认器械列表
+function getDefaultEquipment(focus) {
+  const equipMap = {
+    '胸部': ['杠铃', '哑铃', '卧推凳', '蝴蝶机'],
+    '背部': ['杠铃', '高位下拉器', '哑铃', '坐姿划船机'],
+    '腿部': ['深蹲架', '杠铃', '腿举机', '腿屈伸机'],
+    '肩部': ['哑铃', '史密斯机', '侧平举器', '阿诺德推举器'],
+    '手臂': ['哑铃', '杠铃曲杆', '绳索机', '牧师凳'],
+    '核心': ['瑜伽垫', '药球', '健腹轮', '罗马椅']
+  }
+  return equipMap[focus] || ['哑铃', '杠铃', '瑜伽垫']
+}
+
+// 获取默认器械图片
+function getDefaultEquipmentImage(name) {
+  const imageMap = {
+    '杠铃': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=100&h=100&fit=crop',
+    '哑铃': 'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=100&h=100&fit=crop',
+    '卧推凳': 'https://images.unsplash.com/photo-1571902949628-41aaea4ce747?w=100&h=100&fit=crop',
+    '蝴蝶机': 'https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?w=100&h=100&fit=crop',
+    '深蹲架': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=100&h=100&fit=crop',
+    '瑜伽垫': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=100&h=100&fit=crop'
+  }
+  return imageMap[name] || 'https://via.placeholder.com/100x100/e8e8e8/666?text=' + name.charAt(0)
+}
+
+// 获取默认训练动作
+function getDefaultExercises(focus, experience) {
+  const levelMultiplier = experience === '初级' ? 0.8 : experience === '高级' ? 1.2 : 1
+  const exerciseMap = {
+    '胸部': [
+      { name: '平板杠铃卧推', sets: Math.round(4 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '上斜哑铃卧推', sets: Math.round(4 * levelMultiplier), reps: 10, restSeconds: 60 },
+      { name: '哑铃飞鸟', sets: Math.round(3 * levelMultiplier), reps: 15, restSeconds: 45 },
+      { name: '蝴蝶机夹胸', sets: Math.round(3 * levelMultiplier), reps: 12, restSeconds: 45 }
+    ],
+    '背部': [
+      { name: '引体向上', sets: Math.round(4 * levelMultiplier), reps: 8, restSeconds: 60 },
+      { name: '杠铃划船', sets: Math.round(4 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '单臂哑铃划船', sets: Math.round(3 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '高位下拉', sets: Math.round(3 * levelMultiplier), reps: 15, restSeconds: 45 }
+    ],
+    '腿部': [
+      { name: '杠铃深蹲', sets: Math.round(4 * levelMultiplier), reps: 12, restSeconds: 90 },
+      { name: '腿举', sets: Math.round(4 * levelMultiplier), reps: 15, restSeconds: 60 },
+      { name: '弓步蹲', sets: Math.round(3 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '腿弯举', sets: Math.round(3 * levelMultiplier), reps: 15, restSeconds: 45 }
+    ],
+    '肩部': [
+      { name: '坐姿哑铃推举', sets: Math.round(4 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '哑铃侧平举', sets: Math.round(4 * levelMultiplier), reps: 15, restSeconds: 45 },
+      { name: '哑铃前平举', sets: Math.round(3 * levelMultiplier), reps: 12, restSeconds: 45 },
+      { name: '俯身飞鸟', sets: Math.round(3 * levelMultiplier), reps: 15, restSeconds: 45 }
+    ],
+    '手臂': [
+      { name: '杠铃弯举', sets: Math.round(4 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '锤式弯举', sets: Math.round(3 * levelMultiplier), reps: 12, restSeconds: 60 },
+      { name: '绳索下压', sets: Math.round(4 * levelMultiplier), reps: 15, restSeconds: 45 },
+      { name: '仰卧臂屈伸', sets: Math.round(3 * levelMultiplier), reps: 12, restSeconds: 45 }
+    ],
+    '核心': [
+      { name: '平板支撑', sets: 3, reps: 60, restSeconds: 30 },
+      { name: '卷腹', sets: Math.round(4 * levelMultiplier), reps: 20, restSeconds: 45 },
+      { name: '俄罗斯转体', sets: Math.round(3 * levelMultiplier), reps: 30, restSeconds: 45 },
+      { name: '登山跑', sets: Math.round(3 * levelMultiplier), reps: 20, restSeconds: 45 }
+    ]
+  }
+
+  return exerciseMap[focus] || exerciseMap['胸部']
+}
+
+// 从预览组件触发的事件处理
+function handleRegenerateFromPreview() {
+  showPlanPreview.value = false
+  fitnessPlanData.value = null
+  handleRegeneratePlan()
+}
+
+function handleSaveFromPreview() {
+  handleSavePlan()
+}
+
+function handleCourseClick(course) {
+  message.info(`查看课程: ${course.name}`)
 }
 
 // 保存计划到 sessionStorage
@@ -977,6 +1303,99 @@ function generateNutrition() {
   const nutritionPrompt = '请为我提供个性化的营养指导建议，包括每日饮食搭配、营养素摄入建议和饮食注意事项。'
   inputMessage.value = nutritionPrompt
   sendMessage()
+}
+
+// ==================== 推荐教练相关功能 ====================
+
+// 加载推荐教练列表
+async function loadCoaches() {
+  loadingCoaches.value = true
+  try {
+    const res = await getHomePageCoaches(8)
+    if (res) {
+      coaches.value = res
+    }
+  } catch (error) {
+    console.error('加载教练列表失败:', error)
+    // 使用模拟数据作为后备
+    coaches.value = getMockCoaches()
+  } finally {
+    loadingCoaches.value = false
+  }
+}
+
+// 模拟教练数据
+function getMockCoaches() {
+  return [
+    {
+      id: 1,
+      name: '张教练',
+      title: '高级私教',
+      image: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&h=200&fit=crop&crop=face',
+      experience: '8年',
+      students: '2000+',
+      rating: '99%',
+      ratingScore: 4.9,
+      tags: ['增肌塑形', '体能训练', '康复训练'],
+      bio: '拥有8年健身教学经验，擅长增肌塑形和体能训练。曾帮助超过2000名学员实现健身目标，好评率高达99%。'
+    },
+    {
+      id: 2,
+      name: '李教练',
+      title: '瑜伽导师',
+      image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=200&h=200&fit=crop&crop=face',
+      experience: '6年',
+      students: '1500+',
+      rating: '98%',
+      ratingScore: 4.8,
+      tags: ['瑜伽', '普拉提', '体态调整'],
+      bio: '资深瑜伽导师，专注瑜伽教学6年。擅长哈他瑜伽、流瑜伽和普拉提，帮助学员改善体态、增强柔韧性。'
+    },
+    {
+      id: 3,
+      name: '王教练',
+      title: '力量训练专家',
+      image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=200&h=200&fit=crop&crop=face',
+      experience: '10年',
+      students: '3000+',
+      rating: '99%',
+      ratingScore: 5.0,
+      tags: ['力量训练', '举重', 'CrossFit'],
+      bio: '力量训练专家，10年从业经验。精通举重、CrossFit等多种训练方式，曾获得多项力量比赛冠军。'
+    },
+    {
+      id: 4,
+      name: '刘教练',
+      title: '减脂专家',
+      image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&h=200&fit=crop&crop=face',
+      experience: '5年',
+      students: '1800+',
+      rating: '97%',
+      ratingScore: 4.7,
+      tags: ['减脂', '有氧训练', '营养指导'],
+      bio: '专注减脂领域5年，帮助超过1800名学员成功减重。结合科学训练和营养指导，让减脂更高效、更健康。'
+    }
+  ]
+}
+
+// 打开教练详情
+function openCoachDetail(coach) {
+  selectedCoach.value = coach
+  showCoachDetailModal.value = true
+}
+
+// 与教练开始聊天
+function startChatWithCoach(coach) {
+  message.info(`开始与 ${coach.name} 对话`)
+  // TODO: 实现跳转到聊天页面或打开聊天窗口
+  // router.push(`/chat/coach/${coach.id}`)
+}
+
+// 购买教练课程
+function buyCourseFromCoach(coach) {
+  message.info(`购买 ${coach.name} 的课程`)
+  // TODO: 实现跳转到购课页面
+  // router.push(`/courses/buy?coachId=${coach.id}`)
 }
 
 function askQuestion(question) {
@@ -1432,6 +1851,131 @@ async function regeneratePlan() {
   }
 }
 
+/* 健身计划生成动态等待效果 */
+.plan-generating-animation {
+  background: linear-gradient(135deg, #FFF5F2 0%, #FFFFFF 100%);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 320px;
+}
+
+.generating-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FF6B35;
+}
+
+.generating-header .n-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.generating-progress {
+  margin-top: 8px;
+}
+
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.step-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #F0F2F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: #9CA3AF;
+}
+
+.step.active .step-icon {
+  background: linear-gradient(135deg, #FF6B35, #FF8C61);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  animation: stepPulse 1s ease-in-out infinite;
+}
+
+.step.done .step-icon {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+@keyframes stepPulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(255, 107, 53, 0.5);
+  }
+}
+
+.step span {
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.step.active span,
+.step.done span {
+  color: #1A1A2E;
+  font-weight: 600;
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: #E5E7EB;
+  border-radius: 1px;
+  margin: 0 4px;
+  margin-bottom: 22px;
+  transition: all 0.3s ease;
+}
+
+.step-line.active {
+  background: linear-gradient(90deg, #10B981, #10B981);
+}
+
+/* 健身计划消息样式 - 作为AI消息显示 */
+.plan-message-wrapper {
+  animation: fadeIn 0.4s ease;
+}
+
+.plan-message-content {
+  background: #F0F2F5 !important;
+  border-bottom-left-radius: 4px !important;
+  padding: 0 !important;
+  max-width: 560px;
+  overflow: hidden;
+}
+
 /* 聊天输入区域 - 现代精致设计 */
 .chat-input-area {
   padding: 20px 24px;
@@ -1750,7 +2294,7 @@ async function regeneratePlan() {
   flex-shrink: 0;
 }
 
-.plans-section {
+.coaches-section {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1790,14 +2334,14 @@ async function regeneratePlan() {
   background: white;
 }
 
-/* 我的健身计划列表 */
-.plan-list {
+/* 推荐教练列表 */
+.coaches-list {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
 
-.plans-loading {
+.coaches-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1808,7 +2352,7 @@ async function regeneratePlan() {
   font-size: 13px;
 }
 
-.plans-empty {
+.coaches-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1817,58 +2361,252 @@ async function regeneratePlan() {
   padding: 24px;
 }
 
-.plan-items {
+.coach-items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.plan-item {
-  padding: 12px;
+.coach-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
   background: #F8FAFC;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
   border: 1px solid transparent;
 }
 
-.plan-item:hover {
-  background: #F0F2F5;
+.coach-item:hover {
+  background: white;
   border-color: #FF6B35;
-  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+  transform: translateY(-2px);
 }
 
-.plan-item-header {
+.coach-item-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.coach-item-avatar img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.coach-status {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.coach-status.online {
+  background: #10B981;
+}
+
+.coach-status.busy {
+  background: #F59E0B;
+}
+
+.coach-status.offline {
+  background: #9CA3AF;
+}
+
+.coach-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-item-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
-}
-
-.plan-item-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: #1A1A2E;
-}
-
-.plan-item-meta {
-  display: flex;
   gap: 8px;
   margin-bottom: 4px;
 }
 
-.plan-goal,
-.plan-duration {
-  font-size: 12px;
-  color: #6B7280;
-  background: white;
-  padding: 2px 8px;
-  border-radius: 4px;
+.coach-item-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1A1A2E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.plan-item-date {
-  font-size: 11px;
-  color: #9CA3AF;
+.coach-item-title {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(255, 107, 53, 0.1);
+  color: #FF6B35;
+  border-radius: 8px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.coach-item-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.rating-stars .star {
+  width: 11px;
+  height: 11px;
+  fill: #E5E7EB;
+}
+
+.rating-stars .star.filled {
+  fill: #F59E0B;
+}
+
+.rating-score {
+  font-size: 12px;
+  font-weight: 600;
+  color: #F59E0B;
+}
+
+.coach-item-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.coach-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #F0F2F5;
+  color: #6B7280;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 教练详情弹窗 */
+.coach-detail-modal :deep(.n-card__content) {
+  padding: 20px;
+}
+
+.coach-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.coach-detail-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.coach-detail-avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.coach-detail-info {
+  flex: 1;
+}
+
+.coach-detail-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 4px;
+}
+
+.coach-detail-title {
+  font-size: 14px;
+  color: #6B7280;
+  margin-bottom: 8px;
+}
+
+.coach-detail-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coach-detail-stats {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #F8FAFC;
+  border-radius: 12px;
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FF6B35;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.coach-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.coach-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.coach-detail-bio {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.6;
+}
+
+.coach-detail-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #F0F2F5;
+}
+
+.coach-detail-actions .btn-chat,
+.coach-detail-actions .btn-buy {
+  flex: 1;
 }
 
 /* 移动端快捷问题 */

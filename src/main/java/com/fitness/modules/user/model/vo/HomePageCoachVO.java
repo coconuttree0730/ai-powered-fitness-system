@@ -47,6 +47,16 @@ public class HomePageCoachVO {
     private String rating;
 
     /**
+     * 评分（如：4.5）
+     */
+    private Double ratingScore;
+
+    /**
+     * 个人简介
+     */
+    private String bio;
+
+    /**
      * 教练标签列表（首页最多显示3个）
      */
     private List<String> tags;

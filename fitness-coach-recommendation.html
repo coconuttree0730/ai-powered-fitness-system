@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推荐教练 - 健小助</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --primary-hover: #E55A2B;
+            --primary-light: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+            --primary-bg-light: rgba(255, 107, 53, 0.08);
+            --primary-border-light: rgba(255, 107, 53, 0.3);
+            --success-color: #10B981;
+            --success-hover: #059669;
+            --warning-color: #F59E0B;
+            --error-color: #EF4444;
+            --text-color: #1A1A2E;
+            --text-secondary: #6B7280;
+            --text-light: #9CA3AF;
+            --border-color: #E5E7EB;
+            --bg-color: #FAFBFC;
+            --bg-secondary: #F0F2F5;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 30px rgba(255, 107, 53, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .coach-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        /* 头部 */
+        .coach-header {
+            padding: 20px 24px;
+            background: var(--primary-light);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2);
+        }
+
+        .coach-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .coach-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .coach-subtitle {
+            font-size: 14px;
+            opacity: 0.95;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* 教练列表区域 */
+        .coach-list-container {
+            padding: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .section-title svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary-color);
+        }
+
+        /* 教练卡片网格 - 每行一个卡片 */
+        .coach-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 教练卡片 - 横向布局 */
+        .coach-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .coach-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .coach-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-light);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .coach-card:hover::before {
+            opacity: 1;
+        }
+
+        /* 卡片头部 */
+        .coach-card-header {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* 教练头像 */
+        .coach-avatar-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--white);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .coach-status {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 14px;
+            height: 14px;
+            background: var(--success-color);
+            border: 2px solid var(--white);
+            border-radius: 50%;
+        }
+
+        .coach-status.busy {
+            background: var(--warning-color);
+        }
+
+        .coach-status.offline {
+            background: var(--text-light);
+        }
+
+        /* 教练基本信息 */
+        .coach-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .coach-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .coach-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .coach-title-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: var(--primary-bg-light);
+            color: var(--primary-color);
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .coach-rating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-stars svg {
+            width: 14px;
+            height: 14px;
+            fill: #F59E0B;
+        }
+
+        .rating-score {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--warning-color);
+        }
+
+        .coach-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .coach-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .coach-stat svg {
+            width: 14px;
+            height: 14px;
+            color: var(--text-light);
+        }
+
+        /* 教练标签 */
+        .coach-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .coach-tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .coach-tag:hover {
+            background: var(--primary-bg-light);
+            color: var(--primary-color);
+        }
+
+        /* 卡片操作按钮 */
+        .coach-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-primary {
+            background: var(--primary-light);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-default {
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            background: var(--primary-bg-light);
+            border-color: var(--primary-border-light);
+            color: var(--primary-color);
+        }
+
+        /* 加载状态 */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 空状态 */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* 教练详情弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            position: relative;
+            padding: 0;
+        }
+
+        .modal-cover {
+            width: 100%;
+            height: 180px;
+            background: var(--primary-light);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--white);
+            transform: rotate(90deg);
+        }
+
+        .modal-close svg {
+            width: 20px;
+            height: 20px;
+            color: var(--text-color);
+        }
+
+        .modal-avatar-wrapper {
+            position: absolute;
+            bottom: -50px;
+            left: 24px;
+        }
+
+        .modal-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--white);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-body {
+            padding: 60px 24px 24px;
+        }
+
+        .modal-name-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .modal-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .modal-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .modal-stats {
+            display: flex;
+            gap: 24px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .modal-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .modal-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modal-section-content {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .modal-tag {
+            font-size: 13px;
+            padding: 6px 14px;
+            background: var(--primary-bg-light);
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            padding: 14px 24px;
+            font-size: 15px;
+        }
+
+        /* 滚动条美化 */
+        .coach-list-container::-webkit-scrollbar,
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .coach-list-container::-webkit-scrollbar-track,
+        .modal-content::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 3px;
+        }
+
+        .coach-list-container::-webkit-scrollbar-thumb,
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .coach-list-container::-webkit-scrollbar-thumb:hover,
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .coach-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .coach-card-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .coach-stats {
+                justify-content: center;
+            }
+
+            .coach-tags {
+                justify-content: center;
+            }
+
+            .modal-avatar-wrapper {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .modal-body {
+                padding-top: 70px;
+                text-align: center;
+            }
+
+            .modal-name-row {
+                justify-content: center;
+            }
+
+            .modal-tags {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="coach-container">
+        <!-- 头部 -->
+        <div class="coach-header">
+            <div class="coach-header-top">
+                <div class="coach-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>推荐教练</span>
+                </div>
+            </div>
+            <div class="coach-subtitle">为您精选的专业健身教练团队</div>
+        </div>
+
+        <!-- 教练列表 -->
+        <div class="coach-list-container" id="coachListContainer">
+            <!-- 加载状态 -->
+            <div class="loading-state" id="loadingState">
+                <div class="loading-spinner"></div>
+                <p>正在加载教练信息...</p>
+            </div>
+
+            <!-- 教练列表内容 -->
+            <div id="coachList" style="display: none;">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span>明星教练团队</span>
+                </div>
+                <div class="coach-grid" id="coachGrid">
+                    <!-- 教练卡片将通过JS动态插入 -->
+                </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M16 16s-1.5-2-4-2-4 2-4 2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                </svg>
+                <p>暂无教练信息</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 教练详情弹窗 -->
+    <div class="modal-overlay" id="coachModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-cover"></div>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <div class="modal-avatar-wrapper">
+                    <img src="" alt="教练头像" class="modal-avatar" id="modalAvatar">
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-name-row">
+                    <h2 class="modal-name" id="modalName">教练姓名</h2>
+                    <span class="coach-title-badge" id="modalTitleBadge">职称</span>
+                </div>
+                <p class="modal-title" id="modalTitle">专业领域</p>
+
+                <div class="modal-stats">
+                    <div class="modal-stat">
+                        <div class="modal-stat-value" id="modalExperience">0年</div>
+                        <div class="modal-stat-label">从业经验</div>
+                    </div>
+                    <div class="modal-stat">
+                        <div class="modal-stat-value" id="modalStudents">0+</div>
+                        <div class="modal-stat-label">服务学员</div>
+                    </div>
+                    <div class="modal-stat">
+                        <div class="modal-stat-value" id="modalRating">0%</div>
+                        <div class="modal-stat-label">好评率</div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        专业标签
+                    </div>
+                    <div class="modal-tags" id="modalTags">
+                        <!-- 标签动态插入 -->
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        个人简介
+                    </div>
+                    <div class="modal-section-content" id="modalBio">
+                        暂无简介
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-default" onclick="startChat()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                        在线咨询
+                    </button>
+                    <button class="btn btn-primary" onclick="buyCourse()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="12" y1="8" x2="12" y2="16"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                        购买课程
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 当前选中的教练ID
+        let currentCoachId = null;
+
+        // 模拟教练数据（实际项目中应从API获取）
+        const mockCoaches = [
+            {
+                id: 1,
+                name: "张教练",
+                title: "高级私教",
+                image: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&h=200&fit=crop&crop=face",
+                experience: "8年",
+                students: "2000+",
+                rating: "99%",
+                ratingScore: 4.9,
+                tags: ["增肌塑形", "体能训练", "康复训练"],
+                bio: "拥有8年健身教学经验，擅长增肌塑形和体能训练。曾帮助超过2000名学员实现健身目标，好评率高达99%。持有国际健身教练认证，专业知识扎实。",
+                specialties: ["增肌塑形", "体能训练", "康复训练", "减脂"]
+            },
+            {
+                id: 2,
+                name: "李教练",
+                title: "瑜伽导师",
+                image: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=200&h=200&fit=crop&crop=face",
+                experience: "6年",
+                students: "1500+",
+                rating: "98%",
+                ratingScore: 4.8,
+                tags: ["瑜伽", "普拉提", "体态调整"],
+                bio: "资深瑜伽导师，专注瑜伽教学6年。擅长哈他瑜伽、流瑜伽和普拉提，帮助学员改善体态、增强柔韧性。教学风格温和细致，深受学员喜爱。",
+                specialties: ["瑜伽", "普拉提", "体态调整", "冥想"]
+            },
+            {
+                id: 3,
+                name: "王教练",
+                title: "力量训练专家",
+                image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=200&h=200&fit=crop&crop=face",
+                experience: "10年",
+                students: "3000+",
+                rating: "99%",
+                ratingScore: 5.0,
+                tags: ["力量训练", "举重", "CrossFit"],
+                bio: "力量训练专家，10年从业经验。精通举重、CrossFit等多种训练方式，曾获得多项力量比赛冠军。善于根据学员特点制定个性化训练方案。",
+                specialties: ["力量训练", "举重", "CrossFit", "爆发力训练"]
+            },
+            {
+                id: 4,
+                name: "刘教练",
+                title: "减脂专家",
+                image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&h=200&fit=crop&crop=face",
+                experience: "5年",
+                students: "1800+",
+                rating: "97%",
+                ratingScore: 4.7,
+                tags: ["减脂", "有氧训练", "营养指导"],
+                bio: "专注减脂领域5年，帮助超过1800名学员成功减重。结合科学训练和营养指导，让减脂更高效、更健康。擅长制定可持续的减脂计划。",
+                specialties: ["减脂", "有氧训练", "营养指导", "HIIT"]
+            }
+        ];
+
+        // 页面加载时获取教练列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCoaches();
+        });
+
+        // 加载教练列表
+        async function loadCoaches() {
+            try {
+                // 实际项目中使用以下API调用：
+                // const response = await fetch('/api/v1/coaches/home?limit=8');
+                // const result = await response.json();
+                // const coaches = result.data;
+
+                // 模拟API延迟
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                const coaches = mockCoaches;
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (coaches && coaches.length > 0) {
+                    renderCoachList(coaches);
+                    document.getElementById('coachList').style.display = 'block';
+                } else {
+                    document.getElementById('emptyState').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('加载教练列表失败:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'flex';
+            }
+        }
+
+        // 渲染教练列表
+        function renderCoachList(coaches) {
+            const grid = document.getElementById('coachGrid');
+            grid.innerHTML = coaches.map(coach => createCoachCard(coach)).join('');
+        }
+
+        // 创建教练卡片HTML - 横向布局
+        function createCoachCard(coach) {
+            const stars = generateStars(coach.ratingScore || 4.5);
+
+            return `
+                <div class="coach-card" onclick="openCoachDetail(${coach.id})">
+                    <div class="coach-avatar-wrapper">
+                        <img src="${coach.image || 'https://via.placeholder.com/100'}"
+                             alt="${coach.name}"
+                             class="coach-avatar"
+                             onerror="this.src='https://via.placeholder.com/100/e8e8e8/666?text=Coach'">
+                        <span class="coach-status"></span>
+                    </div>
+                    <div class="coach-card-header">
+                        <div class="coach-info">
+                            <div class="coach-name-row">
+                                <span class="coach-name">${coach.name}</span>
+                                <span class="coach-title-badge">${coach.title || '教练'}</span>
+                            </div>
+                            <div class="coach-rating">
+                                <div class="rating-stars">${stars}</div>
+                                <span class="rating-score">${coach.ratingScore || '4.5'}</span>
+                            </div>
+                            <div class="coach-tags">
+                                ${(coach.tags || []).slice(0, 3).map(tag => `<span class="coach-tag">${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="coach-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-default" onclick="startChatWithCoach(${coach.id}, '${coach.name}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                            </svg>
+                            咨询
+                        </button>
+                        <button class="btn btn-primary" onclick="buyCourseFromCoach(${coach.id}, '${coach.name}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="12" y1="8" x2="12" y2="16"/>
+                                <line x1="8" y1="12" x2="16" y2="12"/>
+                            </svg>
+                            买课
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 生成星级评分HTML
+        function generateStars(score) {
+            const fullStars = Math.floor(score);
+            const hasHalfStar = score % 1 >= 0.5;
+            let starsHtml = '';
+
+            for (let i = 0; i < fullStars; i++) {
+                starsHtml += `<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+            }
+
+            if (hasHalfStar) {
+                starsHtml += `<svg viewBox="0 0 24 24"><defs><linearGradient id="half"><stop offset="50%" stop-color="#F59E0B"/><stop offset="50%" stop-color="#E5E7EB"/></linearGradient></defs><polygon fill="url(#half)" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+            }
+
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += `<svg viewBox="0 0 24 24" style="fill: #E5E7EB;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+            }
+
+            return starsHtml;
+        }
+
+        // 打开教练详情弹窗
+        async function openCoachDetail(coachId) {
+            currentCoachId = coachId;
+
+            // 实际项目中使用以下API调用：
+            // const response = await fetch(`/api/v1/coaches/${coachId}/detail`);
+            // const result = await response.json();
+            // const coach = result.data;
+
+            // 模拟从mock数据中获取
+            const coach = mockCoaches.find(c => c.id === coachId);
+
+            if (coach) {
+                document.getElementById('modalAvatar').src = coach.image || 'https://via.placeholder.com/100';
+                document.getElementById('modalName').textContent = coach.name;
+                document.getElementById('modalTitleBadge').textContent = coach.title || '教练';
+                document.getElementById('modalTitle').textContent = (coach.specialties || []).join(' · ');
+                document.getElementById('modalExperience').textContent = coach.experience || '3年';
+                document.getElementById('modalStudents').textContent = coach.students || '1000+';
+                document.getElementById('modalRating').textContent = coach.rating || '98%';
+                document.getElementById('modalBio').textContent = coach.bio || '暂无简介';
+
+                const tagsContainer = document.getElementById('modalTags');
+                tagsContainer.innerHTML = (coach.tags || []).map(tag => `<span class="modal-tag">${tag}</span>`).join('');
+
+                document.getElementById('coachModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('coachModal').classList.remove('active');
+            document.body.style.overflow = '';
+            currentCoachId = null;
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('coachModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 开始聊天（从弹窗）
+        function startChat() {
+            if (currentCoachId) {
+                const coach = mockCoaches.find(c => c.id === currentCoachId);
+                alert(`开始与 ${coach ? coach.name : '教练'} 对话`);
+                // 实际项目中跳转到聊天页面或打开聊天窗口
+                // window.location.href = `/chat/${currentCoachId}`;
+            }
+        }
+
+        // 购买课程（从弹窗）
+        function buyCourse() {
+            if (currentCoachId) {
+                const coach = mockCoaches.find(c => c.id === currentCoachId);
+                alert(`购买 ${coach ? coach.name : '教练'} 的课程`);
+                // 实际项目中跳转到购课页面
+                // window.location.href = `/courses/buy?coachId=${currentCoachId}`;
+            }
+        }
+
+        // 从卡片开始聊天
+        function startChatWithCoach(coachId, coachName) {
+            event.stopPropagation();
+            alert(`开始与 ${coachName} 对话`);
+            // 实际项目中跳转到聊天页面或打开聊天窗口
+            // window.location.href = `/chat/${coachId}`;
+        }
+
+        // 从卡片购买课程
+        function buyCourseFromCoach(coachId, coachName) {
+            event.stopPropagation();
+            alert(`购买 ${coachName} 的课程`);
+            // 实际项目中跳转到购课页面
+            // window.location.href = `/courses/buy?coachId=${coachId}`;
+        }
+
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

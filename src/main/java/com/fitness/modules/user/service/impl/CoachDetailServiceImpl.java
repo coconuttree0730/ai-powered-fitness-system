@@ -449,6 +449,12 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         // 好评率
         vo.setRating(detail.getRating() != null ? detail.getRating() : "99%");
 
+        // 评分（从好评率转换，如99% -> 4.9）
+        vo.setRatingScore(convertRatingToScore(detail.getRating()));
+
+        // 个人简介
+        vo.setBio(detail.getBio() != null ? detail.getBio() : "专业健身教练，拥有丰富的教学经验，致力于帮助学员达成健身目标。");
+
         // 标签
         String tagsJson = detail.getTagsJson();
         if (tagsJson != null) {
@@ -463,6 +469,27 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         }
 
         return vo;
+    }
+
+    /**
+     * 将好评率转换为评分（如99% -> 4.9）
+     */
+    private Double convertRatingToScore(String rating) {
+        if (rating == null || rating.isEmpty()) {
+            return 4.9;
+        }
+        // 去掉百分号
+        String numberStr = rating.replace("%", "");
+        try {
+            int percentage = Integer.parseInt(numberStr);
+            // 将百分比转换为5分制评分
+            // 100% -> 5.0, 90% -> 4.5, 80% -> 4.0
+            double score = percentage / 20.0;
+            // 保留一位小数
+            return Math.round(score * 10) / 10.0;
+        } catch (NumberFormatException e) {
+            return 4.9;
+        }
     }
 
     /**
