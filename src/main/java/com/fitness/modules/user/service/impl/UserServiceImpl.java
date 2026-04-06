@@ -586,4 +586,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("用户通过短信验证码修改密码成功: userId={}", userId);
         return true;
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO uploadAvatar(Long userId, String avatarUrl) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 如果用户已有头像，删除旧头像
+        if (StringUtils.hasText(user.getAvatar())) {
+            try {
+                fileService.deleteFile(user.getAvatar());
+                log.info("用户旧头像删除成功: userId={}, oldAvatar={}", userId, user.getAvatar());
+            } catch (Exception e) {
+                log.warn("用户旧头像删除失败: userId={}, oldAvatar={}, error={}", userId, user.getAvatar(), e.getMessage());
+            }
+        }
+
+        // 更新用户头像
+        user.setAvatar(avatarUrl);
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("用户头像上传成功: userId={}, avatar={}", userId, avatarUrl);
+        return getUserInfo(userId);
+    }
 }

@@ -47,6 +47,11 @@ public class UserFitnessProfileVO {
     private String fitnessGoal;
 
     /**
+     * 性别：MALE-男, FEMALE-女
+     */
+    private String gender;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

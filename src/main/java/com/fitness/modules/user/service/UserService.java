@@ -178,4 +178,14 @@ public interface UserService {
      * @return 是否成功
      */
     boolean updatePasswordBySmsCode(Long userId, String smsCode, String newPassword);
+
+    /**
+     * 上传用户头像
+     * 上传图片到MinIO并更新用户头像URL
+     *
+     * @param userId 用户ID
+     * @param avatarUrl 头像URL
+     * @return 更新后的用户信息
+     */
+    UserVO uploadAvatar(Long userId, String avatarUrl);
 }

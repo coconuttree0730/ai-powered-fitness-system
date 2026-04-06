@@ -49,4 +49,11 @@ public class UserFitnessProfileDTO {
     @NotBlank(message = "健身目标不能为空")
     @Pattern(regexp = "^(WEIGHT_LOSS|MUSCLE_GAIN|BODY_SHAPING|ENDURANCE|HEALTH)$", message = "健身目标格式不正确")
     private String fitnessGoal;
+
+    /**
+     * 性别：MALE-男, FEMALE-女
+     */
+    @NotBlank(message = "性别不能为空")
+    @Pattern(regexp = "^(MALE|FEMALE)$", message = "性别必须是 MALE 或 FEMALE")
+    private String gender;
 }

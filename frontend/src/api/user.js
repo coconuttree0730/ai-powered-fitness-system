@@ -150,3 +150,19 @@ export function updatePasswordBySms(data) {
     data
   })
 }
+
+/**
+ * 上传用户头像
+ * @param {FormData} formData 包含头像文件的 FormData 对象
+ * @returns {Promise} 上传结果，返回更新后的用户信息
+ */
+export function uploadAvatar(formData) {
+  return request({
+    url: '/users/avatar',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

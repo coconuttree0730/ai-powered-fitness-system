@@ -243,6 +243,9 @@
           <n-form-item label="年龄">
             <n-input-number v-model:value="fitnessForm.age" :min="1" :max="150" />
           </n-form-item>
+          <n-form-item label="性别">
+            <n-select v-model:value="fitnessForm.gender" :options="genderOptions" />
+          </n-form-item>
           <n-form-item>
             <template #label>
               <span class="form-label-with-help">
@@ -523,7 +526,8 @@ import {
   sendEmailCode,
   updateEmail,
   sendPasswordChangeCode,
-  updatePasswordBySms
+  updatePasswordBySms,
+  uploadAvatar
 } from '@/api/user'
 
 const router = useRouter()
@@ -611,6 +615,7 @@ const fitnessForm = reactive({
   height: null,
   weight: null,
   age: null,
+  gender: null,
   experience: null,
   fitnessGoal: null
 })
@@ -620,6 +625,11 @@ const experienceOptions = [
   { label: '初学者', value: 'BEGINNER' },
   { label: '中级', value: 'INTERMEDIATE' },
   { label: '高级', value: 'ADVANCED' }
+]
+
+const genderOptions = [
+  { label: '男', value: 'MALE' },
+  { label: '女', value: 'FEMALE' }
 ]
 
 const goalOptions = [
@@ -752,11 +762,13 @@ function maskPhone(phone) {
 
 // 头像上传
 const avatarInput = ref(null)
+const uploadingAvatar = ref(false)
+
 function handleChangeAvatar() {
   avatarInput.value?.click()
 }
 
-function handleAvatarUpload(e) {
+async function handleAvatarUpload(e) {
   const file = e.target.files[0]
   if (!file) return
 
@@ -773,13 +785,29 @@ function handleAvatarUpload(e) {
     return
   }
 
-  // 创建预览
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    userInfo.avatar = e.target.result
-    message.success('头像上传成功')
+  // 创建 FormData
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    uploadingAvatar.value = true
+    // 调用后端接口上传头像
+    const res = await uploadAvatar(formData)
+    if (res) {
+      // 更新本地用户信息
+      Object.assign(userInfo, res)
+      // 同步更新 authStore
+      authStore.userInfo = res
+      localStorage.setItem('userInfo', JSON.stringify(res))
+      message.success('头像上传成功')
+    }
+  } catch (error) {
+    message.error(error.message || '头像上传失败')
+  } finally {
+    uploadingAvatar.value = false
+    // 清空 input 值，允许重复选择同一文件
+    e.target.value = ''
   }
-  reader.readAsDataURL(file)
 }
 
 // 关闭手机弹窗

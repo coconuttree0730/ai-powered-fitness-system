@@ -71,7 +71,8 @@ public class UserFitnessProfileServiceImpl implements UserFitnessProfileService 
                 && profile.getWeight() != null
                 && profile.getAge() != null
                 && profile.getExperience() != null
-                && profile.getFitnessGoal() != null;
+                && profile.getFitnessGoal() != null
+                && profile.getGender() != null;
     }
 
     /**

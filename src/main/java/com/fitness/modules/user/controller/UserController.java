@@ -3,6 +3,7 @@ package com.fitness.modules.user.controller;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.result.Result;
+import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.user.model.dto.SendEmailCodeDTO;
 import com.fitness.modules.user.model.dto.UpdateEmailDTO;
 import com.fitness.modules.user.model.dto.UpdatePasswordBySmsDTO;
@@ -20,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +40,7 @@ public class UserController {
     private final UserService userService;
     private final SmsCodeService smsCodeService;
     private final EmailCodeService emailCodeService;
+    private final FileService fileService;
 
     /**
      * 获取当前登录用户信息
@@ -272,6 +275,28 @@ public class UserController {
         } else {
             return Result.error("修改密码失败");
         }
+    }
+
+    /**
+     * 上传用户头像
+     * 上传图片到MinIO并更新用户头像URL
+     *
+     * @param file 头像文件
+     * @return 更新后的用户信息
+     */
+    @PostMapping("/avatar")
+    @PreAuthorize("isAuthenticated()")
+    public Result<UserVO> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        Long userId = getCurrentUserId();
+        log.info("上传头像请求, userId: {}", userId);
+
+        // 1. 上传图片到MinIO
+        com.fitness.integration.minio.model.vo.FileUploadVO uploadResult = fileService.uploadImage(file);
+
+        // 2. 更新用户头像URL到数据库
+        UserVO userVO = userService.uploadAvatar(userId, uploadResult.getFileUrl());
+
+        return Result.success(userVO);
     }
 
     /**

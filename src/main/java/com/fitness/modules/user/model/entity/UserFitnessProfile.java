@@ -57,6 +57,12 @@ public class UserFitnessProfile {
     private String fitnessGoal;
 
     /**
+     * 性别：MALE-男, FEMALE-女
+     */
+    @TableField("gender")
+    private String gender;
+
+    /**
      * 专属教练ID
      */
     @TableField("private_coach_id")

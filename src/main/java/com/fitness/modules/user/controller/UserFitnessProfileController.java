@@ -49,8 +49,8 @@ public class UserFitnessProfileController {
     @PreAuthorize("isAuthenticated()")
     public Result<UserFitnessProfileVO> updateProfile(@Valid @RequestBody UserFitnessProfileDTO dto) {
         Long userId = getCurrentUserId();
-        log.info("更新用户健身档案, userId: {}, height: {}, weight: {}, age: {}, experience: {}, fitnessGoal: {}",
-                userId, dto.getHeight(), dto.getWeight(), dto.getAge(), dto.getExperience(), dto.getFitnessGoal());
+        log.info("更新用户健身档案, userId: {}, height: {}, weight: {}, age: {}, gender: {}, experience: {}, fitnessGoal: {}",
+                userId, dto.getHeight(), dto.getWeight(), dto.getAge(), dto.getGender(), dto.getExperience(), dto.getFitnessGoal());
         UserFitnessProfileVO profile = userFitnessProfileService.saveOrUpdateProfile(userId, dto);
         return Result.success(profile);
     }
