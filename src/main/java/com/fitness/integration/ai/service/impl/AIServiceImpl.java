@@ -214,11 +214,33 @@ public class AIServiceImpl implements AIService {
                     .call()
                     .content();
 
-            log.info("文本润色成功，响应长度: {}", response != null ? response.length() : 0);
-            return response;
+            String cleaned = cleanPolishedResponse(response);
+
+            log.info("文本润色成功，原始响应长度: {}，清洗后长度: {}",
+                    response != null ? response.length() : 0,
+                    cleaned != null ? cleaned.length() : 0);
+            return cleaned;
         } catch (Exception e) {
             log.error("文本润色失败", e);
             throw new RuntimeException("文本润色失败: " + e.getMessage(), e);
         }
+    }
+
+    private String cleanPolishedResponse(String response) {
+        if (response == null || response.isBlank()) {
+            return response;
+        }
+
+        String result = response;
+
+        result = result.replaceAll("[（(][\\d约]+[字词][）)]", "");
+        result = result.replaceAll("[【\\[]\\d+[字词][】\\]]", "");
+        result = result.replaceAll("^[\\s]*$", "");
+
+        result = result.trim();
+        result = result.replaceAll("\\n{3,}", "\n\n");
+        result = result.trim();
+
+        return result;
     }
 }

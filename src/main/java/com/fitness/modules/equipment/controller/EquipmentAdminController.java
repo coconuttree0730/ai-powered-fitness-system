@@ -1,14 +1,18 @@
 package com.fitness.modules.equipment.controller;
 
 import com.fitness.common.result.Result;
+import com.fitness.integration.security.UserDetailsImpl;
 import com.fitness.modules.equipment.model.dto.EquipmentDTO;
+import com.fitness.modules.equipment.model.dto.RepairHandleDTO;
 import com.fitness.modules.equipment.model.entity.EquipmentType;
+import com.fitness.modules.equipment.model.vo.RepairRecordVO;
 import com.fitness.modules.equipment.model.vo.RepairVO;
 import com.fitness.modules.equipment.service.EquipmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -81,17 +85,82 @@ public class EquipmentAdminController {
     }
 
     /**
-     * 处理报修
+     * 获取报修详情
      *
      * @param repairId 报修ID
-     * @param status   状态
+     * @return 报修详情
+     */
+    @GetMapping("/repairs/{repairId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<RepairVO> getRepairDetail(@PathVariable Long repairId) {
+        log.info("获取报修详情请求: repairId={}", repairId);
+        RepairVO repair = equipmentService.getRepairDetailAdmin(repairId);
+        return Result.success(repair);
+    }
+
+    /**
+     * 处理报修
+     *
+     * @param userDetails 当前登录管理员
+     * @param repairId    报修ID
+     * @param dto         处理信息
      * @return 操作结果
      */
     @PutMapping("/repairs/{repairId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Result<Void> handleRepair(@PathVariable Long repairId, @RequestParam Integer status) {
-        log.info("处理报修请求: repairId={}, status={}", repairId, status);
-        equipmentService.handleRepair(repairId, status);
+    public Result<Void> handleRepair(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                     @PathVariable Long repairId,
+                                     @Valid @RequestBody RepairHandleDTO dto) {
+        Long handlerId = userDetails.getId();
+        log.info("处理报修请求: repairId={}, status={}, handlerId={}", repairId, dto.getStatus(), handlerId);
+        equipmentService.handleRepair(repairId, dto, handlerId);
+        return Result.success();
+    }
+
+    /**
+     * 添加处理记录
+     *
+     * @param userDetails 当前登录管理员
+     * @param repairId    报修ID
+     * @param content     处理内容
+     * @return 操作结果
+     */
+    @PostMapping("/repairs/{repairId}/records")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> addRepairRecord(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                        @PathVariable Long repairId,
+                                        @RequestParam String content) {
+        Long handlerId = userDetails.getId();
+        log.info("添加处理记录: repairId={}, handlerId={}", repairId, handlerId);
+        equipmentService.addRepairRecord(repairId, content, handlerId);
+        return Result.success();
+    }
+
+    /**
+     * 获取报修处理记录
+     *
+     * @param repairId 报修ID
+     * @return 处理记录列表
+     */
+    @GetMapping("/repairs/{repairId}/records")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<List<RepairRecordVO>> getRepairRecords(@PathVariable Long repairId) {
+        log.info("获取报修处理记录: repairId={}", repairId);
+        List<RepairRecordVO> records = equipmentService.getRepairRecords(repairId);
+        return Result.success(records);
+    }
+
+    /**
+     * 删除报修记录
+     *
+     * @param repairId 报修ID
+     * @return 操作结果
+     */
+    @DeleteMapping("/repairs/{repairId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> deleteRepair(@PathVariable Long repairId) {
+        log.info("删除报修记录请求: repairId={}", repairId);
+        equipmentService.deleteRepair(repairId);
         return Result.success();
     }
 

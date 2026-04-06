@@ -49,6 +49,13 @@ export function deleteEquipment(id) {
   })
 }
 
+// 报修相关接口
+
+/**
+ * 提交报修申请
+ * @param {Object} data 报修数据 { description, imageUrls }
+ * @returns {Promise} 提交结果
+ */
 export function submitRepair(data) {
   return request({
     url: '/repairs',
@@ -57,6 +64,10 @@ export function submitRepair(data) {
   })
 }
 
+/**
+ * 获取我的报修记录
+ * @returns {Promise} 报修记录列表
+ */
 export function getMyRepairs() {
   return request({
     url: '/repairs/my',
@@ -64,6 +75,23 @@ export function getMyRepairs() {
   })
 }
 
+/**
+ * 获取报修详情
+ * @param {number} repairId 报修ID
+ * @returns {Promise} 报修详情
+ */
+export function getRepairDetail(repairId) {
+  return request({
+    url: `/repairs/${repairId}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 取消报修
+ * @param {number} repairId 报修ID
+ * @returns {Promise} 取消结果
+ */
 export function cancelRepair(repairId) {
   return request({
     url: `/repairs/${repairId}/cancel`,
@@ -71,19 +99,66 @@ export function cancelRepair(repairId) {
   })
 }
 
-export function getAllRepairs(params) {
+/**
+ * 获取所有报修记录（管理员）
+ * @returns {Promise} 报修记录列表
+ */
+export function getAllRepairs() {
   return request({
     url: '/admin/equipment/repairs',
-    method: 'get',
-    params
+    method: 'get'
   })
 }
 
+/**
+ * 处理报修（管理员）
+ * @param {number} repairId 报修ID
+ * @param {Object} data 处理数据 { status, remark }
+ * @returns {Promise} 处理结果
+ */
 export function handleRepair(repairId, data) {
   return request({
     url: `/admin/equipment/repairs/${repairId}`,
     method: 'put',
-    params: data
+    data
+  })
+}
+
+/**
+ * 添加处理记录（管理员）
+ * @param {number} repairId 报修ID
+ * @param {string} content 处理内容
+ * @returns {Promise} 添加结果
+ */
+export function addRepairRecord(repairId, content) {
+  return request({
+    url: `/admin/equipment/repairs/${repairId}/records`,
+    method: 'post',
+    params: { content }
+  })
+}
+
+/**
+ * 获取报修处理记录（管理员）
+ * @param {number} repairId 报修ID
+ * @returns {Promise} 处理记录列表
+ */
+export function getRepairRecords(repairId) {
+  return request({
+    url: `/admin/equipment/repairs/${repairId}/records`,
+    method: 'get'
+  })
+}
+
+/**
+ * 删除报修记录（管理员）
+ * @param {number} repairId 报修ID
+ * @returns {Promise} 删除结果
+ */
+export function deleteRepair(repairId) {
+  return request({
+    url: `/admin/equipment/repairs/${repairId}`,
+    method: 'delete'
   })
 }
 
@@ -94,15 +169,20 @@ export function getEquipmentTypes() {
   })
 }
 
-export function getEquipmentRepairs(equipmentId) {
+/**
+ * 获取指定器材的报修记录
+ * @param {number} id 器材ID
+ * @returns {Promise} 报修记录列表
+ */
+export function getEquipmentRepairs(id) {
   return request({
-    url: `/equipment/${equipmentId}/repairs`,
+    url: `/equipment/${id}/repairs`,
     method: 'get'
   })
 }
 
 /**
- * 提交器械报修
+ * 提交器械报修（兼容旧接口）
  * @param {Object} data 报修数据
  * @returns {Promise} 提交结果
  */

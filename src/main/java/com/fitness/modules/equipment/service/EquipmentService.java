@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.modules.equipment.model.dto.EquipmentDTO;
 import com.fitness.modules.equipment.model.dto.EquipmentQueryDTO;
 import com.fitness.modules.equipment.model.dto.RepairDTO;
+import com.fitness.modules.equipment.model.dto.RepairHandleDTO;
+import com.fitness.modules.equipment.model.entity.EquipmentType;
 import com.fitness.modules.equipment.model.vo.EquipmentVO;
 import com.fitness.modules.equipment.model.vo.MyRepairVO;
+import com.fitness.modules.equipment.model.vo.RepairRecordVO;
 import com.fitness.modules.equipment.model.vo.RepairVO;
 
 import java.util.List;
@@ -73,9 +76,10 @@ public interface EquipmentService {
      * 处理报修
      *
      * @param repairId 报修ID
-     * @param status   状态
+     * @param dto      处理信息
+     * @param handlerId 处理人ID
      */
-    void handleRepair(Long repairId, Integer status);
+    void handleRepair(Long repairId, RepairHandleDTO dto, Long handlerId);
 
     /**
      * 提交报修申请
@@ -95,6 +99,23 @@ public interface EquipmentService {
     List<MyRepairVO> getMyRepairs(Long userId);
 
     /**
+     * 获取报修详情（会员端）
+     *
+     * @param userId   用户ID
+     * @param repairId 报修ID
+     * @return 报修详情
+     */
+    RepairVO getRepairDetail(Long userId, Long repairId);
+
+    /**
+     * 获取报修详情（管理端）
+     *
+     * @param repairId 报修ID
+     * @return 报修详情
+     */
+    RepairVO getRepairDetailAdmin(Long repairId);
+
+    /**
      * 取消报修
      *
      * @param userId   用户ID
@@ -107,5 +128,29 @@ public interface EquipmentService {
      *
      * @return 器材类型列表
      */
-    List<com.fitness.modules.equipment.model.entity.EquipmentType> getAllEquipmentTypes();
+    List<EquipmentType> getAllEquipmentTypes();
+
+    /**
+     * 添加处理记录
+     *
+     * @param repairId  报修ID
+     * @param content   处理内容
+     * @param handlerId 处理人ID
+     */
+    void addRepairRecord(Long repairId, String content, Long handlerId);
+
+    /**
+     * 获取报修处理记录
+     *
+     * @param repairId 报修ID
+     * @return 处理记录列表
+     */
+    List<RepairRecordVO> getRepairRecords(Long repairId);
+
+    /**
+     * 删除报修记录
+     *
+     * @param repairId 报修ID
+     */
+    void deleteRepair(Long repairId);
 }

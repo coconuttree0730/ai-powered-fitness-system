@@ -14,14 +14,6 @@ import java.util.List;
 public interface EquipmentRepairMapper extends BaseMapper<EquipmentRepair> {
 
     /**
-     * 查询器材的报修记录
-     *
-     * @param equipmentId 器材ID
-     * @return 报修记录列表
-     */
-    List<RepairVO> selectRepairList(@Param("equipmentId") Long equipmentId);
-
-    /**
      * 查询所有报修记录
      *
      * @return 报修记录列表
@@ -35,4 +27,12 @@ public interface EquipmentRepairMapper extends BaseMapper<EquipmentRepair> {
      * @return 报修记录列表
      */
     List<MyRepairVO> selectMyRepairs(@Param("userId") Long userId);
+
+    /**
+     * 根据ID查询报修详情
+     *
+     * @param repairId 报修ID
+     * @return 报修详情
+     */
+    RepairVO selectRepairById(@Param("repairId") Long repairId);
 }

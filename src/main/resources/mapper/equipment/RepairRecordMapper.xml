@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.equipment.mapper.RepairRecordMapper">
+
+    <!-- 报修处理记录VO结果映射 -->
+    <resultMap id="RepairRecordVOResultMap" type="com.fitness.modules.equipment.model.vo.RepairRecordVO">
+        <id column="id" property="id"/>
+        <result column="repair_id" property="repairId"/>
+        <result column="handler_id" property="handlerId"/>
+        <result column="handler_name" property="handlerName"/>
+        <result column="record_type" property="recordType"/>
+        <result column="before_status" property="beforeStatus"/>
+        <result column="after_status" property="afterStatus"/>
+        <result column="content" property="content"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 查询报修的处理记录列表 -->
+    <select id="selectRecordsByRepairId" resultMap="RepairRecordVOResultMap">
+        SELECT
+            r.id,
+            r.repair_id,
+            r.handler_id,
+            u.username AS handler_name,
+            r.record_type,
+            r.before_status,
+            r.after_status,
+            r.content,
+            r.create_time
+        FROM fitness_repair_record r
+        LEFT JOIN sys_user u ON r.handler_id = u.id
+        WHERE r.repair_id = #{repairId}
+          AND r.deleted = false
+        ORDER BY r.create_time ASC
+    </select>
+
+    <!-- 根据报修ID删除处理记录（逻辑删除） -->
+    <update id="deleteByRepairId">
+        UPDATE fitness_repair_record
+        SET deleted = true
+        WHERE repair_id = #{repairId}
+    </update>
+
+</mapper>
