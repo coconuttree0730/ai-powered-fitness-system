@@ -39,7 +39,6 @@
           @click="switchTab(index)"
         >
           <span class="tab-day">{{ day.dayName }}</span>
-          <span class="tab-focus">{{ day.focus }}</span>
         </button>
       </div>
     </div>
@@ -48,6 +47,20 @@
     <div class="tab-content" ref="tabContentRef">
       <transition name="fade-slide" mode="out-in">
         <div v-if="planData.weeklyPlan && planData.weeklyPlan[activeTab]" :key="activeTab" class="day-section">
+          <!-- 今日焦点说明 -->
+          <div v-if="getCurrentDay().focus" class="day-focus-banner">
+            <div class="focus-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </div>
+            <span class="focus-text">{{ getCurrentDay().focus }}</span>
+          </div>
+
+
+
+         
+
           <!-- 推荐课程 - 支持1-3个课程卡片 -->
           <div v-if="getCurrentDay().courses && getCurrentDay().courses.length > 0" class="section-block">
             <div class="section-header">
@@ -135,6 +148,28 @@
               </div>
             </div>
           </div>
+ <!-- 训练动作 -->
+          <div v-if="getCurrentDay().exercises && getCurrentDay().exercises.length > 0" class="section-block">
+            <div class="section-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+              </svg>
+              <span>训练动作</span>
+            </div>
+            <div class="exercise-list">
+              <div
+                v-for="(exercise, idx) in getCurrentDay().exercises"
+                :key="idx"
+                class="exercise-item"
+              >
+                <div class="exercise-number">{{ idx + 1 }}</div>
+                <div class="exercise-info">
+                  <div class="exercise-name">{{ exercise.name }}</div>
+                  <div class="exercise-detail">{{ exercise.sets }}组 × {{ exercise.reps }}次 · 组间休息{{ exercise.restSeconds }}秒</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- 训练器械 -->
           <div v-if="getCurrentDay().equipment && getCurrentDay().equipment.length > 0" class="section-block">
@@ -161,28 +196,6 @@
             </div>
           </div>
 
-          <!-- 训练动作 -->
-          <div v-if="getCurrentDay().exercises && getCurrentDay().exercises.length > 0" class="section-block">
-            <div class="section-header">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
-              </svg>
-              <span>训练动作</span>
-            </div>
-            <div class="exercise-list">
-              <div
-                v-for="(exercise, idx) in getCurrentDay().exercises"
-                :key="idx"
-                class="exercise-item"
-              >
-                <div class="exercise-number">{{ idx + 1 }}</div>
-                <div class="exercise-info">
-                  <div class="exercise-name">{{ exercise.name }}</div>
-                  <div class="exercise-detail">{{ exercise.sets }}组 × {{ exercise.reps }}次 · 组间休息{{ exercise.restSeconds }}秒</div>
-                </div>
-              </div>
-            </div>
-          </div>
 
         </div>
       </transition>
@@ -309,7 +322,10 @@ function getDefaultImage(type, name = '') {
 <style scoped>
 .fitness-plan-preview {
   width: 100%;
-  max-width: 720px;
+  /*计划表最大宽度*/
+  max-width: 1820px;
+  /* min-width: 1200px;*/
+  min-width: 1200px;
   margin: 0 auto;
   background: #ffffff;
   border-radius: 16px;
@@ -492,6 +508,46 @@ function getDefaultImage(type, name = '') {
   transform: translateX(-20px);
 }
 
+/* 今日焦点横幅 ***************** */
+.day-focus-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DD 50%, #FFF0E6 100%);
+  border-left: 4px solid #FF6B35;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
+  animation: focusBannerIn 0.4s ease;
+}
+
+@keyframes focusBannerIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.focus-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(255, 107, 53, 0.3);
+}
+
+.focus-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #D94E1A;
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+}
+
 /* 区块样式 */
 .section-block {
   margin-bottom: 20px;
@@ -559,6 +615,8 @@ function getDefaultImage(type, name = '') {
   color: inherit;
   display: flex;
   flex-direction: column;
+  /*课程卡片宽度*/
+  max-width: 330px;
 }
 
 .course-card:hover {
@@ -674,7 +732,7 @@ function getDefaultImage(type, name = '') {
 /* 训练器械网格 */
 .equipment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -695,8 +753,8 @@ function getDefaultImage(type, name = '') {
 }
 
 .equipment-img {
-  width: 52px;
-  height: 52px;
+  width: 130px;
+  height: 130px;
   border-radius: 10px;
   object-fit: cover;
   margin: 0 auto 8px;
