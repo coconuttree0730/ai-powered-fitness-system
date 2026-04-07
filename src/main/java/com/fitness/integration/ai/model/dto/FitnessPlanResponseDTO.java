@@ -44,6 +44,7 @@ public class FitnessPlanResponseDTO {
         private Integer duration;
         @JsonProperty("id")
         private Long courseId;
+        private String category;
     }
 
     @Data

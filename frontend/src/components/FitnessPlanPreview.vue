@@ -22,18 +22,18 @@
 
     <!-- 用户信息 -->
     <div class="user-info-bar">
-      <div class="user-stat">身高: <strong>{{ planData.userInfo?.height || '175cm' }}</strong></div>
-      <div class="user-stat">体重: <strong>{{ planData.userInfo?.weight || '70kg' }}</strong></div>
-      <div class="user-stat">BMI: <strong>{{ planData.userInfo?.bmi || '22.9' }}</strong></div>
-      <div class="user-stat">目标: <strong>{{ planData.userInfo?.goal || '增肌塑形' }}</strong></div>
-      <div class="user-stat">强度: <strong>{{ planData.userInfo?.intensity || '中等' }}</strong></div>
+      <div class="user-stat">身高: <strong>{{ normalizedPlan.userInfo.height }}</strong></div>
+      <div class="user-stat">体重: <strong>{{ normalizedPlan.userInfo.weight }}</strong></div>
+      <div class="user-stat">BMI: <strong>{{ normalizedPlan.userInfo.bmi }}</strong></div>
+      <div class="user-stat">目标: <strong>{{ normalizedPlan.userInfo.goal }}</strong></div>
+      <div class="user-stat">强度: <strong>{{ normalizedPlan.userInfo.intensity }}</strong></div>
     </div>
 
     <!-- Tab标签栏 -->
     <div class="tabs-container">
       <div class="tabs-wrapper">
         <button
-          v-for="(day, index) in planData.weeklyPlan"
+          v-for="(day, index) in normalizedPlan.weeklyPlan"
           :key="index"
           :class="['tab-item', { active: activeTab === index }]"
           @click="switchTab(index)"
@@ -46,7 +46,7 @@
     <!-- 内容区域 -->
     <div class="tab-content" ref="tabContentRef">
       <transition name="fade-slide" mode="out-in">
-        <div v-if="planData.weeklyPlan && planData.weeklyPlan[activeTab]" :key="activeTab" class="day-section">
+        <div v-if="normalizedPlan.weeklyPlan && normalizedPlan.weeklyPlan[activeTab]" :key="activeTab" class="day-section">
           <!-- 今日焦点说明 -->
           <div v-if="getCurrentDay().focus" class="day-focus-banner">
             <div class="focus-icon">
@@ -82,8 +82,8 @@
               >
                 <div class="course-image-wrapper">
                   <img
-                    :src="getValidImageUrl(course.coverImage, 'course', course.name)"
-                    :alt="course.name"
+                    :src="getValidImageUrl(course.coverImage, 'course', course.name || course.id)"
+                    :alt="course.name || `课程${idx + 1}`"
                     class="course-image"
                     loading="lazy"
                   >
@@ -94,7 +94,7 @@
                   </div>
                 </div>
                 <div class="course-content">
-                  <div class="course-name">{{ course.name }}</div>
+                  <div class="course-name">{{ course.name || `课程${idx + 1}` }}</div>
                   <div class="course-desc">{{ course.description }}</div>
                   <div class="course-meta">
                     <span class="course-duration">
@@ -121,8 +121,8 @@
               <div class="course-card" @click="$emit('courseClick', getCurrentDay().course)">
                 <div class="course-image-wrapper">
                   <img
-                    :src="getValidImageUrl(getCurrentDay().course.coverImage, 'course', getCurrentDay().course.name)"
-                    :alt="getCurrentDay().course.name"
+                    :src="getValidImageUrl(getCurrentDay().course.coverImage, 'course', getCurrentDay().course.name || getCurrentDay().course.id)"
+                    :alt="getCurrentDay().course.name || '推荐课程'"
                     class="course-image"
                     loading="lazy"
                   >
@@ -133,7 +133,7 @@
                   </div>
                 </div>
                 <div class="course-content">
-                  <div class="course-name">{{ getCurrentDay().course.name }}</div>
+                  <div class="course-name">{{ getCurrentDay().course.name || '推荐课程' }}</div>
                   <div class="course-desc">{{ getCurrentDay().course.description }}</div>
                   <div class="course-meta">
                     <span class="course-duration">
@@ -258,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   planData: {
@@ -287,6 +287,54 @@ defineEmits(['regenerate', 'save', 'courseClick'])
 const activeTab = ref(0)
 const tabContentRef = ref(null)
 
+// 数据规范化：确保任何LLM输出格式都能安全渲染
+const normalizedPlan = computed(() => {
+  const raw = props.planData
+  if (!raw || typeof raw !== 'object') return { subtitle: '', userInfo: {}, weeklyPlan: [] }
+
+  return {
+    subtitle: raw.subtitle || 'AI健身训练计划',
+    userInfo: {
+      height: raw.userInfo?.height || '--',
+      weight: raw.userInfo?.weight || '--',
+      bmi: raw.userInfo?.bmi || '--',
+      goal: raw.userInfo?.goal || '--',
+      intensity: raw.userInfo?.intensity || '--'
+    },
+    weeklyPlan: Array.isArray(raw.weeklyPlan) ? raw.weeklyPlan.map((day, idx) => ({
+      dayName: day.dayName || `第${idx + 1}天`,
+      focus: day.focus || '',
+      courses: normalizeCourses(day.courses),
+      course: normalizeSingleCourse(day.course),
+      equipment: Array.isArray(day.equipment) ? day.equipment : [],
+      exercises: Array.isArray(day.exercises) ? day.exercises : []
+    })) : []
+  }
+})
+
+function normalizeCourses(courses) {
+  if (!Array.isArray(courses) || courses.length === 0) return null
+  return courses.map((c, idx) => ({
+    name: c.name || `课程${idx + 1}`,
+    coverImage: c.coverImage || '',
+    description: c.description || '',
+    duration: c.duration ?? 0,
+    id: c.id ?? null,
+    category: c.category || ''
+  }))
+}
+
+function normalizeSingleCourse(course) {
+  if (!course) return null
+  return {
+    name: course.name || '推荐课程',
+    coverImage: course.coverImage || '',
+    description: course.description || '',
+    duration: course.duration ?? 0,
+    id: course.id ?? null
+  }
+}
+
 function switchTab(index) {
   activeTab.value = index
   if (tabContentRef.value) {
@@ -295,10 +343,10 @@ function switchTab(index) {
 }
 
 function getCurrentDay() {
-  if (!props.planData.weeklyPlan || !props.planData.weeklyPlan[activeTab.value]) {
+  if (!normalizedPlan.value.weeklyPlan || !normalizedPlan.value.weeklyPlan[activeTab.value]) {
     return { courses: null, course: null, equipment: [], exercises: [] }
   }
-  return props.planData.weeklyPlan[activeTab.value]
+  return normalizedPlan.value.weeklyPlan[activeTab.value]
 }
 
 // 图片URL验证和fallback处理

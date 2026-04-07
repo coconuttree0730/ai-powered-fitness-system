@@ -74,8 +74,8 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             bmi = weight.divide(heightInMeters.pow(2), 1, RoundingMode.HALF_UP).toString();
         }
 
-        // 3. 查询系统可用课程列表（用于AI选择） //TODO: 这里设置的可用课程是20条数据，需要根据实际情况调整
-        cachedCourses = courseService.getHomePageCourseCards(20);
+        // 3. 查询系统可用课程列表（用于AI选择）——传入全部课程确保多样性
+        cachedCourses = courseService.getHomePageCourseCards(100);
         StringBuilder coursesJson = new StringBuilder("[");
         for (int i = 0; i < cachedCourses.size(); i++) {
             CourseCardVO c = cachedCourses.get(i);
@@ -94,13 +94,13 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
         coursesJson.append("]");
 
-        // 4. 查询系统可用器械列表（只查正常状态的）//TODO: 这里设置的可用器械是20条数据，需要根据实际情况调整
+        // 4. 查询系统可用器械列表（只查正常状态的）——传入全部器械确保每日多样性
         EquipmentQueryDTO equipQuery = new EquipmentQueryDTO();
         equipQuery.setStatus(1);
-        equipQuery.setPageSize(30);
+        equipQuery.setPageSize(100);
         cachedEquipment = equipmentService.getEquipmentList(equipQuery).getRecords();
         StringBuilder equipmentJson = new StringBuilder("[");
-        for (int i = 0; i < Math.min(cachedEquipment.size(), 20); i++) {
+        for (int i = 0; i < cachedEquipment.size(); i++) {
             EquipmentVO e = cachedEquipment.get(i);
             equipmentJson.append(String.format(
                 "{\"id\":%d,\"name\":\"%s\",\"image\":\"%s\"}",
@@ -108,7 +108,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                 escapeJson(e.getEquipmentName()),
                 escapeJson(e.getImageUrl())
             ));
-            if (i < Math.min(cachedEquipment.size(), 30) - 1) {
+            if (i < cachedEquipment.size() - 1) {
                 equipmentJson.append(",");
             }
         }
@@ -242,6 +242,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                 courseMap.put("coverImage", courseDTO.getCoverImage());
                 courseMap.put("duration", courseDTO.getDuration());
                 courseMap.put("id", courseDTO.getCourseId());
+                courseMap.put("category", courseDTO.getCategory());
                 coursesList.add(courseMap);
             }
             dayPlan.put("courses", coursesList);
@@ -300,6 +301,21 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             for (Map<String, Object> course : courses) {
                 String courseName = (String) course.getOrDefault("name", "");
                 CourseCardVO matchedCourse = findMatchingCourse(courseName, focus);
+
+                // 如果name匹配失败，尝试按ID匹配（LLM可能只返回了id没有返回name）
+                if (matchedCourse == null) {
+                    Object courseIdObj = course.get("id");
+                    if (courseIdObj != null) {
+                        try {
+                            Long courseId = Long.valueOf(courseIdObj.toString());
+                            matchedCourse = findMatchingCourseById(courseId);
+                            log.debug("通过ID匹配到课程: id={}", courseId);
+                        } catch (NumberFormatException e) {
+                            log.debug("课程ID格式无效: {}", courseIdObj);
+                        }
+                    }
+                }
+
                 if (matchedCourse != null) {
                     Map<String, Object> validCourse = new HashMap<>();
                     validCourse.put("name", matchedCourse.getName());
@@ -307,8 +323,15 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                     validCourse.put("description", matchedCourse.getDesc());
                     validCourse.put("duration", matchedCourse.getDuration());
                     validCourse.put("id", matchedCourse.getId());
+                    validCourse.put("category", matchedCourse.getCategory());
                     validatedCourses.add(validCourse);
                     log.debug("替换课程: {} -> {}", courseName, matchedCourse.getName());
+                } else {
+                    // 保留LLM原始数据（至少有id和description时）
+                    if (course.get("id") != null || course.get("description") != null) {
+                        validatedCourses.add(new HashMap<>(course));
+                        log.debug("保留LLM原始课程数据: id={}", course.get("id"));
+                    }
                 }
             }
 
@@ -409,6 +432,19 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             }
         }
 
+        return null;
+    }
+
+    /**
+     * 根据ID精确查找匹配的课程（当LLM未返回name时使用）
+     */
+    private CourseCardVO findMatchingCourseById(Long courseId) {
+        if (cachedCourses == null || cachedCourses.isEmpty() || courseId == null) return null;
+        for (CourseCardVO course : cachedCourses) {
+            if (courseId.equals(course.getId())) {
+                return course;
+            }
+        }
         return null;
     }
 

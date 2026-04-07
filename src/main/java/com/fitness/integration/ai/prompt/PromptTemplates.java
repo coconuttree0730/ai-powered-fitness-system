@@ -48,8 +48,9 @@ public class PromptTemplates {
         prompt.append("  * dayName: \"周一\"~\"周日\"，**仅此7个值，不可出现\"周一（次周）\"等额外天**\n");
         prompt.append("  * focus: 当天训练重点描述（如\"全身复合动作强化\"）\n");
         prompt.append("  * courses: 课程数组，**每天必须推荐2~3门课程**（训练日至少2门，最多3门不同课程组合，严禁只推荐1门）；休息日设为 null\n");
-        prompt.append("    - 每门课程: { name, description, coverImage, duration, id }\n");
-        prompt.append("    - name/coverImage 必须**一字不差**匹配课程库\n");
+        prompt.append("    - 每门课程: { name, description, coverImage, duration, id, **category** }\n");
+        prompt.append("    - name/coverImage/category 必须**一字不差**匹配课程库\n");
+        prompt.append("    - **category必须与当天focus的训练目标一致**（如focus=胸部训练→category=力量训练）\n");
         prompt.append("  * equipment: 器械数组，从系统器械库中选择；休息日设为 []\n");
         prompt.append("    - name/image 必须**一字不差**匹配器械库\n");
         prompt.append("  * exercises: 动作数组 [{ name, sets, reps, restSeconds }]；休息日设为 []\n\n");
@@ -61,13 +62,28 @@ public class PromptTemplates {
         prompt.append("4. 【强制】course.name / course.coverImage 必须与系统课程库完全一致，禁止编造\n");
         prompt.append("5. 【强制】equipment.name / equipment.image 必须与系统器械库完全一致，禁止编造\n");
         //prompt.append("6. 【强制】不要输出 tips 字段，不要输出任何提示建议类字段\n");
-        prompt.append("7. 【强制】dayName 只能是：周一、周二、周三、周四、周五、周六、周日\n\n");
+        prompt.append("7. 【强制】dayName 只能是：周一、周二、周三、周四、周五、周六、周日\n");
+        prompt.append("8. 【强制】【课程匹配】每天推荐的courses的category必须与当天focus高度相关！例如：\n");
+        prompt.append("   - focus含\"胸/背/肩/臂/腿/力量\" → 选择category=\"力量训练\"的课程\n");
+        prompt.append("   - focus含\"有氧/燃脂/心肺\" → 选择category=\"有氧燃脂\"的课程\n");
+        prompt.append("   - focus含\"核心/腹/瑜伽/柔韧\" → 选择category=\"瑜伽普拉提\"的课程\n");
+        prompt.append("   - focus含\"拳击/格斗\" → 选择category=\"拳击格斗\"的课程\n");
+        prompt.append("   - focus含\"舞蹈/操课\" → 选择category=\"舞蹈操课\"的课程\n");
+        prompt.append("   - focus含\"康复/体态/矫正\" → 选择category=\"康复体态\"的课程\n");
+        prompt.append("9. 【强制】【器械匹配】每天推荐的equipment必须与当天训练类型匹配！例如：\n");
+        prompt.append("   - 力量训练日 → 选择STRENGTH/FREE_WEIGHT类型器械（史密斯机、深蹲架、哑铃套装、杠铃等）\n");
+        prompt.append("   - 有氧训练日 → 选择CARDIO类型器械（跑步机、动感单车、划船机、椭圆机等）\n");
+        prompt.append("   - 核心/瑜伽日 → 选择FUNCTIONAL类型器械（瑜伽垫、瑜伽球、弹力带、泡沫轴等）\n");
+        prompt.append("10. 【强制】【器械多样性】不同训练日的equipment必须有所区别！严禁每天都推荐相同的器械组合！\n");
+        prompt.append("    每天至少推荐2-3件不同的器械，且相邻两天尽量避免重复相同器械\n\n");
 
         prompt.append("# 设计原则\n");
         prompt.append("- 遵循渐进超负荷原则，强度合理递进\n");
         prompt.append("- 每周安排1天完全休息日（通常为周日），确保恢复\n");
         prompt.append("- 相邻训练日避免同一肌群连续高强度刺激\n");
-        prompt.append("- 课程选择要与当天 focus 高度相关\n");
+        prompt.append("- 【重要】课程选择要与当天 focus 的训练目标高度匹配（category必须对应）\n");
+        prompt.append("- 【重要】器械选择要符合当天训练类型（力量日用力量器械，有氧日用有氧器械）\n");
+        prompt.append("- 【重要】每天使用2-3件不同器械，7天内的器械组合要有变化和丰富度\n");
 
         return prompt.toString();
     }

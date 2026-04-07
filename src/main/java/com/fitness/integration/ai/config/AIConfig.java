@@ -3,6 +3,7 @@ package com.fitness.integration.ai.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.template.NoOpTemplateRenderer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,8 @@ public class AIConfig {
         log.info("Model: {}", model);
         log.info("================================");
 
-        return ChatClient.builder(chatModel).build();
+        return ChatClient.builder(chatModel)
+                .defaultTemplateRenderer(new NoOpTemplateRenderer())
+                .build();
     }
 }

@@ -63,20 +63,17 @@
       </el-col>
     </el-row>
 
-    <!-- AI智能分析按钮 - 独占一行 -->
+    <!-- AI智能分析按钮 - 右侧布局 -->
     <el-row :gutter="20" class="chart-row ai-analysis-row">
       <el-col :span="24">
         <div class="ai-analysis-bar">
           <el-button 
             type="primary" 
-            size="large"
             :icon="MagicStick"
             :loading="analysisLoading"
             @click="handleAnalysis"
-            class="ai-analysis-btn"
           >
-            <span class="btn-text">AI 智能分析</span>
-            <span class="btn-subtext">基于大模型的深度运营数据分析</span>
+            ai智能分析
           </el-button>
         </div>
       </el-col>
@@ -214,21 +211,14 @@
         <div class="report-body" v-html="renderedContent"></div>
         <div class="suggestions" v-if="analysisReport.suggestions?.length">
           <div class="suggestions-header">
-            <el-icon size="20"><Opportunity /></el-icon>
+            <el-icon size="18"><Opportunity /></el-icon>
             <span>优化建议</span>
           </div>
-          <div class="suggestions-list">
-            <div 
-              class="suggestion-card" 
-              v-for="(suggestion, index) in analysisReport.suggestions" 
-              :key="index"
-              :class="{ 'suggestion-primary': index === 0 }"
-            >
-              <div class="suggestion-index">{{ index + 1 }}</div>
-              <div class="suggestion-text">{{ suggestion }}</div>
-              <el-icon v-if="index === 0" class="star-icon"><Star /></el-icon>
-            </div>
-          </div>
+          <ol class="suggestions-list">
+            <li v-for="(suggestion, index) in analysisReport.suggestions" :key="index">
+              {{ suggestion }}
+            </li>
+          </ol>
         </div>
         <div class="report-footer">
           <el-text type="info" size="small">
@@ -918,12 +908,12 @@ async function handleAnalysis() {
     analysisReport.value = {
       analysisType: 'OVERALL',
       reportTitle: '健身房运营综合分析报告',
-      reportContent: '根据近期数据分析，健身房整体运营状况良好。会员活跃度较上月提升12.5%，课程预约量保持稳定增长。建议重点关注晚间高峰时段的器材调配，以及热门课程的容量扩充。',
+      reportContent: `## 1. 会员运营\n- **活跃率**：当前活跃度良好，续费率有提升空间\n- **建议**：推出老带新活动，加强会员粘性\n\n## 2. 课程运营\n- **热门课程**：瑜伽、动感单车预约率最高\n- **冷门课程**：部分小团课需加大推广\n\n## 3. 器材管理\n- **使用率**：整体正常，跑步机区域高峰时段紧张\n- **维护**：建议错峰安排器材检修\n\n## 4. 运营建议\n1. 增加晚间18:00-20:00热门课程班次\n2. 推出会员续费优惠套餐\n3. 加强低使用率器材的促销引导`,
       suggestions: [
-        '建议增加晚间18:00-20:00时段的动感单车课程班次',
-        '瑜伽课程需求旺盛，可考虑新增周末精品小班课',
-        '部分器材使用率较低，建议开展针对性促销活动',
-        '会员续费率有提升空间，建议推出老带新优惠活动'
+        '增加晚间热门课程班次，缓解高峰压力',
+        '推出老带新优惠活动提升续费率',
+        '对低使用率器材开展针对性促销',
+        '优化高峰时段人员配置与服务'
       ],
       generateTime: new Date().toISOString()
     }
@@ -1206,69 +1196,8 @@ onUnmounted(() => {
 
 .ai-analysis-bar {
   display: flex;
-  justify-content: center;
-  padding: 8px 0;
-}
-
-.ai-analysis-btn {
-  position: relative;
-  height: auto !important;
-  min-width: 360px;
-  padding: 18px 40px !important;
-  border-radius: 16px !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
-  border: none !important;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.35), 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow: hidden;
-}
-
-.ai-analysis-btn::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.08) 50%,
-    transparent 70%
-  );
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%) rotate(0deg); }
-  100% { transform: translateX(100%) rotate(0deg); }
-}
-
-.ai-analysis-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.45), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-.ai-analysis-btn:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-.btn-text {
-  display: block;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.btn-subtext {
-  display: block;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
-  margin-top: 4px;
-  letter-spacing: 1px;
-  opacity: 0.9;
+  justify-content: flex-end;
+  padding: 4px 0;
 }
 
 /* ==================== AI分析报告对话框 ==================== */
@@ -1477,37 +1406,20 @@ onUnmounted(() => {
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
-.report-body :deep(ol li) {
-  counter-increment: item;
-}
-
 .report-body :deep(ol) {
-  counter-reset: item;
-  list-style: none;
-  padding-left: 0;
+  margin: 14px 0;
+  padding-left: 24px;
 }
 
-.report-body :deep(ol li)::before {
-  content: counter(item);
-  position: absolute;
-  left: -4px;
-  top: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+.report-body :deep(ol li) {
+  margin: 6px 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
 }
 
-.report-body :deep(li:hover) {
-  background: rgba(102, 126, 234, 0.05);
-  transform: translateX(4px);
+.report-body :deep(ol li:hover) {
+  background: rgba(102, 126, 234, 0.04);
 }
 
 .report-body :deep(code) {
@@ -1602,35 +1514,21 @@ onUnmounted(() => {
 
 /* ==================== 优化建议区域 ==================== */
 .suggestions {
-  margin-top: 32px;
-  padding: 24px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdf4 100%);
-  border-radius: 16px;
+  margin-top: 28px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 12px;
   border: 1px solid #bbf7d0;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
-  position: relative;
-  overflow: hidden;
-}
-
-.suggestions::before {
-  content: '';
-  position: absolute;
-  top: -30px;
-  right: -30px;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
-  border-radius: 50%;
 }
 
 .suggestions-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 14px;
   color: #15803d;
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .suggestions-header .el-icon {
@@ -1638,61 +1536,17 @@ onUnmounted(() => {
 }
 
 .suggestions-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: decimal;
 }
 
-.suggestion-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #dcfce7;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.suggestion-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.12);
-  border-color: #86efac;
-}
-
-.suggestion-primary {
-  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
-  border-color: #86efac;
-  border-width: 1.5px;
-}
-
-.suggestion-index {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
-}
-
-.suggestion-text {
-  flex: 1;
-  font-size: 13.5px;
+.suggestions-list li {
+  margin: 8px 0;
+  padding: 2px 0;
+  font-size: 14px;
   color: #374151;
-  line-height: 1.65;
-}
-
-.star-icon {
-  color: #f59e0b;
-  flex-shrink: 0;
-  margin-top: 2px;
+  line-height: 1.7;
 }
 
 /* ==================== 加载状态 ==================== */
@@ -1741,12 +1595,6 @@ onUnmounted(() => {
 }
 
 /* ==================== 响应式适配 ==================== */
-@media (max-width: 1400px) {
-  .suggestions-list {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 1200px) {
   .header-actions {
     flex-wrap: wrap;
