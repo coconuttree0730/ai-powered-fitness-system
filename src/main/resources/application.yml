@@ -40,7 +40,7 @@ spring:
 
   ai:
     dashscope:
-      api-key: ${AI_DASHSCOPE_API_KEY:sk-f985ccfc2ec1481cb25408e58cf7d582}
+      api-key: ${AI_DASHSCOPE_API_KEY:sk-7e9cad7dd0c240f19556d7bbf7b2acab}
       chat:
         enabled: true
         options:

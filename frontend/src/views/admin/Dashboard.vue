@@ -29,22 +29,17 @@
     <!-- 核心指标卡片 -->
     <el-row :gutter="20" class="stats-row">
       <el-col :xs="24" :sm="12" :md="8" :lg="4" v-for="(stat, index) in stats" :key="stat.key">
-        <el-card 
-          class="stat-card" 
+        <el-card
+          class="stat-card"
           :class="[`stat-card-${stat.type}`, { 'card-hover': true }]"
           :style="{ animationDelay: `${index * 0.1}s` }"
         >
           <div class="stat-content">
-            <div class="stat-icon-wrapper" :style="{ background: stat.gradient }">
-              <el-icon :size="24" class="stat-icon">
-                <component :is="stat.icon" />
-              </el-icon>
-            </div>
             <div class="stat-info">
               <div class="stat-value-wrapper">
                 <span class="stat-value">{{ formatNumber(stat.value) }}</span>
-                <span 
-                  class="stat-trend" 
+                <span
+                  class="stat-trend"
                   :class="stat.trend >= 0 ? 'trend-up' : 'trend-down'"
                   v-if="stat.trend !== undefined"
                 >
@@ -57,8 +52,8 @@
             </div>
           </div>
           <div class="stat-progress" v-if="stat.progress !== undefined">
-            <el-progress 
-              :percentage="stat.progress" 
+            <el-progress
+              :percentage="stat.progress"
               :color="stat.progressColor"
               :show-text="false"
               :stroke-width="4"
@@ -181,70 +176,6 @@
       </el-col>
     </el-row>
 
-    <!-- 底部数据表格 -->
-    <el-row :gutter="20" class="chart-row">
-      <el-col :span="24">
-        <el-card class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <div class="header-left">
-                <el-icon size="18" color="#1890ff"><List /></el-icon>
-                <span class="header-title-text">热门课程排行榜</span>
-              </div>
-              <el-button type="primary" link size="small" @click="goToCourses">
-                查看全部 <el-icon><ArrowRight /></el-icon>
-              </el-button>
-            </div>
-          </template>
-          <el-table :data="hotCourses" style="width: 100%" v-loading="tableLoading">
-            <el-table-column type="index" label="排名" width="80" align="center">
-              <template #default="{ $index }">
-                <div class="rank-cell" :class="`rank-${$index + 1}`">
-                  {{ $index + 1 }}
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column prop="courseName" label="课程名称" min-width="180">
-              <template #default="{ row }">
-                <div class="course-name-cell">
-                  <el-avatar :size="32" :src="row.coverImage" shape="square" />
-                  <span>{{ row.courseName }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column prop="categoryName" label="分类" width="120">
-              <template #default="{ row }">
-                <el-tag size="small" effect="plain">{{ row.categoryName }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="coachName" label="教练" width="120" />
-            <el-table-column prop="bookingCount" label="预约人数" width="120" align="center">
-              <template #default="{ row }">
-                <el-progress 
-                  :percentage="Math.min(row.bookingCount / maxBookingCount * 100, 100)" 
-                  :show-text="false"
-                  :stroke-width="8"
-                  :color="getProgressColor(row.bookingCount)"
-                  style="width: 80px"
-                />
-                <span class="booking-count">{{ row.bookingCount }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="satisfaction" label="满意度" width="120" align="center">
-              <template #default="{ row }">
-                <el-rate v-model="row.satisfaction" disabled show-score text-color="#ff9900" />
-              </template>
-            </el-table-column>
-            <el-table-column prop="revenue" label="营收" width="120" align="right">
-              <template #default="{ row }">
-                <span class="revenue-text">¥{{ formatNumber(row.revenue) }}</span>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
-
     <!-- AI分析报告对话框 -->
     <el-dialog 
       v-model="analysisVisible" 
@@ -295,12 +226,12 @@ import * as echarts from 'echarts'
 import {
   User, Calendar, Tickets, Box, Goods, Money, ArrowUp, ArrowDown,
   Refresh, TrendCharts, PieChart, Clock, Reading, MagicStick,
-  UserFilled, Warning, List, ArrowRight, Star, Opportunity
+  UserFilled, Warning, Star, Opportunity
 } from '@element-plus/icons-vue'
 import {
   getDashboardStats, getPeakHours, getMemberCardStats, getCourseStats,
   generateAnalysis, getRevenueTrend, getUserGrowth, getEquipmentStatus,
-  getRepairStats, getHotCourses
+  getRepairStats
 } from '@/api/dashboard'
 
 const router = useRouter()
@@ -329,7 +260,6 @@ const refreshLoading = ref(false)
 const analysisLoading = ref(false)
 const analysisVisible = ref(false)
 const analysisReport = ref(null)
-const tableLoading = ref(false)
 
 // 数据存储
 const dashboardData = ref({})
@@ -340,7 +270,6 @@ const revenueData = ref([])
 const userGrowthData = ref([])
 const equipmentStatusData = ref({})
 const repairStatsData = ref([])
-const hotCourses = ref([])
 
 // 定时器
 let refreshTimer = null
@@ -351,9 +280,7 @@ const stats = computed(() => [
     key: 'members',
     title: '总会员数',
     value: dashboardData.value.totalMembers || 0,
-    icon: 'User',
     type: 'primary',
-    gradient: 'linear-gradient(135deg, #1890ff 0%, #36cfc9 100%)',
     trend: 12.5,
     compareText: '较上月',
     progress: 78,
@@ -363,9 +290,7 @@ const stats = computed(() => [
     key: 'courses',
     title: '总课程数',
     value: dashboardData.value.totalCourses || 0,
-    icon: 'Calendar',
     type: 'success',
-    gradient: 'linear-gradient(135deg, #52c41a 0%, #95de64 100%)',
     trend: 8.2,
     compareText: '较上月',
     progress: 65,
@@ -375,9 +300,7 @@ const stats = computed(() => [
     key: 'bookings',
     title: '总预约数',
     value: dashboardData.value.totalBookings || 0,
-    icon: 'Tickets',
     type: 'warning',
-    gradient: 'linear-gradient(135deg, #fa8c16 0%, #ffc53d 100%)',
     trend: -3.1,
     compareText: '较上周',
     progress: 82,
@@ -387,9 +310,7 @@ const stats = computed(() => [
     key: 'equipment',
     title: '总器材数',
     value: dashboardData.value.totalEquipment || 0,
-    icon: 'Box',
     type: 'purple',
-    gradient: 'linear-gradient(135deg, #722ed1 0%, #b37feb 100%)',
     trend: 5.4,
     compareText: '较上月',
     progress: 90,
@@ -399,9 +320,7 @@ const stats = computed(() => [
     key: 'orders',
     title: '今日订单',
     value: dashboardData.value.todayOrders || 0,
-    icon: 'Goods',
     type: 'cyan',
-    gradient: 'linear-gradient(135deg, #13c2c2 0%, #5cdbd3 100%)',
     trend: 15.8,
     compareText: '较昨日',
     progress: 72,
@@ -411,9 +330,7 @@ const stats = computed(() => [
     key: 'revenue',
     title: '今日营收',
     value: dashboardData.value.todayRevenue || 0,
-    icon: 'Money',
     type: 'pink',
-    gradient: 'linear-gradient(135deg, #eb2f96 0%, #ffadd2 100%)',
     trend: 22.3,
     compareText: '较昨日',
     progress: 85,
@@ -774,11 +691,7 @@ const repairStatsOption = computed(() => {
   }
 })
 
-// 最大预约数（用于进度条计算）
-const maxBookingCount = computed(() => {
-  if (!hotCourses.value.length) return 1
-  return Math.max(...hotCourses.value.map(c => c.bookingCount))
-})
+
 
 // 格式化数字
 function formatNumber(num) {
@@ -796,15 +709,6 @@ function formatDateTime(dateTime) {
   return date.toLocaleString('zh-CN')
 }
 
-// 获取进度条颜色
-function getProgressColor(count) {
-  const ratio = count / maxBookingCount.value
-  if (ratio >= 0.8) return '#f5222d'
-  if (ratio >= 0.6) return '#faad14'
-  if (ratio >= 0.4) return '#1890ff'
-  return '#52c41a'
-}
-
 // 获取所有数据
 async function fetchAllData() {
   await Promise.all([
@@ -815,8 +719,7 @@ async function fetchAllData() {
     fetchRevenueTrend(),
     fetchUserGrowth(),
     fetchEquipmentStatus(),
-    fetchRepairStats(),
-    fetchHotCourses()
+    fetchRepairStats()
   ])
 }
 
@@ -912,20 +815,6 @@ async function fetchRepairStats() {
   }
 }
 
-// 获取热门课程
-async function fetchHotCourses() {
-  tableLoading.value = true
-  try {
-    const res = await getHotCourses()
-    hotCourses.value = res || []
-  } catch (error) {
-    console.error('获取热门课程失败:', error)
-    hotCourses.value = generateMockHotCourses()
-  } finally {
-    tableLoading.value = false
-  }
-}
-
 // 生成模拟营收数据
 function generateMockRevenueData() {
   const days = timeRange.value === 'today' ? 24 : 7
@@ -950,17 +839,6 @@ function generateMockUserGrowthData() {
     })
   }
   return data
-}
-
-// 生成模拟热门课程数据
-function generateMockHotCourses() {
-  return [
-    { courseName: '瑜伽基础班', categoryName: '瑜伽', coachName: '李教练', bookingCount: 156, satisfaction: 4.8, revenue: 15600, coverImage: '' },
-    { courseName: '动感单车', categoryName: '有氧', coachName: '王教练', bookingCount: 142, satisfaction: 4.7, revenue: 14200, coverImage: '' },
-    { courseName: '力量训练', categoryName: '力量', coachName: '张教练', bookingCount: 128, satisfaction: 4.9, revenue: 12800, coverImage: '' },
-    { courseName: '普拉提', categoryName: '塑形', coachName: '刘教练', bookingCount: 98, satisfaction: 4.6, revenue: 9800, coverImage: '' },
-    { courseName: '搏击操', categoryName: '有氧', coachName: '陈教练', bookingCount: 87, satisfaction: 4.5, revenue: 8700, coverImage: '' }
-  ]
 }
 
 // 处理时间范围变化
@@ -1012,10 +890,7 @@ async function handleAnalysis() {
   }
 }
 
-// 跳转到课程管理
-function goToCourses() {
-  router.push('/admin/courses')
-}
+
 
 // 自动刷新
 function startAutoRefresh() {
@@ -1186,22 +1061,6 @@ onUnmounted(() => {
 .stat-content {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-}
-
-.stat-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.stat-icon {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .stat-info {
@@ -1295,52 +1154,6 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 600;
   color: #1f1f1f;
-}
-
-/* 表格样式 */
-.rank-cell {
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
-  text-align: center;
-  border-radius: 50%;
-  font-weight: 600;
-  font-size: 14px;
-  margin: 0 auto;
-  background: #f5f5f5;
-  color: #666;
-}
-
-.rank-1 {
-  background: linear-gradient(135deg, #ffd666 0%, #ffc53d 100%);
-  color: #fff;
-}
-
-.rank-2 {
-  background: linear-gradient(135deg, #d9d9d9 0%, #bfbfbf 100%);
-  color: #fff;
-}
-
-.rank-3 {
-  background: linear-gradient(135deg, #ff9c6e 0%, #ff7a45 100%);
-  color: #fff;
-}
-
-.course-name-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.booking-count {
-  margin-left: 8px;
-  font-size: 13px;
-  color: #666;
-}
-
-.revenue-text {
-  font-weight: 600;
-  color: #f5222d;
 }
 
 /* AI分析报告对话框 */

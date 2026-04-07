@@ -5,9 +5,6 @@
       <el-col :span="6" v-for="stat in stats" :key="stat.title">
         <el-card class="stat-card" :body-style="{ padding: '20px' }">
           <div class="stat-content">
-            <div class="stat-icon" :style="{ background: stat.color }">
-              <el-icon :size="24"><component :is="stat.icon" /></el-icon>
-            </div>
             <div class="stat-info">
               <div class="stat-value">{{ stat.value }}</div>
               <div class="stat-title">{{ stat.title }}</div>
@@ -98,18 +95,18 @@
             <el-button type="primary" link @click="handleEdit(row)">
               <el-icon><Edit /></el-icon>编辑
             </el-button>
-            <el-button 
-              v-if="row.status !== 1" 
-              type="success" 
-              link 
+            <el-button
+              v-if="row.status !== 1"
+              type="success"
+              link
               @click="handlePublish(row)"
             >
               <el-icon><Check /></el-icon>发布
             </el-button>
-            <el-button 
-              v-if="row.status === 1" 
-              type="info" 
-              link 
+            <el-button
+              v-if="row.status === 1"
+              type="info"
+              link
               @click="handleArchive(row)"
             >
               <el-icon><Close /></el-icon>设为草稿
@@ -216,10 +213,10 @@ import {
 
 // 统计数据
 const stats = ref([
-  { title: '文档总数', value: 0, icon: 'Document', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-  { title: '已发布', value: 0, icon: 'View', color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
-  { title: '草稿', value: 0, icon: 'Document', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-  { title: '切片总数', value: 0, icon: 'Collection', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
+  { title: '文档总数', value: 0 },
+  { title: '已发布', value: 0 },
+  { title: '草稿', value: 0 },
+  { title: '切片总数', value: 0 }
 ])
 
 // 搜索表单
@@ -275,7 +272,7 @@ async function fetchDocuments() {
     const data = await getKnowledgeDocuments(params)
     tableData.value = data.records || []
     pagination.total = data.total || 0
-    
+
     // 更新统计数据
     updateStats()
   } catch (error) {
@@ -292,7 +289,7 @@ function updateStats() {
   const published = tableData.value.filter(item => item.status === 1).length
   const draft = tableData.value.filter(item => item.status === 0).length
   const chunks = tableData.value.reduce((sum, item) => sum + (item.chunkCount || 0), 0)
-  
+
   stats.value[0].value = total
   stats.value[1].value = published
   stats.value[2].value = draft
@@ -403,7 +400,7 @@ function handleFileChange(file) {
 async function handleSubmit() {
   formRef.value.validate(async (valid) => {
     if (!valid) return
-    
+
     submitting.value = true
     try {
       if (isEdit.value) {
@@ -426,15 +423,15 @@ async function handleSubmit() {
           formData.append('title', form.title)
         }
         const docId = await uploadKnowledgeDocument(formData)
-        
+
         // 如果选择了立即发布
         if (form.status === 1 && docId) {
           await publishKnowledgeDocument(docId)
         }
-        
+
         ElMessage.success(form.status === 1 ? '上传并发布成功' : '上传成功')
       }
-      
+
       dialogVisible.value = false
       fetchDocuments()
     } catch (error) {
@@ -489,17 +486,6 @@ onMounted(() => {
 .stat-content {
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
 }
 
 .stat-info {

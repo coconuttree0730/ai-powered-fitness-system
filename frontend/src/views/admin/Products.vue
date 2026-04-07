@@ -5,9 +5,6 @@
       <el-col :span="6" v-for="stat in stats" :key="stat.title">
         <el-card class="stat-card" :body-style="{ padding: '20px' }">
           <div class="stat-content">
-            <div class="stat-icon" :style="{ background: stat.color }">
-              <el-icon :size="24"><component :is="stat.icon" /></el-icon>
-            </div>
             <div class="stat-info">
               <div class="stat-value">{{ stat.value }}</div>
               <div class="stat-title">{{ stat.title }}</div>
@@ -407,10 +404,10 @@ import { polishDescription } from '@/api/ai'
 
 // 统计数据
 const stats = ref([
-  { title: '商品总数', value: 86, icon: 'Goods', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-  { title: '上架商品', value: 72, icon: 'Box', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-  { title: '本月销量', value: 328, icon: 'TrendCharts', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-  { title: '库存预警', value: 5, icon: 'Warning', color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }
+  { title: '商品总数', value: 86 },
+  { title: '上架商品', value: 72 },
+  { title: '本月销量', value: 328 },
+  { title: '库存预警', value: 5 }
 ])
 
 // 搜索表单
@@ -823,17 +820,6 @@ onMounted(() => {
 .stat-content {
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
 }
 
 .stat-info {

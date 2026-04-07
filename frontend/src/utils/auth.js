@@ -5,7 +5,7 @@
 const TOKEN_KEY = 'token'
 
 /**
- * 获取 Token
+ * 获取 Token  gettoken
  * @returns {string} token
  */
 export function getToken() {

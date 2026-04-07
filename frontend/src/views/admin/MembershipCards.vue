@@ -5,9 +5,6 @@
       <el-col :span="6" v-for="stat in stats" :key="stat.title">
         <el-card class="stat-card" :body-style="{ padding: '20px' }">
           <div class="stat-content">
-            <div class="stat-icon" :style="{ background: stat.color }">
-              <el-icon :size="24"><component :is="stat.icon" /></el-icon>
-            </div>
             <div class="stat-info">
               <div class="stat-value">{{ stat.value }}</div>
               <div class="stat-title">{{ stat.title }}</div>
@@ -256,10 +253,10 @@ import {
 
 // 统计数据
 const stats = ref([
-  { title: '会员卡类型', value: 8, icon: 'CreditCard', color: '#1890ff', trend: 12.5 },
-  { title: '活跃会员', value: '1,286', icon: 'User', color: '#52c41a', trend: 8.3 },
-  { title: '本月收入', value: '¥89,520', icon: 'Money', color: '#faad14', trend: 15.2 },
-  { title: '续费率', value: '68%', icon: 'TrendCharts', color: '#722ed1', trend: -2.1 }
+  { title: '会员卡类型', value: 8, trend: 12.5 },
+  { title: '活跃会员', value: '1,286', trend: 8.3 },
+  { title: '本月收入', value: '¥89,520', trend: 15.2 },
+  { title: '续费率', value: '68%', trend: -2.1 }
 ])
 
 // 搜索表单
@@ -525,17 +522,6 @@ onMounted(() => {
 .stat-content {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
 }
 
 .stat-info {

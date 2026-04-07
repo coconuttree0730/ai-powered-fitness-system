@@ -5,9 +5,6 @@
       <el-col :span="6" v-for="stat in stats" :key="stat.title">
         <el-card class="stat-card" :body-style="{ padding: '20px' }">
           <div class="stat-content">
-            <div class="stat-icon" :style="{ background: stat.color }">
-              <el-icon :size="24"><component :is="stat.icon" /></el-icon>
-            </div>
             <div class="stat-info">
               <div class="stat-value">{{ stat.value }}</div>
               <div class="stat-title">{{ stat.title }}</div>
@@ -426,10 +423,10 @@ const uploadHeaders = computed(() => ({
 
 // 统计数据
 const stats = ref([
-  { title: '轮播图数量', value: 0, icon: 'Picture', color: '#1890ff' },
-  { title: '公告数量', value: 12, icon: 'Bell', color: '#52c41a' },
-  { title: '会员卡展示', value: 4, icon: 'CreditCard', color: '#faad14' },
-  { title: '商城商品展示', value: 8, icon: 'ShoppingCart', color: '#722ed1' }
+  { title: '轮播图数量', value: 0 },
+  { title: '公告数量', value: 12 },
+  { title: '会员卡展示', value: 4 },
+  { title: '商城商品展示', value: 8 }
 ])
 
 // 当前标签页
@@ -906,17 +903,6 @@ onMounted(() => {
 .stat-content {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
 }
 
 .stat-info {
