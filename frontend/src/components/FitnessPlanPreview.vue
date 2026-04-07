@@ -4,13 +4,20 @@
     <div class="plan-header">
       <div class="plan-header-top">
         <div class="plan-title">
+        <!--  符号
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6.5 6.5h11M6.5 17.5h11M3 12h18M6.5 6.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 1 0 5 0zM17.5 6.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 1 0 5 0zM6.5 17.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 1 0 5 0zM17.5 17.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 1 0 5 0z"/>
-          </svg>
+          </svg>        
+           -->
+
           <span>健身训练计划</span>
         </div>
       </div>
+      <!-- "||" 符号后的是无数据时的默认值 -->
+      <!-- 这个是llm返回的副标题，感觉不好看可以注释掉 -->
+      <!--
       <div class="plan-subtitle">{{ planData.subtitle || 'AI为您量身定制的7天增肌塑形计划' }}</div>
+      -->
     </div>
 
     <!-- 用户信息 -->
@@ -44,9 +51,12 @@
           <!-- 推荐课程 - 支持1-3个课程卡片 -->
           <div v-if="getCurrentDay().courses && getCurrentDay().courses.length > 0" class="section-block">
             <div class="section-header">
+
+              <!--
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-              </svg>
+              </svg>              
+              -->
               <span>推荐课程</span>
               <span class="course-count">{{ getCurrentDay().courses.length }}个课程</span>
             </div>
@@ -174,14 +184,6 @@
             </div>
           </div>
 
-          <!-- 提示信息 -->
-          <div v-if="getCurrentDay().tips && getCurrentDay().tips.length > 0" class="section-block">
-            <div class="tips-box">
-              <ul>
-                <li v-for="(tip, idx) in getCurrentDay().tips" :key="idx">{{ tip }}</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </transition>
     </div>
@@ -243,7 +245,7 @@ function switchTab(index) {
 
 function getCurrentDay() {
   if (!props.planData.weeklyPlan || !props.planData.weeklyPlan[activeTab.value]) {
-    return { courses: [], course: null, equipment: [], exercises: [], tips: [] }
+    return { courses: null, course: null, equipment: [], exercises: [] }
   }
   return props.planData.weeklyPlan[activeTab.value]
 }
@@ -765,45 +767,6 @@ function getDefaultImage(type, name = '') {
   font-size: 12px;
   color: #6B7280;
   font-weight: 500;
-}
-
-/* 提示信息 */
-.tips-box {
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 140, 97, 0.04) 100%);
-  border: 1px solid rgba(255, 107, 53, 0.2);
-  border-radius: 12px;
-  padding: 16px 18px;
-  font-size: 13px;
-  color: #E55A2B;
-  line-height: 1.8;
-}
-
-.tips-box ul {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
-}
-
-.tips-box li {
-  padding: 6px 0;
-  padding-left: 22px;
-  position: relative;
-}
-
-.tips-box li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  font-size: 12px;
-  color: #FF6B35;
-  font-weight: 700;
-  width: 18px;
-  height: 18px;
-  background: rgba(255, 107, 53, 0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* 底部操作按钮 */

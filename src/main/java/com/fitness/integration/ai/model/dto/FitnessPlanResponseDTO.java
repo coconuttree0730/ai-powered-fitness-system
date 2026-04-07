@@ -31,10 +31,9 @@ public class FitnessPlanResponseDTO {
     public static class DayPlanDTO {
         private String dayName;
         private String focus;
-        private CourseDTO course;
+        private List<CourseDTO> courses;
         private List<EquipmentDTO> equipment;
         private List<ExerciseDTO> exercises;
-        private List<String> tips;
     }
 
     @Data

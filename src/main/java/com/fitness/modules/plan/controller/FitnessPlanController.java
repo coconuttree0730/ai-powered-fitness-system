@@ -26,7 +26,7 @@ public class FitnessPlanController {
     private final FitnessPlanService fitnessPlanService;
 
     /**
-     * 生成健身计划（从个人档案自动获取数据）
+     * 生成健身计划————（从个人档案自动获取数据）————
      *
      * @return 结构化的健身计划JSON数据
      */
@@ -40,7 +40,7 @@ public class FitnessPlanController {
     }
 
     /**
-     * 生成健身计划（手动选择参数 - 旧版兼容）
+     * 生成健身计划（手动选择参数 - 旧版兼容）：前端select 选择器选择输入类型，输入参数
      *
      * @param dto 生成计划请求
      * @return 生成的计划ID
@@ -56,7 +56,7 @@ public class FitnessPlanController {
     }
 
     /**
-     * 获取我的计划列表
+     * 获取我的计划列表：用户健身计划表的显示
      *
      * @return 计划列表
      */
@@ -70,7 +70,7 @@ public class FitnessPlanController {
     }
 
     /**
-     * 获取计划详情
+     * 获取计划详情 //TODO 计划详情页面
      *
      * @param planId 计划ID
      * @return 计划详情

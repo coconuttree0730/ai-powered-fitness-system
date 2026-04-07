@@ -18,35 +18,56 @@ public class PromptTemplates {
      */
     public String generateFitnessPlanJson(Map<String, Object> variables) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("你是一位专业的健身教练AI助手。请根据学员的个人信息，制定一份科学的7天健身训练计划。\n\n");
 
-        prompt.append("【核心要求 - 必须严格遵守】\n");
-        prompt.append("1. 你只能从下方提供的【系统课程列表】和【系统器械列表】中选择数据\n");
-        prompt.append("2. 绝对禁止编造或修改课程名称、器械名称、图片URL\n");
-        prompt.append("3. 必须完整复制列表中的name、coverImage、image字段，不能有任何改动\n");
-        prompt.append("4. 如果找不到完全匹配的课程或器械，请选择最接近的\n\n");
+        prompt.append("# Role\n");
+        prompt.append("你是一位拥有15年经验的顶级健身教练AI，擅长根据学员身体数据制定科学、个性化的周期训练计划。\n\n");
 
-        prompt.append("学员档案信息：\n");
-        prompt.append("- 身高：").append(variables.get("height")).append("cm\n");
-        prompt.append("- 体重：").append(variables.get("weight")).append("kg\n");
-        prompt.append("- 年龄：").append(variables.get("age")).append("岁\n");
-        prompt.append("- 健身目标：").append(variables.get("goal")).append("\n");
-        prompt.append("- 健身经验水平：").append(variables.get("experience")).append("\n\n");
+        prompt.append("# Task\n");
+        prompt.append("根据学员档案信息，制定一份**严格7天**的周度健身训练计划，返回结构化JSON。\n\n");
 
-        prompt.append("【系统课程列表】以下是系统中真实存在的课程，你必须从中选择：\n");
+        prompt.append("# 学员档案\n");
+        prompt.append("| 字段 | 值 |\n");
+        prompt.append("|------|----|\n");
+        prompt.append("| 身高 | ").append(variables.get("height")).append(" cm |\n");
+        prompt.append("| 体重 | ").append(variables.get("weight")).append(" kg |\n");
+        prompt.append("| 年龄 | ").append(variables.get("age")).append(" 岁 |\n");
+        prompt.append("| 目标 | ").append(variables.get("goal")).append(" |\n");
+        prompt.append("| 经验 | ").append(variables.get("experience")).append(" |\n\n");
+
+        prompt.append("# 系统课程库（必须从中选择）\n");
         prompt.append(variables.get("availableCourses")).append("\n\n");
 
-        prompt.append("【系统器械列表】以下是系统中真实存在的器械，你必须从中选择：\n");
+        prompt.append("# 系统器械库（必须从中选择）\n");
         prompt.append(variables.get("availableEquipment")).append("\n\n");
 
-        prompt.append("【严格约束】\n");
-        prompt.append("1. weeklyPlan必须包含7天（周一到周日）\n");
-        prompt.append("2. 周日可以安排休息，course设为null，equipment设为空数组[]\n");
-        prompt.append("3. course.name必须完全匹配【系统课程列表】中的name字段（一字不差）\n");
-        prompt.append("4. course.coverImage必须完全匹配【系统课程列表】中的coverImage字段（一字不差）\n");
-        prompt.append("5. equipment中的name必须完全匹配【系统器械列表】中的name字段（一字不差）\n");
-        prompt.append("6. equipment中的image必须完全匹配【系统器械列表】中的image字段（一字不差）\n");
-        prompt.append("7. 根据每天的focus（训练重点）智能匹配最合适的课程和器械\n");
+        prompt.append("# 输出格式约束 - JSON Schema\n");
+        prompt.append("返回JSON必须严格符合以下结构：\n");
+        prompt.append("- subtitle: 计划标题（简短有力，如\"7天增肌高级训练计划\"）\n");
+        prompt.append("- userInfo: { height, weight, bmi(计算值), goal, intensity }\n");
+        prompt.append("- weeklyPlan: **长度必须恰好为7的数组**，每个元素包含：\n");
+        prompt.append("  * dayName: \"周一\"~\"周日\"，**仅此7个值，不可出现\"周一（次周）\"等额外天**\n");
+        prompt.append("  * focus: 当天训练重点描述（如\"全身复合动作强化\"）\n");
+        prompt.append("  * courses: 课程数组，**每天1~3门课程**，从系统课程库中选择；休息日设为 null\n");
+        prompt.append("    - 每门课程: { name, description, coverImage, duration, id }\n");
+        prompt.append("    - name/coverImage 必须**一字不差**匹配课程库\n");
+        prompt.append("  * equipment: 器械数组，从系统器械库中选择；休息日设为 []\n");
+        prompt.append("    - name/image 必须**一字不差**匹配器械库\n");
+        prompt.append("  * exercises: 动作数组 [{ name, sets, reps, restSeconds }]；休息日设为 []\n\n");
+
+        prompt.append("# ⚠️ 关键规则（违反任一条将导致输出无效）\n");
+        prompt.append("1. 【强制】weeklyPlan.length === 7，不多不少，必须是 周一~周日 各一个元素\n");
+        prompt.append("2. 【强制】休息日的 courses=null, equipment=[], exercises=[] —— 不允许有课程、器械、动作、tips\n");
+        prompt.append("3. 【强制】每天 courses 数量在1~3之间（训练日至少1门，最多3门不同课程组合）\n");
+        prompt.append("4. 【强制】course.name / course.coverImage 必须与系统课程库完全一致，禁止编造\n");
+        prompt.append("5. 【强制】equipment.name / equipment.image 必须与系统器械库完全一致，禁止编造\n");
+        //prompt.append("6. 【强制】不要输出 tips 字段，不要输出任何提示建议类字段\n");
+        prompt.append("7. 【强制】dayName 只能是：周一、周二、周三、周四、周五、周六、周日\n\n");
+
+        prompt.append("# 设计原则\n");
+        prompt.append("- 遵循渐进超负荷原则，强度合理递进\n");
+        prompt.append("- 每周安排1天完全休息日（通常为周日），确保恢复\n");
+        prompt.append("- 相邻训练日避免同一肌群连续高强度刺激\n");
+        prompt.append("- 课程选择要与当天 focus 高度相关\n");
 
         return prompt.toString();
     }

@@ -25,13 +25,19 @@ public class AIServiceImpl implements AIService {
     private final PromptTemplates promptTemplates;
     private final ObjectMapper objectMapper;
 
-    @Value("${spring.ai.dashscope.chat.options.model:qwen-plus}")
+    @Value("${spring.ai.dashscope.chat.options.model}")
     private String model;
 
+    /**
+     * 通用对话
+     *
+     * @param message 用户输入的消息
+     * @return AI 响应
+     */
     @Override
     public String chat(String message) {
         log.info("AI 通用对话请求，消息长度: {}", message.length());
-        
+
         try {
             String response = chatClient.prompt()
                     .user(message)
@@ -46,7 +52,13 @@ public class AIServiceImpl implements AIService {
         }
     }
 
-    @Override
+    /**
+     * 使用 Prompt 模板的对话
+     *
+     * @param prompt  Prompt 模板
+     * @param variables 模板变量
+     * @return AI 响应
+     */
     public String chatWithPrompt(String prompt, Map<String, Object> variables) {
         log.info("AI Prompt 对话请求，变量数: {}", variables != null ? variables.size() : 0);
 
@@ -68,6 +80,12 @@ public class AIServiceImpl implements AIService {
         }
     }
 
+    /**
+     * 流式对话 Flux<T> 类型返回
+     *
+     * @param message 用户输入的消息
+     * @return AI 响应
+     */
     @Override
     public Flux<String> streamChat(String message) {
         log.info("AI 流式对话请求，消息长度: {}", message.length());
@@ -78,7 +96,7 @@ public class AIServiceImpl implements AIService {
                     .stream()
                     .content()
                     .doOnComplete(() -> {
-                        log.info("AI 流式对话完成");
+                        log.info("AI 流式对话完成......");
                     })
                     .doOnError(e -> {
                         log.error("AI 流式对话失败", e);
@@ -89,6 +107,12 @@ public class AIServiceImpl implements AIService {
         }
     }
 
+    /**
+     * 使用 Prompt 模板的__流式对话__
+     * @param prompt  Prompt 模板
+     * @param variables 模板变量
+     * @return AI 响应
+     */
     @Override
     public Flux<String> streamChatWithPrompt(String prompt, Map<String, Object> variables) {
         log.info("AI Prompt 流式对话请求，变量数: {}", variables != null ? variables.size() : 0);
@@ -99,6 +123,7 @@ public class AIServiceImpl implements AIService {
 
             return chatClient.prompt()
                     .user(renderedPrompt)
+                    // 使用 Stream 模式...
                     .stream()
                     .content()
                     .doOnComplete(() -> {
@@ -112,6 +137,7 @@ public class AIServiceImpl implements AIService {
             return Flux.error(new RuntimeException("AI 流式服务调用失败: " + e.getMessage(), e));
         }
     }
+
 
     @Override
     public String generateFitnessPlan(String goal, String bodyPart, String experience,
@@ -129,6 +155,7 @@ public class AIServiceImpl implements AIService {
 
             String prompt = promptTemplates.generateFitnessPlan(variables);
 
+            //计划生成 调用llm模型语句
             String response = chatClient.prompt()
                     .user(prompt)
                     .call()
@@ -143,6 +170,13 @@ public class AIServiceImpl implements AIService {
         }
     }
 
+
+    /**
+     * 从个人档案生成健身计划
+     *
+     * @param profile 个人档案
+     * @return 健身计划
+     */
     @Override
     public FitnessPlanResponseDTO generateFitnessPlanFromProfile(Map<String, Object> profile) {
         log.info("从个人档案生成健身计划请求，用户信息: {}", profile);
@@ -151,15 +185,17 @@ public class AIServiceImpl implements AIService {
             String prompt = promptTemplates.generateFitnessPlanJson(profile);
             log.debug("生成的Prompt长度: {}", prompt.length());
 
-            BeanOutputConverter<FitnessPlanResponseDTO> converter = 
+            //spring ai Alibaba output 格式约束
+            BeanOutputConverter<FitnessPlanResponseDTO> converter =
                     new BeanOutputConverter<>(FitnessPlanResponseDTO.class);
-            
+
             String format = converter.getFormat();
             log.debug("生成的Output Schema长度: {}", format.length());
 
             String fullPrompt = prompt + "\n\n" + format;
             log.debug("完整Prompt长度: {}", fullPrompt.length());
 
+            //LLM返回的 JSON 数据 //TODO LLM 调用 生成 健身计划的标记...
             String jsonResponse = chatClient.prompt()
                     .user(fullPrompt)
                     .call()
@@ -171,15 +207,15 @@ public class AIServiceImpl implements AIService {
             log.info("=== JSON内容结束 ===");
 
             String cleanedJson = cleanJsonResponse(jsonResponse);
-            log.debug("清洗后的JSON长度: {}", cleanedJson.length());
+            log.debug("------> 清洗后的JSON长度: {}", cleanedJson.length());
 
             FitnessPlanResponseDTO response = objectMapper.readValue(cleanedJson, FitnessPlanResponseDTO.class);
 
             log.info("从个人档案生成健身计划成功");
-            log.debug("生成的计划: subtitle={}, weeklyPlan.size={}", 
-                    response.getSubtitle(), 
+            log.debug("生成的计划: subtitle={}, weeklyPlan.size={}",
+                    response.getSubtitle(),
                     response.getWeeklyPlan() != null ? response.getWeeklyPlan().size() : 0);
-            
+
             return response;
         } catch (Exception e) {
             log.error("从个人档案生成健身计划失败", e);
@@ -191,21 +227,22 @@ public class AIServiceImpl implements AIService {
         if (response == null || response.isBlank()) {
             return response;
         }
-        
+
         String cleaned = response.trim();
-        
+
         if (cleaned.startsWith("```json")) {
             cleaned = cleaned.substring(7);
         } else if (cleaned.startsWith("```")) {
             cleaned = cleaned.substring(3);
         }
-        
+
         if (cleaned.endsWith("```")) {
             cleaned = cleaned.substring(0, cleaned.length() - 3);
         }
-        
+
         return cleaned.trim();
     }
+
 
     @Override
     public String analyzeFitnessData(Map<String, Object> variables) {

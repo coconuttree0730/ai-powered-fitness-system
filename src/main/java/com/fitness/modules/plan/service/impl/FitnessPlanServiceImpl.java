@@ -6,6 +6,7 @@ import com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO;
 import com.fitness.integration.ai.service.AIService;
 import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.service.CourseService;
+import com.fitness.modules.equipment.model.dto.EquipmentQueryDTO;
 import com.fitness.modules.equipment.model.vo.EquipmentVO;
 import com.fitness.modules.equipment.service.EquipmentService;
 import com.fitness.modules.plan.mapper.FitnessPlanDetailMapper;
@@ -30,10 +31,7 @@ import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,16 +65,17 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
         UserFitnessProfileVO profile = userFitnessProfileService.getProfile(userId);
 
-        // 2. 计算BMI
+        // 2. 计算BMI (身高单位cm需转为m)
         BigDecimal height = profile.getHeight();
         BigDecimal weight = profile.getWeight();
         String bmi = "22.9";
         if (height != null && weight != null && height.compareTo(BigDecimal.ZERO) > 0) {
-            bmi = weight.divide(height.pow(2), 1, RoundingMode.HALF_UP).toString();
+            BigDecimal heightInMeters = height.divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            bmi = weight.divide(heightInMeters.pow(2), 1, RoundingMode.HALF_UP).toString();
         }
 
-        // 3. 查询系统可用课程列表（用于AI选择）
-        cachedCourses = courseService.getHomePageCourseCards(50);
+        // 3. 查询系统可用课程列表（用于AI选择） //TODO: 这里设置的可用课程是20条数据，需要根据实际情况调整
+        cachedCourses = courseService.getHomePageCourseCards(20);
         StringBuilder coursesJson = new StringBuilder("[");
         for (int i = 0; i < cachedCourses.size(); i++) {
             CourseCardVO c = cachedCourses.get(i);
@@ -95,14 +94,13 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
         coursesJson.append("]");
 
-        // 4. 查询系统可用器械列表（只查正常状态的）
-        com.fitness.modules.equipment.model.dto.EquipmentQueryDTO equipQuery =
-                new com.fitness.modules.equipment.model.dto.EquipmentQueryDTO();
+        // 4. 查询系统可用器械列表（只查正常状态的）//TODO: 这里设置的可用器械是20条数据，需要根据实际情况调整
+        EquipmentQueryDTO equipQuery = new EquipmentQueryDTO();
         equipQuery.setStatus(1);
         equipQuery.setPageSize(30);
         cachedEquipment = equipmentService.getEquipmentList(equipQuery).getRecords();
         StringBuilder equipmentJson = new StringBuilder("[");
-        for (int i = 0; i < Math.min(cachedEquipment.size(), 30); i++) {
+        for (int i = 0; i < Math.min(cachedEquipment.size(), 20); i++) {
             EquipmentVO e = cachedEquipment.get(i);
             equipmentJson.append(String.format(
                 "{\"id\":%d,\"name\":\"%s\",\"image\":\"%s\"}",
@@ -184,9 +182,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     private Map<String, Object> parseAndValidateAiResponse(FitnessPlanResponseDTO aiResponse, String bmi, String goal, String experience) {
         try {
             Map<String, Object> planData = new HashMap<>();
-            
+
             planData.put("subtitle", aiResponse.getSubtitle());
-            
+
             Map<String, Object> userInfo = new HashMap<>();
             if (aiResponse.getUserInfo() != null) {
                 userInfo.put("height", aiResponse.getUserInfo().getHeight());
@@ -199,10 +197,16 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
             List<Map<String, Object>> weeklyPlanList = new ArrayList<>();
             if (aiResponse.getWeeklyPlan() != null) {
-                for (FitnessPlanResponseDTO.DayPlanDTO dayPlanDTO : aiResponse.getWeeklyPlan()) {
+                List<FitnessPlanResponseDTO.DayPlanDTO> days = aiResponse.getWeeklyPlan();
+                int limit = Math.min(days.size(), 7);
+                for (int i = 0; i < limit; i++) {
+                    FitnessPlanResponseDTO.DayPlanDTO dayPlanDTO = days.get(i);
                     Map<String, Object> dayPlan = convertDayPlanDTOToMap(dayPlanDTO);
                     validateAndReplaceDayPlan(dayPlan);
                     weeklyPlanList.add(dayPlan);
+                }
+                if (days.size() > 7) {
+                    log.warn("LLM返回了{}天计划，已强制截断为7天", days.size());
                 }
             }
             planData.put("weeklyPlan", weeklyPlanList);
@@ -214,6 +218,13 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
     }
 
+    private boolean isRestDay(String focus) {
+        return focus != null && (
+            focus.contains("休息") || focus.contains("恢复") ||
+            focus.contains("Rest") || focus.contains("完全休息")
+        );
+    }
+
     /**
      * 将 DayPlanDTO 转换为 Map
      */
@@ -221,17 +232,21 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         Map<String, Object> dayPlan = new HashMap<>();
         dayPlan.put("dayName", dayPlanDTO.getDayName());
         dayPlan.put("focus", dayPlanDTO.getFocus());
-        dayPlan.put("tips", dayPlanDTO.getTips());
 
-        if (dayPlanDTO.getCourse() != null) {
-            FitnessPlanResponseDTO.CourseDTO courseDTO = dayPlanDTO.getCourse();
-            Map<String, Object> courseMap = new HashMap<>();
-            courseMap.put("name", courseDTO.getName());
-            courseMap.put("description", courseDTO.getDescription());
-            courseMap.put("coverImage", courseDTO.getCoverImage());
-            courseMap.put("duration", courseDTO.getDuration());
-            courseMap.put("id", courseDTO.getCourseId());
-            dayPlan.put("course", courseMap);
+        if (dayPlanDTO.getCourses() != null && !dayPlanDTO.getCourses().isEmpty()) {
+            List<Map<String, Object>> coursesList = new ArrayList<>();
+            for (FitnessPlanResponseDTO.CourseDTO courseDTO : dayPlanDTO.getCourses()) {
+                Map<String, Object> courseMap = new HashMap<>();
+                courseMap.put("name", courseDTO.getName());
+                courseMap.put("description", courseDTO.getDescription());
+                courseMap.put("coverImage", courseDTO.getCoverImage());
+                courseMap.put("duration", courseDTO.getDuration());
+                courseMap.put("id", courseDTO.getCourseId());
+                coursesList.add(courseMap);
+            }
+            dayPlan.put("courses", coursesList);
+        } else {
+            dayPlan.put("courses", null);
         }
 
         if (dayPlanDTO.getEquipment() != null) {
@@ -268,32 +283,49 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     private void validateAndReplaceDayPlan(Map<String, Object> dayPlan) {
         String focus = (String) dayPlan.getOrDefault("focus", "");
 
-        // 1. 校验并替换课程数据
-        if (dayPlan.containsKey("course") && dayPlan.get("course") != null) {
-            Map<String, Object> course = (Map<String, Object>) dayPlan.get("course");
-            String courseName = (String) course.getOrDefault("name", "");
+        // 休息日强制清空课程、器械、动作
+        if (isRestDay(focus) || focus.contains("休息")) {
+            dayPlan.put("courses", null);
+            dayPlan.put("equipment", new ArrayList<>());
+            dayPlan.put("exercises", new ArrayList<>());
+            log.debug("检测到休息日，已清空训练内容: focus={}", focus);
+            return;
+        }
 
-            // 在缓存的课程列表中查找匹配的课程
-            CourseCardVO matchedCourse = findMatchingCourse(courseName, focus);
-            if (matchedCourse != null) {
-                course.put("name", matchedCourse.getName());
-                course.put("coverImage", matchedCourse.getImage());
-                course.put("description", matchedCourse.getDesc());
-                course.put("duration", matchedCourse.getDuration());
-                course.put("id", matchedCourse.getId());
-                log.debug("替换课程: {} -> {}", courseName, matchedCourse.getName());
-            } else {
-                // 如果没有匹配的课程，随机选择一个相关的课程
-                CourseCardVO randomCourse = findRandomCourseByFocus(focus);
-                if (randomCourse != null) {
-                    course.put("name", randomCourse.getName());
-                    course.put("coverImage", randomCourse.getImage());
-                    course.put("description", randomCourse.getDesc());
-                    course.put("duration", randomCourse.getDuration());
-                    course.put("id", randomCourse.getId());
-                    log.debug("使用随机课程替换: {} -> {}", courseName, randomCourse.getName());
+        // 1. 校验并替换课程数据（支持1-3门课程）
+        if (dayPlan.containsKey("courses") && dayPlan.get("courses") instanceof List) {
+            List<Map<String, Object>> courses = (List<Map<String, Object>>) dayPlan.get("courses");
+            List<Map<String, Object>> validatedCourses = new ArrayList<>();
+
+            for (Map<String, Object> course : courses) {
+                String courseName = (String) course.getOrDefault("name", "");
+                CourseCardVO matchedCourse = findMatchingCourse(courseName, focus);
+                if (matchedCourse != null) {
+                    Map<String, Object> validCourse = new HashMap<>();
+                    validCourse.put("name", matchedCourse.getName());
+                    validCourse.put("coverImage", matchedCourse.getImage());
+                    validCourse.put("description", matchedCourse.getDesc());
+                    validCourse.put("duration", matchedCourse.getDuration());
+                    validCourse.put("id", matchedCourse.getId());
+                    validatedCourses.add(validCourse);
+                    log.debug("替换课程: {} -> {}", courseName, matchedCourse.getName());
                 }
             }
+
+            if (validatedCourses.isEmpty()) {
+                CourseCardVO randomCourse = findRandomCourseByFocus(focus);
+                if (randomCourse != null) {
+                    Map<String, Object> fallbackCourse = new HashMap<>();
+                    fallbackCourse.put("name", randomCourse.getName());
+                    fallbackCourse.put("coverImage", randomCourse.getImage());
+                    fallbackCourse.put("description", randomCourse.getDesc());
+                    fallbackCourse.put("duration", randomCourse.getDuration());
+                    fallbackCourse.put("id", randomCourse.getId());
+                    validatedCourses.add(fallbackCourse);
+                    log.debug("使用随机课程作为兜底");
+                }
+            }
+            dayPlan.put("courses", validatedCourses.isEmpty() ? null : validatedCourses);
         }
 
         // 2. 校验并替换器械数据
@@ -603,15 +635,14 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         dayPlan.put("day", day);
         dayPlan.put("focus", focus);
 
-        // 如果是休息日
         if (focus.contains("休息")) {
-            dayPlan.put("course", null);
+            dayPlan.put("courses", null);
             dayPlan.put("equipment", new ArrayList<>());
             dayPlan.put("exercises", new ArrayList<>());
             return dayPlan;
         }
 
-        // 查找匹配的课程
+        List<Map<String, Object>> coursesList = new ArrayList<>();
         CourseCardVO course = findRandomCourseByFocus(focusKey);
         if (course != null) {
             Map<String, Object> courseMap = new HashMap<>();
@@ -620,8 +651,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             courseMap.put("coverImage", course.getImage());
             courseMap.put("description", course.getDesc());
             courseMap.put("duration", course.getDuration());
-            dayPlan.put("course", courseMap);
+            coursesList.add(courseMap);
         }
+        dayPlan.put("courses", coursesList);
 
         // 查找匹配的器械
         List<Map<String, Object>> equipmentList = new ArrayList<>();
@@ -807,6 +839,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         return result;
     }
 
+    /**
+     * 获取计划列表
+     */
     @Override
     public List<PlanVO> getPlanList(Long userId) {
         List<FitnessPlan> plans = fitnessPlanMapper.selectByUserId(userId);
@@ -821,6 +856,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         return result;
     }
 
+    /**
+     * 删除计划
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deletePlan(Long userId, Long planId) {
@@ -833,7 +871,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
 
         // 删除详情 - 使用 MyBatis-Plus 的 delete 方法
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FitnessPlanDetail> wrapper = 
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FitnessPlanDetail> wrapper =
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         wrapper.eq(FitnessPlanDetail::getPlanId, planId);
         fitnessPlanDetailMapper.delete(wrapper);
@@ -842,4 +880,5 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
         log.info("删除健身计划: planId={}", planId);
     }
+
 }
