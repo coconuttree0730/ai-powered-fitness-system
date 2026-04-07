@@ -1,0 +1,2778 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AI健身系统API",
+    "description": "AI健身系统后端API接口文档",
+    "version": "1.0.0",
+    "contact": {
+      "name": "AI健身系统开发团队",
+      "email": "contact@fitness-system.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地开发环境"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "用户注册",
+        "description": "用户注册新账号",
+        "tags": ["认证模块"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "注册成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "用户登录",
+        "description": "用户登录获取Token",
+        "tags": ["认证模块"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTokenInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/slider-verify/token": {
+      "get": {
+        "summary": "获取滑块验证令牌",
+        "description": "获取滑块验证所需的令牌",
+        "tags": ["认证模块"],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSliderVerifyTokenVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/slider-verify/verify": {
+      "post": {
+        "summary": "验证滑块结果",
+        "description": "验证滑块验证结果",
+        "tags": ["认证模块"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SliderVerifyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "验证成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSliderVerifyResultVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sms-code": {
+      "post": {
+        "summary": "发送短信验证码",
+        "description": "发送短信验证码，需要先完成滑块验证",
+        "tags": ["认证模块"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsCodeDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "发送成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSmsCodeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login/sms": {
+      "post": {
+        "summary": "短信验证码登录",
+        "description": "使用短信验证码登录，未注册用户自动创建",
+        "tags": ["认证模块"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsCodeLoginDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTokenInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "summary": "获取当前用户信息",
+        "description": "获取当前登录用户的详细信息",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/password": {
+      "put": {
+        "summary": "修改密码",
+        "description": "修改当前用户密码",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "oldPassword": {
+                    "type": "string",
+                    "description": "旧密码"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "description": "新密码"
+                  }
+                },
+                "required": ["oldPassword", "newPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "修改成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/username": {
+      "put": {
+        "summary": "更新用户名",
+        "description": "更新当前用户用户名",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUsernameDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/phone": {
+      "put": {
+        "summary": "更新手机号",
+        "description": "更新当前用户手机号",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePhoneDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/email": {
+      "put": {
+        "summary": "更新邮箱",
+        "description": "更新当前用户邮箱",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/phone/code/old": {
+      "post": {
+        "summary": "发送旧手机验证码",
+        "description": "发送验证码到当前绑定的手机号",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "发送成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSmsCodeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/phone/code/new": {
+      "post": {
+        "summary": "发送新手机验证码",
+        "description": "发送验证码到新手机号",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "phone",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "新手机号"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "发送成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSmsCodeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/email/code": {
+      "post": {
+        "summary": "发送邮箱验证码",
+        "description": "发送邮箱验证码",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailCodeDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "发送成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSmsCodeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/password/code": {
+      "post": {
+        "summary": "发送密码修改验证码",
+        "description": "发送验证码用于修改密码",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "发送成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSmsCodeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/password/by-sms": {
+      "put": {
+        "summary": "通过短信验证码修改密码",
+        "description": "使用短信验证码修改密码",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePasswordBySmsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "修改成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/avatar": {
+      "post": {
+        "summary": "上传头像",
+        "description": "上传用户头像",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "头像图片文件"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "summary": "分页查询用户列表",
+        "description": "分页查询用户列表",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户名"
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "手机号"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "状态"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageUserVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "创建用户",
+        "description": "管理员创建新用户",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "put": {
+        "summary": "更新用户",
+        "description": "更新用户信息",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "用户ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除用户",
+        "description": "删除用户",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "用户ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/password": {
+      "put": {
+        "summary": "重置用户密码",
+        "description": "重置用户密码",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "用户ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "重置成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/status": {
+      "put": {
+        "summary": "更新用户状态",
+        "description": "更新用户状态",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "用户ID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "状态：0-禁用，1-启用"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile": {
+      "get": {
+        "summary": "获取健身档案",
+        "description": "获取当前用户的健身档案",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserFitnessProfileVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "更新健身档案",
+        "description": "创建或更新健身档案",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserFitnessProfileDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserFitnessProfileVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/complete": {
+      "get": {
+        "summary": "检查档案是否完善",
+        "description": "检查健身档案是否已完善",
+        "tags": ["用户模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "检查成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBoolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/list": {
+      "get": {
+        "summary": "获取教练列表",
+        "description": "获取所有教练列表",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListCoachVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/detail": {
+      "get": {
+        "summary": "获取当前教练详情",
+        "description": "获取当前登录教练的详情",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultCoachDetailVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "更新教练详情",
+        "description": "更新教练个人信息",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoachDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultCoachDetailVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/{id}/detail": {
+      "get": {
+        "summary": "获取指定教练详情",
+        "description": "获取指定教练的详情",
+        "tags": ["教练模块"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "教练ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultCoachDetailVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/detail/image": {
+      "post": {
+        "summary": "上传个人展示图片",
+        "description": "上传教练个人展示图片",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "图片文件"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除个人展示图片",
+        "description": "删除教练个人展示图片",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/detail/tags": {
+      "put": {
+        "summary": "更新教练标签",
+        "description": "更新教练标签",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "标签列表"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultCoachDetailVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/home": {
+      "get": {
+        "summary": "获取首页教练列表",
+        "description": "获取首页展示的教练列表",
+        "tags": ["教练模块"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 4
+            },
+            "description": "限制数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListHomePageCoachVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coaches/my-private-coach": {
+      "get": {
+        "summary": "获取我的专属教练",
+        "description": "获取当前会员的专属教练",
+        "tags": ["教练模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMyPrivateCoachVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/{courseId}": {
+      "get": {
+        "summary": "获取课程详情",
+        "description": "获取课程详细信息",
+        "tags": ["课程模块"],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "课程ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultCourseVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/list": {
+      "get": {
+        "summary": "获取课程列表",
+        "description": "获取课程列表（管理端）",
+        "tags": ["课程模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "课程分类"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "关键词"
+          },
+          {
+            "name": "courseName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "课程名称"
+          },
+          {
+            "name": "coachId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "教练ID"
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "开始日期"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "结束日期"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageCourseVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/public/list": {
+      "get": {
+        "summary": "获取公开课程列表",
+        "description": "获取公开课程列表（游客可看）",
+        "tags": ["课程模块"],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "课程分类"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "关键词"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageCourseVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/categories": {
+      "get": {
+        "summary": "获取课程分类",
+        "description": "获取所有课程分类",
+        "tags": ["课程模块"],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/homepage/categories": {
+      "get": {
+        "summary": "获取首页课程体系",
+        "description": "获取首页课程体系数据（按分类分组）",
+        "tags": ["课程模块"],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListCourseCategoryVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/homepage/cards": {
+      "get": {
+        "summary": "获取首页课程卡片",
+        "description": "获取首页课程卡片列表",
+        "tags": ["课程模块"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 6
+            },
+            "description": "限制数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListCourseCardVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/courses": {
+      "post": {
+        "summary": "创建课程",
+        "description": "创建新课程",
+        "tags": ["课程模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/courses/{courseId}": {
+      "put": {
+        "summary": "更新课程",
+        "description": "更新课程信息",
+        "tags": ["课程模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "课程ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除课程",
+        "description": "删除课程",
+        "tags": ["课程模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "课程ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/generate-from-profile": {
+      "post": {
+        "summary": "从个人档案生成计划",
+        "description": "从个人档案自动生成健身计划",
+        "tags": ["健身计划模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPlanData"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/generate": {
+      "post": {
+        "summary": "手动生成计划",
+        "description": "手动选择参数生成健身计划",
+        "tags": ["健身计划模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanGenerateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/my": {
+      "get": {
+        "summary": "获取我的计划列表",
+        "description": "获取当前用户的健身计划列表",
+        "tags": ["健身计划模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListPlanVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}": {
+      "get": {
+        "summary": "获取计划详情",
+        "description": "获取健身计划详细信息",
+        "tags": ["健身计划模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "计划ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPlanVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除计划",
+        "description": "删除健身计划",
+        "tags": ["健身计划模块"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "计划ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "请在请求头中添加：Authorization: Bearer {token}"
+      }
+    },
+    "schemas": {
+      "Result": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码"
+          },
+          "message": {
+            "type": "string",
+            "description": "消息"
+          },
+          "data": {
+            "type": "object",
+            "description": "数据"
+          }
+        },
+        "example": {
+          "code": 200,
+          "message": "success",
+          "data": {}
+        }
+      },
+      "ResultUserVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserVO"
+          }
+        }
+      },
+      "ResultTokenInfo": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "访问令牌"
+              },
+              "refreshToken": {
+                "type": "string",
+                "description": "刷新令牌"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "description": "过期时间（秒）"
+              }
+            }
+          }
+        }
+      },
+      "ResultSliderVerifyTokenVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SliderVerifyTokenVO"
+          }
+        }
+      },
+      "ResultSliderVerifyResultVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SliderVerifyResultVO"
+          }
+        }
+      },
+      "ResultSmsCodeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sent": {
+                "type": "boolean",
+                "description": "是否发送成功"
+              },
+              "message": {
+                "type": "string",
+                "description": "提示信息"
+              },
+              "remainingSeconds": {
+                "type": "integer",
+                "description": "剩余秒数"
+              },
+              "remainingDailyCount": {
+                "type": "integer",
+                "description": "剩余每日发送次数"
+              }
+            }
+          }
+        }
+      },
+      "ResultLong": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID值"
+          }
+        }
+      },
+      "ResultBoolean": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "boolean",
+            "description": "布尔值"
+          }
+        }
+      },
+      "ResultString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string",
+            "description": "字符串值"
+          }
+        }
+      },
+      "ResultPageUserVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageUserVO"
+          }
+        }
+      },
+      "ResultPageCourseVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageCourseVO"
+          }
+        }
+      },
+      "ResultListCoachVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoachVO"
+            }
+          }
+        }
+      },
+      "ResultListHomePageCoachVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomePageCoachVO"
+            }
+          }
+        }
+      },
+      "ResultListCourseCardVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseCardVO"
+            }
+          }
+        }
+      },
+      "ResultListCourseCategoryVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseCategoryVO"
+            }
+          }
+        }
+      },
+      "ResultListString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ResultListPlanVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanVO"
+            }
+          }
+        }
+      },
+      "ResultPlanVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PlanVO"
+          }
+        }
+      },
+      "ResultPlanData": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "planName": {
+                "type": "string",
+                "description": "计划名称"
+              },
+              "weeklyPlan": {
+                "type": "object",
+                "description": "周计划"
+              }
+            }
+          }
+        }
+      },
+      "ResultCoachDetailVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CoachDetailVO"
+          }
+        }
+      },
+      "ResultMyPrivateCoachVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MyPrivateCoachVO"
+          }
+        }
+      },
+      "ResultCourseVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CourseVO"
+          }
+        }
+      },
+      "ResultUserFitnessProfileVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserFitnessProfileVO"
+          }
+        }
+      },
+      "UserDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱"
+          }
+        },
+        "required": ["username", "password", "phone"]
+      },
+      "LoginDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "SliderVerifyDTO": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "验证令牌"
+          },
+          "sliderValue": {
+            "type": "integer",
+            "description": "滑块值"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳"
+          }
+        },
+        "required": ["token", "sliderValue", "timestamp"]
+      },
+      "SmsCodeDTO": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "verifyToken": {
+            "type": "string",
+            "description": "滑块验证令牌"
+          }
+        },
+        "required": ["phone", "verifyToken"]
+      },
+      "SmsCodeLoginDTO": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "smsCode": {
+            "type": "string",
+            "description": "短信验证码"
+          }
+        },
+        "required": ["phone", "smsCode"]
+      },
+      "UpdateUsernameDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "新用户名"
+          }
+        },
+        "required": ["username"]
+      },
+      "UpdatePhoneDTO": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "新手机号"
+          },
+          "code": {
+            "type": "string",
+            "description": "新手机号验证码"
+          },
+          "oldCode": {
+            "type": "string",
+            "description": "旧手机号验证码"
+          }
+        },
+        "required": ["phone", "code", "oldCode"]
+      },
+      "UpdateEmailDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "新邮箱"
+          },
+          "code": {
+            "type": "string",
+            "description": "邮箱验证码"
+          }
+        },
+        "required": ["email", "code"]
+      },
+      "SendEmailCodeDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "邮箱"
+          }
+        },
+        "required": ["email"]
+      },
+      "UpdatePasswordBySmsDTO": {
+        "type": "object",
+        "properties": {
+          "smsCode": {
+            "type": "string",
+            "description": "短信验证码"
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "新密码"
+          }
+        },
+        "required": ["smsCode", "newPassword"]
+      },
+      "ResetPasswordDTO": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "description": "新密码"
+          }
+        },
+        "required": ["newPassword"]
+      },
+      "UserUpdateDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱"
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态"
+          }
+        }
+      },
+      "UserFitnessProfileDTO": {
+        "type": "object",
+        "properties": {
+          "height": {
+            "type": "integer",
+            "description": "身高（cm）"
+          },
+          "weight": {
+            "type": "integer",
+            "description": "体重（kg）"
+          },
+          "age": {
+            "type": "integer",
+            "description": "年龄"
+          },
+          "gender": {
+            "type": "string",
+            "description": "性别"
+          },
+          "experience": {
+            "type": "string",
+            "description": "经验水平"
+          },
+          "fitnessGoal": {
+            "type": "string",
+            "description": "健身目标"
+          }
+        },
+        "required": ["height", "weight", "age", "gender", "experience", "fitnessGoal"]
+      },
+      "CoachDetailDTO": {
+        "type": "object",
+        "properties": {
+          "specialty": {
+            "type": "string",
+            "description": "专业领域"
+          },
+          "bio": {
+            "type": "string",
+            "description": "个人简介"
+          },
+          "certifications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "证书列表"
+          }
+        }
+      },
+      "CourseDTO": {
+        "type": "object",
+        "properties": {
+          "courseName": {
+            "type": "string",
+            "description": "课程名称"
+          },
+          "category": {
+            "type": "string",
+            "description": "课程分类"
+          },
+          "description": {
+            "type": "string",
+            "description": "课程描述"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "课程时长（分钟）"
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "容量"
+          },
+          "coachId": {
+            "type": "integer",
+            "description": "教练ID"
+          }
+        },
+        "required": ["courseName", "category", "description", "duration", "capacity", "coachId"]
+      },
+      "PlanGenerateDTO": {
+        "type": "object",
+        "properties": {
+          "goal": {
+            "type": "string",
+            "description": "健身目标"
+          },
+          "bodyPart": {
+            "type": "string",
+            "description": "训练部位"
+          },
+          "experience": {
+            "type": "string",
+            "description": "经验水平"
+          },
+          "workoutTime": {
+            "type": "string",
+            "description": "训练时间"
+          },
+          "equipment": {
+            "type": "string",
+            "description": "可用器材"
+          }
+        },
+        "required": ["goal", "bodyPart", "experience", "workoutTime", "equipment"]
+      },
+      "UserVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "用户ID"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像"
+          },
+          "role": {
+            "type": "string",
+            "description": "角色"
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态"
+          }
+        }
+      },
+      "PageUserVO": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserVO"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "总数"
+          },
+          "size": {
+            "type": "integer",
+            "description": "每页数量"
+          },
+          "current": {
+            "type": "integer",
+            "description": "当前页"
+          },
+          "pages": {
+            "type": "integer",
+            "description": "总页数"
+          }
+        }
+      },
+      "UserFitnessProfileVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "档案ID"
+          },
+          "userId": {
+            "type": "integer",
+            "description": "用户ID"
+          },
+          "height": {
+            "type": "integer",
+            "description": "身高（cm）"
+          },
+          "weight": {
+            "type": "integer",
+            "description": "体重（kg）"
+          },
+          "age": {
+            "type": "integer",
+            "description": "年龄"
+          },
+          "gender": {
+            "type": "string",
+            "description": "性别"
+          },
+          "experience": {
+            "type": "string",
+            "description": "经验水平"
+          },
+          "fitnessGoal": {
+            "type": "string",
+            "description": "健身目标"
+          }
+        }
+      },
+      "CoachVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "教练ID"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像"
+          },
+          "specialty": {
+            "type": "string",
+            "description": "专业领域"
+          }
+        }
+      },
+      "HomePageCoachVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "教练ID"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像"
+          },
+          "specialty": {
+            "type": "string",
+            "description": "专业领域"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "标签"
+          }
+        }
+      },
+      "CoachDetailVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "教练ID"
+          },
+          "userId": {
+            "type": "integer",
+            "description": "用户ID"
+          },
+          "specialty": {
+            "type": "string",
+            "description": "专业领域"
+          },
+          "bio": {
+            "type": "string",
+            "description": "个人简介"
+          },
+          "certifications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "证书列表"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "展示图片"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "标签"
+          }
+        }
+      },
+      "MyPrivateCoachVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "教练ID"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像"
+          },
+          "specialty": {
+            "type": "string",
+            "description": "专业领域"
+          },
+          "bio": {
+            "type": "string",
+            "description": "个人简介"
+          }
+        }
+      },
+      "CourseVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "课程ID"
+          },
+          "courseName": {
+            "type": "string",
+            "description": "课程名称"
+          },
+          "category": {
+            "type": "string",
+            "description": "课程分类"
+          },
+          "description": {
+            "type": "string",
+            "description": "课程描述"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "课程时长（分钟）"
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "容量"
+          },
+          "coachId": {
+            "type": "integer",
+            "description": "教练ID"
+          },
+          "coachName": {
+            "type": "string",
+            "description": "教练姓名"
+          }
+        }
+      },
+      "CourseCardVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "课程ID"
+          },
+          "courseName": {
+            "type": "string",
+            "description": "课程名称"
+          },
+          "category": {
+            "type": "string",
+            "description": "课程分类"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "课程时长（分钟）"
+          },
+          "coachName": {
+            "type": "string",
+            "description": "教练姓名"
+          }
+        }
+      },
+      "CourseCategoryVO": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "课程分类"
+          },
+          "courses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseCardVO"
+            },
+            "description": "课程列表"
+          }
+        }
+      },
+      "PageCourseVO": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseVO"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "总数"
+          },
+          "size": {
+            "type": "integer",
+            "description": "每页数量"
+          },
+          "current": {
+            "type": "integer",
+            "description": "当前页"
+          },
+          "pages": {
+            "type": "integer",
+            "description": "总页数"
+          }
+        }
+      },
+      "PlanVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "计划ID"
+          },
+          "planName": {
+            "type": "string",
+            "description": "计划名称"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanDetailVO"
+            },
+            "description": "计划详情"
+          }
+        }
+      },
+      "PlanDetailVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "详情ID"
+          },
+          "planId": {
+            "type": "integer",
+            "description": "计划ID"
+          },
+          "day": {
+            "type": "string",
+            "description": "训练日"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "运动名称"
+                },
+                "sets": {
+                  "type": "integer",
+                  "description": "组数"
+                },
+                "reps": {
+                  "type": "integer",
+                  "description": "次数"
+                },
+                "duration": {
+                  "type": "integer",
+                  "description": "时长（分钟）"
+                }
+              }
+            },
+            "description": "运动列表"
+          }
+        }
+      },
+      "SliderVerifyTokenVO": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "验证令牌"
+          },
+          "backgroundImage": {
+            "type": "string",
+            "description": "背景图片"
+          },
+          "sliderImage": {
+            "type": "string",
+            "description": "滑块图片"
+          }
+        }
+      },
+      "SliderVerifyResultVO": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "验证是否成功"
+          },
+          "message": {
+            "type": "string",
+            "description": "验证消息"
+          }
+        }
+      }
+    }
+  }
+}

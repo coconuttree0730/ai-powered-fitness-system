@@ -4,6 +4,7 @@ import com.fitness.modules.plan.model.dto.PlanGenerateDTO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 健身计划服务接口
@@ -18,6 +19,14 @@ public interface FitnessPlanService {
      * @return 生成的计划ID
      */
     Long generatePlan(Long userId, PlanGenerateDTO dto);
+
+    /**
+     * 从个人档案自动生成健身计划（返回结构化JSON给前端渲染）
+     *
+     * @param userId 用户ID
+     * @return 结构化的健身计划JSON数据
+     */
+    Map<String, Object> generatePlanFromProfile(Long userId);
 
     /**
      * 获取用户的计划列表

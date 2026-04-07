@@ -18,7 +18,7 @@ public interface FitnessPlanMapper extends BaseMapper<FitnessPlan> {
      * @param userId 用户ID
      * @return 计划列表
      */
-    @Select("SELECT * FROM fitness_plan WHERE user_id = #{userId} AND deleted = 0 ORDER BY create_time DESC")
+    @Select("SELECT * FROM fitness_plan WHERE user_id = #{userId} AND deleted = false ORDER BY create_time DESC")
     List<FitnessPlan> selectByUserId(@Param("userId") Long userId);
 
     /**
@@ -27,6 +27,6 @@ public interface FitnessPlanMapper extends BaseMapper<FitnessPlan> {
      * @param userId 用户ID
      * @return 最新计划
      */
-    @Select("SELECT * FROM fitness_plan WHERE user_id = #{userId} AND deleted = 0 ORDER BY create_time DESC LIMIT 1")
+    @Select("SELECT * FROM fitness_plan WHERE user_id = #{userId} AND deleted = false ORDER BY create_time DESC LIMIT 1")
     FitnessPlan selectLatestByUserId(@Param("userId") Long userId);
 }

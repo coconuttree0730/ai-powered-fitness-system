@@ -26,28 +26,46 @@ public class FitnessPlanDetail {
     private Long planId;
 
     /**
-     * 星期几(1-7)
+     * 天数索引(1-7)
      */
-    @TableField("day_of_week")
-    private Integer dayOfWeek;
+    @TableField("day_index")
+    private Integer dayIndex;
 
     /**
-     * 运动名称
+     * 星期名称(周一、周二等)
      */
-    @TableField("exercise_name")
-    private String exerciseName;
+    @TableField("day_name")
+    private String dayName;
 
     /**
-     * 组数
+     * 训练重点(胸部、背部等)
      */
-    @TableField("sets")
-    private Integer sets;
+    @TableField("focus")
+    private String focus;
 
     /**
-     * 每组次数
+     * 课程ID
      */
-    @TableField("reps")
-    private Integer reps;
+    @TableField("course_id")
+    private Long courseId;
+
+    /**
+     * 课程名称
+     */
+    @TableField("course_name")
+    private String courseName;
+
+    /**
+     * 器械信息(JSON格式)
+     */
+    @TableField("equipment_json")
+    private String equipmentJson;
+
+    /**
+     * 训练动作(JSON格式)
+     */
+    @TableField("exercises_json")
+    private String exercisesJson;
 
     /**
      * 持续时间(分钟)

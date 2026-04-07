@@ -16,13 +16,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AIConfig {
 
-    @Value("${spring.ai.dashscope.api-key:N/A}")
+    @Value("${spring.ai.dashscope.api-key}")
     private String apiKey;
 
-    @Value("${spring.ai.dashscope.base-url:N/A}")
-    private String baseUrl;
-
-    @Value("${spring.ai.dashscope.chat.options.model:N/A}")
+    @Value("${spring.ai.dashscope.chat.options.model}")
     private String model;
 
     /**
@@ -36,7 +33,6 @@ public class AIConfig {
     public ChatClient chatClient(ChatModel chatModel) {
         log.info("=== Spring AI Alibaba 配置信息 ===");
         log.info("API Key: {}...", apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) + "***" : "N/A");
-        log.info("Base URL: {}", baseUrl);
         log.info("Model: {}", model);
         log.info("================================");
 

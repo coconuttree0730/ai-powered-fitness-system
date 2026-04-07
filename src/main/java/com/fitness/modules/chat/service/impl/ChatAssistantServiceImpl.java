@@ -334,24 +334,37 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         if (CollUtil.isNotEmpty(planCard.getWeeklyPlan())) {
             int sortOrder = 0;
             for (DayPlanVO dayPlan : planCard.getWeeklyPlan()) {
-                if (CollUtil.isNotEmpty(dayPlan.getExercises())) {
-                    for (ExerciseVO exercise : dayPlan.getExercises()) {
-                        FitnessPlanDetail detail = new FitnessPlanDetail();
-                        detail.setPlanId(plan.getId());
-                        detail.setDayOfWeek(dayPlan.getDayOfWeek());
-                        detail.setExerciseName(exercise.getName());
-                        detail.setSets(exercise.getSets());
-                        detail.setReps(exercise.getReps());
-                        detail.setDuration(exercise.getDuration());
-                        detail.setNotes(exercise.getTips());
-                        detail.setSortOrder(sortOrder++);
-                        detail.setCreateTime(LocalDateTime.now());
-                        detail.setUpdateTime(LocalDateTime.now());
-                        detail.setDeleted(false);
+                FitnessPlanDetail detail = new FitnessPlanDetail();
+                detail.setPlanId(plan.getId());
+                detail.setDayIndex(dayPlan.getDayOfWeek());
+                detail.setDayName(dayPlan.getDayName());
+                detail.setFocus(dayPlan.getFocus());
+                detail.setSortOrder(sortOrder++);
+                detail.setCreateTime(LocalDateTime.now());
+                detail.setUpdateTime(LocalDateTime.now());
+                detail.setDeleted(false);
 
-                        fitnessPlanDetailMapper.insert(detail);
+                // 将训练动作转换为 JSON 存储
+                if (CollUtil.isNotEmpty(dayPlan.getExercises())) {
+                    try {
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                        List<Map<String, Object>> exercisesJson = new ArrayList<>();
+                        for (ExerciseVO exercise : dayPlan.getExercises()) {
+                            Map<String, Object> ex = new HashMap<>();
+                            ex.put("name", exercise.getName());
+                            ex.put("sets", exercise.getSets());
+                            ex.put("reps", exercise.getReps());
+                            ex.put("duration", exercise.getDuration());
+                            ex.put("tips", exercise.getTips());
+                            exercisesJson.add(ex);
+                        }
+                        detail.setExercisesJson(objectMapper.writeValueAsString(exercisesJson));
+                    } catch (Exception e) {
+                        log.warn("序列化训练动作失败: {}", e.getMessage());
                     }
                 }
+
+                fitnessPlanDetailMapper.insert(detail);
             }
         }
 
@@ -825,7 +838,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
      */
     private List<DayPlanVO> convertDetailsToWeeklyPlan(List<FitnessPlanDetail> details) {
         Map<Integer, List<FitnessPlanDetail>> groupedByDay = details.stream()
-                .collect(Collectors.groupingBy(FitnessPlanDetail::getDayOfWeek));
+                .collect(Collectors.groupingBy(FitnessPlanDetail::getDayIndex));
 
         List<DayPlanVO> weeklyPlan = new ArrayList<>();
         String[] dayNames = {"", "周一", "周二", "周三", "周四", "周五", "周六", "周日"};
@@ -836,16 +849,34 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
             dayPlan.setDayName(dayNames[i]);
 
             List<FitnessPlanDetail> dayDetails = groupedByDay.getOrDefault(i, new ArrayList<>());
-            List<ExerciseVO> exercises = new ArrayList<>();
+            
+            // 获取第一条记录的信息
+            if (!dayDetails.isEmpty()) {
+                FitnessPlanDetail firstDetail = dayDetails.get(0);
+                dayPlan.setFocus(firstDetail.getFocus());
+            }
 
+            // 解析训练动作 JSON
+            List<ExerciseVO> exercises = new ArrayList<>();
             for (FitnessPlanDetail detail : dayDetails) {
-                ExerciseVO exercise = new ExerciseVO();
-                exercise.setName(detail.getExerciseName());
-                exercise.setSets(detail.getSets());
-                exercise.setReps(detail.getReps());
-                exercise.setDuration(detail.getDuration());
-                exercise.setTips(detail.getNotes());
-                exercises.add(exercise);
+                if (StrUtil.isNotBlank(detail.getExercisesJson())) {
+                    try {
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                        @SuppressWarnings("unchecked")
+                        List<Map<String, Object>> exercisesJson = objectMapper.readValue(detail.getExercisesJson(), List.class);
+                        for (Map<String, Object> ex : exercisesJson) {
+                            ExerciseVO exercise = new ExerciseVO();
+                            exercise.setName((String) ex.get("name"));
+                            exercise.setSets((Integer) ex.get("sets"));
+                            exercise.setReps((Integer) ex.get("reps"));
+                            exercise.setDuration((Integer) ex.get("duration"));
+                            exercise.setTips((String) ex.get("tips"));
+                            exercises.add(exercise);
+                        }
+                    } catch (Exception e) {
+                        log.warn("解析训练动作JSON失败: {}", e.getMessage());
+                    }
+                }
             }
 
             dayPlan.setExercises(exercises);

@@ -83,7 +83,7 @@
         <div class="hero-content">
           <div class="hero-text">
             <div class="hero-badge">AI智能健身新时代</div>
-            <h1 class="hero-title">让AI成为你的<br><span>私人健身专家</span></h1>
+            <h1 class="hero-title">FutureFit·<br><span>私人健身专家</span></h1>
             <p class="hero-desc">FutureFit 未来健身运用先进的人工智能技术，为您量身定制科学训练计划。无论是减脂塑形、增肌力量还是康复训练，我们让每一次锻炼都精准高效，助您快速达成健身目标。</p>
             <div class="hero-actions">
               <button v-if="!authStore.isLoggedIn" class="btn btn-primary btn-large" @click="goToRegister">开启智能健身之旅</button>
@@ -402,7 +402,7 @@
     </section>
 
     <!-- 成功案例 -->
-<!-- 
+<!--
     <section class="section testimonials-section">
       <div class="testimonials-container">
         <div class="section-header" v-intersect="onReveal">
@@ -538,7 +538,7 @@
 
           <!-- 查看更多按钮 -->
           <div class="equipments-more">
-            <button 
+            <button
               v-if="authStore.isLoggedIn"
               class="btn btn-outline btn-view-all"
               @click="router.push('/equipments')"
@@ -549,7 +549,7 @@
                 <polyline points="12 5 19 12 12 19"/>
               </svg>
             </button>
-            <button 
+            <button
               v-else
               class="btn btn-outline btn-view-all"
               @click="showLoginModal = true"
@@ -1410,7 +1410,7 @@ function handleEquipmentClick(equipment) {
 const omnichannelFeatures = [
   { icon: svgIcons.mobile, title: '智能预约系统', desc: '一键预约课程、私教、场地，实时查看健身房人流情况，避开高峰。' },
   { icon: svgIcons.video, title: '线上课程库', desc: '500+精品线上课程，在家也能享受专业指导，随时随地开始训练。' },
-  { icon: svgIcons.chat, title: '教练在线指导', desc: '训练遇到问题？随时与教练在线沟通，获取专业建议与动作纠正。' },
+  { icon: svgIcons.chat, title: '教练指导服务', desc: '训练遇到问题？随时与教练在线沟通，获取专业建议与动作纠正。' },
   { icon: svgIcons.trophy2, title: '社群挑战赛', desc: '参与线上线下挑战赛，与志同道合的伙伴一起进步，赢取丰厚奖励。' }
 ]
 
@@ -4093,7 +4093,7 @@ const vIntersect = {
   .equipment-showcase-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .equipment-showcase-card.card-wide {
     grid-column: span 2;
   }
@@ -4105,7 +4105,7 @@ const vIntersect = {
     grid-template-rows: repeat(3, 280px);
     gap: 16px;
   }
-  
+
   /* 平板端重置所有卡片样式 */
   .equipment-showcase-card:nth-child(1),
   .equipment-showcase-card:nth-child(2),
@@ -4126,19 +4126,19 @@ const vIntersect = {
     flex-wrap: nowrap;
     padding-bottom: 8px;
   }
-  
+
   .equipment-tab {
     padding: 10px 18px;
     font-size: 14px;
     white-space: nowrap;
   }
-  
+
   .equipment-showcase-grid {
     grid-template-columns: 1fr;
     grid-template-rows: repeat(6, 240px);
     gap: 16px;
   }
-  
+
   /* 移动端重置所有卡片样式 */
   .equipment-showcase-card:nth-child(1),
   .equipment-showcase-card:nth-child(2),
@@ -4150,7 +4150,7 @@ const vIntersect = {
     height: 240px;
     margin-top: 0;
   }
-  
+
   .equipment-showcase-image {
     height: 160px;
   }

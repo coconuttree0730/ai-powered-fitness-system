@@ -2,6 +2,9 @@ package com.fitness.modules.plan.model.vo;
 
 import lombok.Data;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 计划详情VO
  */
@@ -14,24 +17,49 @@ public class PlanDetailVO {
     private Long id;
 
     /**
-     * 星期几(1-7)
+     * 天数索引(1-7)
      */
-    private Integer dayOfWeek;
+    private Integer dayIndex;
 
     /**
-     * 运动名称
+     * 星期名称(周一、周二等)
      */
-    private String exerciseName;
+    private String dayName;
 
     /**
-     * 组数
+     * 训练重点(胸部、背部等)
      */
-    private Integer sets;
+    private String focus;
 
     /**
-     * 每组次数
+     * 课程ID
      */
-    private Integer reps;
+    private Long courseId;
+
+    /**
+     * 课程名称
+     */
+    private String courseName;
+
+    /**
+     * 课程封面图
+     */
+    private String courseCoverImage;
+
+    /**
+     * 课程描述
+     */
+    private String courseDescription;
+
+    /**
+     * 器械信息列表
+     */
+    private List<Map<String, Object>> equipment;
+
+    /**
+     * 训练动作列表
+     */
+    private List<Map<String, Object>> exercises;
 
     /**
      * 持续时间(分钟)

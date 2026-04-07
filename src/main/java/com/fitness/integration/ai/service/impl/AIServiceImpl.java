@@ -1,11 +1,14 @@
 package com.fitness.integration.ai.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO;
 import com.fitness.integration.ai.prompt.PromptTemplates;
 import com.fitness.integration.ai.service.AIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,10 +16,6 @@ import reactor.core.publisher.Flux;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * AI 服务实现类
- * 使用 Spring AI Alibaba 与百炼大模型交互
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,6 +23,7 @@ public class AIServiceImpl implements AIService {
 
     private final ChatClient chatClient;
     private final PromptTemplates promptTemplates;
+    private final ObjectMapper objectMapper;
 
     @Value("${spring.ai.dashscope.chat.options.model:qwen-plus}")
     private String model;
@@ -135,11 +135,76 @@ public class AIServiceImpl implements AIService {
                     .content();
 
             log.info("健身计划生成成功，响应长度: {}", response != null ? response.length() : 0);
+            //log.info("健身计划-LLM 返回消息{}",response);
             return response;
         } catch (Exception e) {
             log.error("生成健身计划失败", e);
             throw new RuntimeException("生成健身计划失败: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public FitnessPlanResponseDTO generateFitnessPlanFromProfile(Map<String, Object> profile) {
+        log.info("从个人档案生成健身计划请求，用户信息: {}", profile);
+
+        try {
+            String prompt = promptTemplates.generateFitnessPlanJson(profile);
+            log.debug("生成的Prompt长度: {}", prompt.length());
+
+            BeanOutputConverter<FitnessPlanResponseDTO> converter = 
+                    new BeanOutputConverter<>(FitnessPlanResponseDTO.class);
+            
+            String format = converter.getFormat();
+            log.debug("生成的Output Schema长度: {}", format.length());
+
+            String fullPrompt = prompt + "\n\n" + format;
+            log.debug("完整Prompt长度: {}", fullPrompt.length());
+
+            String jsonResponse = chatClient.prompt()
+                    .user(fullPrompt)
+                    .call()
+                    .content();
+
+            log.debug("AI返回的JSON长度: {}", jsonResponse != null ? jsonResponse.length() : 0);
+            log.info("=== LLM返回的完整JSON内容 ===");
+            log.info("{}", jsonResponse);
+            log.info("=== JSON内容结束 ===");
+
+            String cleanedJson = cleanJsonResponse(jsonResponse);
+            log.debug("清洗后的JSON长度: {}", cleanedJson.length());
+
+            FitnessPlanResponseDTO response = objectMapper.readValue(cleanedJson, FitnessPlanResponseDTO.class);
+
+            log.info("从个人档案生成健身计划成功");
+            log.debug("生成的计划: subtitle={}, weeklyPlan.size={}", 
+                    response.getSubtitle(), 
+                    response.getWeeklyPlan() != null ? response.getWeeklyPlan().size() : 0);
+            
+            return response;
+        } catch (Exception e) {
+            log.error("从个人档案生成健身计划失败", e);
+            throw new RuntimeException("生成健身计划失败: " + e.getMessage(), e);
+        }
+    }
+
+    private String cleanJsonResponse(String response) {
+        if (response == null || response.isBlank()) {
+            return response;
+        }
+        
+        String cleaned = response.trim();
+        
+        if (cleaned.startsWith("```json")) {
+            cleaned = cleaned.substring(7);
+        } else if (cleaned.startsWith("```")) {
+            cleaned = cleaned.substring(3);
+        }
+        
+        if (cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 3);
+        }
+        
+        return cleaned.trim();
     }
 
     @Override
@@ -205,23 +270,33 @@ public class AIServiceImpl implements AIService {
     @Override
     public String polishText(String text) {
         log.info("文本润色请求，文本长度: {}", text.length());
+        log.debug("待润色原文: {}", text);
 
         try {
-            String prompt = promptTemplates.generateTextPolish(text);
+            String systemPrompt = promptTemplates.getTextPolishSystemPrompt();
+            String userPrompt = promptTemplates.generateTextPolishUserPrompt(text);
+
+            log.debug("System Prompt: {}", systemPrompt);
+            log.debug("User Prompt: {}", userPrompt);
 
             String response = chatClient.prompt()
-                    .user(prompt)
+                    .system(systemPrompt)
+                    .user(userPrompt)
                     .call()
                     .content();
+
+            log.info("LLM返回原始响应，长度: {}", response != null ? response.length() : 0);
+            log.debug("LLM返回的原始内容: {}", response);
 
             String cleaned = cleanPolishedResponse(response);
 
             log.info("文本润色成功，原始响应长度: {}，清洗后长度: {}",
                     response != null ? response.length() : 0,
                     cleaned != null ? cleaned.length() : 0);
+            log.debug("清洗后的润色结果: {}", cleaned);
             return cleaned;
         } catch (Exception e) {
-            log.error("文本润色失败", e);
+            log.error("文本润色失败，原文: {}", text, e);
             throw new RuntimeException("文本润色失败: " + e.getMessage(), e);
         }
     }

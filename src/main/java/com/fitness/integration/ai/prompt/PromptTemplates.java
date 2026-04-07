@@ -6,201 +6,162 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * AI Prompt 模板管理类
- * 定义系统中使用的各种 Prompt 模板
+ * AI提示词模板管理类
  */
 @Component
 public class PromptTemplates {
 
     /**
-     * 健身计划生成 Prompt 模板
+     * 健身计划生成 Prompt 模板（返回结构化JSON）
+     * 注意：使用字符串拼接避免 ST4 模板语法冲突
+     * 格式约束由 BeanOutputConverter 自动生成
      */
-    private static final String FITNESS_PLAN_TEMPLATE = """
-            你是一位专业的健身教练。请为以下学员制定一份周度健身计划（7天）：
+    public String generateFitnessPlanJson(Map<String, Object> variables) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("你是一位专业的健身教练AI助手。请根据学员的个人信息，制定一份科学的7天健身训练计划。\n\n");
 
-            学员信息：
-            - 健身目标：{goal}
-            - 训练部位偏好：{bodyPart}
-            - 健身经验：{experience}
-            - 身高：{height}cm
-            - 体重：{weight}kg
-            - 年龄：{age}岁
+        prompt.append("【核心要求 - 必须严格遵守】\n");
+        prompt.append("1. 你只能从下方提供的【系统课程列表】和【系统器械列表】中选择数据\n");
+        prompt.append("2. 绝对禁止编造或修改课程名称、器械名称、图片URL\n");
+        prompt.append("3. 必须完整复制列表中的name、coverImage、image字段，不能有任何改动\n");
+        prompt.append("4. 如果找不到完全匹配的课程或器械，请选择最接近的\n\n");
 
-            请按照以下格式返回：
-            周一：...
-            周二：...
-            周三：...
-            周四：...
-            周五：...
-            周六：...
-            周日：...
+        prompt.append("学员档案信息：\n");
+        prompt.append("- 身高：").append(variables.get("height")).append("cm\n");
+        prompt.append("- 体重：").append(variables.get("weight")).append("kg\n");
+        prompt.append("- 年龄：").append(variables.get("age")).append("岁\n");
+        prompt.append("- 健身目标：").append(variables.get("goal")).append("\n");
+        prompt.append("- 健身经验水平：").append(variables.get("experience")).append("\n\n");
 
-            每个训练日请包含：
-            1. 训练项目
-            2. 组数和次数
-            3. 训练时长
-            4. 注意事项
+        prompt.append("【系统课程列表】以下是系统中真实存在的课程，你必须从中选择：\n");
+        prompt.append(variables.get("availableCourses")).append("\n\n");
 
-            请确保计划科学合理，符合学员的身体状况和健身目标。
+        prompt.append("【系统器械列表】以下是系统中真实存在的器械，你必须从中选择：\n");
+        prompt.append(variables.get("availableEquipment")).append("\n\n");
 
-            输出返回格式，html + css + js 生成的动态交互性好的精美的html页面
-            """;
+        prompt.append("【严格约束】\n");
+        prompt.append("1. weeklyPlan必须包含7天（周一到周日）\n");
+        prompt.append("2. 周日可以安排休息，course设为null，equipment设为空数组[]\n");
+        prompt.append("3. course.name必须完全匹配【系统课程列表】中的name字段（一字不差）\n");
+        prompt.append("4. course.coverImage必须完全匹配【系统课程列表】中的coverImage字段（一字不差）\n");
+        prompt.append("5. equipment中的name必须完全匹配【系统器械列表】中的name字段（一字不差）\n");
+        prompt.append("6. equipment中的image必须完全匹配【系统器械列表】中的image字段（一字不差）\n");
+        prompt.append("7. 根据每天的focus（训练重点）智能匹配最合适的课程和器械\n");
+
+        return prompt.toString();
+    }
 
     /**
-     * 健身数据分析 Prompt 模板
+     * 健身计划生成 Prompt 模板（旧版兼容）
      */
-    private static final String FITNESS_ANALYSIS_TEMPLATE = """
-            你是一位专业的健身数据分析师。请根据以下用户的健身数据进行分析并给出建议：
-
-            用户基本信息：
-            - 年龄：{age}岁
-            - 性别：{gender}
-            - 身高：{height}cm
-            - 体重：{weight}kg
-            - BMI：{bmi}
-
-            近期运动数据：
-            - 总运动次数：{totalWorkouts}次
-            - 总运动时长：{totalDuration}分钟
-            - 平均每次运动时长：{avgDuration}分钟
-            - 最常进行的运动类型：{favoriteType}
-            - 消耗总卡路里：{totalCalories}千卡
-
-            请提供以下分析：
-            1. 身体状况评估
-            2. 运动习惯分析
-            3. 改进建议
-            4. 下阶段目标建议
-            """;
+    public String generateFitnessPlan(Map<String, Object> variables) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("你是一位专业的健身教练。请为以下学员制定一份周度健身计划（7天）：\n\n");
+        prompt.append("学员信息：\n");
+        prompt.append("- 健身目标：").append(variables.get("goal")).append("\n");
+        prompt.append("- 训练部位偏好：").append(variables.get("bodyPart")).append("\n");
+        prompt.append("- 健身经验：").append(variables.get("experience")).append("\n");
+        prompt.append("- 身高：").append(variables.get("height")).append("cm\n");
+        prompt.append("- 体重：").append(variables.get("weight")).append("kg\n");
+        prompt.append("- 年龄：").append(variables.get("age")).append("岁\n\n");
+        prompt.append("请按照以下格式返回：\n");
+        prompt.append("周一：...\n周二：...\n周三：...\n周四：...\n周五：...\n周六：...\n周日：...\n\n");
+        prompt.append("每个训练日请包含：\n");
+        prompt.append("1. 训练项目\n");
+        prompt.append("2. 组数和次数\n");
+        prompt.append("3. 训练时长\n");
+        prompt.append("4. 注意事项\n\n");
+        prompt.append("请确保计划科学合理，符合学员的身体状况和健身目标。");
+        return prompt.toString();
+    }
 
     /**
      * 营养建议 Prompt 模板
      */
-    private static final String NUTRITION_ADVICE_TEMPLATE = """
-            你是一位专业的运动营养师。请根据以下信息提供营养建议：
+    public String generateNutritionAdvice(Map<String, Object> variables) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("你是一位专业的营养师。请根据以下信息提供营养建议：\n\n");
+        prompt.append("用户信息：\n");
+        prompt.append("- 健身目标：").append(variables.get("goal")).append("\n");
+        prompt.append("- 身高：").append(variables.get("height")).append("cm\n");
+        prompt.append("- 体重：").append(variables.get("weight")).append("kg\n");
+        prompt.append("- 年龄：").append(variables.get("age")).append("岁\n");
+        prompt.append("- 活动水平：").append(variables.get("activityLevel")).append("\n\n");
+        prompt.append("请提供：\n");
+        prompt.append("1. 每日热量摄入建议\n");
+        prompt.append("2. 蛋白质、碳水化合物、脂肪摄入比例\n");
+        prompt.append("3. 推荐的食物列表\n");
+        prompt.append("4. 饮食时间安排建议");
+        return prompt.toString();
+    }
 
-            用户信息：
-            - 健身目标：{goal}
-            - 当前体重：{weight}kg
-            - 目标体重：{targetWeight}kg
-            - 每日活动量：{activityLevel}
-            - 饮食偏好：{dietPreference}
-            - 过敏/忌口：{allergies}
-
-            请提供：
-            1. 每日热量需求估算
-            2. 三大营养素比例建议
-            3. 一日三餐示例
-            4. 运动前后饮食建议
-            5. 补剂建议（如有需要）
-            """;
+    /**
+     * 健身数据分析 Prompt 模板
+     */
+    public String generateFitnessAnalysis(Map<String, Object> variables) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("你是一位专业的健身教练。请分析以下健身数据并提供建议：\n\n");
+        prompt.append("健身数据：\n");
+        prompt.append(variables.get("data")).append("\n\n");
+        prompt.append("请提供：\n");
+        prompt.append("1. 数据分析总结\n");
+        prompt.append("2. 训练效果评估\n");
+        prompt.append("3. 改进建议\n");
+        prompt.append("4. 下阶段训练重点");
+        return prompt.toString();
+    }
 
     /**
      * 运动动作指导 Prompt 模板
      */
-    private static final String EXERCISE_GUIDE_TEMPLATE = """
-            你是一位专业的健身教练。请针对以下运动动作提供详细指导：
-
-            动作名称：{exerciseName}
-            用户经验水平：{experienceLevel}
-            训练目标：{trainingGoal}
-
-            请提供：
-            1. 动作要领（详细步骤）
-            2. 目标肌群
-            3. 推荐组数和次数
-            4. 常见错误及纠正方法
-            5. 安全注意事项
-            6. 进阶/退阶变式
-            """;
-
-    /**
-     * 文本润色 Prompt 模板
-     */
-    private static final String TEXT_POLISH_TEMPLATE = """
-            你是一位专业的文案编辑。请对以下文本进行润色：
-
-            %s
-
-            严格输出要求：
-            1. 保持原有核心信息和事实不变
-            2. 优化语言表述，使其更加流畅、专业、有吸引力
-            3. 改善文本结构和逻辑，提升可读性
-            4. 使用专业、准确、易懂的语言风格
-            5. 严格控制输出字数30-100字以内（含标点符号）
-
-            禁止事项（违反任一条即视为输出无效）：
-            - 禁止添加标题、副标题或任何前缀文字
-            - 禁止输出字数统计，如"（XX字）"、"【XX字】"、"约XX字"等
-            - 禁止添加任何解释、说明或元信息
-            - 禁止在正文前后添加多余空行或分隔符
-
-            请仅直接返回润色后的纯文本内容，不要包含其他任何内容。
-            """;
-
-    /**
-     * 生成健身计划
-     *
-     * @param variables 模板变量
-     * @return 生成的 Prompt
-     */
-    public String generateFitnessPlan(Map<String, Object> variables) {
-        PromptTemplate promptTemplate = new PromptTemplate(FITNESS_PLAN_TEMPLATE);
-        return promptTemplate.render(variables);
-    }
-
-    /**
-     * 生成健身数据分析
-     *
-     * @param variables 模板变量
-     * @return 生成的 Prompt
-     */
-    public String generateFitnessAnalysis(Map<String, Object> variables) {
-        PromptTemplate promptTemplate = new PromptTemplate(FITNESS_ANALYSIS_TEMPLATE);
-        return promptTemplate.render(variables);
-    }
-
-    /**
-     * 生成营养建议
-     *
-     * @param variables 模板变量
-     * @return 生成的 Prompt
-     */
-    public String generateNutritionAdvice(Map<String, Object> variables) {
-        PromptTemplate promptTemplate = new PromptTemplate(NUTRITION_ADVICE_TEMPLATE);
-        return promptTemplate.render(variables);
-    }
-
-    /**
-     * 生成运动动作指导
-     *
-     * @param variables 模板变量
-     * @return 生成的 Prompt
-     */
     public String generateExerciseGuide(Map<String, Object> variables) {
-        PromptTemplate promptTemplate = new PromptTemplate(EXERCISE_GUIDE_TEMPLATE);
-        return promptTemplate.render(variables);
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("你是一位专业的健身教练。请为以下动作提供详细指导：\n\n");
+        prompt.append("动作名称：").append(variables.get("exerciseName")).append("\n");
+        prompt.append("目标肌群：").append(variables.get("targetMuscle")).append("\n");
+        prompt.append("难度等级：").append(variables.get("difficulty")).append("\n\n");
+        prompt.append("请提供：\n");
+        prompt.append("1. 动作要领\n");
+        prompt.append("2. 常见错误\n");
+        prompt.append("3. 注意事项\n");
+        prompt.append("4. 替代动作");
+        return prompt.toString();
     }
 
     /**
-     * 生成文本润色Prompt
-     *
-     * @param text 原始文本
-     * @return 生成的Prompt
+     * 文本润色 System Prompt
+     * 设定角色行为规范
      */
-    public String generateTextPolish(String text) {
-        return String.format(TEXT_POLISH_TEMPLATE, text);
+    public String getTextPolishSystemPrompt() {
+        return """
+                你是一位专业的健身房内容编辑。
+
+                【你的职责】
+                精准描述健身房的介绍（如设备介绍、课程简介等）。
+
+                【必须遵守的规则】
+                1. 只润色，不添加任何解释、说明或多余文字！！！
+                2. 只输出一个最终润色结果，不提供选项
+                3. 保持原文核心意思，不添加无关信息
+                4. 语言专业，符合健身房场景
+
+                【严格禁止】
+                - 不要说"根据指令"、"这里提供"、"如需"、"可选"等
+                - 不要解释你的润色思路
+                - 不要分段、不要列点、不要编号
+                - 只输出纯文本内容
+
+                【例子】
+                原文：“龙门架”；
+                润色：“这款双滑轮龙门架设计专业，支持多样化的拉力训练，全方位刺激目标肌群。配备80kg配重系统，阻力调节灵活精准，满足从基础塑形到力量进阶的不同需求。其运行平稳流畅，是打造家庭健身房或提升商业健身区专业度的理想选择。”
+                """;
     }
 
     /**
-     * 使用自定义模板生成 Prompt
-     *
-     * @param template 模板字符串
-     * @param variables 模板变量
-     * @return 生成的 Prompt
+     * 文本润色 User Prompt 模板
+     * 适用于设备管理、课程管理等表单描述字段的简短文本润色
      */
-    public String generateWithCustomTemplate(String template, Map<String, Object> variables) {
-        PromptTemplate promptTemplate = new PromptTemplate(template);
-        return promptTemplate.render(variables);
+    public String generateTextPolishUserPrompt(String text) {
+        return "原文：" + text + "\n\n润色后的文本：";
     }
 }

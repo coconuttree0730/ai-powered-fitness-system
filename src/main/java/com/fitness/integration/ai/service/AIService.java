@@ -1,5 +1,6 @@
 package com.fitness.integration.ai.service;
 
+import com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
@@ -57,6 +58,15 @@ public interface AIService {
      */
     String generateFitnessPlan(String goal, String bodyPart, String experience,
                                Integer height, Integer weight, Integer age);
+
+    /**
+     * 从个人档案生成健身计划（返回结构化JSON）
+     * 使用Spring AI的结构化输出功能，强制约束AI返回符合格式的JSON
+     *
+     * @param profile 个人档案数据Map
+     * @return 结构化的健身计划DTO对象
+     */
+    FitnessPlanResponseDTO generateFitnessPlanFromProfile(Map<String, Object> profile);
 
     /**
      * 分析健身数据

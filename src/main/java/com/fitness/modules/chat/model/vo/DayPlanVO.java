@@ -27,6 +27,11 @@ public class DayPlanVO {
     private String trainingType;
 
     /**
+     * 训练重点(胸部、背部、腿部等)
+     */
+    private String focus;
+
+    /**
      * 训练总时长(分钟)
      */
     private Integer totalDuration;

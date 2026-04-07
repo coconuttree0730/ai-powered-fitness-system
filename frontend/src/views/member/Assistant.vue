@@ -42,34 +42,38 @@
             <div class="message-content typing-content">
               <div v-if="generatingPlanPreview" class="plan-generating-animation">
                 <div class="generating-header">
-                  <n-icon :component="FitnessOutline" size="20" />
-                  <span>正在生成您的专属健身计划...</span>
+                  <div class="generating-icon-wrapper">
+                    <n-icon :component="FitnessOutline" size="24" />
+                    <div class="icon-pulse-ring"></div>
+                  </div>
+                  <div class="generating-text">
+                    <div class="generating-title">正在生成您的专属健身计划</div>
+                    <div class="generating-subtitle">{{ planGenStepText }}</div>
+                  </div>
                 </div>
-                <div class="generating-progress">
-                  <div class="progress-steps">
-                    <div :class="['step', { active: planGenStep >= 1, done: planGenStep > 1 }]">
-                      <div class="step-icon">
-                        <svg v-if="planGenStep <= 1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                      </div>
-                      <span>分析档案</span>
-                    </div>
-                    <div class="step-line" :class="{ active: planGenStep > 1 }"></div>
-                    <div :class="['step', { active: planGenStep >= 2, done: planGenStep > 2 }]">
-                      <div class="step-icon">
-                        <svg v-if="planGenStep <= 2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                      </div>
-                      <span>制定方案</span>
-                    </div>
-                    <div class="step-line" :class="{ active: planGenStep > 2 }"></div>
-                    <div :class="['step', { active: planGenStep >= 3, done: planGenStep > 3 }]">
-                      <div class="step-icon">
-                        <svg v-if="planGenStep <= 3" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                      </div>
-                      <span>生成完成</span>
-                    </div>
+                <div class="generating-progress-bar">
+                  <div class="progress-track">
+                    <div class="progress-fill" :style="{ width: planGenProgress + '%' }"></div>
+                    <div class="progress-glow" :style="{ left: planGenProgress + '%' }"></div>
+                  </div>
+                  <div class="progress-percentage">{{ planGenProgress }}%</div>
+                </div>
+                <div class="generating-steps">
+                  <div :class="['step-item', { active: planGenStep >= 1, done: planGenStep > 1 }]">
+                    <div class="step-dot"></div>
+                    <span>分析档案</span>
+                  </div>
+                  <div :class="['step-item', { active: planGenStep >= 2, done: planGenStep > 2 }]">
+                    <div class="step-dot"></div>
+                    <span>匹配课程</span>
+                  </div>
+                  <div :class="['step-item', { active: planGenStep >= 3, done: planGenStep > 3 }]">
+                    <div class="step-dot"></div>
+                    <span>制定方案</span>
+                  </div>
+                  <div :class="['step-item', { active: planGenStep >= 4, done: planGenStep > 4 }]">
+                    <div class="step-dot"></div>
+                    <span>生成完成</span>
                   </div>
                 </div>
               </div>
@@ -80,20 +84,22 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 健身计划预览组件 (Tab版详细展示) - 作为聊天消息展示 -->
-        <div v-if="showPlanPreview && fitnessPlanData" class="message ai plan-message-wrapper">
-          <div class="message-avatar">AI</div>
-          <div class="message-content plan-message-content">
-            <FitnessPlanPreview
-              :plan-data="fitnessPlanData"
-              :is-embedded="true"
-              @regenerate="handleRegenerateFromPreview"
-              @save="handleSaveFromPreview"
-              @course-click="handleCourseClick"
-            />
-          </div>
+          <!-- 健身计划预览组件 (Tab版详细展示) - 作为聊天消息展示 -->
+          <transition name="plan-fade">
+            <div v-if="showPlanPreview && fitnessPlanData" class="message ai plan-message-wrapper">
+              <div class="message-avatar">AI</div>
+              <div class="message-content plan-message-content">
+                <FitnessPlanPreview
+                  :plan-data="fitnessPlanData"
+                  :is-embedded="true"
+                  @regenerate="handleRegenerateFromPreview"
+                  @save="handleSaveFromPreview"
+                  @course-click="handleCourseClick"
+                />
+              </div>
+            </div>
+          </transition>
         </div>
 
         <div class="chat-input-area">
@@ -125,7 +131,8 @@
                   <n-button
                     size="small"
                     class="btn-plan"
-                    @click="showPlanModal = true"
+                    :loading="generatingPlan"
+                    @click="generatePlanFromProfile"
                   >
                     <template #icon>
                       <n-icon :component="FitnessOutline" />
@@ -259,50 +266,6 @@
       </div>
     </div>
 
-    <!-- 健身计划生成弹窗 -->
-    <n-modal
-      v-model:show="showPlanModal"
-      title="生成健身计划"
-      preset="card"
-      class="plan-modal"
-      :style="{ width: '480px' }"
-    >
-      <div class="plan-form">
-        <div class="form-item">
-          <label class="form-label">健身目标</label>
-          <n-select
-            v-model:value="planForm.goal"
-            :options="goalOptions"
-            placeholder="请选择健身目标"
-          />
-        </div>
-        <div class="form-item">
-          <label class="form-label">训练部位</label>
-          <n-select
-            v-model:value="planForm.bodyPart"
-            :options="bodyPartOptions"
-            placeholder="请选择训练部位"
-          />
-        </div>
-        <div class="form-item">
-          <label class="form-label">健身经验</label>
-          <n-select
-            v-model:value="planForm.experience"
-            :options="experienceOptions"
-            placeholder="请选择健身经验"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div class="modal-footer">
-          <n-button @click="showPlanModal = false">取消</n-button>
-          <n-button type="primary" :loading="generatingPlan" @click="generatePlan">
-            生成计划
-          </n-button>
-        </div>
-      </template>
-    </n-modal>
-
     <!-- 计划详情弹窗 -->
     <n-modal
       v-model:show="showPlanDetailModal"
@@ -435,6 +398,7 @@ import {
   getSessionDetail,
   getSessionMessages,
   generateFitnessPlan,
+  generateFitnessPlanFromProfile,
   saveFitnessPlan,
   getMyFitnessPlans
 } from '@/api/chat'
@@ -879,7 +843,21 @@ const showPlanPreview = ref(false)
 const fitnessPlanData = ref(null)
 const generatingPlanPreview = ref(false)
 const planGenStep = ref(0)
+const planGenProgress = ref(0)
 let planGenTimer = null
+let progressTimer = null
+
+// 步骤文本
+const planGenStepText = computed(() => {
+  const texts = [
+    '正在准备生成环境...',
+    '正在分析您的健身档案...',
+    '正在匹配适合您的课程...',
+    '正在制定个性化训练方案...',
+    '即将完成，正在整理数据...'
+  ]
+  return texts[planGenStep.value] || texts[0]
+})
 
 // 我的健身计划列表
 const myPlans = ref([])
@@ -927,7 +905,83 @@ const experienceOptions = [
   { label: '高级', value: '高级' }
 ]
 
-// 生成健身计划
+// 从个人档案生成健身计划（无需手动选择）
+async function generatePlanFromProfile() {
+  generatingPlan.value = true
+
+  // 启用计划生成动画
+  generatingPlanPreview.value = true
+  planGenStep.value = 0
+  startPlanGenAnimation()
+
+  try {
+    // 调用后端API，后端会自动从个人档案获取数据并返回结构化JSON
+    const res = await generateFitnessPlanFromProfile()
+    
+    console.log('=== 后端返回的健身计划数据 ===')
+    console.log('返回数据类型:', typeof res)
+    console.log('返回数据:', JSON.stringify(res, null, 2))
+    console.log('=== 数据结束 ===')
+
+    // 完成步骤动画
+    completePlanGenAnimation()
+
+    if (res) {
+      // 后端已返回完整结构化数据，直接使用
+      fitnessPlanData.value = res
+      showPlanPreview.value = true
+
+      console.log('健身计划数据已设置:', fitnessPlanData.value)
+      console.log('预览组件显示状态:', showPlanPreview.value)
+
+      message.success('健身计划生成成功！')
+    }
+  } catch (error) {
+    console.error('生成计划失败:', error)
+    stopPlanGenAnimation()
+    message.error(error.message || '生成计划失败，请稍后重试')
+  } finally {
+    generatingPlan.value = false
+    generatingPlanPreview.value = false
+  }
+}
+
+// 从API响应构建预览数据（后端已返回完整结构化数据）
+function buildFitnessPlanPreviewDataFromResponse(apiResponse) {
+  // 如果API返回的是新格式（包含weeklyPlan），直接使用
+  if (apiResponse.weeklyPlan && Array.isArray(apiResponse.weeklyPlan)) {
+    return {
+      subtitle: apiResponse.subtitle || `AI为您量身定制的7天${apiResponse.userInfo?.goal || '增肌塑形'}计划`,
+      userInfo: apiResponse.userInfo || {
+        height: '175cm',
+        weight: '70kg',
+        bmi: '22.9',
+        goal: '增肌塑形',
+        intensity: '中等'
+      },
+      weeklyPlan: apiResponse.weeklyPlan
+    }
+  }
+
+  // 兼容旧格式：构建默认数据
+  return {
+    subtitle: `AI为您量身定制的7天增肌塑形计划`,
+    userInfo: {
+      height: apiResponse.height ? `${apiResponse.height}cm` : '175cm',
+      weight: apiResponse.weight ? `${apiResponse.weight}kg` : '70kg',
+      bmi: apiResponse.bmi || '22.9',
+      goal: apiResponse.goal || '增肌塑形',
+      intensity: apiResponse.experience || '中等'
+    },
+    weeklyPlan: generateDefaultWeeklyPlan({
+      goal: apiResponse.goal || '增肌',
+      bodyPart: apiResponse.bodyPart || '全身',
+      experience: apiResponse.experience || '中级'
+    }, apiResponse)
+  }
+}
+
+// 生成健身计划（保留兼容）
 async function generatePlan() {
   if (!planForm.value.goal || !planForm.value.bodyPart || !planForm.value.experience) {
     message.warning('请填写完整的计划信息')
@@ -992,12 +1046,23 @@ async function generatePlan() {
 // 计划生成步骤动画
 function startPlanGenAnimation() {
   planGenStep.value = 0
+  planGenProgress.value = 0
+  
+  // 进度条动画
+  progressTimer = setInterval(() => {
+    if (planGenProgress.value < 90) {
+      // 非线性增长，越到后面越慢
+      const increment = Math.max(1, Math.floor((100 - planGenProgress.value) / 10))
+      planGenProgress.value = Math.min(90, planGenProgress.value + increment)
+    }
+  }, 200)
+  
   // 模拟步骤进度
   planGenTimer = setInterval(() => {
-    if (planGenStep.value < 3) {
+    if (planGenStep.value < 4) {
       planGenStep.value++
     }
-  }, 1500)
+  }, 1200)
 }
 
 function completePlanGenAnimation() {
@@ -1005,7 +1070,12 @@ function completePlanGenAnimation() {
     clearInterval(planGenTimer)
     planGenTimer = null
   }
-  planGenStep.value = 3
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+  planGenStep.value = 4
+  planGenProgress.value = 100
 }
 
 function stopPlanGenAnimation() {
@@ -1013,7 +1083,12 @@ function stopPlanGenAnimation() {
     clearInterval(planGenTimer)
     planGenTimer = null
   }
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
   planGenStep.value = 0
+  planGenProgress.value = 0
 }
 
 // 构建健身计划预览数据
@@ -1199,8 +1274,8 @@ function handleRegenerateFromPreview() {
   handleRegeneratePlan()
 }
 
-function handleSaveFromPreview() {
-  handleSavePlan()
+async function handleSaveFromPreview() {
+  await handleSavePlan()
 }
 
 function handleCourseClick(course) {
@@ -1234,16 +1309,21 @@ function dismissPlanCard() {
 
 // 保存计划到我的计划列表
 async function handleSavePlan() {
-  if (!currentPlanCard.value) return
+  if (!currentPlanCard.value && !fitnessPlanData.value) return
 
   savingPlan.value = true
   try {
-    const res = await saveFitnessPlan(currentPlanCard.value)
+    // 优先使用 currentPlanCard，如果没有则使用 fitnessPlanData
+    const planToSave = currentPlanCard.value || fitnessPlanData.value
+    const res = await saveFitnessPlan(planToSave)
     if (res) {
       message.success('计划已保存到我的健身计划！')
       // 清除当前卡片
       currentPlanCard.value = null
       sessionStorage.removeItem('currentPlanCard')
+      // 隐藏计划预览（带动画效果）
+      showPlanPreview.value = false
+      fitnessPlanData.value = null
       // 刷新计划列表
       await loadMyPlans()
     }
@@ -1515,7 +1595,7 @@ async function regeneratePlan() {
 }
 
 .message-content {
-  max-width: 70%;
+  max-width: 80%;
   padding: 14px 18px;
   border-radius: 16px;
   font-size: 14px;
@@ -1851,116 +1931,212 @@ async function regeneratePlan() {
   }
 }
 
-/* 健身计划生成动态等待效果 */
+/* 健身计划生成动态等待效果 - 全新设计 */
 .plan-generating-animation {
-  background: linear-gradient(135deg, #FFF5F2 0%, #FFFFFF 100%);
-  border: 1px solid rgba(255, 107, 53, 0.2);
-  border-radius: 12px;
-  padding: 20px;
-  min-width: 320px;
+  background: linear-gradient(135deg, #FFF8F6 0%, #FFFFFF 50%, #FFF8F6 100%);
+  border: 1px solid rgba(255, 107, 53, 0.15);
+  border-radius: 16px;
+  padding: 24px;
+  min-width: 360px;
+  max-width: 420px;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.08);
+  animation: generatingCardIn 0.4s ease;
+}
+
+@keyframes generatingCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .generating-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 600;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.generating-icon-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #FF6B35;
 }
 
-.generating-header .n-icon {
-  animation: pulse 1.5s ease-in-out infinite;
+.generating-icon-wrapper .n-icon {
+  animation: iconBounce 1s ease-in-out infinite;
+  z-index: 2;
 }
 
-@keyframes pulse {
+@keyframes iconBounce {
   0%, 100% {
     transform: scale(1);
-    opacity: 1;
   }
   50% {
-    transform: scale(1.1);
-    opacity: 0.8;
+    transform: scale(1.15);
   }
 }
 
-.generating-progress {
-  margin-top: 8px;
+.icon-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 107, 53, 0.15);
+  animation: pulseRing 1.5s ease-out infinite;
 }
 
-.progress-steps {
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.generating-text {
+  flex: 1;
+}
+
+.generating-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 4px;
+}
+
+.generating-subtitle {
+  font-size: 13px;
+  color: #6B7280;
+  animation: textFade 0.3s ease;
+}
+
+@keyframes textFade {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 进度条 */
+.generating-progress-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.step {
+.progress-track {
+  flex: 1;
+  height: 8px;
+  background: #F0F2F5;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B35 0%, #FF8C61 50%, #FF6B35 100%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  animation: progressShine 2s linear infinite;
+}
+
+@keyframes progressShine {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.progress-glow {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  transition: left 0.3s ease;
+  pointer-events: none;
+}
+
+.progress-percentage {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FF6B35;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* 步骤指示器 */
+.generating-steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.step-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  flex: 1;
   transition: all 0.3s ease;
 }
 
-.step-icon {
-  width: 32px;
-  height: 32px;
+.step-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #F0F2F5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #E5E7EB;
   transition: all 0.3s ease;
-  color: #9CA3AF;
 }
 
-.step.active .step-icon {
-  background: linear-gradient(135deg, #FF6B35, #FF8C61);
-  color: white;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-  animation: stepPulse 1s ease-in-out infinite;
-}
-
-.step.done .step-icon {
-  background: linear-gradient(135deg, #10B981, #059669);
-  color: white;
-}
-
-@keyframes stepPulse {
-  0%, 100% {
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-  }
-  50% {
-    box-shadow: 0 4px 20px rgba(255, 107, 53, 0.5);
-  }
-}
-
-.step span {
+.step-item span {
   font-size: 11px;
   color: #9CA3AF;
   font-weight: 500;
+  text-align: center;
   transition: all 0.3s ease;
 }
 
-.step.active span,
-.step.done span {
-  color: #1A1A2E;
+.step-item.active .step-dot {
+  background: linear-gradient(135deg, #FF6B35, #FF8C61);
+  box-shadow: 0 0 8px rgba(255, 107, 53, 0.5);
+  transform: scale(1.3);
+}
+
+.step-item.active span {
+  color: #FF6B35;
   font-weight: 600;
 }
 
-.step-line {
-  width: 40px;
-  height: 2px;
-  background: #E5E7EB;
-  border-radius: 1px;
-  margin: 0 4px;
-  margin-bottom: 22px;
-  transition: all 0.3s ease;
+.step-item.done .step-dot {
+  background: linear-gradient(135deg, #10B981, #059669);
 }
 
-.step-line.active {
-  background: linear-gradient(90deg, #10B981, #10B981);
+.step-item.done span {
+  color: #10B981;
+  font-weight: 600;
 }
 
 /* 健身计划消息样式 - 作为AI消息显示 */
@@ -1969,11 +2145,31 @@ async function regeneratePlan() {
 }
 
 .plan-message-content {
-  background: #F0F2F5 !important;
+  background: transparent !important;
   border-bottom-left-radius: 4px !important;
   padding: 0 !important;
-  max-width: 560px;
-  overflow: hidden;
+  max-width: 720px;
+  width: 100%;
+  overflow: visible;
+}
+
+/* 计划卡片淡入淡出动画 */
+.plan-fade-enter-active,
+.plan-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plan-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+
+.plan-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+  max-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 /* 聊天输入区域 - 现代精致设计 */

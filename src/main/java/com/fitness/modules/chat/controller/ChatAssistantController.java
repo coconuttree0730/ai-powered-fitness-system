@@ -42,9 +42,14 @@ public class ChatAssistantController {
     }
 
     @PostMapping(value = "/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @PreAuthorize("hasRole('MEMBER')")
     public Flux<String> sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return Flux.error(new org.springframework.security.access.AccessDeniedException("未登录或登录已过期"));
+        }
+        if (!SecurityUtils.hasRole("MEMBER")) {
+            return Flux.error(new org.springframework.security.access.AccessDeniedException("没有权限访问该资源"));
+        }
         return chatAssistantService.sendMessageStream(userId, dto);
     }
 

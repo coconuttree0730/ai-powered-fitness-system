@@ -57,7 +57,7 @@ export function getSessionMessages(sessionId, params = {}) {
 }
 
 /**
- * 生成健身计划
+ * 生成健身计划（旧版兼容）
  * @param {Object} data - 计划参数
  * @param {string} data.goal - 健身目标
  * @param {string} data.bodyPart - 训练部位
@@ -65,9 +65,20 @@ export function getSessionMessages(sessionId, params = {}) {
  */
 export function generateFitnessPlan(data) {
   return request({
-    url: '/chat/fitness-plan/generate',
+    url: '/plans/generate',
     method: 'post',
-    params: data
+    data
+  })
+}
+
+/**
+ * 从个人档案生成健身计划（返回结构化JSON给前端渲染）
+ * 后端自动从用户档案获取身高、体重、目标、经验等数据
+ */
+export function generateFitnessPlanFromProfile() {
+  return request({
+    url: '/plans/generate-from-profile',
+    method: 'post'
   })
 }
 

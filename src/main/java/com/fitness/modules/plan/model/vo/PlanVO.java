@@ -32,6 +32,11 @@ public class PlanVO {
     private Integer duration;
 
     /**
+     * 难度等级: BEGINNER-初级, INTERMEDIATE-中级, ADVANCED-高级
+     */
+    private String level;
+
+    /**
      * 状态: 0-已停用, 1-进行中
      */
     private Integer status;

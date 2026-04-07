@@ -18,6 +18,6 @@ public interface FitnessPlanDetailMapper extends BaseMapper<FitnessPlanDetail> {
      * @param planId 计划ID
      * @return 详情列表
      */
-    @Select("SELECT * FROM fitness_plan_detail WHERE plan_id = #{planId} AND deleted = 0 ORDER BY day_of_week, sort_order")
+    @Select("SELECT * FROM fitness_plan_detail WHERE plan_id = #{planId} AND deleted = false ORDER BY day_index, sort_order")
     List<FitnessPlanDetail> selectByPlanId(@Param("planId") Long planId);
 }

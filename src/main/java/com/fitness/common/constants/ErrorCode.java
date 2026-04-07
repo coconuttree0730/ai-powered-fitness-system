@@ -42,6 +42,7 @@ public enum ErrorCode {
     PLAN_NOT_FOUND(4001, "健身计划不存在"),
     PROFILE_NOT_COMPLETE(4002, "请先完善个人信息"),
     AI_GENERATE_ERROR(4003, "AI生成计划失败"),
+    NO_PERMISSION(4004, "没有权限操作此资源"),
 
     FILE_UPLOAD_ERROR(5001, "文件上传失败"),
     FILE_TYPE_NOT_ALLOWED(5002, "文件类型不允许"),
