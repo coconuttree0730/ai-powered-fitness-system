@@ -325,6 +325,22 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                     log.debug("使用随机课程作为兜底");
                 }
             }
+
+            while (validatedCourses.size() < 2) {
+                CourseCardVO extraCourse = findRandomCourseByFocusExcluding(focus, validatedCourses);
+                if (extraCourse != null) {
+                    Map<String, Object> extraCourseMap = new HashMap<>();
+                    extraCourseMap.put("name", extraCourse.getName());
+                    extraCourseMap.put("coverImage", extraCourse.getImage());
+                    extraCourseMap.put("description", extraCourse.getDesc());
+                    extraCourseMap.put("duration", extraCourse.getDuration());
+                    extraCourseMap.put("id", extraCourse.getId());
+                    validatedCourses.add(extraCourseMap);
+                    log.debug("自动补充课程至最少2门: {}", extraCourse.getName());
+                } else {
+                    break;
+                }
+            }
             dayPlan.put("courses", validatedCourses.isEmpty() ? null : validatedCourses);
         }
 
@@ -424,6 +440,46 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
 
         // 随机返回一个匹配的课程
+        int randomIndex = (int) (Math.random() * matchedCourses.size());
+        return matchedCourses.get(randomIndex);
+    }
+
+    /**
+     * 根据训练重点随机选择相关课程（排除已选课程）
+     */
+    private CourseCardVO findRandomCourseByFocusExcluding(String focus, List<Map<String, Object>> excludedCourses) {
+        if (cachedCourses == null || cachedCourses.isEmpty()) return null;
+
+        Set<Long> excludedIds = new HashSet<>();
+        for (Map<String, Object> course : excludedCourses) {
+            Object id = course.get("id");
+            if (id != null) {
+                excludedIds.add(Long.valueOf(id.toString()));
+            }
+        }
+
+        List<CourseCardVO> matchedCourses = new ArrayList<>();
+        String focusLower = focus.toLowerCase();
+
+        for (CourseCardVO course : cachedCourses) {
+            if (excludedIds.contains(course.getId())) continue;
+            String category = course.getCategory() != null ? course.getCategory().toLowerCase() : "";
+            String name = course.getName() != null ? course.getName().toLowerCase() : "";
+            String desc = course.getDesc() != null ? course.getDesc().toLowerCase() : "";
+            if (matchesFocus(focusLower, category, name, desc)) {
+                matchedCourses.add(course);
+            }
+        }
+
+        if (matchedCourses.isEmpty()) {
+            for (CourseCardVO course : cachedCourses) {
+                if (!excludedIds.contains(course.getId())) {
+                    matchedCourses.add(course);
+                }
+            }
+        }
+
+        if (matchedCourses.isEmpty()) return null;
         int randomIndex = (int) (Math.random() * matchedCourses.size());
         return matchedCourses.get(randomIndex);
     }

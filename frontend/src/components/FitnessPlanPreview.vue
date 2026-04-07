@@ -155,17 +155,55 @@
                 <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
               </svg>
               <span>训练动作</span>
+              <span class="exercise-total-badge">{{ getCurrentDay().exercises.length }}个动作</span>
             </div>
-            <div class="exercise-list">
+            <div class="exercise-grid">
               <div
                 v-for="(exercise, idx) in getCurrentDay().exercises"
                 :key="idx"
-                class="exercise-item"
+                class="exercise-card"
               >
-                <div class="exercise-number">{{ idx + 1 }}</div>
-                <div class="exercise-info">
-                  <div class="exercise-name">{{ exercise.name }}</div>
-                  <div class="exercise-detail">{{ exercise.sets }}组 × {{ exercise.reps }}次 · 组间休息{{ exercise.restSeconds }}秒</div>
+                <div class="exercise-card-left">
+                  <div class="exercise-rank">
+                    <span class="rank-num">{{ String(idx + 1).padStart(2, '0') }}</span>
+                  </div>
+                  <div class="exercise-main">
+                    <div class="exercise-name">{{ exercise.name }}</div>
+                    <div class="exercise-tags">
+                      <span class="tag tag-set" title="组数">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                        <span class="tag-label">组数</span>
+                        <span class="tag-value">{{ exercise.sets }}</span>
+                      </span>
+                      <span class="tag tag-rep" title="次数">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <span class="tag-label">次数</span>
+                        <span class="tag-value">{{ exercise.reps }}</span>
+                      </span>
+                      <span class="tag tag-rest" title="休息">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span class="tag-label">休息</span>
+                        <span class="tag-value">{{ exercise.restSeconds }}s</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="exercise-card-right">
+                  <div class="exercise-progress-ring">
+                    <svg viewBox="0 0 36 36" class="ring-svg">
+                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="#E5E7EB" stroke-width="3"/>
+                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="url(#exerciseGrad)" stroke-width="3"
+                        stroke-dasharray="97.39" :stroke-dashoffset="97.39 - (97.39 * Math.min(exercise.sets, 5) / 5)"
+                        stroke-linecap="round" class="ring-progress"/>
+                      <defs>
+                        <linearGradient id="exerciseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#FF6B35"/>
+                          <stop offset="100%" stop-color="#FF8C61"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <span class="ring-label">{{ exercise.sets }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -770,61 +808,183 @@ function getDefaultImage(type, name = '') {
   line-height: 1.3;
 }
 
-/* 训练动作列表 */
-.exercise-list {
+/* 训练动作网格 - 现代卡片式布局 */
+.exercise-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.exercise-item {
+.exercise-total-badge {
+  margin-left: auto;
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 600;
+  background: linear-gradient(135deg, #FFF5F0, #FFEEE6);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 107, 53, 0.15);
+}
+
+.exercise-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #E8ECF1;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.exercise-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #FF6B35 0%, #FF8C61 50%, #FFB088 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.exercise-card:hover {
+  border-color: rgba(255, 107, 53, 0.25);
+  box-shadow: 0 6px 24px rgba(255, 107, 53, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+.exercise-card:hover::before {
+  opacity: 1;
+}
+
+.exercise-card-left {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #F8FAFC 0%, #F3F4F6 100%);
-  border-radius: 12px;
-  border-left: 4px solid #FF6B35;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  min-width: 0;
 }
 
-.exercise-item:hover {
-  background: rgba(255, 107, 53, 0.06);
-  border-left-color: #E55A2B;
-  transform: translateX(6px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
-}
-
-.exercise-number {
-  width: 28px;
-  height: 28px;
+.exercise-rank {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
-  color: white;
-  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.rank-num {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.exercise-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.exercise-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  letter-spacing: 0.2px;
+}
+
+.exercise-tags {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 8px;
+  line-height: 1.4;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.tag svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.tag-label {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.tag-value {
+  font-weight: 700;
+}
+
+.tag-set {
+  color: #D94E1A;
+  background: linear-gradient(135deg, #FFF5F0, #FFEDE6);
+  border-color: rgba(255, 107, 53, 0.2);
+}
+
+.tag-rep {
+  color: #047857;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  border-color: rgba(5, 150, 105, 0.2);
+}
+
+.tag-rest {
+  color: #4F46E5;
+  background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.exercise-card-right {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.exercise-progress-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.ring-svg {
+  width: 44px;
+  height: 44px;
+  transform: rotate(-90deg);
+}
+
+.ring-progress {
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(255, 107, 53, 0.3);
-}
-
-.exercise-info {
-  flex: 1;
-}
-
-.exercise-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1A1A2E;
-  margin-bottom: 3px;
-}
-
-.exercise-detail {
-  font-size: 12px;
-  color: #6B7280;
-  font-weight: 500;
+  font-weight: 800;
+  color: #FF6B35;
 }
 
 /* 底部操作按钮 */

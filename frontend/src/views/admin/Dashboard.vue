@@ -63,6 +63,25 @@
       </el-col>
     </el-row>
 
+    <!-- AI智能分析按钮 - 独占一行 -->
+    <el-row :gutter="20" class="chart-row ai-analysis-row">
+      <el-col :span="24">
+        <div class="ai-analysis-bar">
+          <el-button 
+            type="primary" 
+            size="large"
+            :icon="MagicStick"
+            :loading="analysisLoading"
+            @click="handleAnalysis"
+            class="ai-analysis-btn"
+          >
+            <span class="btn-text">AI 智能分析</span>
+            <span class="btn-subtext">基于大模型的深度运营数据分析</span>
+          </el-button>
+        </div>
+      </el-col>
+    </el-row>
+
     <!-- 图表区域第一行 -->
     <el-row :gutter="20" class="chart-row">
       <el-col :xs="24" :lg="16">
@@ -122,10 +141,6 @@
                 <el-icon size="18" color="#722ed1"><Reading /></el-icon>
                 <span class="header-title-text">课程分类统计</span>
               </div>
-              <el-button type="primary" link size="small" @click="handleAnalysis" :loading="analysisLoading">
-                <el-icon><MagicStick /></el-icon>
-                AI智能分析
-              </el-button>
             </div>
           </template>
           <div ref="courseStatsChartRef" style="height: 300px"></div>
@@ -180,39 +195,52 @@
     <el-dialog 
       v-model="analysisVisible" 
       title="AI智能分析报告" 
-      width="700px"
+      width="1200px"
       class="analysis-dialog"
       destroy-on-close
+      top="5vh"
     >
       <div class="analysis-report" v-if="analysisReport">
         <div class="report-header">
-          <el-icon size="32" color="#1890ff"><MagicStick /></el-icon>
-          <h3>{{ analysisReport.reportTitle }}</h3>
-          <el-tag type="info" size="small">{{ analysisReport.analysisType }}</el-tag>
+          <div class="header-icon-wrap">
+            <el-icon size="28" color="#fff"><MagicStick /></el-icon>
+          </div>
+          <div class="header-info">
+            <h3>{{ analysisReport.reportTitle }}</h3>
+            <el-tag type="info" size="small" effect="dark" round>{{ analysisReport.analysisType }}</el-tag>
+          </div>
         </div>
         <el-divider />
-        <div class="report-content">{{ analysisReport.reportContent }}</div>
+        <div class="report-body" v-html="renderedContent"></div>
         <div class="suggestions" v-if="analysisReport.suggestions?.length">
-          <h4>
-            <el-icon><Opportunity /></el-icon>
-            优化建议
-          </h4>
-          <el-timeline>
-            <el-timeline-item 
+          <div class="suggestions-header">
+            <el-icon size="20"><Opportunity /></el-icon>
+            <span>优化建议</span>
+          </div>
+          <div class="suggestions-list">
+            <div 
+              class="suggestion-card" 
               v-for="(suggestion, index) in analysisReport.suggestions" 
               :key="index"
-              :type="index === 0 ? 'primary' : 'info'"
-              :icon="index === 0 ? Star : null"
+              :class="{ 'suggestion-primary': index === 0 }"
             >
-              {{ suggestion }}
-            </el-timeline-item>
-          </el-timeline>
+              <div class="suggestion-index">{{ index + 1 }}</div>
+              <div class="suggestion-text">{{ suggestion }}</div>
+              <el-icon v-if="index === 0" class="star-icon"><Star /></el-icon>
+            </div>
+          </div>
         </div>
         <div class="report-footer">
           <el-text type="info" size="small">
+            <el-icon><Clock /></el-icon>
             生成时间：{{ formatDateTime(analysisReport.generateTime) }}
           </el-text>
         </div>
+      </div>
+      <div v-else-if="analysisLoading" class="analysis-loading">
+        <el-icon class="loading-icon" size="48"><MagicStick /></el-icon>
+        <p>AI 正在深度分析运营数据，请稍候...</p>
+        <el-progress :percentage="100" status="success" :indeterminate="true" :duration="3" />
       </div>
     </el-dialog>
   </div>
@@ -223,6 +251,8 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import {
   User, Calendar, Tickets, Box, Goods, Money, ArrowUp, ArrowDown,
   Refresh, TrendCharts, PieChart, Clock, Reading, MagicStick,
@@ -273,6 +303,19 @@ const repairStatsData = ref([])
 
 // 定时器
 let refreshTimer = null
+
+// Markdown 渲染内容
+const renderedContent = computed(() => {
+  if (!analysisReport.value?.reportContent) return ''
+  const raw = analysisReport.value.reportContent
+  const html = marked.parse(raw, {
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false
+  })
+  return DOMPurify.sanitize(html)
+})
 
 // 核心指标数据
 const stats = computed(() => [
@@ -1156,70 +1199,568 @@ onUnmounted(() => {
   color: #1f1f1f;
 }
 
-/* AI分析报告对话框 */
+/* ==================== AI智能分析按钮栏 ==================== */
+.ai-analysis-row {
+  margin-bottom: 20px;
+}
+
+.ai-analysis-bar {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.ai-analysis-btn {
+  position: relative;
+  height: auto !important;
+  min-width: 360px;
+  padding: 18px 40px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
+  border: none !important;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.35), 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+}
+
+.ai-analysis-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 70%
+  );
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(0deg); }
+  100% { transform: translateX(100%) rotate(0deg); }
+}
+
+.ai-analysis-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.45), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ai-analysis-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.btn-text {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-subtext {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4px;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+/* ==================== AI分析报告对话框 ==================== */
+.analysis-dialog :deep(.el-dialog) {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15), 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
 .analysis-dialog :deep(.el-dialog__header) {
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
   margin-right: 0;
-  padding: 20px 24px;
+  padding: 24px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.analysis-dialog :deep(.el-dialog__header::after) {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
 }
 
 .analysis-dialog :deep(.el-dialog__title) {
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .analysis-dialog :deep(.el-dialog__headerbtn .el-dialog__close) {
-  color: #fff;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  transition: all 0.3s;
 }
 
+.analysis-dialog :deep(.el-dialog__headerbtn .el-dialog__close:hover) {
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.analysis-dialog :deep(.el-dialog__body) {
+  padding: 28px 36px;
+  max-height: 75vh;
+  overflow-y: auto;
+  background: #fafbfc;
+}
+
+.analysis-dialog :deep(.el-dialog__body::-webkit-scrollbar) {
+  width: 6px;
+}
+
+.analysis-dialog :deep(.el-dialog__body::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+.analysis-dialog :deep(.el-dialog__body::-webkit-scrollbar-thumb) {
+  background: linear-gradient(180deg, #667eea, #764ba2);
+  border-radius: 3px;
+}
+
+/* 报告头部 */
 .report-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
-.report-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #1f1f1f;
-}
-
-.report-content {
-  line-height: 1.8;
-  color: #434343;
-  font-size: 14px;
-  white-space: pre-wrap;
-}
-
-.suggestions {
-  margin-top: 24px;
-  padding: 20px;
-  background: #f6ffed;
-  border-radius: 8px;
-  border: 1px solid #b7eb8f;
-}
-
-.suggestions h4 {
+.header-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 16px 0;
-  color: #52c41a;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+  flex-shrink: 0;
+}
+
+.header-info {
+  flex: 1;
+}
+
+.header-info h3 {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: 0.5px;
+}
+
+/* ==================== Markdown 报告内容样式 ==================== */
+.report-body {
+  line-height: 2;
+  color: #374151;
+  font-size: 14.5px;
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.report-body :deep(h1),
+.report-body :deep(h2),
+.report-body :deep(h3),
+.report-body :deep(h4) {
+  margin-top: 28px;
+  margin-bottom: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  position: relative;
+  padding-left: 16px;
+}
+
+.report-body :deep(h1) {
+  font-size: 22px;
+  color: #1a1a2e;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 12px 20px;
+  border-radius: 10px;
+  background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%), linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+  background-clip: padding-box, border-box;
+  -webkit-background-clip: text, padding-box;
+  border-left: 4px solid #667eea;
+  padding-left: 16px;
+  -webkit-text-fill-color: #1a1a2e;
+}
+
+.report-body :deep(h2) {
+  font-size: 18px;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.report-body :deep(h2)::before {
+  content: '';
+  width: 5px;
+  height: 22px;
+  background: linear-gradient(180deg, #667eea, #764ba2);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.report-body :deep(h3) {
   font-size: 16px;
+  color: #334155;
+  border-left: 3px solid #94a3b8;
+  padding-left: 14px;
 }
 
+.report-body :deep(h4) {
+  font-size: 15px;
+  color: #475569;
+  border-left: 3px solid #cbd5e1;
+  padding-left: 14px;
+}
+
+.report-body :deep(p) {
+  margin: 10px 0;
+  text-align: justify;
+}
+
+.report-body :deep(strong),
+.report-body :deep(b) {
+  color: #667eea;
+  font-weight: 700;
+  background: linear-gradient(120deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.08) 100%);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.report-body :deep(ul),
+.report-body :deep(ol) {
+  margin: 14px 0;
+  padding-left: 24px;
+}
+
+.report-body :deep(li) {
+  margin: 8px 0;
+  padding: 6px 12px 6px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  list-style: none;
+}
+
+.report-body :deep(ul li)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.report-body :deep(ol li) {
+  counter-increment: item;
+}
+
+.report-body :deep(ol) {
+  counter-reset: item;
+  list-style: none;
+  padding-left: 0;
+}
+
+.report-body :deep(ol li)::before {
+  content: counter(item);
+  position: absolute;
+  left: -4px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.report-body :deep(li:hover) {
+  background: rgba(102, 126, 234, 0.05);
+  transform: translateX(4px);
+}
+
+.report-body :deep(code) {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: #e06c75;
+  background: linear-gradient(135deg, #282c34, #21252b);
+  padding: 2px 8px;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #3a3f4b;
+}
+
+.report-body :deep(pre) {
+  margin: 16px 0;
+  padding: 18px 22px;
+  background: linear-gradient(145deg, #1e2230, #181b24);
+  border-radius: 12px;
+  overflow-x: auto;
+  border: 1px solid #2d3342;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.report-body :deep(pre code) {
+  background: none;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  color: #abb2bf;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.report-body :deep(blockquote) {
+  margin: 16px 0;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%);
+  border-left: 4px solid #667eea;
+  border-radius: 0 10px 10px 0;
+  color: #555;
+  font-style: italic;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.08);
+}
+
+.report-body :deep(blockquote p) {
+  margin: 4px 0;
+}
+
+.report-body :deep(hr) {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+  margin: 24px 0;
+}
+
+.report-body :deep(table) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 16px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.report-body :deep(th) {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: left;
+}
+
+.report-body :deep(td) {
+  padding: 11px 16px;
+  border-bottom: 1px solid #eef2ff;
+  font-size: 13.5px;
+}
+
+.report-body :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.report-body :deep(tr:nth-child(even) td) {
+  background: #f8faff;
+}
+
+.report-body :deep(tr:hover td) {
+  background: #eef2ff;
+}
+
+/* ==================== 优化建议区域 ==================== */
+.suggestions {
+  margin-top: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdf4 100%);
+  border-radius: 16px;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.suggestions::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.suggestions-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: #15803d;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.suggestions-header .el-icon {
+  color: #22c55e;
+}
+
+.suggestions-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.suggestion-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #dcfce7;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.suggestion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.12);
+  border-color: #86efac;
+}
+
+.suggestion-primary {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-color: #86efac;
+  border-width: 1.5px;
+}
+
+.suggestion-index {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+}
+
+.suggestion-text {
+  flex: 1;
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.65;
+}
+
+.star-icon {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ==================== 加载状态 ==================== */
+.analysis-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 20px;
+}
+
+.loading-icon {
+  color: #667eea;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.4));
+    transform: scale(1); 
+  }
+  50% { 
+    filter: drop-shadow(0 0 24px rgba(102, 126, 234, 0.7));
+    transform: scale(1.08); 
+  }
+}
+
+.analysis-loading p {
+  color: #64748b;
+  font-size: 15px;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* ==================== 报告底部 ==================== */
 .report-footer {
-  margin-top: 24px;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px dashed #e2e8f0;
   text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
-/* 响应式适配 */
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 1400px) {
+  .suggestions-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1200px) {
   .header-actions {
     flex-wrap: wrap;
     justify-content: flex-start;
     margin-top: 16px;
+  }
+
+  .analysis-dialog :deep(.el-dialog__body) {
+    padding: 24px 28px;
+  }
+
+  .ai-analysis-btn {
+    min-width: 300px;
+    padding: 16px 32px !important;
   }
 }
 
@@ -1236,6 +1777,23 @@ onUnmounted(() => {
   
   .stat-value {
     font-size: 24px;
+  }
+
+  .ai-analysis-btn {
+    min-width: 260px;
+    padding: 14px 24px !important;
+  }
+
+  .btn-text {
+    font-size: 17px;
+  }
+
+  .report-body :deep(h1) {
+    font-size: 19px;
+  }
+
+  .report-body :deep(h2) {
+    font-size: 16px;
   }
 }
 </style>

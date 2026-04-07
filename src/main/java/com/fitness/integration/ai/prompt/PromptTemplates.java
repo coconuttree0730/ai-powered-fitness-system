@@ -47,7 +47,7 @@ public class PromptTemplates {
         prompt.append("- weeklyPlan: **长度必须恰好为7的数组**，每个元素包含：\n");
         prompt.append("  * dayName: \"周一\"~\"周日\"，**仅此7个值，不可出现\"周一（次周）\"等额外天**\n");
         prompt.append("  * focus: 当天训练重点描述（如\"全身复合动作强化\"）\n");
-        prompt.append("  * courses: 课程数组，**每天1~3门课程**，从系统课程库中选择；休息日设为 null\n");
+        prompt.append("  * courses: 课程数组，**每天必须推荐2~3门课程**（训练日至少2门，最多3门不同课程组合，严禁只推荐1门）；休息日设为 null\n");
         prompt.append("    - 每门课程: { name, description, coverImage, duration, id }\n");
         prompt.append("    - name/coverImage 必须**一字不差**匹配课程库\n");
         prompt.append("  * equipment: 器械数组，从系统器械库中选择；休息日设为 []\n");
@@ -57,7 +57,7 @@ public class PromptTemplates {
         prompt.append("# ⚠️ 关键规则（违反任一条将导致输出无效）\n");
         prompt.append("1. 【强制】weeklyPlan.length === 7，不多不少，必须是 周一~周日 各一个元素\n");
         prompt.append("2. 【强制】休息日的 courses=null, equipment=[], exercises=[] —— 不允许有课程、器械、动作、tips\n");
-        prompt.append("3. 【强制】每天 courses 数量在1~3之间（训练日至少1门，最多3门不同课程组合）\n");
+        prompt.append("3. 【强制】每天 courses 数量必须在2~3之间（训练日至少2门不同课程，最多3门，**绝对禁止只返回1门课程**）\n");
         prompt.append("4. 【强制】course.name / course.coverImage 必须与系统课程库完全一致，禁止编造\n");
         prompt.append("5. 【强制】equipment.name / equipment.image 必须与系统器械库完全一致，禁止编造\n");
         //prompt.append("6. 【强制】不要输出 tips 字段，不要输出任何提示建议类字段\n");
