@@ -72,6 +72,12 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         return getCoachDetail(userId);
     }
 
+    /**
+     * 更新教练详情
+     *
+     * @param dto 教练详情DTO
+     * @return 教练详情VO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CoachDetailVO updateCoachDetail(CoachDetailDTO dto) {
@@ -85,20 +91,21 @@ public class CoachDetailServiceImpl implements CoachDetailService {
             validateUsername(dto.getUsername(), userId);
             updateUsername(userId, dto.getUsername());
         }
-
+        //获取教练详情
         CoachDetail detail = coachDetailMapper.selectByUserId(userId);
         if (detail == null) {
             // 首次更新，创建新记录
             detail = new CoachDetail();
             detail.setUserId(userId);
             setDetailFromDTO(detail, dto);
+            //教练档案到数据库
             coachDetailMapper.insert(detail);
         } else {
-            // 更新现有记录
+            // _更新_现有记录
             setDetailFromDTO(detail, dto);
             coachDetailMapper.updateById(detail);
         }
-
+        //更新完毕回显
         User user = userMapper.selectById(userId);
         return convertToVO(detail, user);
     }
@@ -421,7 +428,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
 
         vo.setId(detail.getUserId());
         vo.setName(detail.getUsername());
-        
+
         // 根据专业领域生成职称
         vo.setTitle(generateCoachTitle(detail));
 
@@ -517,7 +524,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
                 };
             }
         }
-        
+
         // 根据教学风格生成职称
         if (detail.getTeachingStyle() != null) {
             return switch (detail.getTeachingStyle()) {
@@ -529,14 +536,14 @@ public class CoachDetailServiceImpl implements CoachDetailService {
                 default -> "专业教练";
             };
         }
-        
+
         // 根据从业年限生成职称
         if (detail.getWorkYears() != null && detail.getWorkYears() >= 10) {
             return "高级私人教练";
         } else if (detail.getWorkYears() != null && detail.getWorkYears() >= 5) {
             return "资深健身教练";
         }
-        
+
         return "专业教练";
     }
 

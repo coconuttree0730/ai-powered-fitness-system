@@ -66,6 +66,7 @@ public class UserDetailsImpl implements UserDetails {
      */
     public static UserDetailsImpl build(User user, List<String> roles) {
         List<GrantedAuthority> authorities = roles.stream()
+                // 将角色列表转换为 SimpleGrantedAuthority 对象
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
 

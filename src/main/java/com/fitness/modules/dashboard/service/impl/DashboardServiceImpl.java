@@ -9,14 +9,20 @@ import com.fitness.modules.dashboard.model.enums.AnalysisType;
 import com.fitness.modules.dashboard.model.vo.AnalysisReportVO;
 import com.fitness.modules.dashboard.model.vo.CourseStatsVO;
 import com.fitness.modules.dashboard.model.vo.DashboardStatsVO;
+import com.fitness.modules.dashboard.model.vo.EquipmentStatusVO;
 import com.fitness.modules.dashboard.model.vo.MemberCardStatsVO;
 import com.fitness.modules.dashboard.model.vo.PeakHoursVO;
+import com.fitness.modules.dashboard.model.vo.RepairStatsVO;
+import com.fitness.modules.dashboard.model.vo.RevenueTrendVO;
+import com.fitness.modules.dashboard.model.vo.UserGrowthVO;
 import com.fitness.modules.dashboard.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +54,10 @@ public class DashboardServiceImpl implements DashboardService {
         stats.setTotalCourses(dashboardMapper.countTotalCourses());
         stats.setTotalBookings(dashboardMapper.countTotalBookings());
         stats.setTotalEquipment(dashboardMapper.countTotalEquipment());
+        stats.setTodayOrders(dashboardMapper.countTodayOrders());
+        
+        BigDecimal todayRevenue = dashboardMapper.sumTodayRevenue();
+        stats.setTodayRevenue(todayRevenue != null ? todayRevenue : BigDecimal.ZERO);
 
         return stats;
     }
@@ -55,8 +65,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public MemberCardStatsVO getMemberCardStats() {
         log.info("获取会员卡销量统计（模拟数据）");
-
-        // MVP阶段使用模拟数据
+        //TODO 当前还是 模拟数据，未开发
         MemberCardStatsVO stats = new MemberCardStatsVO();
         stats.setMonthCard(random.nextInt(51) + 50);   // 50-100
         stats.setQuarterCard(random.nextInt(31) + 30); // 30-60
@@ -84,22 +93,170 @@ public class DashboardServiceImpl implements DashboardService {
         try {
             // 解析分析类型
             AnalysisType type = AnalysisType.fromCode(analysisType);
-            
+
             // 收集运营数据
             Map<String, Object> variables = collectAnalysisData(type);
-            
+
             // 构建分析 Prompt
             String prompt = buildAnalysisPrompt(type, variables);
-            
+
             // 调用 AI 生成报告
             String aiResponse = aiService.chat(prompt);
-            
+
             // 解析 AI 返回结果
             return parseAIResponse(type, aiResponse);
         } catch (Exception e) {
             log.error("生成AI分析报告失败", e);
             throw new BusinessException(ErrorCode.ANALYSIS_ERROR);
         }
+    }
+
+    @Override
+    public List<RevenueTrendVO> getRevenueTrend(String range) {
+        log.info("获取营收趋势数据，时间范围: {}", range);
+        
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate;
+        String groupBy;
+        
+        switch (range) {
+            case "today":
+                startDate = endDate;
+                groupBy = "hour";
+                break;
+            case "week":
+                startDate = endDate.minusDays(6);
+                groupBy = "day";
+                break;
+            case "month":
+                startDate = endDate.minusDays(29);
+                groupBy = "day";
+                break;
+            case "year":
+                startDate = endDate.minusDays(364);
+                groupBy = "day";
+                break;
+            default:
+                startDate = endDate.minusDays(6);
+                groupBy = "day";
+        }
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<RevenueTrendVO> data = dashboardMapper.selectRevenueTrend(
+            startDate.format(formatter), 
+            endDate.format(formatter), 
+            groupBy
+        );
+        
+        // 如果是今日数据，需要填充没有数据的小时
+        if ("today".equals(range) && groupBy.equals("hour")) {
+            data = fillTodayRevenueHours(data);
+        }
+        
+        return data;
+    }
+
+    @Override
+    public List<UserGrowthVO> getUserGrowth(String range) {
+        log.info("获取用户增长趋势，时间范围: {}", range);
+        
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate;
+        
+        switch (range) {
+            case "today":
+                startDate = endDate;
+                break;
+            case "week":
+                startDate = endDate.minusDays(6);
+                break;
+            case "month":
+                startDate = endDate.minusDays(29);
+                break;
+            case "year":
+                startDate = endDate.minusDays(364);
+                break;
+            default:
+                startDate = endDate.minusDays(6);
+        }
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<UserGrowthVO> data = dashboardMapper.selectUserGrowth(
+            startDate.format(formatter), 
+            endDate.format(formatter)
+        );
+        
+        // 填充没有数据的日期
+        return fillMissingDates(data, startDate, endDate);
+    }
+
+    @Override
+    public EquipmentStatusVO getEquipmentStatus() {
+        log.info("获取器材使用状态统计");
+        
+        EquipmentStatusVO status = new EquipmentStatusVO();
+        status.setNormal(dashboardMapper.countNormalEquipment());
+        status.setMaintenance(dashboardMapper.countMaintenanceEquipment());
+        status.setRepair(dashboardMapper.countRepairEquipment());
+        status.setOffline(dashboardMapper.countOfflineEquipment());
+        
+        return status;
+    }
+
+    @Override
+    public List<RepairStatsVO> getRepairStats() {
+        log.info("获取报修处理统计");
+        return dashboardMapper.selectRepairStats();
+    }
+
+    /**
+     * 填充今日24小时的营收数据
+     */
+    private List<RevenueTrendVO> fillTodayRevenueHours(List<RevenueTrendVO> data) {
+        Map<String, RevenueTrendVO> dataMap = new HashMap<>();
+        for (RevenueTrendVO vo : data) {
+            dataMap.put(vo.getDate(), vo);
+        }
+        
+        List<RevenueTrendVO> filledData = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            String hour = String.format("%02d:00", i);
+            RevenueTrendVO vo = dataMap.get(hour);
+            if (vo == null) {
+                vo = new RevenueTrendVO();
+                vo.setDate(hour);
+                vo.setAmount(BigDecimal.ZERO);
+            }
+            filledData.add(vo);
+        }
+        return filledData;
+    }
+
+    /**
+     * 填充缺失的日期数据
+     */
+    private List<UserGrowthVO> fillMissingDates(List<UserGrowthVO> data, LocalDate startDate, LocalDate endDate) {
+        Map<String, UserGrowthVO> dataMap = new HashMap<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
+        
+        for (UserGrowthVO vo : data) {
+            dataMap.put(vo.getDate(), vo);
+        }
+        
+        List<UserGrowthVO> filledData = new ArrayList<>();
+        LocalDate current = startDate;
+        while (!current.isAfter(endDate)) {
+            String dateStr = current.format(formatter);
+            UserGrowthVO vo = dataMap.get(dateStr);
+            if (vo == null) {
+                vo = new UserGrowthVO();
+                vo.setDate(dateStr);
+                vo.setCount(0);
+            }
+            filledData.add(vo);
+            current = current.plusDays(1);
+        }
+        return filledData;
     }
 
     /**
@@ -162,13 +319,13 @@ public class DashboardServiceImpl implements DashboardService {
      */
     private AnalysisReportVO parseAIResponse(AnalysisType type, String aiResponse) {
         List<String> suggestions = extractSuggestions(aiResponse);
-        
+
         return AnalysisReportVO.builder()
                 .analysisType(type.getCode())
                 .reportTitle(type.getDescription() + "报告")
                 .reportContent(aiResponse)
                 .suggestions(suggestions)
-                .generateTime(LocalDateTime.now())
+                .generateTime(java.time.LocalDateTime.now())
                 .build();
     }
 
@@ -177,23 +334,23 @@ public class DashboardServiceImpl implements DashboardService {
      */
     private List<String> extractSuggestions(String content) {
         List<String> suggestions = new ArrayList<>();
-        
+
         // 尝试匹配建议相关的行
         Pattern pattern = Pattern.compile("(?:建议|建议：|\\d+\\.\\s*建议)[：:]?\\s*(.+)");
         Matcher matcher = pattern.matcher(content);
-        
+
         while (matcher.find()) {
             String suggestion = matcher.group(1).trim();
             if (!suggestion.isEmpty()) {
                 suggestions.add(suggestion);
             }
         }
-        
+
         // 如果没有提取到建议，返回默认提示
         if (suggestions.isEmpty()) {
             suggestions.add("请参考报告内容中的建议部分");
         }
-        
+
         return suggestions;
     }
 
@@ -204,7 +361,7 @@ public class DashboardServiceImpl implements DashboardService {
         if (peakHours == null || peakHours.isEmpty()) {
             return "暂无数据";
         }
-        
+
         StringBuilder sb = new StringBuilder();
         for (PeakHoursVO vo : peakHours) {
             sb.append(String.format("- %d点: %d人次\n", vo.getHour(), vo.getCount()));
@@ -219,10 +376,10 @@ public class DashboardServiceImpl implements DashboardService {
         if (courseStats == null || courseStats.isEmpty()) {
             return "暂无数据";
         }
-        
+
         StringBuilder sb = new StringBuilder();
         for (CourseStatsVO vo : courseStats) {
-            sb.append(String.format("- %s: 课程数%d, 预约数%d\n", 
+            sb.append(String.format("- %s: 课程数%d, 预约数%d\n",
                     vo.getCategoryName(), vo.getCourseCount(), vo.getBookingCount()));
         }
         return sb.toString();

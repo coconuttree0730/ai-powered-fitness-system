@@ -36,7 +36,7 @@ public class CoachDetailController {
     }
 
     /**
-     * 获取指定教练的详情
+     * 获取__指定id__教练的详情
      *
      * @param id 教练ID
      * @return 教练详情

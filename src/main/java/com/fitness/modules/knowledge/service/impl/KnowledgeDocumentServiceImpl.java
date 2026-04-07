@@ -77,14 +77,14 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     @Transactional(rollbackFor = Exception.class)
     public Long uploadDocument(MultipartFile file, String title) {
         log.info("【文档上传】开始上传文档，文件名: {}, 标题: {}", file.getOriginalFilename(), title);
-        
+
         validateFile(file);
 
         String originalFilename = file.getOriginalFilename();
         String fileType = getFileExtension(originalFilename);
 
         log.info("【文档上传】文件验证通过，文件类型: {}", fileType);
-        
+
         var fileUploadVO = fileService.uploadFile(file, "knowledge");
         log.info("【文档上传】文件上传至MinIO成功，URL: {}", fileUploadVO.getFileUrl());
 
@@ -129,7 +129,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     @Transactional(rollbackFor = Exception.class)
     public void publish(Long id) {
         log.info("【文档发布】开始发布文档，文档ID: {}", id);
-        
+
         KnowledgeDocument document = getEntityById(id);
 
         if (StrUtil.isBlank(document.getFileUrl())) {
@@ -154,7 +154,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     @Transactional(rollbackFor = Exception.class)
     public void reindex(Long id) {
         log.info("【文档索引】开始重建文档索引，文档ID: {}", id);
-        
+
         KnowledgeDocument document = getEntityById(id);
 
         chunkService.deleteByDocumentId(id);
@@ -173,14 +173,15 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         }
 
         log.info("【文档索引】开始文档切片，文档ID: {}, 内容长度: {} 字符", id, content.length());
+        // 生成切片
         List<KnowledgeChunk> chunks = documentProcessorService.chunkDocument(document, content);
         log.info("【文档索引】文档切片完成，共生成 {} 个切片", chunks.size());
 
         // 打印切片内容日志
         for (int i = 0; i < chunks.size(); i++) {
             KnowledgeChunk chunk = chunks.get(i);
-            log.info("【文档索引】切片 #{} - 长度: {} 字符，内容预览: {}", 
-                i, 
+            log.info("【文档索引】切片 #{} - 长度: {} 字符，内容预览: {}",
+                i,
                 chunk.getContent().length(),
                 chunk.getContent().substring(0, Math.min(100, chunk.getContent().length())) + "..."
             );
@@ -190,10 +191,10 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         for (int i = 0; i < chunks.size(); i++) {
             KnowledgeChunk chunk = chunks.get(i);
             log.info("【文档索引】正在处理切片 #{}/{} 的向量化", i + 1, chunks.size());
-            
+
             float[] embedding = embeddingService.embed(chunk.getContent());
             chunk.setEmbedding(embedding);
-            
+
             log.info("【文档索引】切片 #{} 向量化完成，向量维度: {}", i, embedding.length);
         }
 

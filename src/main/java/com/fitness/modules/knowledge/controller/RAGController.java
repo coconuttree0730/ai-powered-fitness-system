@@ -15,11 +15,23 @@ public class RAGController {
 
     private final RAGService ragService;
 
+    /**
+     * RAG搜索接口 向量匹配
+     *
+     * @param queryDTO 查询参数
+     * @return 搜索结果
+     */
     @PostMapping("/search")
     public Result<RAGSearchResultVO> search(@Valid @RequestBody RAGQueryDTO queryDTO) {
         return Result.success(ragService.search(queryDTO));
     }
 
+    /**
+     * RAG搜索接口 混合匹配
+     * @param query 查询参数
+     * @param categoryId 分类ID
+     * @return 搜索结果
+     */
     @PostMapping("/chat")
     public Result<String> chat(
             @RequestParam("query") String query,

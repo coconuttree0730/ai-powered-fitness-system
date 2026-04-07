@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 用户控制器
+ * 用户控制器 （会员端：个人信息）
  * 处理用户信息相关接口
  */
 @Slf4j

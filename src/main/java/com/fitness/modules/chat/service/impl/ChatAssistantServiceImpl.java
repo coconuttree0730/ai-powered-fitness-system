@@ -71,6 +71,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     @Override
     @Transactional
     public ChatSessionVO createSession(Long userId) {
+
         ChatSession session = new ChatSession();
         session.setUserId(userId);
         session.setTitle("新对话");
@@ -849,7 +850,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
             dayPlan.setDayName(dayNames[i]);
 
             List<FitnessPlanDetail> dayDetails = groupedByDay.getOrDefault(i, new ArrayList<>());
-            
+
             // 获取第一条记录的信息
             if (!dayDetails.isEmpty()) {
                 FitnessPlanDetail firstDetail = dayDetails.get(0);

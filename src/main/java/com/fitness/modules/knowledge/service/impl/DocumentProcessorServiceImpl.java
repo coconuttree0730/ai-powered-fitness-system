@@ -40,13 +40,20 @@ public class DocumentProcessorServiceImpl implements DocumentProcessorService {
     // 列表项正则
     private static final Pattern LIST_ITEM_PATTERN = Pattern.compile("^([\\s]*[-*+]|\\d+\\.)\\s+(.+)$", Pattern.MULTILINE);
 
+    /**
+     * 解析文件并返回内容
+     *
+     * @param fileUrl 文件URL
+     * @param fileType 文件类型
+     * @return 文件内容
+     */
     @Override
     public String parseFile(String fileUrl, String fileType) {
         if (StrUtil.isBlank(fileUrl)) {
             return "";
         }
-
         try {
+            //获取文件内容
             String content = HttpRequest.get(fileUrl)
                     .timeout(30000)
                     .execute()

@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 @Data
 @TableName("product_order")
 public class ProductOrder {
-    
+
     @TableId(type = IdType.AUTO)
     private Long id;
-    
+
     private String orderNo;
     private Long userId;
     private Long productId;
@@ -30,10 +30,11 @@ public class ProductOrder {
     private String carrier;
     private String address;
     private String remark;
-    
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
-    
+
+    //mybatis plus 配置填充
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 }

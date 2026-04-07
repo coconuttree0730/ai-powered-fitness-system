@@ -24,7 +24,7 @@ public class AnnouncementController {
     private final AnnouncementService announcementService;
 
     /**
-     * 获取所有已发布的公告（公开接口，供首页使用）
+     * 获取所有————已发布————的公告（公开接口，供首页使用）
      *
      * @return 公告列表
      */

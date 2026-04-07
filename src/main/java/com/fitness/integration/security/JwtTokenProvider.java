@@ -65,7 +65,7 @@ public class JwtTokenProvider {
         claims.put(CLAIM_ROLES, userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
-
+        //创建token
         return Jwts.builder()
                 .claims(claims)
                 .subject(userDetails.getUsername())

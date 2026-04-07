@@ -2,8 +2,13 @@ package com.fitness.modules.dashboard.mapper;
 
 import com.fitness.modules.dashboard.model.vo.CourseStatsVO;
 import com.fitness.modules.dashboard.model.vo.PeakHoursVO;
+import com.fitness.modules.dashboard.model.vo.RepairStatsVO;
+import com.fitness.modules.dashboard.model.vo.RevenueTrendVO;
+import com.fitness.modules.dashboard.model.vo.UserGrowthVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -76,4 +81,61 @@ public interface DashboardMapper {
      * @return 维修中器材数量
      */
     Integer countMaintenanceEquipment();
+
+    /**
+     * 统计今日订单数
+     *
+     * @return 今日订单数量
+     */
+    Integer countTodayOrders();
+
+    /**
+     * 统计今日营收
+     *
+     * @return 今日营收金额
+     */
+    BigDecimal sumTodayRevenue();
+
+    /**
+     * 查询营收趋势数据
+     *
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param groupBy 分组方式：day-按天，hour-按小时
+     * @return 营收趋势数据列表
+     */
+    List<RevenueTrendVO> selectRevenueTrend(@Param("startDate") String startDate,
+                                             @Param("endDate") String endDate,
+                                             @Param("groupBy") String groupBy);
+
+    /**
+     * 查询用户增长趋势
+     *
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 用户增长数据列表
+     */
+    List<UserGrowthVO> selectUserGrowth(@Param("startDate") String startDate,
+                                        @Param("endDate") String endDate);
+
+    /**
+     * 统计待维修器材数量（维修中状态）
+     *
+     * @return 待维修器材数量
+     */
+    Integer countRepairEquipment();
+
+    /**
+     * 统计已停用/报废器材数量
+     *
+     * @return 已停用器材数量
+     */
+    Integer countOfflineEquipment();
+
+    /**
+     * 查询报修处理统计
+     *
+     * @return 报修统计列表
+     */
+    List<RepairStatsVO> selectRepairStats();
 }

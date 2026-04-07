@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/src/main/java/com/fitness/modules/announcement/mapper/AnnouncementMapper.java" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/fitness/modules/banner/mapper/BannerMapper.java" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/fitness/modules/booking/mapper/BookingMapper.java" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/fitness/modules/user/mapper/CoachDetailMapper.java" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/fitness/modules/user/mapper/RoleMapper.java" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/fitness/modules/user/mapper/UserMapper.java" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1__init_schema.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V2__init_data.sql" dialect="PostgreSQL" />
@@ -9,5 +14,7 @@
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__init_course_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__add_equipment_type.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/mapper/course/CourseMapper.xml" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/mapper/dashboard/DashboardMapper.xml" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/mapper/knowledge/KnowledgeChunkMapper.xml" dialect="PostgreSQL" />
   </component>
 </project>

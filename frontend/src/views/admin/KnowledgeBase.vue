@@ -111,8 +111,15 @@
             >
               <el-icon><Close /></el-icon>设为草稿
             </el-button>
-            <el-button type="warning" link @click="handleReindex(row)">
-              <el-icon><Refresh /></el-icon>重建索引
+            <el-button
+              type="warning"
+              link
+              :loading="row.reindexing"
+              :disabled="row.reindexing"
+              @click="handleReindex(row)"
+            >
+              <el-icon v-if="!row.reindexing"><Refresh /></el-icon>
+              {{ row.reindexing ? '重建中...' : '重建索引' }}
             </el-button>
             <el-button type="danger" link @click="handleDelete(row)">
               <el-icon><Delete /></el-icon>删除
@@ -382,12 +389,17 @@ function handleDelete(row) {
 
 // 重建索引
 async function handleReindex(row) {
+  if (row.reindexing) return
+
+  row.reindexing = true
   try {
     await reindexKnowledgeDocument(row.id)
     ElMessage.success('重建索引成功')
     fetchDocuments()
   } catch (error) {
     ElMessage.error('重建索引失败')
+  } finally {
+    row.reindexing = false
   }
 }
 

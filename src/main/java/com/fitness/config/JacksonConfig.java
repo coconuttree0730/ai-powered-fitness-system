@@ -42,6 +42,8 @@ public class JacksonConfig {
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATETIME_PATTERN)));
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATETIME_PATTERN)));
 
+
+        //注册配置的序列化器
         objectMapper.registerModule(javaTimeModule);
 
         // 禁用将日期写为时间戳

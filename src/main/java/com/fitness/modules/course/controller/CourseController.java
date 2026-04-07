@@ -13,7 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 课程查询控制器（公开接口）
+ * 课程查询控制器（公开接口）：首页展示接口
  */
 @Slf4j
 @RestController
@@ -45,7 +45,7 @@ public class CourseController {
     @GetMapping("/list")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
     public Result<Page<CourseVO>> getCourseList(CourseQueryDTO query) {
-        log.info("获取课程列表请求: category={}, keyword={}, courseName={}, coachId={}, startDate={}, endDate={}", 
+        log.info("获取课程列表请求: category={}, keyword={}, courseName={}, coachId={}, startDate={}, endDate={}",
                 query.getCategory(), query.getKeyword(), query.getCourseName(), query.getCoachId(), query.getStartDate(), query.getEndDate());
         Page<CourseVO> page = courseService.getCourseList(query);
         return Result.success(page);

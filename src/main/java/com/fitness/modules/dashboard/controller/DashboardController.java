@@ -5,8 +5,12 @@ import com.fitness.modules.dashboard.model.dto.AnalysisRequestDTO;
 import com.fitness.modules.dashboard.model.vo.AnalysisReportVO;
 import com.fitness.modules.dashboard.model.vo.CourseStatsVO;
 import com.fitness.modules.dashboard.model.vo.DashboardStatsVO;
+import com.fitness.modules.dashboard.model.vo.EquipmentStatusVO;
 import com.fitness.modules.dashboard.model.vo.MemberCardStatsVO;
 import com.fitness.modules.dashboard.model.vo.PeakHoursVO;
+import com.fitness.modules.dashboard.model.vo.RepairStatsVO;
+import com.fitness.modules.dashboard.model.vo.RevenueTrendVO;
+import com.fitness.modules.dashboard.model.vo.UserGrowthVO;
 import com.fitness.modules.dashboard.service.DashboardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -82,6 +87,62 @@ public class DashboardController {
         log.info("获取课程统计");
         List<CourseStatsVO> courseStats = dashboardService.getCourseStats();
         return Result.success(courseStats);
+    }
+
+    /**
+     * 获取营收趋势数据
+     *
+     * @param range 时间范围：today/week/month/year
+     * @return 营收趋势数据
+     */
+    @GetMapping("/revenue-trend")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<List<RevenueTrendVO>> getRevenueTrend(
+            @RequestParam(defaultValue = "week") String range) {
+        log.info("获取营收趋势数据，时间范围: {}", range);
+        List<RevenueTrendVO> data = dashboardService.getRevenueTrend(range);
+        return Result.success(data);
+    }
+
+    /**
+     * 获取用户增长趋势
+     *
+     * @param range 时间范围：today/week/month/year
+     * @return 用户增长数据
+     */
+    @GetMapping("/user-growth")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<List<UserGrowthVO>> getUserGrowth(
+            @RequestParam(defaultValue = "week") String range) {
+        log.info("获取用户增长趋势，时间范围: {}", range);
+        List<UserGrowthVO> data = dashboardService.getUserGrowth(range);
+        return Result.success(data);
+    }
+
+    /**
+     * 获取器材使用状态统计
+     *
+     * @return 器材状态数据
+     */
+    @GetMapping("/equipment-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<EquipmentStatusVO> getEquipmentStatus() {
+        log.info("获取器材使用状态统计");
+        EquipmentStatusVO status = dashboardService.getEquipmentStatus();
+        return Result.success(status);
+    }
+
+    /**
+     * 获取报修处理统计
+     *
+     * @return 报修统计数据
+     */
+    @GetMapping("/repair-stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<List<RepairStatsVO>> getRepairStats() {
+        log.info("获取报修处理统计");
+        List<RepairStatsVO> stats = dashboardService.getRepairStats();
+        return Result.success(stats);
     }
 
     /**

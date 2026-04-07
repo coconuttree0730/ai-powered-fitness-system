@@ -23,11 +23,19 @@ public class KnowledgeCategoryServiceImpl implements KnowledgeCategoryService {
 
     private final KnowledgeCategoryMapper categoryMapper;
 
+    /**
+     * 获取所有分类
+     *
+     * @return 分类列表
+     */
     @Override
     public List<KnowledgeCategoryVO> listAll() {
+
         LambdaQueryWrapper<KnowledgeCategory> wrapper = new LambdaQueryWrapper<>();
+
         wrapper.eq(KnowledgeCategory::getDeleted, false)
                .orderByAsc(KnowledgeCategory::getSortOrder);
+
         return categoryMapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());

@@ -62,6 +62,7 @@ public class SmsCodeServiceImpl implements SmsCodeService {
         incrementDailyCount(phone);
 
         // 7. 模拟发送短信（后续接入真实短信服务）
+        //TODO 模拟发送短信: 后续接入 短信服务进行短信发送
         log.info("短信验证码发送成功: phone={}, code={}", phone, code);
 
         return true;

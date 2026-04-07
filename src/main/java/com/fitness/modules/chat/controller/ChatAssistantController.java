@@ -47,6 +47,7 @@ public class ChatAssistantController {
         if (userId == null) {
             return Flux.error(new org.springframework.security.access.AccessDeniedException("未登录或登录已过期"));
         }
+        //编程式鉴权
         if (!SecurityUtils.hasRole("MEMBER")) {
             return Flux.error(new org.springframework.security.access.AccessDeniedException("没有权限访问该资源"));
         }
@@ -61,6 +62,12 @@ public class ChatAssistantController {
         return Result.success(sessions);
     }
 
+    /**
+     * 获取会话详情
+     *
+     * @param sessionId 会话ID
+     * @return 会话详情
+     */
     @GetMapping("/sessions/{sessionId}")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<ChatSessionVO> getSessionDetail(@PathVariable Long sessionId) {

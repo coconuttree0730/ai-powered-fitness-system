@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Spring Security 配置类
+ * Spring Security 配置类 *******
  * 配置安全过滤链、密码编码器、认证管理器等
  */
 @Configuration
@@ -48,7 +48,7 @@ public class SecurityConfig {
     private final CustomAuthorizationDeniedHandler authorizationDeniedHandler;
 
     /**
-     * 白名单URL路径 ******* 全局用户可用
+     * 白名单URL路径 ******* 首页公开内容 无拦截
      */
     private static final String[] WHITE_LIST_URLS = {
             // 认证相关
@@ -131,7 +131,7 @@ public class SecurityConfig {
     }
 
     /**
-     * 配置密码编码器
+     * 配置密码编码器***
      *
      * @return BCryptPasswordEncoder
      */
@@ -141,7 +141,7 @@ public class SecurityConfig {
     }
 
     /**
-     * 配置认证提供者
+     * 配置认证提供者 ***
      *
      * @return DaoAuthenticationProvider
      */

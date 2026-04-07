@@ -13,6 +13,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 知识文档控制器
+ */
+
 @RestController
 @RequestMapping("/api/v1/knowledge/documents")
 @RequiredArgsConstructor
@@ -20,18 +24,27 @@ public class KnowledgeDocumentController {
 
     private final KnowledgeDocumentService documentService;
 
+    /**
+     * 分页查询
+     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Page<KnowledgeDocumentVO>> page(KnowledgeDocumentQueryDTO queryDTO) {
         return Result.success(documentService.page(queryDTO));
     }
 
+    /**
+     * 获取详情
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<KnowledgeDocumentDetailVO> getDetail(@PathVariable Long id) {
         return Result.success(documentService.getDetailById(id));
     }
 
+    /**
+     * 创建 知识库文档
+     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Long> create(@Valid @RequestBody KnowledgeDocumentDTO dto) {
@@ -61,6 +74,9 @@ public class KnowledgeDocumentController {
         return Result.success();
     }
 
+    /**
+     * 发布
+     */
     @PatchMapping("/{id}/publish")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> publish(@PathVariable Long id) {
@@ -68,6 +84,9 @@ public class KnowledgeDocumentController {
         return Result.success();
     }
 
+    /**
+     * 归档
+     */
     @PatchMapping("/{id}/archive")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> archive(@PathVariable Long id) {
@@ -75,6 +94,9 @@ public class KnowledgeDocumentController {
         return Result.success();
     }
 
+    /**
+     * 重建索引
+     */
     @PostMapping("/{id}/reindex")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> reindex(@PathVariable Long id) {

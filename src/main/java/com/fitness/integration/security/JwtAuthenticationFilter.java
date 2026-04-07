@@ -31,8 +31,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    // JWT Token提供者
     private final JwtTokenProvider jwtTokenProvider;
+    // 用户详情服务实现
     private final UserDetailsServiceImpl userDetailsService;
+    // JSON工具
     private final ObjectMapper objectMapper;
 
     /**
@@ -46,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     /**
-     * 拦截所有请求，进行JWT认证
+     * 拦截所有请求，进行JWT认证 前置过滤器！！！
      *
      * @param request     HTTP请求
      * @param response    HTTP响应
@@ -74,10 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                         // 5. 创建认证对象
                         UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities()
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()
                                 );
                         // 7. 设置认证对象
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

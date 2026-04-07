@@ -26,7 +26,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserMapper userMapper;
 
     /**
-     * 根据【 用户名 】加载用户详情
+     * 根据【 用户名 】加载用户详情 **** 自定义的的 UserDetails 实现类 ，数据源：PostgreSQL数据
      *
      * @param username 用户名
      * @return UserDetails 对象
@@ -53,7 +53,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // 查询用户角色
         List<String> roles = userMapper.selectRoleCodesByUserId(user.getId());
         if (roles.isEmpty()) {
-            // 如果没有角色，默认赋予普通用户角色
+            // 如果没有角色，默认赋予普通用户角色 ***
             roles = List.of("USER");
         }
 

@@ -29,9 +29,11 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     @Override
     public List<AnnouncementVO> getPublishedAnnouncements() {
         LambdaQueryWrapper<Announcement> wrapper = new LambdaQueryWrapper<>();
+        //条件匹配
         wrapper.eq(Announcement::getStatus, 1)
                .eq(Announcement::getDeleted, false)
                .orderByDesc(Announcement::getPublishTime);
+        //获取公告列表
         List<Announcement> announcements = announcementMapper.selectList(wrapper);
         return announcements.stream()
                 .map(this::convertToVO)
@@ -107,6 +109,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteAnnouncements(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
+            //不存在直接返回
             return;
         }
         announcementMapper.deleteByIds(ids);

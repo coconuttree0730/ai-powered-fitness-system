@@ -18,6 +18,7 @@ import com.fitness.modules.user.model.dto.UserUpdateDTO;
 import com.fitness.modules.user.model.entity.Role;
 import com.fitness.modules.user.model.entity.User;
 import com.fitness.modules.user.model.vo.UserVO;
+import com.fitness.modules.user.model.vo.CoachVO;
 import com.fitness.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -121,6 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("roles", roleCodes);
+        //生成jwt -  token
         String token = jwtUtils.generateToken(user.getUsername(), claims);
 
         // 构建返回结果
@@ -356,7 +358,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public List<com.fitness.modules.user.model.vo.CoachVO> getCoachList() {
+    public List<CoachVO> getCoachList() {
         return userMapper.selectCoachList();
     }
 
