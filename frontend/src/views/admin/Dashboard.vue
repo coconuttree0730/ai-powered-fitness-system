@@ -14,10 +14,10 @@
           <el-radio-button label="month">本月</el-radio-button>
           <el-radio-button label="year">全年</el-radio-button>
         </el-radio-group>
-        <el-button 
-          type="primary" 
-          size="small" 
-          :icon="Refresh" 
+        <el-button
+          type="primary"
+          size="small"
+          :icon="Refresh"
           :loading="refreshLoading"
           @click="refreshAllData"
           class="refresh-btn"
@@ -67,8 +67,8 @@
     <el-row :gutter="20" class="chart-row ai-analysis-row">
       <el-col :span="24">
         <div class="ai-analysis-bar">
-          <el-button 
-            type="primary" 
+          <el-button
+            type="primary"
             :icon="MagicStick"
             :loading="analysisLoading"
             @click="handleAnalysis"
@@ -188,10 +188,10 @@
       </el-col>
     </el-row>
 
-    <!-- AI分析报告对话框 -->
-    <el-dialog 
-      v-model="analysisVisible" 
-      title="AI智能分析报告" 
+    <!-- AI分析报告对话框！！！！！ -->
+    <el-dialog
+      v-model="analysisVisible"
+      title="AI智能分析报告"
       width="1200px"
       class="analysis-dialog"
       destroy-on-close
@@ -214,11 +214,7 @@
             <el-icon size="18"><Opportunity /></el-icon>
             <span>优化建议</span>
           </div>
-          <ol class="suggestions-list">
-            <li v-for="(suggestion, index) in analysisReport.suggestions" :key="index">
-              {{ suggestion }}
-            </li>
-          </ol>
+          <div class="suggestions-content" v-html="renderedSuggestions"></div>
         </div>
         <div class="report-footer">
           <el-text type="info" size="small">
@@ -294,10 +290,23 @@ const repairStatsData = ref([])
 // 定时器
 let refreshTimer = null
 
-// Markdown 渲染内容
+// Markdown 渲染报告内容
 const renderedContent = computed(() => {
   if (!analysisReport.value?.reportContent) return ''
   const raw = analysisReport.value.reportContent
+  const html = marked.parse(raw, {
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false
+  })
+  return DOMPurify.sanitize(html)
+})
+
+// Markdown 渲染优化建议
+const renderedSuggestions = computed(() => {
+  if (!analysisReport.value?.suggestions?.length) return ''
+  const raw = analysisReport.value.suggestions.join('\n\n')
   const html = marked.parse(raw, {
     breaks: true,
     gfm: true,
@@ -375,7 +384,7 @@ const stats = computed(() => [
 const revenueOption = computed(() => {
   const data = revenueData.value || []
   const isLine = revenueChartType.value === 'line'
-  
+
   return {
     tooltip: {
       trigger: 'axis',
@@ -435,7 +444,7 @@ const memberCardOption = computed(() => {
     { value: data.quarterCard || 0, name: '季卡', itemStyle: { color: '#52c41a' } },
     { value: data.yearCard || 0, name: '年卡', itemStyle: { color: '#faad14' } }
   ]
-  
+
   return {
     tooltip: {
       trigger: 'item',
@@ -483,7 +492,7 @@ const memberCardOption = computed(() => {
 // 到店高峰时段图表配置
 const peakHoursOption = computed(() => {
   const data = peakHoursData.value || []
-  
+
   return {
     tooltip: {
       trigger: 'axis',
@@ -531,7 +540,7 @@ const peakHoursOption = computed(() => {
 // 课程统计图表配置
 const courseStatsOption = computed(() => {
   const data = courseStatsData.value || []
-  
+
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
     legend: {
@@ -612,7 +621,7 @@ const courseStatsOption = computed(() => {
 // 用户增长趋势图表配置
 const userGrowthOption = computed(() => {
   const data = userGrowthData.value || []
-  
+
   return {
     tooltip: {
       trigger: 'axis',
@@ -656,7 +665,7 @@ const userGrowthOption = computed(() => {
 // 器材使用状态图表配置
 const equipmentStatusOption = computed(() => {
   const data = equipmentStatusData.value || {}
-  
+
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: {
@@ -688,7 +697,7 @@ const equipmentStatusOption = computed(() => {
 // 报修处理统计图表配置
 const repairStatsOption = computed(() => {
   const data = repairStatsData.value || []
-  
+
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
@@ -1535,18 +1544,67 @@ onUnmounted(() => {
   color: #22c55e;
 }
 
-.suggestions-list {
-  margin: 0;
-  padding-left: 20px;
-  list-style-type: decimal;
+.suggestions-content {
+  line-height: 1.8;
+  color: #374151;
+  font-size: 14px;
 }
 
-.suggestions-list li {
+.suggestions-content :deep(h1),
+.suggestions-content :deep(h2),
+.suggestions-content :deep(h3),
+.suggestions-content :deep(h4) {
+  margin-top: 16px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.suggestions-content :deep(h1) {
+  font-size: 18px;
+  border-left: 4px solid #22c55e;
+  padding-left: 12px;
+}
+
+.suggestions-content :deep(h2) {
+  font-size: 16px;
+  border-left: 3px solid #4ade80;
+  padding-left: 10px;
+}
+
+.suggestions-content :deep(h3) {
+  font-size: 15px;
+  color: #334155;
+}
+
+.suggestions-content :deep(p) {
   margin: 8px 0;
-  padding: 2px 0;
-  font-size: 14px;
-  color: #374151;
+  line-height: 1.8;
+}
+
+.suggestions-content :deep(strong),
+.suggestions-content :deep(b) {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.suggestions-content :deep(ul),
+.suggestions-content :deep(ol) {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.suggestions-content :deep(li) {
+  margin: 6px 0;
   line-height: 1.7;
+}
+
+.suggestions-content :deep(ul li) {
+  list-style-type: disc;
+}
+
+.suggestions-content :deep(ol li) {
+  list-style-type: decimal;
 }
 
 /* ==================== 加载状态 ==================== */
@@ -1565,13 +1623,13 @@ onUnmounted(() => {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { 
+  0%, 100% {
     filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.4));
-    transform: scale(1); 
+    transform: scale(1);
   }
-  50% { 
+  50% {
     filter: drop-shadow(0 0 24px rgba(102, 126, 234, 0.7));
-    transform: scale(1.08); 
+    transform: scale(1.08);
   }
 }
 
@@ -1617,12 +1675,12 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .header-actions {
     width: 100%;
     margin-top: 16px;
   }
-  
+
   .stat-value {
     font-size: 24px;
   }

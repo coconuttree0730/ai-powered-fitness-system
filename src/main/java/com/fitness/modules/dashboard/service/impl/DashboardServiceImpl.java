@@ -374,26 +374,62 @@ public class DashboardServiceImpl implements DashboardService {
 
     /**
      * 从 AI 响应中提取建议列表
+     * 提取 "### 5. 运营综合建议" 或类似章节后的内容
      */
     private List<String> extractSuggestions(String content) {
         List<String> suggestions = new ArrayList<>();
 
-        // 尝试匹配建议相关的行
-        Pattern pattern = Pattern.compile("(?:建议|建议：|\\d+\\.\\s*建议)[：:]?\\s*(.+)");
-        Matcher matcher = pattern.matcher(content);
+        // 尝试匹配 "运营综合建议" 或 "优化建议" 章节后的内容
+        // 匹配模式：从 "### 5. 运营综合建议" 或 "## 5. 运营综合建议" 开始，到下一个 ## 标题或文档结束
+        Pattern sectionPattern = Pattern.compile(
+            "(?:#{1,3}\\s*(?:5\\.\\s*)?(?:运营综合建议|优化建议|改进措施|建议).*?)(?:\\r?\\n)(.*?)(?=(?:\\r?\\n#{1,3}\\s*\\d+\\.|\\z))",
+            Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+        );
+        Matcher sectionMatcher = sectionPattern.matcher(content);
 
-        while (matcher.find()) {
-            String suggestion = matcher.group(1).trim();
-            if (!suggestion.isEmpty()) {
-                suggestions.add(suggestion);
+        if (sectionMatcher.find()) {
+            String suggestionsSection = sectionMatcher.group(1).trim();
+
+            // 从建议章节中提取具体的建议项
+            // 匹配模式：以数字或 - 开头的列表项
+            Pattern itemPattern = Pattern.compile(
+                "(?:^|\\n)\\s*(?:\\d+[.、]\\s*|-\\s*|•\\s*)([^\\n]+)"
+            );
+            Matcher itemMatcher = itemPattern.matcher(suggestionsSection);
+
+            while (itemMatcher.find()) {
+                String suggestion = itemMatcher.group(1).trim();
+                // 过滤掉标题行（如 "短期改进措施"、"中期优化计划" 等）
+                if (!suggestion.isEmpty() &&
+                    !suggestion.matches(".*?(?:短期|中期|长期|措施|计划|战略).*?") &&
+                    suggestion.length() > 10) {
+                    suggestions.add(suggestion);
+                }
             }
         }
 
-        // 如果没有提取到建议，返回默认提示
+        // 如果没有提取到建议，尝试备用方案：提取所有包含 "建议" 关键词的段落
+        if (suggestions.isEmpty()) {
+            Pattern fallbackPattern = Pattern.compile(
+                "(?:^|\\n)\\s*(?:\\d+[.、]\\s*|•\\s*|-\\s*)([^\\n]{10,200})"
+            );
+            Matcher fallbackMatcher = fallbackPattern.matcher(content);
+            int count = 0;
+            while (fallbackMatcher.find() && count < 8) {
+                String suggestion = fallbackMatcher.group(1).trim();
+                if (!suggestion.isEmpty()) {
+                    suggestions.add(suggestion);
+                    count++;
+                }
+            }
+        }
+
+        // 如果还是没有提取到，返回默认提示
         if (suggestions.isEmpty()) {
             suggestions.add("请参考报告内容中的建议部分");
         }
 
+        log.info("提取到 {} 条建议", suggestions.size());
         return suggestions;
     }
 

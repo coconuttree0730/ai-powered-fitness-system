@@ -1,42 +1,54 @@
 <template>
   <div class="bookings-page">
-    <!-- 预约统计卡片 -->
+    <!-- 预约统计卡片 - 使用 Naive UI 组件 -->
     <n-grid :cols="4" :x-gap="16" class="stats-grid">
       <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #FF6B35, #FF8C61);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.total }}</div>
-            <div class="stat-label">总预约</div>
-          </div>
-        </div>
+        <n-card class="stat-card" :bordered="false" size="small">
+          <n-statistic :value="stats.total">
+            <template #prefix>
+              <n-icon :component="CalendarOutline" class="stat-icon stat-icon-total" />
+            </template>
+            <template #label>
+              <span class="stat-label">总预约</span>
+            </template>
+          </n-statistic>
+        </n-card>
       </n-grid-item>
       <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #06D6A0, #2EC4B6);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.upcoming }}</div>
-            <div class="stat-label">即将开始</div>
-          </div>
-        </div>
+        <n-card class="stat-card" :bordered="false" size="small">
+          <n-statistic :value="stats.upcoming">
+            <template #prefix>
+              <n-icon :component="CheckmarkCircleOutline" class="stat-icon stat-icon-upcoming" />
+            </template>
+            <template #label>
+              <span class="stat-label">即将开始</span>
+            </template>
+          </n-statistic>
+        </n-card>
       </n-grid-item>
       <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.completed }}</div>
-            <div class="stat-label">已完成</div>
-          </div>
-        </div>
+        <n-card class="stat-card" :bordered="false" size="small">
+          <n-statistic :value="stats.completed">
+            <template #prefix>
+              <n-icon :component="CheckmarkDoneOutline" class="stat-icon stat-icon-completed" />
+            </template>
+            <template #label>
+              <span class="stat-label">已完成</span>
+            </template>
+          </n-statistic>
+        </n-card>
       </n-grid-item>
       <n-grid-item>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #EF476F, #FFD166);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.cancelled }}</div>
-            <div class="stat-label">已取消</div>
-          </div>
-        </div>
+        <n-card class="stat-card" :bordered="false" size="small">
+          <n-statistic :value="stats.cancelled">
+            <template #prefix>
+              <n-icon :component="CloseCircleOutline" class="stat-icon stat-icon-cancelled" />
+            </template>
+            <template #label>
+              <span class="stat-label">已取消</span>
+            </template>
+          </n-statistic>
+        </n-card>
       </n-grid-item>
     </n-grid>
 
@@ -117,7 +129,13 @@
 
 <script setup>
 import { ref, computed, h, onMounted } from 'vue'
-import { NTag, NButton, useMessage, NPopconfirm } from 'naive-ui'
+import { NTag, NButton, useMessage, NPopconfirm, NIcon, NCard, NStatistic } from 'naive-ui'
+import {
+  CalendarOutline,
+  CheckmarkCircleOutline,
+  CheckmarkDoneOutline,
+  CloseCircleOutline
+} from '@vicons/ionicons5'
 
 const message = useMessage()
 const loading = ref(false)
@@ -248,46 +266,57 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  border-radius: 12px;
   transition: all 0.3s;
+  cursor: pointer;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.stat-card :deep(.n-statistic) {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-card :deep(.n-statistic__label) {
+  margin-bottom: 0;
+  margin-top: 4px;
+}
+
+.stat-card :deep(.n-statistic-value) {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1A1A2E;
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
+  font-size: 24px;
 }
 
-.stat-info {
-  flex: 1;
+.stat-icon-total {
+  color: #FF6B35;
 }
 
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1A1A2E;
-  line-height: 1;
+.stat-icon-upcoming {
+  color: #06D6A0;
+}
+
+.stat-icon-completed {
+  color: #667eea;
+}
+
+.stat-icon-cancelled {
+  color: #EF476F;
 }
 
 .stat-label {
   font-size: 14px;
   color: #6B7280;
-  margin-top: 4px;
 }
 
 .card-section {
