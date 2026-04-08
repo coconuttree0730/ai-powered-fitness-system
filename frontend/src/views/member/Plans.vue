@@ -2,18 +2,9 @@
   <div class="fitness-plans">
     <n-space justify="space-between" style="margin-bottom: 20px">
       <h2>我的健身计划</h2>
-      <n-button type="primary" @click="showGenerateModal = true">
-        生成新计划
-      </n-button>
     </n-space>
 
-    <n-empty v-if="plans.length === 0" description="暂无健身计划">
-      <template #extra>
-        <n-button type="primary" @click="showGenerateModal = true">
-          生成计划
-        </n-button>
-      </template>
-    </n-empty>
+    <n-empty v-if="plans.length === 0" description="暂无健身计划" />
 
     <n-grid :cols="2" :x-gap="20" :y-gap="20" v-else>
       <n-grid-item v-for="plan in plans" :key="plan.id">

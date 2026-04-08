@@ -70,7 +70,6 @@
           <el-button
             type="primary"
             :icon="MagicStick"
-            :loading="analysisLoading"
             @click="handleAnalysis"
           >
             ai智能分析
@@ -188,7 +187,7 @@
       </el-col>
     </el-row>
 
-    <!-- AI分析报告对话框！！！！！ -->
+    <!-- AI分析报告对话框 -->
     <el-dialog
       v-model="analysisVisible"
       title="AI智能分析报告"
@@ -197,7 +196,7 @@
       destroy-on-close
       top="5vh"
     >
-      <div class="analysis-report" v-if="analysisReport">
+      <div class="analysis-report">
         <div class="report-header">
           <div class="header-icon-wrap">
             <el-icon size="28" color="#fff"><MagicStick /></el-icon>
@@ -223,11 +222,6 @@
           </el-text>
         </div>
       </div>
-      <div v-else-if="analysisLoading" class="analysis-loading">
-        <el-icon class="loading-icon" size="48"><MagicStick /></el-icon>
-        <p>AI 正在深度分析运营数据，请稍候...</p>
-        <el-progress :percentage="100" status="success" :indeterminate="true" :duration="3" />
-      </div>
     </el-dialog>
   </div>
 </template>
@@ -239,6 +233,7 @@ import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { useLoadingStore } from '@/stores/loading'
 import {
   User, Calendar, Tickets, Box, Goods, Money, ArrowUp, ArrowDown,
   Refresh, TrendCharts, PieChart, Clock, Reading, MagicStick,
@@ -251,6 +246,7 @@ import {
 } from '@/api/dashboard'
 
 const router = useRouter()
+const loadingStore = useLoadingStore()
 
 // ECharts 实例
 const revenueChartRef = ref(null)
@@ -273,7 +269,6 @@ let repairStatsChart = null
 const timeRange = ref('week')
 const revenueChartType = ref('line')
 const refreshLoading = ref(false)
-const analysisLoading = ref(false)
 const analysisVisible = ref(false)
 const analysisReport = ref(null)
 
@@ -904,31 +899,22 @@ async function refreshAllData() {
 
 // 生成AI分析报告
 async function handleAnalysis() {
-  analysisLoading.value = true
+  // 显示全局加载状态（覆盖整个页面，包括侧边栏）
+  loadingStore.showLoading('AI 正在分析运营数据，请稍候...')
+
   try {
     const res = await generateAnalysis({ analysisType: 'OVERALL' })
     if (res) {
       analysisReport.value = res
+      // 数据返回后才打开对话框
       analysisVisible.value = true
     }
   } catch (error) {
     console.error('生成分析报告失败:', error)
-    // 使用模拟数据
-    analysisReport.value = {
-      analysisType: 'OVERALL',
-      reportTitle: '健身房运营综合分析报告',
-      reportContent: `## 1. 会员运营\n- **活跃率**：当前活跃度良好，续费率有提升空间\n- **建议**：推出老带新活动，加强会员粘性\n\n## 2. 课程运营\n- **热门课程**：瑜伽、动感单车预约率最高\n- **冷门课程**：部分小团课需加大推广\n\n## 3. 器材管理\n- **使用率**：整体正常，跑步机区域高峰时段紧张\n- **维护**：建议错峰安排器材检修\n\n## 4. 运营建议\n1. 增加晚间18:00-20:00热门课程班次\n2. 推出会员续费优惠套餐\n3. 加强低使用率器材的促销引导`,
-      suggestions: [
-        '增加晚间热门课程班次，缓解高峰压力',
-        '推出老带新优惠活动提升续费率',
-        '对低使用率器材开展针对性促销',
-        '优化高峰时段人员配置与服务'
-      ],
-      generateTime: new Date().toISOString()
-    }
-    analysisVisible.value = true
+    ElMessage.error('生成分析报告失败，请稍后重试')
   } finally {
-    analysisLoading.value = false
+    // 隐藏全局加载状态
+    loadingStore.hideLoading()
   }
 }
 
@@ -1605,39 +1591,6 @@ onUnmounted(() => {
 
 .suggestions-content :deep(ol li) {
   list-style-type: decimal;
-}
-
-/* ==================== 加载状态 ==================== */
-.analysis-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  gap: 20px;
-}
-
-.loading-icon {
-  color: #667eea;
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.4));
-    transform: scale(1);
-  }
-  50% {
-    filter: drop-shadow(0 0 24px rgba(102, 126, 234, 0.7));
-    transform: scale(1.08);
-  }
-}
-
-.analysis-loading p {
-  color: #64748b;
-  font-size: 15px;
-  margin: 0;
-  letter-spacing: 0.5px;
 }
 
 /* ==================== 报告底部 ==================== */

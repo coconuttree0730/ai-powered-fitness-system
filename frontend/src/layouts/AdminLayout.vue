@@ -1,6 +1,6 @@
 <template>
-  <el-container class="admin-layout">
-    <el-aside width="220px" class="sidebar">
+  <el-container class="admin-layout" v-loading="loadingStore.globalLoading" :element-loading-text="loadingStore.loadingText" element-loading-background="rgba(0, 0, 0, 0.7)" element-loading-lock>
+    <el-aside width="220px" class="sidebar" :class="{ 'disabled': loadingStore.globalLoading }">
       <div class="logo">
         <h2>智能健身房</h2>
         <span>管理后台</span>
@@ -107,6 +107,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLoadingStore } from '@/stores/loading'
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
   CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection
@@ -115,6 +116,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const loadingStore = useLoadingStore()
 
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '仪表盘')
@@ -192,5 +194,31 @@ function handleLogout() {
 .main {
   background: #f0f2f5;
   padding: 20px;
+}
+
+/* 加载时禁用侧边栏交互 */
+.sidebar.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* 自定义全屏加载样式 */
+:deep(.el-loading-mask) {
+  z-index: 9999 !important;
+}
+
+:deep(.el-loading-spinner) {
+  transform: translateY(-50%);
+  margin-top: 0;
+}
+
+:deep(.el-loading-spinner .el-loading-text) {
+  color: #fff;
+  font-size: 16px;
+  margin-top: 16px;
+}
+
+:deep(.el-loading-spinner .path) {
+  stroke: #409eff;
 }
 </style>

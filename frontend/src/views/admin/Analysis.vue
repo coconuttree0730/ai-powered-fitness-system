@@ -1,55 +1,117 @@
 <template>
   <div class="analysis-page">
-    <el-card>
+    <el-card class="analysis-container">
       <template #header>
         <div class="card-header">
-          <span>数据分析</span>
-          <el-button type="primary" @click="handleAnalysis" :loading="analysisLoading">
-            生成AI分析报告
-          </el-button>
+          <span>AI数据分析报告管理</span>
         </div>
       </template>
 
-      <el-tabs v-model="activeTab">
-        <el-tab-pane label="概览" name="overview">
-          <el-row :gutter="20">
-            <el-col :span="6" v-for="stat in stats" :key="stat.title">
-              <el-card>
-                <el-statistic :title="stat.title" :value="stat.value">
-                  <template #prefix>
-                    <el-icon :size="20" :color="stat.color">
-                      <component :is="stat.icon" />
-                    </el-icon>
-                  </template>
-                </el-statistic>
-              </el-card>
-            </el-col>
-          </el-row>
-        </el-tab-pane>
-        <el-tab-pane label="高峰时间" name="peak">
-          <vue-echarts :option="peakHoursOption" style="height: 400px" />
-        </el-tab-pane>
-        <el-tab-pane label="课程统计" name="courses">
-          <vue-echarts :option="courseStatsOption" style="height: 400px" />
-        </el-tab-pane>
-        <el-tab-pane label="会员卡统计" name="members">
-          <vue-echarts :option="memberCardOption" style="height: 400px" />
-        </el-tab-pane>
-      </el-tabs>
+      <!-- 筛选区域 -->
+      <div class="filter-section">
+        <el-radio-group v-model="timeFilter" size="default" @change="handleFilterChange">
+          <el-radio-button label="today">本日</el-radio-button>
+          <el-radio-button label="month">本月</el-radio-button>
+          <el-radio-button label="year">本年</el-radio-button>
+        </el-radio-group>
+        <el-tag type="info" effect="plain" class="count-tag">
+          共 {{ filteredReports.length }} 条记录
+        </el-tag>
+      </div>
+
+      <!-- 报告列表 -->
+      <el-table
+        :data="filteredReports"
+        stripe
+        style="width: 100%"
+        v-loading="loading"
+        class="report-table"
+      >
+        <el-table-column type="index" label="序号" width="80" align="center" />
+        <el-table-column prop="analysisType" label="分析类型" width="120" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getAnalysisTypeTag(row.analysisType)" size="small">
+              {{ getAnalysisTypeText(row.analysisType) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="generateTime" label="生成日期" width="180" align="center">
+          <template #default="{ row }">
+            <el-icon class="time-icon"><Clock /></el-icon>
+            {{ formatDateTime(row.generateTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="150" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="handleView(row)"
+            >
+              <el-icon><View /></el-icon>
+              查看
+            </el-button>
+            <el-button
+              type="danger"
+              link
+              size="small"
+              @click="handleDelete(row)"
+            >
+              <el-icon><Delete /></el-icon>
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50]"
+          :total="filteredReports.length"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
-    <el-dialog v-model="analysisVisible" title="AI分析报告" width="700px" destroy-on-close>
-      <div class="analysis-report" v-if="analysisReport">
-        <h3>{{ analysisReport.reportTitle }}</h3>
+    <!-- 查看报告详情对话框 -->
+    <el-dialog
+      v-model="viewDialogVisible"
+      title="报告详情"
+      width="800px"
+      destroy-on-close
+      class="report-detail-dialog"
+    >
+      <div v-if="currentReport" class="report-detail">
+        <div class="detail-header">
+          <h3>{{ currentReport.reportTitle }}</h3>
+          <el-tag :type="getAnalysisTypeTag(currentReport.analysisType)">
+            {{ getAnalysisTypeText(currentReport.analysisType) }}
+          </el-tag>
+        </div>
         <el-divider />
-        <div class="report-content">{{ analysisReport.reportContent }}</div>
-        <div class="suggestions" v-if="analysisReport.suggestions?.length">
-          <h4>优化建议</h4>
-          <el-list>
-            <el-list-item v-for="(s, i) in analysisReport.suggestions" :key="i">
-              {{ s }}
-            </el-list-item>
-          </el-list>
+        <div class="detail-content">
+          <div class="detail-item">
+            <span class="label">生成时间：</span>
+            <span class="value">{{ formatDateTime(currentReport.generateTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">报告内容：</span>
+            <div class="content-text">{{ currentReport.reportContent }}</div>
+          </div>
+          <div class="detail-item" v-if="currentReport.suggestions?.length">
+            <span class="label">优化建议：</span>
+            <ul class="suggestions-list">
+              <li v-for="(suggestion, index) in currentReport.suggestions" :key="index">
+                {{ suggestion }}
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </el-dialog>
@@ -57,128 +119,175 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { User, Calendar, Ticket, Box } from '@element-plus/icons-vue'
-import { getDashboardStats, getPeakHours, getMemberCardStats, getCourseStats, generateAnalysis } from '@/api/dashboard'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Document, Clock, View, Delete } from '@element-plus/icons-vue'
 
-const message = ElMessage
-const activeTab = ref('overview')
-const analysisVisible = ref(false)
-const analysisLoading = ref(false)
-const analysisReport = ref(null)
+// 加载状态
+const loading = ref(false)
 
-const stats = ref([
-  { title: '总会员数', value: 0, icon: 'User', color: '#1890ff' },
-  { title: '总课程数', value: 0, icon: 'Calendar', color: '#52c41a' },
-  { title: '总预约数', value: 0, icon: 'Ticket', color: '#faad14' },
-  { title: '总器材数', value: 0, icon: 'Box', color: '#722ed1' }
+// 筛选条件
+const timeFilter = ref('today')
+
+// 分页
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 对话框显示状态
+const viewDialogVisible = ref(false)
+
+// 当前查看的报告
+const currentReport = ref(null)
+
+// 获取今天的日期字符串
+const today = new Date().toISOString().split('T')[0]
+
+// 模拟报告数据 - 包含今天的数据
+const mockReports = ref([
+  {
+    id: 1,
+    reportTitle: '2026年4月8日 - 综合运营分析报告',
+    analysisType: 'OVERALL',
+    generateTime: `${today} 09:30:00`,
+    reportContent: '本报告对健身房整体运营情况进行了全面分析。本月会员活跃度较上月提升15%，课程预约率达到78%，营收同比增长22%。建议加强高峰时段的课程安排，优化器材配置以满足会员需求。',
+    suggestions: [
+      '增加晚间高峰时段的课程数量',
+      '优化器材维护计划，减少故障率',
+      '推出会员推荐奖励计划',
+      '加强新会员 onboarding 流程'
+    ]
+  }
 ])
 
-const peakHoursData = ref([])
-const memberCardData = ref({})
-const courseStatsData = ref([])
+// 根据筛选条件过滤报告
+const filteredReports = computed(() => {
+  const now = new Date()
+  let filtered = mockReports.value
 
-const peakHoursOption = computed(() => ({
-  title: { text: '到店高峰时间分布' },
-  xAxis: { type: 'category', data: peakHoursData.value.map(d => `${d.hour}:00`) },
-  yAxis: { type: 'value', name: '到店人数' },
-  series: [{ data: peakHoursData.value.map(d => d.count), type: 'bar', itemStyle: { color: '#1890ff' } }],
-  tooltip: { trigger: 'axis' }
-}))
+  switch (timeFilter.value) {
+    case 'today':
+      // 本日：显示今天生成的报告
+      filtered = mockReports.value.filter(report => {
+        const reportDate = new Date(report.generateTime)
+        return reportDate.toDateString() === now.toDateString()
+      })
+      break
+    case 'month':
+      // 本月：显示本月生成的报告
+      filtered = mockReports.value.filter(report => {
+        const reportDate = new Date(report.generateTime)
+        return reportDate.getMonth() === now.getMonth() &&
+               reportDate.getFullYear() === now.getFullYear()
+      })
+      break
+    case 'year':
+      // 本年：显示今年生成的报告
+      filtered = mockReports.value.filter(report => {
+        const reportDate = new Date(report.generateTime)
+        return reportDate.getFullYear() === now.getFullYear()
+      })
+      break
+  }
 
-const memberCardOption = computed(() => ({
-  title: { text: '会员卡销量分布' },
-  series: [{
-    type: 'pie',
-    radius: ['40%', '70%'],
-    data: [
-      { value: memberCardData.value.monthCard || 0, name: '月卡' },
-      { value: memberCardData.value.quarterCard || 0, name: '季卡' },
-      { value: memberCardData.value.yearCard || 0, name: '年卡' }
-    ]
-  }],
-  legend: { bottom: 'bottom' },
-  tooltip: { trigger: 'item' }
-}))
-
-const courseStatsOption = computed(() => ({
-  title: { text: '课程分类统计' },
-  xAxis: { type: 'category', data: courseStatsData.value.map(d => d.categoryName) },
-  yAxis: [{ type: 'value', name: '课程数' }, { type: 'value', name: '预约数' }],
-  series: [
-    { name: '课程数', data: courseStatsData.value.map(d => d.courseCount), type: 'bar', itemStyle: { color: '#1890ff' } },
-    { name: '预约数', data: courseStatsData.value.map(d => d.bookingCount), type: 'line', yAxisIndex: 1, itemStyle: { color: '#52c41a' } }
-  ],
-  tooltip: { trigger: 'axis' },
-  legend: { data: ['课程数', '预约数'] }
-}))
-
-onMounted(async () => {
-  await Promise.all([fetchStats(), fetchPeakHours(), fetchMemberCards(), fetchCourseStats()])
+  // 按时间倒序排列
+  return filtered.sort((a, b) => new Date(b.generateTime) - new Date(a.generateTime))
 })
 
-async function fetchStats() {
+// 获取分析类型标签样式
+function getAnalysisTypeTag(type) {
+  const tagMap = {
+    'OVERALL': 'primary',
+    'REVENUE': 'success',
+    'MEMBER': 'warning',
+    'COURSE': 'info'
+  }
+  return tagMap[type] || 'info'
+}
+
+// 获取分析类型显示文本
+function getAnalysisTypeText(type) {
+  const textMap = {
+    'OVERALL': '综合分析',
+    'REVENUE': '营收分析',
+    'MEMBER': '会员分析',
+    'COURSE': '课程分析'
+  }
+  return textMap[type] || type
+}
+
+// 格式化日期时间
+function formatDateTime(dateTime) {
+  if (!dateTime) return '-'
+  const date = new Date(dateTime)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 筛选变化处理
+function handleFilterChange() {
+  currentPage.value = 1
+  ElMessage.success(`已切换到${timeFilter.value === 'today' ? '本日' : timeFilter.value === 'month' ? '本月' : '本年'}数据`)
+}
+
+// 查看报告
+function handleView(row) {
+  currentReport.value = row
+  viewDialogVisible.value = true
+}
+
+// 删除报告
+async function handleDelete(row) {
   try {
-    const res = await getDashboardStats()
-    if (res.data) {
-      stats.value[0].value = res.data.totalMembers || 0
-      stats.value[1].value = res.data.totalCourses || 0
-      stats.value[2].value = res.data.totalBookings || 0
-      stats.value[3].value = res.data.totalEquipment || 0
+    await ElMessageBox.confirm(
+      `确定要删除报告 "${row.reportTitle}" 吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    // 模拟删除
+    const index = mockReports.value.findIndex(r => r.id === row.id)
+    if (index > -1) {
+      mockReports.value.splice(index, 1)
+      ElMessage.success('删除成功')
     }
-  } catch (error) {
-    console.error('获取统计数据失败:', error)
+  } catch {
+    // 用户取消删除
   }
 }
 
-async function fetchPeakHours() {
-  try {
-    const res = await getPeakHours()
-    peakHoursData.value = res.data || []
-  } catch (error) {
-    console.error('获取高峰时间失败:', error)
-  }
+// 分页处理
+function handleSizeChange(val) {
+  pageSize.value = val
 }
 
-async function fetchMemberCards() {
-  try {
-    const res = await getMemberCardStats()
-    memberCardData.value = res.data || {}
-  } catch (error) {
-    console.error('获取会员卡统计失败:', error)
-  }
+function handleCurrentChange(val) {
+  currentPage.value = val
 }
 
-async function fetchCourseStats() {
-  try {
-    const res = await getCourseStats()
-    courseStatsData.value = res.data || []
-  } catch (error) {
-    console.error('获取课程统计失败:', error)
-  }
-}
-
-async function handleAnalysis() {
-  analysisLoading.value = true
-  try {
-    const res = await generateAnalysis({ analysisType: 'OVERALL' })
-    if (res.data) {
-      analysisReport.value = res.data
-      analysisVisible.value = true
-    }
-  } catch (error) {
-    message.error('生成分析报告失败')
-    console.error(error)
-  } finally {
-    analysisLoading.value = false
-  }
-}
+onMounted(() => {
+  loading.value = true
+  // 模拟加载数据
+  setTimeout(() => {
+    loading.value = false
+  }, 500)
+})
 </script>
 
 <style scoped>
 .analysis-page {
   padding: 0;
+}
+
+.analysis-container {
+  min-height: calc(100vh - 120px);
 }
 
 .card-header {
@@ -189,25 +298,116 @@ async function handleAnalysis() {
   font-size: 16px;
 }
 
-.analysis-report h3 {
-  color: #1890ff;
-  margin-bottom: 0;
+/* 筛选区域 */
+.filter-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
 }
 
-.report-content {
-  white-space: pre-wrap;
-  line-height: 1.8;
-  color: #333;
+.count-tag {
+  font-size: 14px;
 }
 
-.suggestions {
-  margin-top: 20px;
+/* 表格样式 */
+.report-table {
+  margin-bottom: 20px;
+}
+
+.report-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-icon {
+  flex-shrink: 0;
+}
+
+.report-title {
+  font-weight: 500;
+  color: #303133;
+}
+
+.time-icon {
+  margin-right: 4px;
+  color: #909399;
+}
+
+/* 分页 */
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
   padding-top: 16px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #ebeef5;
 }
 
-.suggestions h4 {
-  margin-bottom: 12px;
-  color: #666;
+/* 报告详情对话框 */
+.report-detail-dialog :deep(.el-dialog__body) {
+  padding: 20px 30px;
+}
+
+.report-detail {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-header h3 {
+  margin: 0;
+  color: #303133;
+  font-size: 18px;
+}
+
+.detail-content {
+  padding: 10px 0;
+}
+
+.detail-item {
+  margin-bottom: 20px;
+}
+
+.detail-item .label {
+  font-weight: 600;
+  color: #606266;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.detail-item .value {
+  color: #303133;
+}
+
+.content-text {
+  line-height: 1.8;
+  color: #606266;
+  text-align: justify;
+  padding: 12px;
+  background-color: #f5f7fa;
+  border-radius: 6px;
+}
+
+.suggestions-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.suggestions-list li {
+  margin-bottom: 8px;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.suggestions-list li::marker {
+  color: #409eff;
 }
 </style>
