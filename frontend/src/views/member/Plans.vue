@@ -27,34 +27,140 @@
       />
     </n-spin>
 
-    <!-- 查看详情弹窗 - 使用 FitnessPlanPreview 组件渲染JSON数据 -->
+    <!-- 查看详情弹窗 - 独立内嵌视图 -->
     <n-modal
       v-model:show="showDetailModal"
       preset="card"
-      title=""
-      :style="{ width: '92vw', maxWidth: '1200px' }"
+      :title="`健身训练计划 - ${formatDate(selectedPlan?.createTime)}`"
+      :style="{ width: '90vw', maxWidth: '1000px' }"
       :bordered="false"
-      :segmented="false"
-      class="plan-detail-modal"
+      class="plan-view-modal"
     >
-      <FitnessPlanPreview
-        v-if="previewData"
-        :key="'preview-' + selectedPlan?.id"
-        :plan-data="previewData"
-        :is-embedded="true"
-        :show-actions="false"
-        @course-click="handleCourseClick"
-      />
+      <div v-if="previewData" class="plan-view-content">
+        <!-- 用户信息卡片 -->
+        <div class="user-info-card">
+          <div class="info-item">
+            <span class="label">身高</span>
+            <span class="value">{{ previewData.userInfo?.height || '--' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">体重</span>
+            <span class="value">{{ previewData.userInfo?.weight || '--' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">BMI</span>
+            <span class="value">{{ previewData.userInfo?.bmi || '--' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">目标</span>
+            <n-tag size="small" type="info">{{ previewData.userInfo?.goal || '--' }}</n-tag>
+          </div>
+          <div class="info-item">
+            <span class="label">强度</span>
+            <n-tag size="small" :type="getIntensityType(previewData.userInfo?.intensity)">
+              {{ previewData.userInfo?.intensity || '--' }}
+            </n-tag>
+          </div>
+        </div>
+
+        <!-- 星期标签页 -->
+        <n-tabs v-model:value="activeDay" type="line" animated class="day-tabs">
+          <n-tab-pane
+            v-for="(day, index) in previewData.weeklyPlan"
+            :key="index"
+            :name="index"
+            :tab="day.dayName"
+          >
+            <div class="day-content">
+              <!-- 今日焦点 -->
+              <div v-if="day.focus" class="focus-banner">
+                <n-icon size="18" color="#f97316">
+                  <InformationCircleOutline />
+                </n-icon>
+                <span>{{ day.focus }}</span>
+              </div>
+
+              <!-- 推荐课程 -->
+              <div v-if="day.courses?.length" class="section">
+                <div class="section-title">
+                  <span>推荐课程</span>
+                  <n-tag size="small" round>{{ day.courses.length }}个课程</n-tag>
+                </div>
+                <div class="courses-grid">
+                  <div
+                    v-for="course in day.courses"
+                    :key="course.id"
+                    class="course-card"
+                    @click="handleCourseClick(course)"
+                  >
+                    <img :src="course.coverImage || getDefaultCourseImage()" :alt="course.name">
+                    <div class="course-info">
+                      <h4>{{ course.name }}</h4>
+                      <p class="desc">{{ course.description }}</p>
+                      <div class="meta">
+                        <n-icon size="14"><TimeOutline /></n-icon>
+                        <span>{{ course.duration }}分钟</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 训练动作 -->
+              <div v-if="day.exercises?.length" class="section">
+                <div class="section-title">
+                  <span>训练动作</span>
+                  <n-tag size="small" round type="warning">{{ day.exercises.length }}个动作</n-tag>
+                </div>
+                <div class="exercises-list">
+                  <div
+                    v-for="(exercise, idx) in day.exercises"
+                    :key="idx"
+                    class="exercise-item"
+                  >
+                    <div class="exercise-number">{{ String(idx + 1).padStart(2, '0') }}</div>
+                    <div class="exercise-info">
+                      <span class="name">{{ exercise.name }}</span>
+                      <div class="tags">
+                        <n-tag size="small" type="success">{{ exercise.sets }}组</n-tag>
+                        <n-tag size="small" type="info">{{ exercise.reps }}次</n-tag>
+                        <n-tag size="small" type="warning">休息{{ exercise.restSeconds }}s</n-tag>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 训练器械 -->
+              <div v-if="day.equipment?.length" class="section">
+                <div class="section-title">
+                  <span>训练器械</span>
+                </div>
+                <div class="equipment-grid">
+                  <div
+                    v-for="(equip, idx) in day.equipment"
+                    :key="idx"
+                    class="equipment-item"
+                  >
+                    <img :src="equip.image || getDefaultEquipmentImage()" :alt="equip.name">
+                    <span>{{ equip.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </n-tab-pane>
+        </n-tabs>
+      </div>
       <n-empty v-else description="计划数据加载失败" />
     </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, h, computed } from 'vue'
-import { NButton, NTag, useMessage, useDialog, NSpace } from 'naive-ui'
+import { ref, onMounted, h } from 'vue'
+import { NButton, NTag, useMessage, useDialog, NSpace, NTabs, NTabPane, NIcon } from 'naive-ui'
+import { InformationCircleOutline, TimeOutline } from '@vicons/ionicons5'
 import { getMyPlans, deletePlan, getPlanDetail } from '@/api/plan'
-import FitnessPlanPreview from '@/components/FitnessPlanPreview.vue'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -64,6 +170,7 @@ const plans = ref([])
 const showDetailModal = ref(false)
 const selectedPlan = ref(null)
 const previewData = ref(null)
+const activeDay = ref(0)
 
 const columns = [
   {
@@ -178,6 +285,7 @@ async function handleView(plan) {
   try {
     previewData.value = null
     selectedPlan.value = null
+    activeDay.value = 0
 
     const res = await getPlanDetail(plan.id)
     selectedPlan.value = res
@@ -215,6 +323,21 @@ function handleDelete(plan) {
 
 function handleCourseClick(course) {
   message.info(`查看课程: ${course.name}`)
+}
+
+function getIntensityType(intensity) {
+  if (!intensity) return 'default'
+  if (intensity.includes('高')) return 'error'
+  if (intensity.includes('中')) return 'warning'
+  return 'success'
+}
+
+function getDefaultCourseImage() {
+  return 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=250&fit=crop&q=80'
+}
+
+function getDefaultEquipmentImage() {
+  return 'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=100&h=100&fit=crop&q=80'
 }
 
 function formatDate(dateStr) {
@@ -271,35 +394,219 @@ function formatDateTime(dateStr) {
   color: #4b5563;
 }
 
-.plan-detail-modal :deep(.n-card-header) {
-  padding: 16px 24px 12px;
-  border-bottom: 1px solid #f0f2f5;
+/* 弹窗样式 */
+.plan-view-modal :deep(.n-card__content) {
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: 20px;
 }
 
-.modal-header {
+/* 用户信息卡片 */
+.user-info-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.info-item {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.info-item .label {
+  font-size: 13px;
+  color: #78716c;
+}
+
+.info-item .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ea580c;
+}
+
+/* 星期标签页 */
+.day-tabs :deep(.n-tabs-nav) {
+  margin-bottom: 16px;
+}
+
+.day-content {
+  padding: 4px;
+}
+
+/* 焦点横幅 */
+.focus-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fff7ed;
+  border-left: 4px solid #f97316;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #c2410c;
+}
+
+/* 区块样式 */
+.section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 14px;
+}
+
+/* 课程网格 */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
-.modal-title {
-  font-size: 18px;
-  font-weight: 700;
+.course-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.course-card:hover {
+  border-color: #f97316;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+  transform: translateY(-2px);
+}
+
+.course-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.course-info {
+  padding: 12px 14px;
+}
+
+.course-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
   color: #1a1a2e;
 }
 
-.modal-date {
+.course-info .desc {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-info .meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #f97316;
+  font-weight: 500;
+}
+
+/* 动作列表 */
+.exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.exercise-item:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.exercise-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  color: #fff;
   font-size: 13px;
-  color: #9ca3af;
+  font-weight: 700;
+  border-radius: 8px;
 }
 
-.plan-detail-modal :deep(.n-card__content) {
-  padding: 0;
-  max-height: 85vh;
-  overflow-y: auto;
+.exercise-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.plan-detail-modal :deep(.n-card) {
-  max-height: 90vh;
+.exercise-info .name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.exercise-info .tags {
+  display: flex;
+  gap: 8px;
+}
+
+/* 器械网格 */
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.equipment-item {
+  text-align: center;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.equipment-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.equipment-item span {
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
 }
 </style>
