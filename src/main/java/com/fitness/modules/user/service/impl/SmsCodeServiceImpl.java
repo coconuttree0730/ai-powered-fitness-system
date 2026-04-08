@@ -20,10 +20,12 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     private final StringRedisTemplate redisTemplate;
 
     // Redis键前缀
+    // 短信验证码前缀
     private static final String SMS_CODE_KEY_PREFIX = "sms:code:";
+    // 短信验证码冷却时间前缀
     private static final String SMS_CODE_COOLDOWN_KEY_PREFIX = "sms:cooldown:";
+    // 短信验证码每日发送次数前缀
     private static final String SMS_CODE_DAILY_COUNT_KEY_PREFIX = "sms:daily:count:";
-
     // 验证码过期时间（5分钟）
     private static final long CODE_EXPIRE_MINUTES = 5;
     // 发送冷却时间（60秒）
@@ -93,6 +95,7 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     @Override
     public boolean canSend(String phone) {
         String cooldownKey = SMS_CODE_COOLDOWN_KEY_PREFIX + phone;
+        //检查冷却时间
         Boolean exists = redisTemplate.hasKey(cooldownKey);
         return !Boolean.TRUE.equals(exists);
     }

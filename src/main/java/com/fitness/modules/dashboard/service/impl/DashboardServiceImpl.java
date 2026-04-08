@@ -96,15 +96,22 @@ public class DashboardServiceImpl implements DashboardService {
 
             // 收集运营数据
             Map<String, Object> variables = collectAnalysisData(type);
+            log.info("收集到的分析数据变量: {}", variables.keySet());
 
             // 构建分析 Prompt
             String prompt = buildAnalysisPrompt(type, variables);
+            log.info("生成的Prompt内容:\n{}", prompt);
 
             // 调用 AI 生成报告
             String aiResponse = aiService.chat(prompt);
+            log.info("AI返回的原始响应:\n{}", aiResponse);
 
             // 解析 AI 返回结果
-            return parseAIResponse(type, aiResponse);
+            AnalysisReportVO report = parseAIResponse(type, aiResponse);
+            log.info("解析后的报告标题: {}, 建议数量: {}", report.getReportTitle(), 
+                    report.getSuggestions() != null ? report.getSuggestions().size() : 0);
+            
+            return report;
         } catch (Exception e) {
             log.error("生成AI分析报告失败", e);
             throw new BusinessException(ErrorCode.ANALYSIS_ERROR);
@@ -285,10 +292,14 @@ public class DashboardServiceImpl implements DashboardService {
         Integer totalEquipment = dashboardMapper.countTotalEquipment();
         Integer normalEquipment = dashboardMapper.countNormalEquipment();
         Integer maintenanceEquipment = dashboardMapper.countMaintenanceEquipment();
+        Integer repairEquipment = dashboardMapper.countRepairEquipment();
+        Integer offlineEquipment = dashboardMapper.countOfflineEquipment();
         double equipmentGoodRate = totalEquipment > 0 ? (normalEquipment * 100.0 / totalEquipment) : 0;
         variables.put("totalEquipment", totalEquipment);
         variables.put("normalEquipment", normalEquipment);
         variables.put("maintenanceEquipment", maintenanceEquipment);
+        variables.put("repairEquipment", repairEquipment);
+        variables.put("offlineEquipment", offlineEquipment);
         variables.put("equipmentGoodRate", String.format("%.1f", equipmentGoodRate));
 
         // 到店高峰时间
@@ -298,6 +309,38 @@ public class DashboardServiceImpl implements DashboardService {
         // 课程分类统计
         List<CourseStatsVO> courseStats = dashboardMapper.selectCourseStats();
         variables.put("courseStatsData", formatCourseStats(courseStats));
+
+        // 营收趋势数据（本周）
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(6);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<RevenueTrendVO> revenueTrend = dashboardMapper.selectRevenueTrend(
+            startDate.format(formatter), 
+            endDate.format(formatter), 
+            "day"
+        );
+        variables.put("revenueTrendData", formatRevenueTrend(revenueTrend));
+
+        // 用户增长趋势（本周）
+        List<UserGrowthVO> userGrowth = dashboardMapper.selectUserGrowth(
+            startDate.format(formatter), 
+            endDate.format(formatter)
+        );
+        variables.put("userGrowthData", formatUserGrowth(userGrowth));
+
+        // 报修处理统计
+        List<RepairStatsVO> repairStats = dashboardMapper.selectRepairStats();
+        variables.put("repairStatsData", formatRepairStats(repairStats));
+
+        // 会员卡销售统计（模拟数据）
+        MemberCardStatsVO memberCardStats = getMemberCardStats();
+        variables.put("memberCardStatsData", formatMemberCardStats(memberCardStats));
+
+        // 今日数据
+        Integer todayOrders = dashboardMapper.countTodayOrders();
+        BigDecimal todayRevenue = dashboardMapper.sumTodayRevenue();
+        variables.put("todayOrders", todayOrders);
+        variables.put("todayRevenue", todayRevenue != null ? todayRevenue : BigDecimal.ZERO);
 
         return variables;
     }
@@ -383,5 +426,67 @@ public class DashboardServiceImpl implements DashboardService {
                     vo.getCategoryName(), vo.getCourseCount(), vo.getBookingCount()));
         }
         return sb.toString();
+    }
+
+    /**
+     * 格式化营收趋势数据
+     */
+    private String formatRevenueTrend(List<RevenueTrendVO> revenueTrend) {
+        if (revenueTrend == null || revenueTrend.isEmpty()) {
+            return "暂无数据";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("本周营收趋势：\n");
+        for (RevenueTrendVO vo : revenueTrend) {
+            sb.append(String.format("- %s: ¥%.2f\n", vo.getDate(), vo.getAmount()));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 格式化用户增长数据
+     */
+    private String formatUserGrowth(List<UserGrowthVO> userGrowth) {
+        if (userGrowth == null || userGrowth.isEmpty()) {
+            return "暂无数据";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("本周用户增长趋势：\n");
+        for (UserGrowthVO vo : userGrowth) {
+            sb.append(String.format("- %s: 新增%d人\n", vo.getDate(), vo.getCount()));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 格式化报修处理统计数据
+     */
+    private String formatRepairStats(List<RepairStatsVO> repairStats) {
+        if (repairStats == null || repairStats.isEmpty()) {
+            return "暂无数据";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("报修处理统计：\n");
+        for (RepairStatsVO vo : repairStats) {
+            sb.append(String.format("- %s: %d件\n", vo.getStatus(), vo.getCount()));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 格式化会员卡销售统计数据
+     */
+    private String formatMemberCardStats(MemberCardStatsVO memberCardStats) {
+        if (memberCardStats == null) {
+            return "暂无数据";
+        }
+
+        return String.format("会员卡销售统计（模拟数据）：\n- 月卡: %d张\n- 季卡: %d张\n- 年卡: %d张\n",
+                memberCardStats.getMonthCard(),
+                memberCardStats.getQuarterCard(),
+                memberCardStats.getYearCard());
     }
 }

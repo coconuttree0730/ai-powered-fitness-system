@@ -50,6 +50,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
         redisTemplate.opsForValue().set(cooldownKey, "1", COOLDOWN_SECONDS, TimeUnit.SECONDS);
 
         // 5. 模拟发送邮件（后续接入真实邮件服务）
+        // TODO 模拟发送邮件: 后续接入 邮件服务进行邮件发送
         log.info("邮箱验证码发送成功: email={}, code={}", email, code);
 
         return true;
