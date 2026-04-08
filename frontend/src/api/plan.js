@@ -29,6 +29,14 @@ export function deletePlan(id) {
   })
 }
 
+export function saveFitnessPlan(data) {
+  return request({
+    url: '/plans/save',
+    method: 'post',
+    data
+  })
+}
+
 export function getProfile() {
   return request({
     url: '/profile',

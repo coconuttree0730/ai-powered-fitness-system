@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.analysis.mapper.AnalysisReportMapper;
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AI数据分析报告Service实现类
@@ -24,19 +27,29 @@ import java.time.LocalTime;
 @Service
 public class AnalysisReportServiceImpl extends ServiceImpl<AnalysisReportMapper, AnalysisReport> implements AnalysisReportService {
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public AnalysisReport saveReport(AnalysisReportVO reportVO, Long userId) {
         log.info("保存AI分析报告，用户ID: {}", userId);
+        log.info("报告标题: {}", reportVO.getReportTitle());
+        log.info("建议列表: {}", reportVO.getSuggestions());
 
         AnalysisReport report = new AnalysisReport();
         report.setReportTitle(reportVO.getReportTitle());
         report.setAnalysisType(reportVO.getAnalysisType());
         report.setReportContent(reportVO.getReportContent());
-        report.setSuggestions(reportVO.getSuggestions());
+        
+        // 确保suggestions是正确的格式
+        if (reportVO.getSuggestions() != null) {
+            report.setSuggestions(reportVO.getSuggestions());
+            log.info("设置的建议列表大小: {}", reportVO.getSuggestions().size());
+        }
+        
         report.setGenerateTime(reportVO.getGenerateTime() != null ?
                 reportVO.getGenerateTime() : LocalDateTime.now());
         report.setCreateBy(userId);
-        report.setIsDeleted(false);  // 设置默认值
+        report.setIsDeleted(false);
 
         this.save(report);
         log.info("AI分析报告保存成功，ID: {}", report.getId());
@@ -86,7 +99,14 @@ public class AnalysisReportServiceImpl extends ServiceImpl<AnalysisReportMapper,
         // 按生成时间倒序排列
         wrapper.orderByDesc(AnalysisReport::getGenerateTime);
 
-        return this.page(pageParam, wrapper);
+        IPage<AnalysisReport> resultPage = this.page(pageParam, wrapper);
+
+        // 处理每条记录的suggestions字段
+        for (AnalysisReport record : resultPage.getRecords()) {
+            processSuggestions(record);
+        }
+
+        return resultPage;
     }
 
     @Override
@@ -120,6 +140,50 @@ public class AnalysisReportServiceImpl extends ServiceImpl<AnalysisReportMapper,
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
+        // 处理suggestions字段
+        processSuggestions(report);
+
         return report;
+    }
+
+    /**
+     * 处理suggestions字段，确保它是List<String>类型
+     * 从数据库的JSON字符串解析为List
+     */
+    private void processSuggestions(AnalysisReport report) {
+        if (report == null) {
+            return;
+        }
+
+        // 获取数据库存储的JSON字符串
+        String suggestionsJson = report.getSuggestionsJson();
+        log.info("processSuggestions - suggestionsJson: {}", 
+                suggestionsJson != null ? suggestionsJson.substring(0, Math.min(100, suggestionsJson.length())) + "..." : "null");
+
+        if (suggestionsJson != null && !suggestionsJson.isEmpty()) {
+            List<String> processedSuggestions = null;
+
+            try {
+                if (suggestionsJson.startsWith("[") && suggestionsJson.endsWith("]")) {
+                    // 是JSON数组格式，解析为List
+                    processedSuggestions = objectMapper.readValue(suggestionsJson, new TypeReference<List<String>>() {});
+                    log.info("解析后的suggestions大小: {}", processedSuggestions.size());
+                } else {
+                    // 单个建议字符串
+                    processedSuggestions = new ArrayList<>();
+                    processedSuggestions.add(suggestionsJson);
+                }
+                
+                report.setSuggestions(processedSuggestions);
+                log.info("最终设置的suggestions大小: {}", processedSuggestions.size());
+                
+            } catch (Exception e) {
+                log.error("处理suggestions字段失败", e);
+                report.setSuggestions(new ArrayList<>());
+            }
+        } else {
+            log.warn("suggestionsJson为空");
+            report.setSuggestions(new ArrayList<>());
+        }
     }
 }

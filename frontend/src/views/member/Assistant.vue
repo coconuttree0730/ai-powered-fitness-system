@@ -398,10 +398,9 @@ import {
   getSessionDetail,
   getSessionMessages,
   generateFitnessPlan,
-  generateFitnessPlanFromProfile,
-  saveFitnessPlan,
-  getMyFitnessPlans
+  generateFitnessPlanFromProfile
 } from '@/api/chat'
+import { saveFitnessPlan as savePlanToServer, getMyPlans } from '@/api/plan'
 import { getCurrentUser } from '@/api/user'
 import { getHomePageCoaches, getCoachDetail } from '@/api/coachDetail'
 import FitnessPlanPreview from '@/components/FitnessPlanPreview.vue'
@@ -1309,24 +1308,50 @@ function dismissPlanCard() {
 
 // 保存计划到我的计划列表
 async function handleSavePlan() {
-  if (!currentPlanCard.value && !fitnessPlanData.value) return
+  if (!fitnessPlanData.value) return
 
   savingPlan.value = true
   try {
-    // 优先使用 currentPlanCard，如果没有则使用 fitnessPlanData
-    const planToSave = currentPlanCard.value || fitnessPlanData.value
-    const res = await saveFitnessPlan(planToSave)
-    if (res) {
-      message.success('计划已保存到我的健身计划！')
-      // 清除当前卡片
-      currentPlanCard.value = null
-      sessionStorage.removeItem('currentPlanCard')
-      // 隐藏计划预览（带动画效果）
-      showPlanPreview.value = false
-      fitnessPlanData.value = null
-      // 刷新计划列表
-      await loadMyPlans()
+    const planData = fitnessPlanData.value
+    let height = null, weight = null, age = null, gender = null, experience = null, goal = null
+
+    if (planData.userInfo) {
+      const h = String(planData.userInfo.height || '').replace(/[^0-9.]/g, '')
+      const w = String(planData.userInfo.weight || '').replace(/[^0-9.]/g, '')
+      height = h ? parseFloat(h) : null
+      weight = w ? parseFloat(w) : null
+      experience = planData.userInfo.intensity || null
+      goal = planData.userInfo.goal || null
     }
+
+    try {
+      const userRes = await getCurrentUser()
+      if (userRes && userRes.fitnessProfile) {
+        const fp = userRes.fitnessProfile
+        if (!height) height = fp.height
+        if (!weight) weight = fp.weight
+        if (!age) age = fp.age
+        if (!gender) gender = fp.gender
+        if (!experience) experience = fp.experience
+        if (!goal) goal = fp.fitnessGoal
+      }
+    } catch (e) { }
+
+    await savePlanToServer({
+      planDataJson: planData,
+      height,
+      weight,
+      age,
+      gender,
+      experience,
+      fitnessGoal: goal
+    })
+    message.success('计划已保存到我的健身计划！')
+    showPlanPreview.value = false
+    fitnessPlanData.value = null
+    currentPlanCard.value = null
+    sessionStorage.removeItem('currentPlanCard')
+    await loadMyPlans()
   } catch (error) {
     console.error('保存计划失败:', error)
     message.error(error.message || '保存计划失败，请稍后重试')
@@ -1352,7 +1377,7 @@ async function handleRegeneratePlan() {
 async function loadMyPlans() {
   loadingPlans.value = true
   try {
-    const res = await getMyFitnessPlans()
+    const res = await getMyPlans()
     if (res) {
       myPlans.value = res
     }

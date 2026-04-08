@@ -1,9 +1,11 @@
 package com.fitness.modules.analysis.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,59 +13,82 @@ import java.util.List;
  */
 @Data
 @TableName("analysis_report")
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class AnalysisReport {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 报告标题
-     */
     private String reportTitle;
-
-    /**
-     * 分析类型：OVERALL-综合分析, MEMBER-会员分析, COURSE-课程分析, EQUIPMENT-器材分析, REVENUE-营收分析
-     */
     private String analysisType;
-
-    /**
-     * LLM返回的Markdown格式报告内容
-     */
     private String reportContent;
 
     /**
-     * 优化建议列表（JSON数组格式）
+     * 优化建议JSON字符串 - 直接用TEXT存储
      */
-    @TableField(typeHandler = com.fitness.common.mybatis.JsonbTypeHandler.class)
-    private List<String> suggestions;
+    private String suggestionsJson;
 
-    /**
-     * 报告生成时间
-     */
     private LocalDateTime generateTime;
 
-    /**
-     * 创建时间
-     */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
-    /**
-     * 创建人ID（管理员ID）
-     */
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
 
-    /**
-     * 是否删除：0-未删除，1-已删除
-     */
     @TableLogic
     @TableField(fill = FieldFill.INSERT)
     private Boolean isDeleted;
+
+    // ==================== 非数据库字段 ====================
+
+    /**
+     * 优化建议列表（前端显示用）
+     */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @TableField(exist = false)
+    private transient List<String> suggestions;
+
+    public List<String> getSuggestions() {
+        if (this.suggestions != null && !this.suggestions.isEmpty()) {
+            return this.suggestions;
+        }
+        
+        if (this.suggestionsJson != null && !this.suggestionsJson.isEmpty()) {
+            return parseJson();
+        }
+        
+        return new ArrayList<>();
+    }
+
+    private List<String> parseJson() {
+        try {
+            if (suggestionsJson.startsWith("[") && suggestionsJson.endsWith("]")) {
+                return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(suggestionsJson, 
+                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+            }
+            List<String> result = new ArrayList<>();
+            result.add(suggestionsJson);
+            return result;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void setSuggestions(List<String> list) {
+        this.suggestions = list;
+        if (list != null && !list.isEmpty()) {
+            try {
+                this.suggestionsJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(list);
+            } catch (Exception e) {
+                this.suggestionsJson = list.toString();
+            }
+        } else {
+            this.suggestionsJson = "[]";
+        }
+    }
 }

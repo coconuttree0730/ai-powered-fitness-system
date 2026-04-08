@@ -1,116 +1,164 @@
 <template>
-  <div class="fitness-plans">
-    <n-space justify="space-between" style="margin-bottom: 20px">
+  <div class="fitness-plans-page">
+    <div class="page-header">
       <h2>我的健身计划</h2>
-    </n-space>
+      <p class="page-desc">在「健小助」中生成的健身计划会保存在此处</p>
+    </div>
 
-    <n-empty v-if="plans.length === 0" description="暂无健身计划" />
-
-    <n-grid :cols="2" :x-gap="20" :y-gap="20" v-else>
-      <n-grid-item v-for="plan in plans" :key="plan.id">
-        <n-card :title="plan.planName" hoverable>
-          <template #header-extra>
-            <n-button text type="error" @click="handleDelete(plan.id)">
-              删除
-            </n-button>
-          </template>
-          <p><strong>目标:</strong> {{ plan.goal }}</p>
-          <p><strong>时长:</strong> {{ plan.duration }}天</p>
-          <p><strong>创建时间:</strong> {{ formatTime(plan.createTime) }}</p>
-          <n-button text type="primary" @click="viewDetail(plan)">
-            查看详情
+    <n-spin :show="loading">
+      <n-empty v-if="!loading && plans.length === 0" description="暂无健身计划" size="large">
+        <template #extra>
+          <n-button type="primary" @click="$router.push('/member/assistant')">
+            去健小助生成计划
           </n-button>
-        </n-card>
-      </n-grid-item>
-    </n-grid>
+        </template>
+      </n-empty>
 
-    <n-modal v-model:show="showGenerateModal" preset="card" title="生成健身计划" style="width: 500px">
-      <n-form ref="formRef" :model="generateForm" :rules="rules">
-        <n-form-item path="goal" label="健身目标">
-          <n-select v-model:value="generateForm.goal" :options="goalOptions" placeholder="选择目标" />
-        </n-form-item>
-        <n-form-item path="bodyPart" label="训练部位">
-          <n-select v-model:value="generateForm.bodyPart" :options="bodyPartOptions" placeholder="选择部位" />
-        </n-form-item>
-        <n-form-item path="experience" label="经验水平">
-          <n-select v-model:value="generateForm.experience" :options="experienceOptions" placeholder="选择水平" />
-        </n-form-item>
-      </n-form>
-      <template #footer>
-        <n-space justify="end">
-          <n-button @click="showGenerateModal = false">取消</n-button>
-          <n-button type="primary" @click="handleGenerate" :loading="generating">
-            生成
-          </n-button>
-        </n-space>
+      <n-data-table
+        v-else
+        :columns="columns"
+        :data="plans"
+        :pagination="false"
+        :bordered="false"
+        :row-key="row => row.id"
+        striped
+        size="medium"
+        class="plan-table"
+      />
+    </n-spin>
+
+    <!-- 查看详情弹窗 - 使用 FitnessPlanPreview 组件渲染JSON数据 -->
+    <n-modal
+      v-model:show="showDetailModal"
+      preset="card"
+      title=""
+      :style="{ width: '92vw', maxWidth: '1200px' }"
+      :bordered="false"
+      :segmented="{ content: true }"
+      class="plan-detail-modal"
+    >
+      <template #header>
+        <div class="modal-header">
+          <span class="modal-title">健身训练计划</span>
+          <span class="modal-date">{{ formatDateTime(selectedPlan?.createTime) }}</span>
+        </div>
       </template>
-    </n-modal>
-
-    <n-modal v-model:show="showDetailModal" preset="card" title="计划详情" style="width: 700px">
-      <n-timeline v-if="selectedPlan">
-        <n-timeline-item
-          v-for="detail in planDetails"
-          :key="detail.id"
-          :type="'info'"
-          :title="`第${detail.dayOfWeek}天`"
-        >
-          <h4>{{ detail.exerciseName }}</h4>
-          <p>组数: {{ detail.sets }} | 次数: {{ detail.reps }} | 时长: {{ detail.duration }}</p>
-          <p v-if="detail.notes">备注: {{ detail.notes }}</p>
-        </n-timeline-item>
-      </n-timeline>
+      <FitnessPlanPreview
+        v-if="selectedPlan && selectedPlan.planDataJson"
+        :key="'preview-' + selectedPlan.id"
+        :plan-data="selectedPlan.planDataJson"
+        :is-embedded="true"
+        @course-click="handleCourseClick"
+      />
+      <n-empty v-else description="计划数据加载失败" />
     </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useMessage, useDialog } from 'naive-ui'
-import { getMyPlans, generatePlan, deletePlan, getPlanDetail } from '@/api/plan'
+import { ref, onMounted, h, computed } from 'vue'
+import { NButton, NTag, useMessage, useDialog, NSpace } from 'naive-ui'
+import { getMyPlans, deletePlan, getPlanDetail } from '@/api/plan'
+import FitnessPlanPreview from '@/components/FitnessPlanPreview.vue'
 
 const message = useMessage()
 const dialog = useDialog()
 
+const loading = ref(false)
 const plans = ref([])
-const showGenerateModal = ref(false)
 const showDetailModal = ref(false)
-const generating = ref(false)
 const selectedPlan = ref(null)
-const planDetails = ref([])
-const formRef = ref(null)
 
-const generateForm = reactive({
-  goal: null,
-  bodyPart: null,
-  experience: null
-})
-
-const rules = {
-  goal: [{ required: true, message: '请选择健身目标', trigger: 'change' }],
-  bodyPart: [{ required: true, message: '请选择训练部位', trigger: 'change' }],
-  experience: [{ required: true, message: '请选择经验水平', trigger: 'change' }]
-}
-
-const goalOptions = [
-  { label: '增肌', value: 'MUSCLE_GAIN' },
-  { label: '减脂', value: 'FAT_LOSS' },
-  { label: '塑形', value: 'BODY_SHAPING' },
-  { label: '耐力提升', value: 'ENDURANCE' }
-]
-
-const bodyPartOptions = [
-  { label: '全身', value: 'FULL_BODY' },
-  { label: '上肢', value: 'UPPER_BODY' },
-  { label: '下肢', value: 'LOWER_BODY' },
-  { label: '核心', value: 'CORE' },
-  { label: '背部', value: 'BACK' },
-  { label: '胸部', value: 'CHEST' }
-]
-
-const experienceOptions = [
-  { label: '新手', value: 'BEGINNER' },
-  { label: '中级', value: 'INTERMEDIATE' },
-  { label: '高级', value: 'ADVANCED' }
+const columns = [
+  {
+    title: '序号',
+    key: 'index',
+    width: 70,
+    render: (_, index) => index + 1
+  },
+  {
+    title: '计划生成日期',
+    key: 'createTime',
+    width: 180,
+    render: row => formatDateTime(row.createTime),
+    sorter: (a, b) => new Date(a.createTime) - new Date(b.createTime)
+  },
+  {
+    title: '身高',
+    key: 'height',
+    width: 80,
+    render: row => row.height ? `${row.height}cm` : '-'
+  },
+  {
+    title: '体重',
+    key: 'weight',
+    width: 80,
+    render: row => row.weight ? `${row.weight}kg` : '-'
+  },
+  {
+    title: '年龄',
+    key: 'age',
+    width: 70,
+    render: row => row.age ? `${row.age}岁` : '-'
+  },
+  {
+    title: '性别',
+    key: 'gender',
+    width: 80,
+    render: row => {
+      const map = { MALE: '男', FEMALE: '女', male: '男', female: '女' }
+      return map[row.gender] || row.gender || '-'
+    }
+  },
+  {
+    title: '健身经验',
+    key: 'experience',
+    width: 100,
+    render: row => {
+      const exp = row.experience || ''
+      if (!exp) return '-'
+      if (exp.includes('初级') || exp === 'BEGINNER') return h(NTag, { size: 'small', type: 'success' }, () => '初级')
+      if (exp.includes('中级') || exp === 'INTERMEDIATE') return h(NTag, { size: 'small', type: 'warning' }, () => '中级')
+      if (exp.includes('高级') || exp === 'ADVANCED') return h(NTag, { size: 'small', type: 'error' }, () => '高级')
+      return exp
+    }
+  },
+  {
+    title: '健身目标',
+    key: 'fitnessGoal',
+    width: 110,
+    render: row => {
+      const goal = row.fitnessGoal || row.goal || ''
+      if (!goal) return '-'
+      const colorMap = {
+        '增肌': 'info', 'MUSCLE_GAIN': 'info',
+        '减脂': 'success', 'FAT_LOSS': 'success',
+        '塑形': 'warning', 'BODY_SHAPING': 'warning',
+        '增强体能': 'error', 'ENDURANCE': 'error'
+      }
+      return h(NTag, { size: 'small', type: colorMap[goal] || 'default', bordered: false }, () => goal)
+    }
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 180,
+    fixed: 'right',
+    render: row => h(NSpace, {}, () => [
+      h(NButton, {
+        text: true,
+        type: 'primary',
+        size: 'small',
+        onClick: () => handleView(row)
+      }, () => '查看'),
+      h(NButton, {
+        text: true,
+        type: 'error',
+        size: 'small',
+        onClick: () => handleDelete(row)
+      }, () => '删除')
+    ])
+  }
 ]
 
 onMounted(() => {
@@ -118,53 +166,38 @@ onMounted(() => {
 })
 
 async function fetchPlans() {
+  loading.value = true
   try {
     const res = await getMyPlans()
-    plans.value = res.data || []
+    plans.value = Array.isArray(res) ? res : []
   } catch (error) {
-    console.error('获取计划失败:', error)
-  }
-}
-
-async function handleGenerate() {
-  try {
-    await formRef.value?.validate()
-    generating.value = true
-    const res = await generatePlan(generateForm)
-    if (res.data?.code === 200) {
-      message.success('计划生成成功')
-      showGenerateModal.value = false
-      fetchPlans()
-    } else {
-      message.error(res.data?.message || '生成失败')
-    }
-  } catch (error) {
-    console.error('生成计划失败:', error)
+    console.error('获取计划列表失败:', error)
+    message.error('获取计划列表失败')
   } finally {
-    generating.value = false
+    loading.value = false
   }
 }
 
-async function viewDetail(plan) {
-  selectedPlan.value = plan
+async function handleView(plan) {
   try {
     const res = await getPlanDetail(plan.id)
-    planDetails.value = res.data?.details || []
+    selectedPlan.value = res
     showDetailModal.value = true
   } catch (error) {
-    console.error('获取详情失败:', error)
+    console.error('获取计划详情失败:', error)
+    message.error('获取计划详情失败')
   }
 }
 
-function handleDelete(id) {
+function handleDelete(plan) {
   dialog.warning({
     title: '确认删除',
-    content: '确定要删除这个健身计划吗？',
+    content: `确定要删除 ${formatDate(plan.createTime)} 生成的健身计划吗？删除后无法恢复。`,
     positiveText: '删除',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await deletePlan(id)
+        await deletePlan(plan.id)
         message.success('删除成功')
         fetchPlans()
       } catch (error) {
@@ -174,14 +207,89 @@ function handleDelete(id) {
   })
 }
 
-function formatTime(time) {
-  if (!time) return ''
-  return new Date(time).toLocaleString('zh-CN')
+function handleCourseClick(course) {
+  message.info(`查看课程: ${course.name}`)
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('zh-CN')
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 </script>
 
 <style scoped>
-.fitness-plans h2 {
+.fitness-plans-page {
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.page-desc {
   margin: 0;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.plan-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.plan-table :deep(.n-data-table-tr) {
+  cursor: default;
+}
+
+.plan-table :deep(.n-data-table-th) {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+}
+
+.plan-table :deep(.n-data-table-td) {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.plan-detail-modal :deep(.n-card-header) {
+  padding: 16px 24px 12px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.modal-date {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.plan-detail-modal :deep(.n-card__content) {
+  padding: 0;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 </style>

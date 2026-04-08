@@ -3,6 +3,7 @@ package com.fitness.modules.plan.controller;
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.plan.model.dto.PlanGenerateDTO;
+import com.fitness.modules.plan.model.dto.SaveFitnessPlanDTO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 import com.fitness.modules.plan.service.FitnessPlanService;
 import jakarta.validation.Valid;
@@ -97,5 +98,14 @@ public class FitnessPlanController {
         log.info("删除计划: userId={}, planId={}", userId, planId);
         fitnessPlanService.deletePlan(userId, planId);
         return Result.success();
+    }
+
+    @PostMapping("/save")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<Long> savePlan(@Valid @RequestBody SaveFitnessPlanDTO dto) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("保存健身计划: userId={}", userId);
+        Long planId = fitnessPlanService.savePlan(userId, dto);
+        return Result.success(planId);
     }
 }

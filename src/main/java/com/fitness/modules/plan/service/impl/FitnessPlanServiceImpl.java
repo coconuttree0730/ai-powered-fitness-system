@@ -12,6 +12,7 @@ import com.fitness.modules.equipment.service.EquipmentService;
 import com.fitness.modules.plan.mapper.FitnessPlanDetailMapper;
 import com.fitness.modules.plan.mapper.FitnessPlanMapper;
 import com.fitness.modules.plan.model.dto.PlanGenerateDTO;
+import com.fitness.modules.plan.model.dto.SaveFitnessPlanDTO;
 import com.fitness.modules.plan.model.entity.FitnessPlan;
 import com.fitness.modules.plan.model.entity.FitnessPlanDetail;
 import com.fitness.modules.plan.model.vo.PlanDetailVO;
@@ -971,6 +972,50 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         fitnessPlanMapper.deleteById(planId);
 
         log.info("删除健身计划: planId={}", planId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long savePlan(Long userId, SaveFitnessPlanDTO dto) {
+        log.info("保存健身计划: userId={}", userId);
+
+        FitnessPlan plan = new FitnessPlan();
+        plan.setUserId(userId);
+        plan.setPlanDataJson(dto.getPlanDataJson());
+        plan.setHeight(dto.getHeight());
+        plan.setWeight(dto.getWeight());
+        plan.setAge(dto.getAge());
+        plan.setGender(dto.getGender());
+        plan.setExperience(dto.getExperience());
+        plan.setFitnessGoal(dto.getFitnessGoal());
+        plan.setStatus(1);
+        plan.setCreateTime(LocalDateTime.now());
+        plan.setUpdateTime(LocalDateTime.now());
+
+        String planName = "AI健身计划";
+        Object subtitle = dto.getPlanDataJson().get("subtitle");
+        if (subtitle != null) {
+            planName = String.valueOf(subtitle);
+        } else if (dto.getFitnessGoal() != null) {
+            planName = dto.getFitnessGoal() + "训练计划";
+        }
+        plan.setPlanName(planName);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> userInfo = (Map<String, Object>) dto.getPlanDataJson().get("userInfo");
+        if (userInfo != null) {
+            if (plan.getFitnessGoal() == null && userInfo.get("goal") != null) {
+                plan.setFitnessGoal(String.valueOf(userInfo.get("goal")));
+            }
+            if (plan.getExperience() == null && userInfo.get("intensity") != null) {
+                plan.setExperience(String.valueOf(userInfo.get("intensity")));
+            }
+        }
+
+        fitnessPlanMapper.insert(plan);
+
+        log.info("保存健身计划成功: planId={}", plan.getId());
+        return plan.getId();
     }
 
 }

@@ -932,6 +932,7 @@ async function handleSaveReport() {
 
   saveLoading.value = true
   try {
+    console.log('保存报告，suggestions:', analysisReport.value.suggestions)
     const reportData = {
       reportTitle: analysisReport.value.reportTitle,
       analysisType: analysisReport.value.analysisType,

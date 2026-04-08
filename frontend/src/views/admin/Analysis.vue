@@ -108,12 +108,15 @@
         </div>
         <el-divider />
         <div class="report-body" v-html="renderedContent"></div>
-        <div class="suggestions" v-if="currentReport.suggestions?.length">
+        <div class="suggestions" v-if="currentReport.suggestions && renderedSuggestions">
           <div class="suggestions-header">
             <el-icon size="18"><Opportunity /></el-icon>
             <span>优化建议</span>
           </div>
           <div class="suggestions-content" v-html="renderedSuggestions"></div>
+        </div>
+        <div v-else style="padding: 20px; color: #999; text-align: center;">
+          暂无优化建议数据 (suggestions: {{ currentReport.suggestions }})
         </div>
         <div class="report-footer">
           <el-text type="info" size="small">
@@ -169,14 +172,40 @@ const renderedContent = computed(() => {
 
 // Markdown 渲染优化建议
 const renderedSuggestions = computed(() => {
-  if (!currentReport.value?.suggestions?.length) return ''
-  const raw = currentReport.value.suggestions.join('\n\n')
+  console.log('renderedSuggestions 计算，原始值:', currentReport.value?.suggestions)
+  
+  if (!currentReport.value?.suggestions) {
+    console.log('suggestions 为空')
+    return ''
+  }
+
+  // 处理 suggestions 可能是 JSON 字符串的情况
+  let suggestions = currentReport.value.suggestions
+  if (typeof suggestions === 'string') {
+    try {
+      suggestions = JSON.parse(suggestions)
+      console.log('解析后的 suggestions:', suggestions)
+    } catch (e) {
+      console.error('解析 suggestions 失败:', e)
+      return ''
+    }
+  }
+
+  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+    console.log('suggestions 不是数组或为空')
+    return ''
+  }
+
+  const raw = suggestions.join('\n\n')
+  console.log('合并后的 raw:', raw.substring(0, 100) + '...')
+  
   const html = marked.parse(raw, {
     breaks: true,
     gfm: true,
     headerIds: false,
     mangle: false
   })
+  console.log('渲染后的 html 长度:', html.length)
   return DOMPurify.sanitize(html)
 })
 
