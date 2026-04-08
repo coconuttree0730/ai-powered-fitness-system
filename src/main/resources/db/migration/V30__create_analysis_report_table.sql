@@ -4,7 +4,7 @@ CREATE TABLE analysis_report (
     report_title VARCHAR(255) NOT NULL,
     analysis_type VARCHAR(50) NOT NULL,
     report_content TEXT NOT NULL,
-    suggestions_json TEXT,  -- JSON字符串格式
+    suggestions TEXT,           -- Markdown格式文本
     generate_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

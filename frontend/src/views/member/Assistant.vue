@@ -1322,6 +1322,9 @@ async function handleSavePlan() {
       weight = w ? parseFloat(w) : null
       experience = planData.userInfo.intensity || null
       goal = planData.userInfo.goal || null
+      const a = String(planData.userInfo.age || '').replace(/[^0-9]/g, '')
+      if (a) age = parseInt(a, 10)
+      gender = planData.userInfo.gender || null
     }
 
     try {

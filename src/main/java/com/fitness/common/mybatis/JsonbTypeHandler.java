@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * PostgreSQL jsonb 类型处理器
@@ -61,39 +62,44 @@ public class JsonbTypeHandler extends BaseTypeHandler<Object> {
         if (value == null) {
             return null;
         }
-        
-        // 使用反射处理 PGobject，避免直接依赖 PostgreSQL 驱动类
+
         String json = extractJsonFromPgObject(value);
         if (json != null) {
             if (json.isEmpty()) {
                 return null;
             }
             try {
-                // 尝试解析为 List<String>
                 if (json.startsWith("[")) {
-                    return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+                    return objectMapper.readValue(json, new TypeReference<List<Object>>() {});
                 }
-                // 其他情况返回原始字符串
+                if (json.startsWith("{")) {
+                    return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+                }
                 return json;
             } catch (Exception e) {
-                // 解析失败返回原始字符串
                 return json;
             }
         }
-        
-        // 如果已经是字符串
+
         if (value instanceof String) {
             String str = (String) value;
             if (str.startsWith("[")) {
                 try {
-                    return objectMapper.readValue(str, new TypeReference<List<String>>() {});
+                    return objectMapper.readValue(str, new TypeReference<List<Object>>() {});
+                } catch (Exception e) {
+                    return str;
+                }
+            }
+            if (str.startsWith("{")) {
+                try {
+                    return objectMapper.readValue(str, new TypeReference<Map<String, Object>>() {});
                 } catch (Exception e) {
                     return str;
                 }
             }
             return str;
         }
-        
+
         return value;
     }
     

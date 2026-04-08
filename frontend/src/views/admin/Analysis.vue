@@ -172,40 +172,14 @@ const renderedContent = computed(() => {
 
 // Markdown 渲染优化建议
 const renderedSuggestions = computed(() => {
-  console.log('renderedSuggestions 计算，原始值:', currentReport.value?.suggestions)
-  
-  if (!currentReport.value?.suggestions) {
-    console.log('suggestions 为空')
-    return ''
-  }
-
-  // 处理 suggestions 可能是 JSON 字符串的情况
-  let suggestions = currentReport.value.suggestions
-  if (typeof suggestions === 'string') {
-    try {
-      suggestions = JSON.parse(suggestions)
-      console.log('解析后的 suggestions:', suggestions)
-    } catch (e) {
-      console.error('解析 suggestions 失败:', e)
-      return ''
-    }
-  }
-
-  if (!Array.isArray(suggestions) || suggestions.length === 0) {
-    console.log('suggestions 不是数组或为空')
-    return ''
-  }
-
-  const raw = suggestions.join('\n\n')
-  console.log('合并后的 raw:', raw.substring(0, 100) + '...')
-  
+  if (!currentReport.value?.suggestions) return ''
+  const raw = currentReport.value.suggestions
   const html = marked.parse(raw, {
     breaks: true,
     gfm: true,
     headerIds: false,
     mangle: false
   })
-  console.log('渲染后的 html 长度:', html.length)
   return DOMPurify.sanitize(html)
 })
 

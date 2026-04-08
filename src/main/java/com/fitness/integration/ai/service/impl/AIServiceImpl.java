@@ -185,7 +185,6 @@ public class AIServiceImpl implements AIService {
             String prompt = promptTemplates.generateFitnessPlanJson(profile);
             log.debug("生成的Prompt长度: {}", prompt.length());
 
-            //spring ai Alibaba output 格式约束
             BeanOutputConverter<FitnessPlanResponseDTO> converter =
                     new BeanOutputConverter<>(FitnessPlanResponseDTO.class);
 
@@ -195,7 +194,6 @@ public class AIServiceImpl implements AIService {
             String fullPrompt = prompt + "\n\n" + format;
             log.debug("完整Prompt长度: {}", fullPrompt.length());
 
-            //LLM返回的 JSON 数据 //TODO LLM 调用 生成 健身计划的标记...
             String jsonResponse = chatClient.prompt()
                     .user(fullPrompt)
                     .call()
@@ -209,7 +207,11 @@ public class AIServiceImpl implements AIService {
             String cleanedJson = cleanJsonResponse(jsonResponse);
             log.debug("------> 清洗后的JSON长度: {}", cleanedJson.length());
 
+            validateJsonStructure(cleanedJson);
+
             FitnessPlanResponseDTO response = objectMapper.readValue(cleanedJson, FitnessPlanResponseDTO.class);
+
+            validateResponse(response);
 
             log.info("从个人档案生成健身计划成功");
             log.debug("生成的计划: subtitle={}, weeklyPlan.size={}",
@@ -220,6 +222,86 @@ public class AIServiceImpl implements AIService {
         } catch (Exception e) {
             log.error("从个人档案生成健身计划失败", e);
             throw new RuntimeException("生成健身计划失败: " + e.getMessage(), e);
+        }
+    }
+
+    private void validateJsonStructure(String json) {
+        if (json == null || json.isEmpty()) {
+            throw new RuntimeException("JSON内容为空");
+        }
+
+        if (!json.trim().startsWith("{")) {
+            throw new RuntimeException("JSON格式错误：必须以 { 开头");
+        }
+
+        if (!json.trim().endsWith("}")) {
+            throw new RuntimeException("JSON格式错误：必须以 } 结尾，可能是JSON被截断");
+        }
+
+        int openBraces = 0;
+        int closeBraces = 0;
+        int openBrackets = 0;
+        int closeBrackets = 0;
+        boolean inString = false;
+        boolean escaped = false;
+
+        for (char c : json.toCharArray()) {
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                escaped = true;
+                continue;
+            }
+
+            if (c == '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (!inString) {
+                if (c == '{') openBraces++;
+                else if (c == '}') closeBraces++;
+                else if (c == '[') openBrackets++;
+                else if (c == ']') closeBrackets++;
+            }
+        }
+
+        if (openBraces != closeBraces) {
+            throw new RuntimeException(String.format(
+                "JSON格式错误：花括号不匹配，左括号 %d 个，右括号 %d 个",
+                openBraces, closeBraces
+            ));
+        }
+
+        if (openBrackets != closeBrackets) {
+            throw new RuntimeException(String.format(
+                "JSON格式错误：方括号不匹配，左括号 %d 个，右括号 %d 个",
+                openBrackets, closeBrackets
+            ));
+        }
+    }
+
+    private void validateResponse(FitnessPlanResponseDTO response) {
+        if (response.getWeeklyPlan() == null) {
+            throw new RuntimeException("生成的计划缺少weeklyPlan字段");
+        }
+
+        if (response.getWeeklyPlan().size() != 7) {
+            throw new RuntimeException(String.format(
+                "生成的计划天数不正确：期望7天，实际%d天",
+                response.getWeeklyPlan().size()
+            ));
+        }
+
+        String[] expectedDays = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
+        for (int i = 0; i < 7; i++) {
+            String actualDay = response.getWeeklyPlan().get(i).getDayName();
+            if (!expectedDays[i].equals(actualDay)) {
+                log.warn("第{}天的dayName不符合预期：期望{}，实际{}", i+1, expectedDays[i], actualDay);
+            }
         }
     }
 
@@ -240,7 +322,115 @@ public class AIServiceImpl implements AIService {
             cleaned = cleaned.substring(0, cleaned.length() - 3);
         }
 
-        return cleaned.trim();
+        cleaned = cleaned.trim();
+
+        cleaned = fixMalformedImageFields(cleaned);
+
+        cleaned = truncateWeeklyPlanTo7Days(cleaned);
+
+        return cleaned;
+    }
+
+    private String truncateWeeklyPlanTo7Days(String json) {
+        if (json == null || json.isEmpty()) {
+            return json;
+        }
+
+        try {
+            int weeklyPlanStart = json.indexOf("\"weeklyPlan\"");
+            if (weeklyPlanStart == -1) {
+                return json;
+            }
+
+            int arrayStart = json.indexOf("[", weeklyPlanStart);
+            if (arrayStart == -1) {
+                return json;
+            }
+
+            int dayCount = 0;
+            int lastValidEnd = -1;
+            int braceDepth = 0;
+            boolean inString = false;
+            boolean escaped = false;
+            int objectStart = -1;
+
+            for (int i = arrayStart + 1; i < json.length(); i++) {
+                char c = json.charAt(i);
+
+                if (escaped) {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\') {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"') {
+                    inString = !inString;
+                    continue;
+                }
+
+                if (!inString) {
+                    if (c == '{') {
+                        if (braceDepth == 0) {
+                            objectStart = i;
+                        }
+                        braceDepth++;
+                    } else if (c == '}') {
+                        braceDepth--;
+                        if (braceDepth == 0) {
+                            dayCount++;
+                            lastValidEnd = i;
+
+                            if (dayCount == 7) {
+                                int arrayEnd = json.indexOf("]", i);
+                                if (arrayEnd != -1) {
+                                    String truncated = json.substring(0, lastValidEnd + 1) + json.substring(arrayEnd);
+                                    log.info("截断多余的weeklyPlan数据，保留前7天");
+                                    return truncated;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("截断weeklyPlan时发生错误: {}", e.getMessage());
+        }
+
+        return json;
+    }
+
+    private String fixMalformedImageFields(String json) {
+        if (json == null || json.isEmpty()) {
+            return json;
+        }
+
+        String fixed = json;
+
+        fixed = fixed.replaceAll(
+            "\"image\"\\s*:\\s*\"([^\"]*?),name\"\\s*:\\s*\"([^\"]*?)\",\\s*\"image\"\\s*:\\s*\"([^\"]*?)\"",
+            "\"image\": \"$3\", \"name\": \"$2\""
+        );
+
+        fixed = fixed.replaceAll(
+            "\"([^\"]*?),name\"\\s*:\\s*\"([^\"]*?)\",\\s*\"image\"\\s*:\\s*\"([^\"]*?)\"",
+            "\"$3\""
+        );
+
+        fixed = fixed.replaceAll(
+            "\"image\"\\s*:\\s*\"(https?://[^\"]*?)/([a-f0-9\\-]+|[0-9]+),name\":\"([^\"]*?)\"",
+            "\"image\": \"$1/$2.webp\""
+        );
+
+        fixed = fixed.replaceAll(
+            "\"image\"\\s*:\\s*\"([^\"]*?)/([a-f0-9\\-]+|[0-9]+),name\"\\s*:\\s*\"([^\"]*?)\"",
+            "\"image\": \"$1/$2.webp\""
+        );
+
+        return fixed;
     }
 
 

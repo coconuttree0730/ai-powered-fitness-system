@@ -23,7 +23,8 @@ public class PromptTemplates {
         prompt.append("你是一位拥有15年经验的顶级健身教练AI，擅长根据学员身体数据制定科学、个性化的周期训练计划。\n\n");
 
         prompt.append("# Task\n");
-        prompt.append("根据学员档案信息，制定一份**严格7天**的周度健身训练计划，返回结构化JSON。\n\n");
+        prompt.append("根据学员档案信息，制定一份**严格7天**的周度健身训练计划，返回结构化JSON。\n");
+        prompt.append("**重要：weeklyPlan数组必须恰好包含7个元素，对应周一到周日，绝对不能有第8天！**\n\n");
 
         prompt.append("# 学员档案\n");
         prompt.append("| 字段 | 值 |\n");
@@ -56,7 +57,10 @@ public class PromptTemplates {
         prompt.append("  * exercises: 动作数组 [{ name, sets, reps, restSeconds }]；休息日设为 []\n\n");
 
         prompt.append("# ⚠️ 关键规则（违反任一条将导致输出无效）\n");
-        prompt.append("1. 【强制】weeklyPlan.length === 7，不多不少，必须是 周一~周日 各一个元素\n");
+        prompt.append("1. 【最高优先级】weeklyPlan数组必须恰好包含7个元素！对应：周一、周二、周三、周四、周五、周六、周日\n");
+        prompt.append("   ❌ 错误：返回8天或更多天的数据\n");
+        prompt.append("   ❌ 错误：在周日后面又出现\"周一\"（第二周）\n");
+        prompt.append("   ✅ 正确：只有7天，从周一到周日结束\n");
         prompt.append("2. 【强制】休息日的 courses=null, equipment=[], exercises=[] —— 不允许有课程、器械、动作、tips\n");
         prompt.append("3. 【强制】每天 courses 数量必须在2~3之间（训练日至少2门不同课程，最多3门，**绝对禁止只返回1门课程**）\n");
         prompt.append("4. 【强制】course.name / course.coverImage 必须与系统课程库完全一致，禁止编造\n");
@@ -76,6 +80,16 @@ public class PromptTemplates {
         prompt.append("   - 核心/瑜伽日 → 选择FUNCTIONAL类型器械（瑜伽垫、瑜伽球、弹力带、泡沫轴等）\n");
         prompt.append("10. 【强制】【器械多样性】不同训练日的equipment必须有所区别！严禁每天都推荐相同的器械组合！\n");
         prompt.append("    每天至少推荐2-3件不同的器械，且相邻两天尽量避免重复相同器械\n\n");
+
+        prompt.append("#  JSON格式强制要求（违反将导致解析失败）\n");
+        prompt.append("1. 【绝对禁止】在字符串值中嵌入JSON片段！例如以下错误示例：\n");
+        prompt.append("    错误：\"image\": \"http://example.com/1,name\":\"杠铃\",\"image\":\"http://example.com/2.webp\"\n");
+        prompt.append("   正确：\"image\": \"http://example.com/1.webp\"\n");
+        prompt.append("2. 【绝对禁止】字符串值未闭合或JSON结构不完整\n");
+        prompt.append("3. 【绝对禁止】返回超过7天的数据（周一到周日，共7天，不能有第8天）\n");
+        prompt.append("4. 【强制】所有字符串值必须用双引号包裹，且引号内不能包含未转义的双引号\n");
+        prompt.append("5. 【强制】image字段的值必须是完整的URL字符串，不能包含逗号、花括号等JSON字符\n");
+        prompt.append("6. 【强制】确保JSON完整闭合，所有 { 必须有对应的 }，所有 [ 必须有对应的 ]\n\n");
 
         prompt.append("# 设计原则\n");
         prompt.append("- 遵循渐进超负荷原则，强度合理递进\n");
