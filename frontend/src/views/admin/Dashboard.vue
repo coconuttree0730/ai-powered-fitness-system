@@ -220,6 +220,9 @@
             <el-icon><Clock /></el-icon>
             生成时间：{{ formatDateTime(analysisReport.generateTime) }}
           </el-text>
+          <el-button type="primary" :icon="Document" @click="handleSaveReport" :loading="saveLoading">
+            保存到数据分析
+          </el-button>
         </div>
       </div>
     </el-dialog>
@@ -237,13 +240,14 @@ import { useLoadingStore } from '@/stores/loading'
 import {
   User, Calendar, Tickets, Box, Goods, Money, ArrowUp, ArrowDown,
   Refresh, TrendCharts, PieChart, Clock, Reading, MagicStick,
-  UserFilled, Warning, Star, Opportunity
+  UserFilled, Warning, Star, Opportunity, Document
 } from '@element-plus/icons-vue'
 import {
   getDashboardStats, getPeakHours, getMemberCardStats, getCourseStats,
   generateAnalysis, getRevenueTrend, getUserGrowth, getEquipmentStatus,
   getRepairStats
 } from '@/api/dashboard'
+import { saveAnalysisReport } from '@/api/analysis'
 
 const router = useRouter()
 const loadingStore = useLoadingStore()
@@ -271,6 +275,7 @@ const revenueChartType = ref('line')
 const refreshLoading = ref(false)
 const analysisVisible = ref(false)
 const analysisReport = ref(null)
+const saveLoading = ref(false)
 
 // 数据存储
 const dashboardData = ref({})
@@ -918,7 +923,32 @@ async function handleAnalysis() {
   }
 }
 
+// 保存报告到数据分析
+async function handleSaveReport() {
+  if (!analysisReport.value) {
+    ElMessage.warning('没有可保存的报告')
+    return
+  }
 
+  saveLoading.value = true
+  try {
+    const reportData = {
+      reportTitle: analysisReport.value.reportTitle,
+      analysisType: analysisReport.value.analysisType,
+      reportContent: analysisReport.value.reportContent,
+      suggestions: analysisReport.value.suggestions,
+      generateTime: analysisReport.value.generateTime
+    }
+
+    await saveAnalysisReport(reportData)
+    ElMessage.success('报告保存成功，可在数据分析菜单查看')
+  } catch (error) {
+    console.error('保存报告失败:', error)
+    ElMessage.error('保存报告失败，请稍后重试')
+  } finally {
+    saveLoading.value = false
+  }
+}
 
 // 自动刷新
 function startAutoRefresh() {
