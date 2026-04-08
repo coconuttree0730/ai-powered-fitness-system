@@ -74,8 +74,8 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             bmi = weight.divide(heightInMeters.pow(2), 1, RoundingMode.HALF_UP).toString();
         }
 
-        // 3. 查询系统可用课程列表（用于AI选择）——传入全部课程确保多样性
-        cachedCourses = courseService.getHomePageCourseCards(100);
+        // 3. 查询系统可用课程列表（用于AI选择）——优化：只查询前20个热门课程
+        cachedCourses = courseService.getHomePageCourseCards(20);
         StringBuilder coursesJson = new StringBuilder("[");
         for (int i = 0; i < cachedCourses.size(); i++) {
             CourseCardVO c = cachedCourses.get(i);
@@ -94,10 +94,10 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
         coursesJson.append("]");
 
-        // 4. 查询系统可用器械列表（只查正常状态的）——传入全部器械确保每日多样性
+        // 4. 查询系统可用器械列表（只查正常状态的）——优化：只查询前15个器械
         EquipmentQueryDTO equipQuery = new EquipmentQueryDTO();
         equipQuery.setStatus(1);
-        equipQuery.setPageSize(100);
+        equipQuery.setPageSize(15);
         cachedEquipment = equipmentService.getEquipmentList(equipQuery).getRecords();
         StringBuilder equipmentJson = new StringBuilder("[");
         for (int i = 0; i < cachedEquipment.size(); i++) {

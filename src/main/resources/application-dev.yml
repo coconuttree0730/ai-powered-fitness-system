@@ -3,14 +3,14 @@ spring:
     activate:
       on-profile: dev
 
-  # Spring Boot DevTools 热重启配置
-  devtools:
-    restart:
-      enabled: true
-      additional-paths: src/main/java,src/main/resources
-      exclude: static/**,public/**,templates/**
-    livereload:
-      enabled: true
+
+  ai:
+    ollama:
+      base-url: http://172.19.55.232:11434
+      embedding:
+        model: embeddinggemma:300m
+
+
 
   # Redis 配置
   data:
@@ -55,3 +55,5 @@ logging:
     org.springframework.ai.chat: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}:%line - %msg%n"
+
+

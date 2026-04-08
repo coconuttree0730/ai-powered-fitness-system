@@ -1,0 +1,362 @@
+{
+  "subtitle": "7天增肌高级训练计划",
+  "userInfo": {
+    "bmi": "22.8",
+    "goal": "增肌",
+    "height": "170 cm",
+    "intensity": "高强度",
+    "weight": "63 kg"
+  },
+  "weeklyPlan": [
+    {
+      "dayName": "周一",
+      "focus": "全身复合动作强化",
+      "courses": [
+        {
+          "category": "力量训练",
+          "coverImage": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+          "description": "以复合动作为核心构建力量循环训练，系统提升全身整体力量水平。",
+          "duration": 90,
+          "id": 81,
+          "name": "全身力量循环"
+        },
+        {
+          "category": "力量训练",
+          "coverImage": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?w=800",
+          "description": "系统掌握杠铃深蹲要领，强化下肢力量与核心稳定，提升运动表现与体态控制。",
+          "duration": 60,
+          "id": 76,
+          "name": "杠铃深蹲特训"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/29/28a815be-a2cd-4f77-ac7e-716a320d1422.webp",
+          "name": "动感单车 S200"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/30/71d74753-bb23-4ac3-a041-6ca2dc51e2e4.webp",
+          "name": "橡胶包胶杠铃片套装"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/23/6b017543-142a-422b-8f38-0caa3137bce0.webp",
+          "name": "史密斯训练架"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "杠铃深蹲",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 5
+        },
+        {
+          "name": "硬拉",
+          "reps": 3,
+          "restSeconds": 120,
+          "sets": 4
+        },
+        {
+          "name": "卧推",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 4
+        }
+      ]
+    },
+    {
+      "dayName": "周二",
+      "focus": "上半身力量发展",
+      "courses": [
+        {
+          "category": "力量训练",
+          "coverImage": "http://localhost:9000/fitness-bucket/images/5f60ffe5-754b-4ad1-b974-94632893fc96.jpg",
+          "description": "胸肌与背部肌群交替训练，打造完美上半身线条",
+          "duration": 50,
+          "id": 77,
+          "name": "胸背超级组训练"
+        },
+        {
+          "category": "力量训练",
+          "coverImage": "http://localhost:9000/fitness-bucket/images/50b712ab-fb6e-4c07-b8c1-cc41a466da04.webp",
+          "description": "壶铃套装",
+          "duration": 45,
+          "id": 31,
+          "name": "壶铃套装"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/32/50b712ab-fb6e-4c07-b8c1-cc41a466da04.webp",
+          "name": "壶铃套装"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/28/6b017543-142a-422b-8f38-0caa3137bce0.webp",
+          "name": "史密斯训练架"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/35/4eda3da5-5023-457b-8076-e7020f52a711.webp",
+          "name": "泡沫轴"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "上斜哑铃推举",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 4
+        },
+        {
+          "name": "引体向上",
+          "reps": 4,
+          "restSeconds": 120,
+          "sets": 3
+        },
+        {
+          "name": "壶铃摆动",
+          "reps": 3,
+          "restSeconds": 60,
+          "sets": 4
+        }
+      ]
+    },
+    {
+      "dayName": "周三",
+      "focus": "有氧耐力与心肺强化",
+      "courses": [
+        {
+          "category": "有氧燃脂",
+          "coverImage": "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=800",
+          "description": "高强度跳绳训练，快速提升心率，燃烧卡路里",
+          "duration": 45,
+          "id": 84,
+          "name": "跳绳燃脂课"
+        },
+        {
+          "category": "有氧燃脂",
+          "coverImage": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+          "description": "高强度骑行训练，配合动感音乐，快速燃烧脂肪",
+          "duration": 45,
+          "id": 82,
+          "name": "燃脂动感单车"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/36/927d642f-c144-41b0-9690-a3d7861a5c49.webp",
+          "name": "战绳 15米"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/18/2a4e805e-b137-47c5-be32-e3b3e005e00a.webp",
+          "name": "商用跑步机 X1"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/21/4ad04cff-064f-4920-9195-7a2c98267a00.webp",
+          "name": "划船机 R300"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周四",
+      "focus": "核心稳定性强化",
+      "courses": [
+        {
+          "category": "瑜伽普拉提",
+          "coverImage": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800",
+          "description": "借助核心床进行普拉提训练，是强化核心肌群的高效途径。通过器械独特的弹簧阻力与滑动床板设计，训练者能在动态不稳定中精准激活深层肌群。",
+          "duration": 60,
+          "id": 90,
+          "name": "普拉提核心床"
+        },
+        {
+          "category": "瑜伽普拉提",
+          "coverImage": "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=800",
+          "description": "利用吊床进行的瑜伽练习，增强核心与柔韧性",
+          "duration": 60,
+          "id": 92,
+          "name": "空中瑜伽入门"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/90/2a4e805e-b137-47c5-be32-e3b3e005e00a.webp",
+          "name": "商用跑步机 X1"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/9/5f937e1c-1edc-40e1-a35e-2caf08aae1ad.webp",
+          "name": "瑜伽球"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/7/84ecc2e1-ed5c-4ecc-b8d4-30d7163d8920.webp",
+          "name": "瑜伽垫"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周五",
+      "focus": "手臂与肩部塑形",
+      "courses": [
+        {
+          "category": "力量训练",
+          "coverImage": "http://localhost:9000/fitness-bucket/images/589bd94f-3ee4-4cd0-9896-528bcd2d2930.webp",
+          "description": "二头肌与三头肌超级组训练，突破臂围瓶颈，高效刺激双臂肌群，提升力量与耐力。",
+          "duration": 40,
+          "id": 80,
+          "name": "手臂力量轰炸"
+        },
+        {
+          "category": "力量训练",
+          "coverImage": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800",
+          "description": "针对三角肌前中后束的专项训练，打造立体肩部，配备多角度固定式肩推与侧平举、高低坐姿推举等模块，多点位激活并塑形肩峰线",
+          "duration": 45,
+          "id": 79,
+          "name": "肩部塑形训练"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/5/245766b9-567d-4c86-bc9a-c2d961e1b806.webp",
+          "name": "哑铃套装"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/28/6b017543-142a-422b-8f38-0caa3137bce0.webp",
+          "name": "史密斯训练架"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/34/4800b936-589d-4380-8b88-19cd1eb0ac16.jpg",
+          "name": "弹力带套装"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "哑铃卧推",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 4
+        },
+        {
+          "name": "高位下拉",
+          "reps": 4,
+          "restSeconds": 120,
+          "sets": 3
+        },
+        {
+          "name": "侧平举",
+          "reps": 12,
+          "restSeconds": 45,
+          "sets": 3
+        }
+      ]
+    },
+    {
+      "dayName": "周六",
+      "focus": "功能性力量与爆发力",
+      "courses": [
+        {
+          "category": "拳击格斗",
+          "coverImage": "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=800",
+          "description": "学习泰拳基础动作，提升力量与反应速度",
+          "duration": 60,
+          "id": 95,
+          "name": "泰拳实战技巧"
+        },
+        {
+          "category": "拳击格斗",
+          "coverImage": "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800",
+          "description": "学习拳击基本拳法、步法与防守技巧",
+          "duration": 60,
+          "id": 94,
+          "name": "拳击基础入门"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/96/89f93cc1-0835-4764-9680-fe7e28a83c46.webp",
+          "name": "奥林匹克杠铃杆"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/22/8f754d4d-352a-4388-a5d3-12cc774e95d0.webp",
+          "name": "登山机 C100"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/15/526b286b-71f9-43cc-947e-1fd47fd98b50.webp",
+          "name": "高位下拉器"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "俯卧撑",
+          "reps": 4,
+          "restSeconds": 60,
+          "sets": 5
+        },
+        {
+          "name": "深蹲跳",
+          "reps": 3,
+          "restSeconds": 90,
+          "sets": 4
+        },
+        {
+          "name": "开合跳",
+          "reps": 3,
+          "restSeconds": 45,
+          "sets": 5
+        }
+      ]
+    },
+    {
+      "dayName": "周日",
+      "focus": "恢复与放松",
+      "courses": null,
+      "equipment": [],
+      "exercises": [],
+      "focus": "深度放松与恢复"
+    },
+    {
+      "dayName": "周一",
+      "focus": "增肌专项强化",
+      "courses": [
+        {
+          "category": "力量训练",
+          "coverImage": "http://localhost:9000/fitness-bucket/images/5f60ffe5-754b-4ad1-b974-94632893fc96.jpg",
+          "description": "胸背超级组训练，打造完美上半身线条",
+          "duration": 50,
+          "id": 77,
+          "name": "胸背超级组训练"
+        },
+        {
+          "category": "力量训练",
+          "coverImage": "http://localhost:9000/fitness-bucket/images/80/589bd94f-3ee4-4cd0-9896-528bcd2d2930.webp",
+          "description": "手臂与三头肌强化训练",
+          "duration": 40,
+          "id": 80,
+          "name": "手臂力量轰炸"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/23/6b017543-142a-422b-8f38-0caa3137bce0.webp",
+          "name": "史密斯训练架"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/5/245766b9-567d-4c86-bc9a-c2d961e1b806.webp",
+          "name": "哑铃套装"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/28/4eda3da5-5023-457b-8076-e7020f52a711.webp",
+          "name": "泡沫轴"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "卧推",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 5
+        },
+        {
+          "name": "引体向上",
+          "reps": 4,
+          "restSeconds": 1
