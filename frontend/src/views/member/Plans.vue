@@ -34,20 +34,15 @@
       title=""
       :style="{ width: '92vw', maxWidth: '1200px' }"
       :bordered="false"
-      :segmented="{ content: true }"
+      :segmented="false"
       class="plan-detail-modal"
     >
-      <template #header>
-        <div class="modal-header">
-          <span class="modal-title">健身训练计划</span>
-          <span class="modal-date">{{ formatDateTime(selectedPlan?.createTime) }}</span>
-        </div>
-      </template>
       <FitnessPlanPreview
-        v-if="selectedPlan && selectedPlan.planDataJson"
-        :key="'preview-' + selectedPlan.id"
-        :plan-data="selectedPlan.planDataJson"
+        v-if="previewData"
+        :key="'preview-' + selectedPlan?.id"
+        :plan-data="previewData"
         :is-embedded="true"
+        :show-actions="false"
         @course-click="handleCourseClick"
       />
       <n-empty v-else description="计划数据加载失败" />
@@ -68,6 +63,7 @@ const loading = ref(false)
 const plans = ref([])
 const showDetailModal = ref(false)
 const selectedPlan = ref(null)
+const previewData = ref(null)
 
 const columns = [
   {
@@ -180,8 +176,18 @@ async function fetchPlans() {
 
 async function handleView(plan) {
   try {
+    previewData.value = null
+    selectedPlan.value = null
+
     const res = await getPlanDetail(plan.id)
     selectedPlan.value = res
+
+    let data = res?.planDataJson
+    if (data && typeof data === 'string') {
+      try { data = JSON.parse(data) } catch (e) { data = null }
+    }
+
+    previewData.value = data
     showDetailModal.value = true
   } catch (error) {
     console.error('获取计划详情失败:', error)
@@ -289,7 +295,11 @@ function formatDateTime(dateStr) {
 
 .plan-detail-modal :deep(.n-card__content) {
   padding: 0;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
+}
+
+.plan-detail-modal :deep(.n-card) {
+  max-height: 90vh;
 }
 </style>

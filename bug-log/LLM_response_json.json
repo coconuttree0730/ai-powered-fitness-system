@@ -1,0 +1,273 @@
+{
+  "subtitle": "7天增肌高级训练计划",
+  "userInfo": {
+    "bmi": "21.9",
+    "goal": "增肌",
+    "height": "170 cm",
+    "intensity": "高强度",
+    "weight": "63 kg"
+  },
+  "weeklyPlan": [
+    {
+      "dayName": "周一",
+      "focus": "全身复合动作强化",
+      "courses": [
+        {
+          "category": "力量训练",
+          "coverImage": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+          "description": "以复合动作为核心构建力量循环训练，系统提升全身整体力量水平。",
+          "duration": 90,
+          "id": 81,
+          "name": "全身力量循环"
+        },
+        {
+          "category": "力量训练",
+          "coverImage": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?w=800",
+          "description": "系统掌握杠铃深蹲要领，强化下肢力量与核心稳定，提升运动表现与体态控制。",
+          "duration": 60,
+          "id": 76,
+          "name": "杠铃深蹲特训"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/29,name":"奥林匹克杠铃杆",
+          "name": "奥林匹克杠铃杆"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/28,name":"可调节哑铃套装",
+          "name": "可调节哑铃套装"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "杠铃深蹲",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 3
+        },
+        {
+          "name": "硬拉",
+          "reps": 3,
+          "restSeconds": 120,
+          "sets": 3
+        },
+        {
+          "name": "推举",
+          "reps": 3,
+          "restSeconds": 90,
+          "sets": 3
+        }
+      ]
+    },
+    {
+      "dayName": "周二",
+      "focus": "上肢力量与肩部塑形",
+      "courses": [
+        {
+          "category": "力量训练",
+          "coverImage": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800",
+          "description": "针对三角肌前中后束的专项训练，打造立体肩部，配备多角度固定式肩推与侧平举、高低坐姿推举等模块，多点位激活并塑形肩峰线，提供可调阻力与多档位选择，满足进阶塑形与力量提升需求。",
+          "duration": 45,
+          "id": 79,
+          "name": "肩部塑形训练"
+        },
+        {
+          "category": "力量训练",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/589bd94f-3ee4-4cd0-9896-528bcd2d2930.webp",
+          "description": "二头肌与三头肌超级组训练，突破臂围瓶颈，高效刺激双臂肌群，提升力量与耐力。",
+          "duration": 40,
+          "id": 80,
+          "name": "手臂力量轰炸"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/30,name":"橡胶包胶杠铃片套装",
+          "name": "橡胶包胶杠铃片套装"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/23,name":"史密斯训练架",
+          "name": "史密斯训练架"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/28,name":"可调节哑铃套装",
+          "name": "可调节哑铃套装"
+        }
+      ],
+      "exercises": [
+        {
+          "name": "坐姿推举",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 3
+        },
+        {
+          "name": "划船",
+          "reps": 4,
+          "restSeconds": 120,
+          "sets": 3
+        },
+        {
+          "name": "弯举",
+          "reps": 3,
+          "restSeconds": 90,
+          "sets": 3
+        }
+      ]
+    },
+    {
+      "dayName": "周三",
+      "focus": "核心稳定性强化",
+      "courses": [
+        {
+          "category": "瑜伽普拉提",
+          "coverImage": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800",
+          "description": "借助核心床进行普拉提训练，是强化核心肌群的高效途径。通过器械独特的弹簧阻力与滑动床板设计，训练者能在动态不稳定中精准激活深层肌群。这不仅有助于塑造紧致身形，更能显著提升身体稳定性与协调性，让每一次伸展与发力都充满控制之美。",
+          "duration": 60,
+          "id": 90,
+          "name": "普拉提核心床"
+        },
+        {
+          "category": "康复体态",
+          "coverImage": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+          "description": "借助科学系统的专业训练，针对性矫正脊柱侧弯问题。通过强化核心肌群与优化体态排列，有效改善脊柱生理曲度，帮助身体重获自然平衡与挺拔姿态，从而提升整体健康气质。",
+          "duration": 50,
+          "id": 104,
+          "name": "脊柱侧弯矫正"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/90,name":"普拉提核心床",
+          "name": "普拉提核心床"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/35,name":"泡沫轴",
+          "name": "泡沫轴"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周四",
+      "focus": "有氧耐力与心肺强化",
+      "courses": [
+        {
+          "category": "有氧燃脂",
+          "coverImage": "https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?w=800",
+          "description": "结合流行舞蹈的有氧运动，快乐燃脂不枯燥",
+          "duration": 50,
+          "id": 88,
+          "name": "有氧舞蹈派对"
+        },
+        {
+          "category": "有氧燃脂",
+          "coverImage": "https://images.unsplash.com/photo-1535525153412-5a42439a210d?w=800",
+          "description": "学习Hip-Hop基础律动与舞步，释放青春活力",
+          "duration": 60,
+          "id": 101,
+          "name": "街舞Hip-Hop"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/18,name":"商用跑步机 X1",
+          "name": "商用跑步机 X1"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/21,name":"划船机 R300",
+          "name": "划船机 R300"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周五",
+      "focus": "高强度间歇燃脂",
+      "courses": [
+        {
+          "category": "有氧燃脂",
+          "coverImage": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800",
+          "description": "利用踏板进行有氧训练，锻炼心肺功能与腿部力量",
+          "duration": 50,
+          "id": 86,
+          "name": "阶梯踏板训练"
+        },
+        {
+          "category": "有氧燃脂",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/41873e51-e76b-44ae-9cad-9bc787845fb3.webp",
+          "description": "高强度跳绳训练，快速提升心率，高效燃烧卡路里。",
+          "duration": 45,
+          "id": 84,
+          "name": "跳绳燃脂课"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/20,name":"动感单车 S200",
+          "name": "动感单车 S200"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/37,name":"TRX悬挂训练带",
+          "name": "TRX悬挂训练带"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周六",
+      "focus": "舞蹈协调性与心肺提升",
+      "courses": [
+        {
+          "category": "舞蹈操课",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/50e9109f-1dbd-476f-b23c-02d9d8266994.jpg",
+          "description": "拉丁风格有氧舞蹈，热情奔放，以律动与节奏燃脂塑形，融合踢踏、摇摆与旋转，提升心肺耐力与核心控制。",
+          "duration": 50,
+          "id": 99,
+          "name": "Zumba尊巴舞"
+        },
+        {
+          "category": "舞蹈操课",
+          "coverImage": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800",
+          "description": "学习爵士舞基本动作与组合，提升身体协调性",
+          "duration": 60,
+          "id": 100,
+          "name": "爵士舞基础"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/22,name":"登山机 C100",
+          "name": "登山机 C100"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/24,name":"龙门架综合训练器",
+          "name": "龙门架综合训练器"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周日",
+      "focus": "完全恢复与放松",
+      "courses": null,
+      "equipment": [],
+      "exercises": [],
+      "dayName": "周日",
+      "focus": "阴瑜伽深度放松",
+      "courses": [
+        {
+          "category": "瑜伽普拉提",
+          "coverImage": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+          "description": "长时间保持体式，深度拉伸结缔组织，缓解压力",
+          "duration": 90,
+          "id": 91,
+          "name": "阴瑜伽深度放松"
+        }
+      ],
+      "equipment": [],
+      "exercises": []
+    }
+  ]
+}

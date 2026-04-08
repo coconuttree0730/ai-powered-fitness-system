@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
-@TableName("fitness_plan")
+@TableName(value = "fitness_plan", autoResultMap = true)
 public class FitnessPlan {
 
     @TableId(type = IdType.AUTO)

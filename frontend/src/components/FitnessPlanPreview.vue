@@ -240,7 +240,7 @@
     </div>
 
     <!-- 底部操作按钮 -->
-    <div class="plan-actions">
+    <div v-if="showActions" class="plan-actions">
       <button class="btn btn-default" @click="$emit('regenerate')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
@@ -279,6 +279,10 @@ const props = defineProps({
   isEmbedded: {
     type: Boolean,
     default: false
+  },
+  showActions: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -427,6 +431,8 @@ function getDefaultImage(type, name = '') {
   border: 1px solid rgba(229, 231, 235, 0.8);
   background: #ffffff;
   max-width: 100%;
+  min-width: auto;
+  max-height: 85vh;
 }
 
 /* 头部 */
@@ -1120,6 +1126,7 @@ function getDefaultImage(type, name = '') {
 
 .fitness-plan-preview.embedded-mode .tab-content {
   padding: 18px 20px;
+  max-height: calc(85vh - 200px);
 }
 
 .fitness-plan-preview.embedded-mode .plan-actions {

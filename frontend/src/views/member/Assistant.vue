@@ -400,7 +400,7 @@ import {
   generateFitnessPlan,
   generateFitnessPlanFromProfile
 } from '@/api/chat'
-import { saveFitnessPlan as savePlanToServer, getMyPlans } from '@/api/plan'
+import { saveFitnessPlan as savePlanToServer, getMyPlans, getProfile } from '@/api/plan'
 import { getCurrentUser } from '@/api/user'
 import { getHomePageCoaches, getCoachDetail } from '@/api/coachDetail'
 import FitnessPlanPreview from '@/components/FitnessPlanPreview.vue'
@@ -1328,9 +1328,9 @@ async function handleSavePlan() {
     }
 
     try {
-      const userRes = await getCurrentUser()
-      if (userRes && userRes.fitnessProfile) {
-        const fp = userRes.fitnessProfile
+      const fp = await getProfile()
+      if (fp) {
+        console.log('[handleSavePlan] getProfile返回:', JSON.stringify(fp, null, 2))
         if (!height) height = fp.height
         if (!weight) weight = fp.weight
         if (!age) age = fp.age
@@ -1338,9 +1338,11 @@ async function handleSavePlan() {
         if (!experience) experience = fp.experience
         if (!goal) goal = fp.fitnessGoal
       }
-    } catch (e) { }
+    } catch (e) {
+      console.warn('[handleSavePlan] getProfile兜底失败:', e)
+    }
 
-    await savePlanToServer({
+    const payload = {
       planDataJson: planData,
       height,
       weight,
@@ -1348,7 +1350,11 @@ async function handleSavePlan() {
       gender,
       experience,
       fitnessGoal: goal
-    })
+    }
+    console.log('[handleSavePlan] 发送保存请求payload:', JSON.stringify(payload, null, 2))
+    console.log('[handleSavePlan] planData.userInfo原始:', JSON.stringify(planData.userInfo, null, 2))
+
+    await savePlanToServer(payload)
     message.success('计划已保存到我的健身计划！')
     showPlanPreview.value = false
     fitnessPlanData.value = null

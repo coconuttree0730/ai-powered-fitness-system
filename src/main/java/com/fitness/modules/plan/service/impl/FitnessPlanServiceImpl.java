@@ -869,8 +869,18 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             throw new BusinessException(ErrorCode.NO_PERMISSION);
         }
 
+        log.debug("[getPlanDetail] Entity原始数据: id={}, planDataJson类型={}, planDataJson值={}, age={}, gender={}",
+                plan.getId(),
+                plan.getPlanDataJson() != null ? plan.getPlanDataJson().getClass().getName() : "NULL",
+                plan.getPlanDataJson(),
+                plan.getAge(), plan.getGender());
+
         PlanVO vo = new PlanVO();
         BeanUtil.copyProperties(plan, vo);
+
+        log.debug("[getPlanDetail] VO复制后: planDataJson类型={}, planDataJson值={}",
+                vo.getPlanDataJson() != null ? vo.getPlanDataJson().getClass().getName() : "NULL",
+                vo.getPlanDataJson());
 
         // 查询计划详情并转换
         List<FitnessPlanDetail> detailEntities = fitnessPlanDetailMapper.selectByPlanId(planId);
@@ -978,6 +988,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     @Transactional(rollbackFor = Exception.class)
     public Long savePlan(Long userId, SaveFitnessPlanDTO dto) {
         log.info("保存健身计划: userId={}", userId);
+        log.debug("[savePlan] DTO完整入参: height={}, weight={}, age={}, gender={}, experience={}, fitnessGoal={}",
+                dto.getHeight(), dto.getWeight(), dto.getAge(), dto.getGender(), dto.getExperience(), dto.getFitnessGoal());
+        log.debug("[savePlan] planDataJson.userInfo原始内容: {}", dto.getPlanDataJson() != null ? dto.getPlanDataJson().get("userInfo") : "NULL");
 
         FitnessPlan plan = new FitnessPlan();
         plan.setUserId(userId);

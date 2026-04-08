@@ -9,7 +9,15 @@
         <result column="plan_name" property="planName"/>
         <result column="goal" property="goal"/>
         <result column="duration" property="duration"/>
+        <result column="level" property="level"/>
         <result column="status" property="status"/>
+        <result column="height" property="height"/>
+        <result column="weight" property="weight"/>
+        <result column="age" property="age"/>
+        <result column="gender" property="gender"/>
+        <result column="experience" property="experience"/>
+        <result column="fitness_goal" property="fitnessGoal"/>
+        <result column="plan_data_json" property="planDataJson" typeHandler="com.fitness.common.mybatis.JsonbTypeHandler"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
         <result column="deleted" property="deleted"/>
