@@ -1,0 +1,123 @@
+version: '3.8'
+
+networks:
+  fitness-ai-net:
+    driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
+  mysql_data:
+  rabbitmq_data:
+  minio_data:
+  nginx_conf:
+  nginx_logs:
+  ollama_data:
+    external: true
+    name: ollama
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: always
+    networks:
+      - fitness-ai-net
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  redis:
+    image: redis/redis-stack-server:7.2.0-v13
+    container_name: fitness-redis
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=myRedisPass123
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: fitness-postgres
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_DB: fitness_ai_db
+      POSTGRES_USER: fitness_user
+      POSTGRES_PASSWORD: myPostgresPass123
+  mysql:
+    image: mysql:8.0
+    container_name: fitness-mysql
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootPass123
+      MYSQL_DATABASE: fitness_ai_mysql
+      MYSQL_USER: fitness_user
+      MYSQL_PASSWORD: myMysqlPass123
+    command: --default-authentication-plugin=mysql_native_password
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: fitness-rabbitmq
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: fitness_rabbit
+      RABBITMQ_DEFAULT_PASS: myRabbitPass123
+  minio:
+    image: minio/minio:latest
+    container_name: fitness-minio
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioPass123
+    command: server /data --console-address ":9001"
+  nginx:
+    image: nginx:1.26-alpine
+    container_name: fitness-nginx
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "9080:80"
+      - "9443:443"
+    volumes:
+      - nginx_conf:/etc/nginx/conf.d
+      - nginx_logs:/var/log/nginx
