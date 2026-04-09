@@ -2182,7 +2182,7 @@ async function regeneratePlan() {
   background: transparent !important;
   border-bottom-left-radius: 4px !important;
   padding: 0 !important;
-  max-width: 720px;
+  max-width: 900px;
   width: 100%;
   overflow: visible;
 }

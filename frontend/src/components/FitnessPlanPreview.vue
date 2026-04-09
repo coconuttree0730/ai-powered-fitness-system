@@ -431,8 +431,10 @@ function getDefaultImage(type, name = '') {
   border: 1px solid rgba(229, 231, 235, 0.8);
   background: #ffffff;
   max-width: 100%;
-  min-width: auto;
+  min-width: 800px;
   max-height: 85vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 头部 */
@@ -567,6 +569,7 @@ function getDefaultImage(type, name = '') {
   padding: 20px 24px;
   max-height: 480px;
   overflow-y: auto;
+  flex: 1;
 }
 
 .day-section {
@@ -1126,7 +1129,8 @@ function getDefaultImage(type, name = '') {
 
 .fitness-plan-preview.embedded-mode .tab-content {
   padding: 18px 20px;
-  max-height: calc(85vh - 200px);
+  max-height: none;
+  min-height: 0;
 }
 
 .fitness-plan-preview.embedded-mode .plan-actions {

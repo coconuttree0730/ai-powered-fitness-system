@@ -1,14 +1,14 @@
-4-09 01:32:06.465 [http-nio-8088-exec-8] DEBUG org.springframework.web.client.DefaultRestClient:227 - Reading to [com.alibaba.cloud.ai.dashscope.spec.DashScopeApiSpec$ChatCompletion]
-2026-04-09 01:32:06.488 [http-nio-8088-exec-8] DEBUG c.f.integration.ai.service.impl.AIServiceImpl:202 - AI返回的JSON长度: 8228
-2026-04-09 01:32:06.489 [http-nio-8088-exec-8] INFO  c.f.integration.ai.service.impl.AIServiceImpl:203 - === LLM返回的完整JSON内容 ===
-2026-04-09 01:32:06.489 [http-nio-8088-exec-8] INFO  c.f.integration.ai.service.impl.AIServiceImpl:204 - ```json
+026-04-09 02:46:42.919 [http-nio-8088-exec-3] DEBUG org.springframework.web.client.DefaultRestClient:227 - Reading to [com.alibaba.cloud.ai.dashscope.spec.DashScopeApiSpec$ChatCompletion]
+2026-04-09 02:46:42.922 [http-nio-8088-exec-3] DEBUG c.f.integration.ai.service.impl.AIServiceImpl:202 - AI返回的JSON长度: 8505
+2026-04-09 02:46:42.923 [http-nio-8088-exec-3] INFO  c.f.integration.ai.service.impl.AIServiceImpl:203 - === LLM返回的完整JSON内容 ===
+2026-04-09 02:46:42.923 [http-nio-8088-exec-3] INFO  c.f.integration.ai.service.impl.AIServiceImpl:204 - ```json
 {
-  "subtitle": "7天增肌高级训练计划",
+  "subtitle": "7天高级全能健身周计划",
   "userInfo": {
     "bmi": "21.9",
-    "goal": "增肌",
+    "goal": "保持健康",
     "height": "170 cm",
-    "intensity": "高强度",
+    "intensity": "中等至高强度",
     "weight": "63 kg"
   },
   "weeklyPlan": [
@@ -35,12 +35,12 @@
       ],
       "equipment": [
         {
-          "image": "http://localhost:9000/fitness-bucket/images/29,name":"奥林匹克杠铃杆",
-          "name": "奥林匹克杠铃杆"
+          "image": "http://localhost:9000/fitness-bucket/images/6b017543-142a-422b-8f38-0caa3137bce0.webp",
+          "name": "史密斯训练架"
         },
         {
-          "image": "http://localhost:9000/fitness-bucket/images/28,name":"可调节哑铃套装",
-          "name": "可调节哑铃套装"
+          "image": "http://localhost:9000/fitness-bucket/images/29d74753-bb23-4ac3-a041-6ca2dc51e2e4.webp",
+          "name": "橡胶包胶杠铃片套装"
         }
       ],
       "exercises": [
@@ -57,7 +57,7 @@
           "sets": 3
         },
         {
-          "name": "推举",
+          "name": "肩推举",
           "reps": 3,
           "restSeconds": 90,
           "sets": 3
@@ -66,122 +66,118 @@
     },
     {
       "dayName": "周二",
-      "focus": "上肢力量与肩部塑形",
+      "focus": "上肢力量与心肺耐力",
       "courses": [
         {
           "category": "力量训练",
           "coverImage": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800",
-          "description": "针对三角肌前中后束的专项训练，打造立体肩部，配备多角度固定式肩推与侧平举、高低坐姿推举等模块，多点位激活并塑形肩峰线，提供可调阻力与多档位选择，满足进阶塑形与力量提升需求。",
+          "description": "针对三角肌前中后束的专项训练，打造立体肩部，配备多角度固定式肩推与侧平举、高低坐姿推举等模块，多点位激活并塑形肩峰线",
           "duration": 45,
           "id": 79,
           "name": "肩部塑形训练"
         },
         {
-          "category": "力量训练",
-          "coverImage": "http://localhost:9000/fitness-bucket/courses/589bd94f-3ee4-4cd0-9896-528bcd2d2930.webp",
-          "description": "二头肌与三头肌超级组训练，突破臂围瓶颈，高效刺激双臂肌群，提升力量与耐力。",
-          "duration": 40,
-          "id": 80,
-          "name": "手臂力量轰炸"
+          "category": "有氧燃脂",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/0da9ecfc-d9be-4659-85f6-9c072b1df915.webp",
+          "description": "高强度骑行训练，提供电动与手动双模式，心率与阻力可调，高强度间歇训练与节奏训练可选，提升心肺耐力与燃脂效率",
+          "duration": 45,
+          "id": 82,
+          "name": "燃脂动感单车"
         }
       ],
       "equipment": [
         {
-          "image": "http://localhost:9000/fitness-bucket/images/30,name":"橡胶包胶杠铃片套装",
-          "name": "橡胶包胶杠铃片套装"
+          "image": "http://localhost:9000/fitness-bucket/images/28a815be-a2cd-4f77-ac7e-716a320d1422.webp",
+          "name": "动感单车 S200"
         },
         {
-          "image": "http://localhost:9000/fitness-bucket/images/23,name":"史密斯训练架",
-          "name": "史密斯训练架"
-        },
-        {
-          "image": "http://localhost:9000/fitness-bucket/images/28,name":"可调节哑铃套装",
-          "name": "可调节哑铃套装"
+          "image": "http://localhost:9000/fitness-bucket/images/89f93cc1-0835-4764-9680-fe7e28a83c46.webp",
+          "name": "奥林匹克杠铃杆"
         }
       ],
       "exercises": [
         {
-          "name": "坐姿推举",
-          "reps": 4,
+          "name": "哑铃肩推举",
+          "reps": 3,
           "restSeconds": 90,
-          "sets": 3
+          "sets": 4
         },
         {
-          "name": "划船",
-          "reps": 4,
+          "name": "高位下拉",
+          "reps": 3,
           "restSeconds": 120,
           "sets": 3
         },
         {
-          "name": "弯举",
-          "reps": 3,
-          "restSeconds": 60,
-          "sets": 4
+          "name": "冲刺间歇",
+          "reps": 30,
+          "restSeconds": 45,
+          "sets": 5
         }
       ]
     },
     {
       "dayName": "周三",
-      "focus": "有氧耐力与心肺强化",
-      "courses": [
-        {
-          "category": "有氧燃脂",
-          "coverImage": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800",
-          "description": "利用踏板进行有氧训练，锻炼心肺功能与腿部力量",
-          "duration": 50,
-          "id": 86,
-          "name": "阶梯踏板训练"
-        },
-        {
-          "category": "有氧燃脂",
-          "coverImage": "https://images.unsplash.com/photo-1535525153412-5a42439a210d?w=800",
-          "description": "学习Hip-Hop基础律动与舞步，释放青春活力",
-          "duration": 60,
-          "id": 101,
-          "name": "街舞Hip-Hop"
-        }
-      ],
-      "equipment": [
-        {
-          "image": "http://localhost:9000/fitness-bucket/images/21,name":"划船机 R300",
-          "name": "划船机 R300"
-        },
-        {
-          "image": "http://localhost:9000/fitness-bucket/images/20,name":"动感单车 S200",
-          "name": "动感单车 S200"
-        }
-      ],
-      "exercises": []
-    },
-    {
-      "dayName": "周四",
       "focus": "核心稳定性强化",
       "courses": [
         {
           "category": "瑜伽普拉提",
-          "coverImage": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
-          "description": "借助核心床进行普拉提训练，是强化核心肌群的高效途径。通过器械独特的弹簧阻力与滑动床板设计，训练者能在动态不稳定中精准激活深层肌群。这不仅有助于塑造紧致身形，更能显著提升身体稳定性与协调性，让每一次伸展与发力都充满控制之美。",
+          "coverImage": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800",
+          "description": "借助核心床进行普拉提训练，是强化核心肌群的高效途径。通过器械独特的弹簧阻力与滑动床板设计，训练者能在动态不稳定中精准激活深层肌群",
           "duration": 60,
           "id": 90,
           "name": "普拉提核心床"
         },
         {
           "category": "瑜伽普拉提",
-          "coverImage": "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=800",
-          "description": "经典垫上普拉提动作，塑造修长线条与优雅体态",
-          "duration": 50,
-          "id": 93,
-          "name": "垫上普拉提塑形"
+          "coverImage": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+          "description": "长时间保持体式，深度拉伸结缔组织，缓解压力",
+          "duration": 90,
+          "id": 91,
+          "name": "阴瑜伽深度放松"
         }
       ],
       "equipment": [
         {
-          "image": "http://localhost:9000/fitness-bucket/images/35,name":"泡沫轴",
-          "name": "泡沫轴"
+          "image": "http://localhost:9000/fitness-bucket/images/6b017543-142a-422b-8f38-0caa3137bce0.webp",
+          "name": "史密斯训练架"
         },
         {
-          "image": "http://localhost:9000/fitness-bucket/images/34,name":"弹力带套装",
-          "name": "弹力带套装"
+          "image": "http://localhost:9000/fitness-bucket/images/4eda3da5-5023-457b-8076-e7020f52a711.webp",
+          "name": "泡沫轴"
+        }
+      ],
+      "exercises": []
+    },
+    {
+      "dayName": "周四",
+      "focus": "舞蹈协调性与心肺提升",
+      "courses": [
+        {
+          "category": "舞蹈操课",
+          "coverImage": "https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?w=800",
+          "description": "结合流行舞蹈的有氧运动，快乐燃脂不枯燥",
+          "duration": 50,
+          "id": 88,
+          "name": "有氧舞蹈派对"
+        },
+        {
+          "category": "舞蹈操课",
+          "coverImage": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800",
+          "description": "学习爵士舞基本动作与组合，提升身体协调性",
+          "duration": 60,
+          "id": 100,
+          "name": "爵士舞基础"
+        }
+      ],
+      "equipment": [
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/37 trusthing.webp",
+          "name": "TRX悬挂训练带"
+        },
+        {
+          "image": "http://localhost:9000/fitness-bucket/images/28a815be-a2cd-4f77-ac7e-716a320d1422.webp",
+          "name": "动感单车 S200"
         }
       ],
       "exercises": []
@@ -192,114 +188,119 @@
       "courses": [
         {
           "category": "力量训练",
-          "coverImage": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
-          "description": "以复合动作为核心构建力量循环训练，系统提升全身整体力量水平。",
-          "duration": 90,
-          "id": 81,
-          "name": "全身力量循环"
-        },
-        {
-          "category": "力量训练",
           "coverImage": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?w=800",
-          "description": "系统掌握杠铃深蹲要领，强化下肢力量与核心稳定，提升运动表现与体态控制。",
+          "description": "系统掌握杠铃深蹲要领，强化下肢力量与核心稳定，提升运动表现与体态控制",
           "duration": 60,
           "id": 76,
           "name": "杠铃深蹲特训"
+        },
+        {
+          "category": "有氧燃脂",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/41873e51-e76b-44ae-9cad-9bc787845fb3.webp",
+          "description": "高强度跳绳训练，快速提升心率，高效燃烧卡路里",
+          "duration": 45,
+          "id": 84,
+          "name": "跳绳燃脂课"
         }
       ],
       "equipment": [
         {
-          "image": "http://localhost:9000/fitness-bucket/images/25,name":"腿举训练器",
-          "name": "腿举训练器"
+          "image": "http://localhost:9000/fitness-bucket/images/28a815be-a2cd-4f77-ac7e-716a320d1422.webp",
+          "name": "动感单车 S200"
         },
         {
-          "image": "http://localhost:9000/fitness-bucket/images/28,name":"可调节哑铃套装",
-          "name": "可调节哑铃套装"
+          "image": "http://localhost:9000/fitness-bucket/images/22 trusthing.webp",
+          "name": "登山机 C100"
         }
       ],
       "exercises": [
         {
-          "name": "深蹲跳",
-          "reps": 3,
-          "restSeconds": 60,
+          "name": "杠铃深蹲",
+          "reps": 4,
+          "restSeconds": 90,
+          "sets": 3
+        },
+        {
+          "name": "跳绳冲刺",
+          "reps": 30,
+          "restSeconds": 45,
           "sets": 5
         },
         {
-          "name": "硬拉跳",
-          "reps": 3,
-          "restSeconds": 90,
-          "sets": 4
-        },
-        {
-          "name": "臀桥",
+          "name": "俯卧撑",
           "reps": 4,
-          "restSeconds": 45,
+          "restSeconds": 60,
           "sets": 3
         }
       ]
     },
     {
       "dayName": "周六",
-      "focus": "有氧耐力强化与心肺提升",
+      "focus": "拳击格斗技能强化",
       "courses": [
         {
-          "category": "有氧燃脂",
-          "coverImage": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800",
-          "description": "高强度骑行训练，提供电动与手动双模式，心率与阻力可调，高强度间歇训练与节奏训练可选，提升心肺耐力与燃脂效率，适用于体能强化与耐力提升。",
-          "duration": 45,
-          "id": 82,
-          "name": "燃脂动感单车"
+          "category": "拳击格斗",
+          "coverImage": "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800",
+          "description": "学习拳击基本拳法、步法与防守技巧",
+          "duration": 60,
+          "id": 94,
+          "name": "拳击基础入门"
         },
         {
-          "category": "有氧燃脂",
-          "coverImage": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800",
-          "description": "学习爵士舞基本动作与组合，提升身体协调性",
+          "category": "拳击格斗",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/7ba89f77-3768-4df9-8c29-4ff4bd0e4a7d.webp",
+          "description": "学习泰拳基础动作，提升力量与反应速度。提供泰拳基础课程，系统训练踢、打、闪避等核心动作",
           "duration": 60,
-          "id": 100,
-          "name": "爵士舞基础"
+          "id": 95,
+          "name": "泰拳实战技巧"
         }
       ],
       "equipment": [
         {
-          "image": "http://localhost:9000/fitness-bucket/images/18,name":"商用跑步机 X1",
-          "name": "商用跑步机 X1"
+          "image": "http://localhost:9000/fitness-bucket/images/21 trusthing.webp",
+          "name": "划船机 R300"
         },
         {
-          "image": "http://localhost:9000/fitness-bucket/images/20,name":"动感单车 S200",
-          "name": "动感单车 S200"
+          "image": "http://localhost:9000/fitness-bucket/images/22 trusthing.webp",
+          "name": "登山机 C100"
         }
       ],
       "exercises": []
     },
     {
       "dayName": "周日",
-      "focus": "完全休息与恢复",
+      "focus": "完全恢复与灵活性",
       "courses": null,
       "equipment": [],
       "exercises": [],
-      "focus": "恢复与放松"
-    },
-    {
-      "dayName": "周一",
-      "focus": "脊柱与体态矫正",
+      "dayName": "周日",
+      "focus": "恢复与柔韧",
       "courses": [
         {
           "category": "康复体态",
           "coverImage": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
-          "description": "借助科学系统的专业训练，针对性矫正脊柱侧弯问题。通过强化核心肌群与优化体态排列，有效改善脊柱生理曲度，帮助身体重获自然平衡与挺拔姿态，从而提升整体健康气质。",
+          "description": "借助科学系统的专业训练，针对性矫正脊柱侧弯问题。通过强化核心肌群与优化体态排列，有效改善脊柱生理曲度",
           "duration": 50,
           "id": 104,
           "name": "脊柱侧弯矫正"
+        },
+        {
+          "category": "舞蹈操课",
+          "coverImage": "http://localhost:9000/fitness-bucket/courses/cdce174a-912b-403a-8f12-e0b7977098da.jpg",
+          "description": "本套健身操创新融合了民族舞蹈的艺术精髓，将传统舞姿的柔美韵律与现代健身的科学节奏完美结合",
+          "duration": 65,
+          "id": 102,
+          "name": "民族健身操"
         }
       ],
       "equipment": [
         {
-          "image": "http://localhost:9000/fitness-bucket/images/24,name":"龙门架综合训练器",
-          "name": "龙门架综合训练器"
+          "image": "http://localhost:9000/fitness-bucket/images/35 trusthing.webp",
+          "name": "弹力带套装"
         },
         {
-          "image": "http://localhost:9000/fitness-bucket/images/37,name":"TRX悬挂训练带",
-          "name": "TRX悬挂训练带"
+          "image": "http://localhost:9000/fitness-bucket/images/28a815be-a2cd-4f77-ac7e-716a320d1422.webp",
+          "name": "动感单车 S200"
         }
       ],
       "exercises": []
@@ -307,203 +308,37 @@
   ]
 }
 ```
-2026-04-09 01:32:06.490 [http-nio-8088-exec-8] INFO  c.f.integration.ai.service.impl.AIServiceImpl:205 - === JSON内容结束 ===
-2026-04-09 01:32:06.493 [http-nio-8088-exec-8] DEBUG c.f.integration.ai.service.impl.AIServiceImpl:208 - ------> 清洗后的JSON长度: 8216
-2026-04-09 01:32:06.499 [http-nio-8088-exec-8] ERROR c.f.integration.ai.service.impl.AIServiceImpl:223 - 从个人档案生成健身计划失败
-com.fasterxml.jackson.databind.JsonMappingException: Unexpected character (':' (code 58)): was expecting comma to separate Object entries
- at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 34, column: 73] (through reference chain: com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO["weeklyPlan"]->java.util.ArrayList[0]->com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO$DayPlanDTO["equipment"]->java.util.ArrayList[0])
-	at com.fasterxml.jackson.databind.JsonMappingException.wrapWithPath(JsonMappingException.java:400)
-	at com.fasterxml.jackson.databind.JsonMappingException.wrapWithPath(JsonMappingException.java:371)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer._deserializeFromArray(CollectionDeserializer.java:380)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:245)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:29)
-	at com.fasterxml.jackson.databind.deser.impl.MethodProperty.deserializeAndSet(MethodProperty.java:129)
-	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:302)
-	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:169)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer._deserializeFromArray(CollectionDeserializer.java:360)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:245)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:29)
-	at com.fasterxml.jackson.databind.deser.impl.MethodProperty.deserializeAndSet(MethodProperty.java:129)
-	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:302)
-	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:169)
-	at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:342)
-	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4971)
-	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3887)
-	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3855)
-	at com.fitness.integration.ai.service.impl.AIServiceImpl.generateFitnessPlanFromProfile(AIServiceImpl.java:212)
-	at com.fitness.modules.plan.service.impl.FitnessPlanServiceImpl.generatePlanFromProfile(FitnessPlanServiceImpl.java:138)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:724)
-	at com.fitness.modules.plan.service.impl.FitnessPlanServiceImpl$$SpringCGLIB$$0.generatePlanFromProfile(<generated>)
-	at com.fitness.modules.plan.controller.FitnessPlanController.generatePlanFromProfile(FitnessPlanController.java:39)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
-	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.proceed(AuthorizationManagerBeforeMethodInterceptor.java:268)
-	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.attemptAuthorization(AuthorizationManagerBeforeMethodInterceptor.java:263)
-	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.invoke(AuthorizationManagerBeforeMethodInterceptor.java:196)
-	at org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor.invoke(DeferringMethodInterceptor.java:44)
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
-	at com.fitness.modules.plan.controller.FitnessPlanController$$SpringCGLIB$$0.generatePlanFromProfile(<generated>)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:191)
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
-	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914)
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590)
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
-	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
-	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479)
-	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340)
-	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128)
-	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:125)
-	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
-	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at com.fitness.integration.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:103)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
-	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
-	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
-	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
-	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323)
-	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224)
-	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
-	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
-	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
-	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52)
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
-	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
-	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319)
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
-	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:243)
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
-	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
-	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240)
-	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362)
-	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:114)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:116)
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:398)
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1740)
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1189)
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:658)
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
-	at java.base/java.lang.Thread.run(Thread.java:833)
-Caused by: com.fasterxml.jackson.core.JsonParseException: Unexpected character (':' (code 58)): was expecting comma to separate Object entries
- at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 34, column: 73]
-	at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2666)
-	at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase.java:742)
-	at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._skipComma(ReaderBasedJsonParser.java:2429)
-	at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextFieldName(ReaderBasedJsonParser.java:924)
-	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:309)
-	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:169)
-	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer._deserializeFromArray(CollectionDeserializer.java:360)
-	... 182 common frames omitted
+2026-04-09 02:46:42.923 [http-nio-8088-exec-3] INFO  c.f.integration.ai.service.impl.AIServiceImpl:205 - === JSON内容结束 ===
+2026-04-09 02:46:42.928 [http-nio-8088-exec-3] INFO  c.f.integration.ai.service.impl.AIServiceImpl:391 - 截断多余的weeklyPlan数据，保留前7天
+2026-04-09 02:46:42.928 [http-nio-8088-exec-3] DEBUG c.f.integration.ai.service.impl.AIServiceImpl:208 - ------> 清洗后的JSON长度: 8490
+2026-04-09 02:46:42.929 [http-nio-8088-exec-3] INFO  c.f.integration.ai.service.impl.AIServiceImpl:216 - 从个人档案生成健身计划成功
+2026-04-09 02:46:42.929 [http-nio-8088-exec-3] DEBUG c.f.integration.ai.service.impl.AIServiceImpl:217 - 生成的计划: subtitle=7天高级全能健身周计划, weeklyPlan.size=7
+2026-04-09 02:46:42.930 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 全身力量循环 -> 全身力量循环
+2026-04-09 02:46:42.930 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 杠铃深蹲特训 -> 杠铃深蹲特训
+2026-04-09 02:46:42.930 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 史密斯训练架 -> 史密斯训练架
+2026-04-09 02:46:42.930 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 橡胶包胶杠铃片套装 -> 橡胶包胶杠铃片套装
+2026-04-09 02:46:42.931 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 肩部塑形训练 -> 肩部塑形训练
+2026-04-09 02:46:42.931 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 燃脂动感单车 -> 燃脂动感单车
+2026-04-09 02:46:42.931 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 动感单车 S200 -> 动感单车 S200
+2026-04-09 02:46:42.931 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 奥林匹克杠铃杆 -> 奥林匹克杠铃杆
+2026-04-09 02:46:42.931 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 普拉提核心床 -> 普拉提核心床
+2026-04-09 02:46:42.932 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 阴瑜伽深度放松 -> 阴瑜伽深度放松
+2026-04-09 02:46:42.932 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 史密斯训练架 -> 史密斯训练架
+2026-04-09 02:46:42.933 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 泡沫轴 -> 泡沫轴
+2026-04-09 02:46:42.933 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 有氧舞蹈派对 -> 有氧舞蹈派对
+2026-04-09 02:46:42.933 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 爵士舞基础 -> 爵士舞基础
+2026-04-09 02:46:42.933 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: TRX悬挂训练带 -> TRX悬挂训练带
+2026-04-09 02:46:42.934 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 动感单车 S200 -> 动感单车 S200
+2026-04-09 02:46:42.934 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 杠铃深蹲特训 -> 杠铃深蹲特训
+2026-04-09 02:46:42.934 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 跳绳燃脂课 -> 跳绳燃脂课
+2026-04-09 02:46:42.934 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 动感单车 S200 -> 动感单车 S200
+2026-04-09 02:46:42.934 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 登山机 C100 -> 登山机 C100
+2026-04-09 02:46:42.934 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 拳击基础入门 -> 拳击基础入门
+2026-04-09 02:46:42.935 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:329 - 替换课程: 泰拳实战技巧 -> 泰拳实战技巧
+2026-04-09 02:46:42.935 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 划船机 R300 -> 划船机 R300
+2026-04-09 02:46:42.935 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:386 - 替换器械: 登山机 C100 -> 登山机 C100
+2026-04-09 02:46:42.935 [http-nio-8088-exec-3] DEBUG c.f.m.plan.service.impl.FitnessPlanServiceImpl:293 - 检测到休息日，已清空训练内容: focus=恢复与柔韧
+2026-04-09 02:46:42.936 [http-nio-8088-exec-3] INFO  c.f.m.plan.service.impl.FitnessPlanServiceImpl:148 - 从个人档案生成健身计划成功: userId=25
+2026-04-09 02:46:42.937 [http-nio-8088-exec-3] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor:310 - Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json, application/yaml]
+2026-04-09 02:46:42.937 [http-nio-8088-exec-3] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor:120 - Writing [Result(code=200, message=操作成功, data={userInfo={intensity=高级, goal=保持健康, weight=63 kg, height=170 cm, (truncated)...]
+2026-04-09 02:46:42.938 [http-nio-8088-exec-3] DEBUG org.springframework.web.servlet.DispatcherServlet:1138 - Completed 200 OK
