@@ -509,7 +509,6 @@ async function doSendSmsCode() {
     })
 
     if (data && data.sent) {
-      // 开始倒计时
       countdown.value = 60
       const timer = setInterval(() => {
         countdown.value--
@@ -521,15 +520,20 @@ async function doSendSmsCode() {
       message.success('验证码已发送，请注意查收')
     } else {
       message.error(data?.message || '验证码发送失败，请重试')
+      resetSlider()
+      isSliderVerified.value = false
+      sliderVerifyToken.value = ''
+      pendingPhone.value = ''
     }
   } catch (error) {
     console.error('发送验证码失败:', error)
     message.error('验证码发送失败，请稍后重试')
-  } finally {
-    isSendingCode.value = false
-    // 清理验证令牌
+    resetSlider()
+    isSliderVerified.value = false
     sliderVerifyToken.value = ''
     pendingPhone.value = ''
+  } finally {
+    isSendingCode.value = false
   }
 }
 

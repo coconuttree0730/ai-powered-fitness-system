@@ -1,5 +1,6 @@
 package com.fitness.modules.user.controller;
 
+import com.fitness.common.exception.BusinessException;
 import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.LoginDTO;
 import com.fitness.modules.user.model.dto.SliderVerifyDTO;
@@ -103,6 +104,7 @@ public class AuthController {
      */
     @PostMapping("/sms-code")
     public Result<Map<String, Object>> sendSmsCode(@Valid @RequestBody SmsCodeDTO dto) {
+        try {
         log.info("发送短信验证码请求: phone={}", dto.getPhone());
 
         // 1. 检查滑块验证是否通过
@@ -124,15 +126,15 @@ public class AuthController {
         // 4. 发送短信验证码
         boolean sent = smsCodeService.sendSmsCode(dto.getPhone());
 
-        if (!sent) {
-            return Result.error(500, "验证码发送失败，请稍后重试");
-        }
-
         Map<String, Object> result = new HashMap<>();
         result.put("sent", true);
         result.put("message", "验证码已发送");
 
         return Result.success(result);
+        } catch (BusinessException e) {
+        log.warn("发送短信验证码业务异常: phone={}, message={}", dto.getPhone(), e.getMessage());
+        return Result.error(400, e.getMessage());
+        }
     }
 
     /**

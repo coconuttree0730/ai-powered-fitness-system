@@ -93,6 +93,14 @@ minio:
   bucket-name: ${MINIO_BUCKET:fitness-bucket}
   secure: ${MINIO_SECURE:false}
 
+aliyun:
+  sms:
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET}
+    sign-name: 速通互联验证码
+    template-code: 100001
+    endpoint: dypnsapi.aliyuncs.com
+
 logging:
   level:
     com.fitness: INFO

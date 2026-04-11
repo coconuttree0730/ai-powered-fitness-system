@@ -22,6 +22,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.catalina.connector.ClientAbortException;
+
 /**
  * JWT 认证过滤器
  * 从请求头中解析JWT Token并设置SecurityContext
@@ -54,13 +56,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @param request     HTTP请求
      * @param response    HTTP响应
      * @param filterChain 过滤器链
-     * @throws ServletException Servlet异常
-     * @throws IOException      IO异常
      */
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request,
                                     @NotNull HttpServletResponse response,
-                                    @NotNull FilterChain filterChain) throws ServletException, IOException {
+                                    @NotNull FilterChain filterChain) {
         try {
             // 1. 从请求中获取JWT Token
             String jwt = getJwtFromRequest(request);
@@ -95,12 +95,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
+            // 检查是否是客户端断开连接
+            if (isClientAbortException(e)) {
+                log.debug("客户端在认证过程中断开连接: {}", e.getMessage());
+                return;
+            }
             log.error("JWT认证过程中发生错误: {}", e.getMessage(), e);
             sendUnauthorizedResponse(response, "认证失败: " + e.getMessage());
             return;
         }
         //放行
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            // 检查是否是客户端断开连接
+            if (isClientAbortException(e)) {
+                log.debug("客户端在请求处理过程中断开连接: {}", e.getMessage());
+            } else {
+                log.error("过滤器链执行失败: {}", e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
@@ -118,19 +133,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
+     * 判断异常是否是客户端断开连接异常
+     *
+     * @param throwable 异常
+     * @return true-客户端断开连接, false-其他异常
+     */
+    private boolean isClientAbortException(Throwable throwable) {
+        if (throwable instanceof ClientAbortException) {
+            return true;
+        }
+        // 检查根本原因
+        Throwable cause = throwable.getCause();
+        while (cause != null) {
+            if (cause instanceof ClientAbortException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
+    }
+
+    /**
      * 发送401未授权响应
      *
      * @param response HTTP响应
      * @param message  错误消息
-     * @throws IOException IO异常
      */
-    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message) {
+        try {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
 
-        Result<Void> result = Result.error(401, message);
-        objectMapper.writeValue(response.getOutputStream(), result);
+            Result<Void> result = Result.error(401, message);
+            objectMapper.writeValue(response.getOutputStream(), result);
+        } catch (ClientAbortException e) {
+            // 客户端主动断开连接,这是正常的网络行为,不需要记录为错误
+            log.debug("客户端在响应完成前断开连接: {}", e.getMessage());
+        } catch (IOException e) {
+            // 其他IO异常,记录为警告
+            log.warn("发送认证失败响应时发生IO异常: {}", e.getMessage());
+        }
     }
 
     @Override

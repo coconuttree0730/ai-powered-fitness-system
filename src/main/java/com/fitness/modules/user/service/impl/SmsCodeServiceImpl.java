@@ -1,5 +1,7 @@
 package com.fitness.modules.user.service.impl;
 
+import com.fitness.common.exception.BusinessException;
+import com.fitness.integration.sms.service.AliyunSmsService;
 import com.fitness.modules.user.service.SmsCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,8 @@ public class SmsCodeServiceImpl implements SmsCodeService {
 
     private final StringRedisTemplate redisTemplate;
 
+    private final AliyunSmsService aliyunSmsService;
+
     // Redis键前缀
     // 短信验证码前缀
     private static final String SMS_CODE_KEY_PREFIX = "sms:code:";
@@ -26,14 +30,14 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     private static final String SMS_CODE_COOLDOWN_KEY_PREFIX = "sms:cooldown:";
     // 短信验证码每日发送次数前缀
     private static final String SMS_CODE_DAILY_COUNT_KEY_PREFIX = "sms:daily:count:";
-    // 验证码过期时间（5分钟）
+    // 验证码过期时间（5分钟）********
     private static final long CODE_EXPIRE_MINUTES = 5;
     // 发送冷却时间（60秒）
     private static final long COOLDOWN_SECONDS = 60;
     // 验证码长度
     private static final int CODE_LENGTH = 6;
     // 每日发送限制次数
-    private static final int DAILY_LIMIT = 5;
+    private static final int DAILY_LIMIT = 15;
 
     @Override
     public boolean sendSmsCode(String phone) {
@@ -46,13 +50,13 @@ public class SmsCodeServiceImpl implements SmsCodeService {
         // 2. 检查每日发送限制
         if (isDailyLimitExceeded(phone)) {
             log.warn("短信验证码发送超过每日限制: phone={}", phone);
-            return false;
+            throw new com.fitness.common.exception.BusinessException("今日发送次数已达上限，请明天再试");
         }
 
         // 3. 生成6位数字验证码
         String code = generateCode();
 
-        // 4. 存储验证码到Redis
+        // 4. 存储验证码到Redis***********  redis 的key有效时长就是 短信服务的有效时长
         String codeKey = SMS_CODE_KEY_PREFIX + phone;
         redisTemplate.opsForValue().set(codeKey, code, CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
 
@@ -63,9 +67,16 @@ public class SmsCodeServiceImpl implements SmsCodeService {
         // 6. 增加每日发送次数
         incrementDailyCount(phone);
 
-        // 7. 模拟发送短信（后续接入真实短信服务）
-        //TODO 模拟发送短信: 后续接入 短信服务进行短信发送
-        log.info("短信验证码发送成功: phone={}, code={}", phone, code);
+        // 7. 调用阿里云短信认证服务发送验证码
+        boolean sent = aliyunSmsService.sendVerifyCode(phone, code, (int) CODE_EXPIRE_MINUTES);
+        if (!sent) {
+            log.error("阿里云短信验证码发送失败: phone={}", phone);
+            redisTemplate.delete(SMS_CODE_KEY_PREFIX + phone);
+            redisTemplate.delete(SMS_CODE_COOLDOWN_KEY_PREFIX + phone);
+            throw new com.fitness.common.exception.BusinessException("短信发送失败，请检查手机号是否正确");
+        }
+
+        log.info("短信验证码发送成功: phone={}", phone);
 
         return true;
     }
