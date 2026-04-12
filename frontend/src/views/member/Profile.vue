@@ -57,24 +57,55 @@
 
         <!-- 信息列表 -->
         <div class="info-list">
-          <!-- 姓名 -->
+          <!-- 昵称 -->
           <div class="info-item">
             <div class="info-main">
-              <span class="info-label">姓名</span>
+              <span class="info-label">昵称</span>
               <div class="info-value-wrapper">
-                <span v-if="!editingField.name" class="info-value">{{ userInfo.username || '未设置' }}</span>
+                <span v-if="!editingField.nickname" class="info-value">{{ userInfo.nickname || userInfo.username || '未设置' }}</span>
                 <n-input
                   v-else
-                  v-model:value="editForm.username"
+                  v-model:value="editForm.nickname"
                   size="small"
                   style="width: 200px"
-                  @blur="saveField('name')"
-                  @keyup.enter="saveField('name')"
+                  placeholder="请输入昵称"
+                  @blur="saveField('nickname')"
+                  @keyup.enter="saveField('nickname')"
                 />
               </div>
             </div>
-            <n-button text type="primary" @click="toggleEdit('name')">
-              {{ editingField.name ? '保存' : '编辑' }}
+            <n-button text type="primary" @click="toggleEdit('nickname')">
+              {{ editingField.nickname ? '保存' : '编辑' }}
+            </n-button>
+          </div>
+
+          <!-- 用户名 -->
+          <div class="info-item">
+            <div class="info-main">
+              <span class="info-label">用户名</span>
+              <div class="info-value-wrapper">
+                <span v-if="!editingField.username" class="info-value">{{ userInfo.username || '未设置' }}</span>
+                <div v-else class="username-edit-wrapper">
+                  <n-input
+                    v-model:value="editForm.username"
+                    size="small"
+                    style="width: 200px"
+                    placeholder="请输入用户名"
+                    @input="onUsernameInput"
+                    @blur="saveField('username')"
+                    @keyup.enter="saveField('username')"
+                  />
+                  <div v-if="usernameCheckStatus.checking" class="check-status">
+                    <n-spin size="small" /> 检查中...
+                  </div>
+                  <div v-else-if="usernameCheckStatus.error" class="check-status error">
+                    {{ usernameCheckStatus.error }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <n-button text type="primary" @click="toggleEdit('username')">
+              {{ editingField.username ? '保存' : '编辑' }}
             </n-button>
           </div>
 
@@ -527,7 +558,9 @@ import {
   updateEmail,
   sendPasswordChangeCode,
   updatePasswordBySms,
-  uploadAvatar
+  uploadAvatar,
+  checkUsernameExists,
+  updateNickname
 } from '@/api/user'
 
 const router = useRouter()
@@ -547,6 +580,7 @@ const activeMenu = ref('account')
 const userInfo = reactive({
   id: '',
   username: '',
+  nickname: '',
   avatar: '',
   phone: '',
   email: '',
@@ -561,11 +595,20 @@ const usernameInitial = computed(() => {
 
 // 编辑状态
 const editingField = reactive({
-  name: false
+  nickname: false,
+  username: false
 })
 
 const editForm = reactive({
+  nickname: '',
   username: ''
+})
+
+// 用户名检查状态
+const usernameCheckStatus = reactive({
+  checking: false,
+  exists: false,
+  error: ''
 })
 
 // 弹窗显示状态
@@ -719,30 +762,110 @@ function toggleEdit(field) {
     saveField(field)
   } else {
     editingField[field] = true
-    if (field === 'name') {
-      editForm.username = userInfo.username
+    if (field === 'nickname') {
+      editForm.nickname = userInfo.nickname || ''
+    } else if (field === 'username') {
+      editForm.username = userInfo.username || ''
+      // 重置检查状态
+      usernameCheckStatus.checking = false
+      usernameCheckStatus.exists = false
+      usernameCheckStatus.error = ''
     }
   }
 }
 
+// 用户名输入时的检查（防抖）
+let checkTimeout = null
+async function onUsernameInput() {
+  const username = editForm.username.trim()
+
+  // 重置状态
+  usernameCheckStatus.error = ''
+  usernameCheckStatus.exists = false
+
+  // 如果为空或与当前用户名相同，不检查
+  if (!username || username === userInfo.username) {
+    usernameCheckStatus.checking = false
+    return
+  }
+
+  // 清除之前的定时器
+  if (checkTimeout) {
+    clearTimeout(checkTimeout)
+  }
+
+  // 延迟检查，避免频繁请求
+  usernameCheckStatus.checking = true
+  checkTimeout = setTimeout(async () => {
+    try {
+      const res = await checkUsernameExists(username)
+      if (res && res.exists) {
+        usernameCheckStatus.exists = true
+        usernameCheckStatus.error = '该用户名已被使用，请更换其他用户名'
+      } else {
+        usernameCheckStatus.exists = false
+        usernameCheckStatus.error = ''
+      }
+    } catch (error) {
+      console.error('检查用户名失败:', error)
+    } finally {
+      usernameCheckStatus.checking = false
+    }
+  }, 500)
+}
+
 // 保存字段
 async function saveField(field) {
-  if (field === 'name') {
-    if (editForm.username && editForm.username !== userInfo.username) {
+  if (field === 'nickname') {
+    const nickname = editForm.nickname.trim()
+    if (nickname && nickname !== userInfo.nickname) {
       try {
-        const res = await updateUsername(editForm.username)
+        const res = await updateNickname(nickname)
         if (res) {
           Object.assign(userInfo, res)
           // 同步更新 authStore
           authStore.userInfo = res
+          // 同时更新两种存储，避免数据不一致
           localStorage.setItem('userInfo', JSON.stringify(res))
-          message.success('用户名已更新')
+          sessionStorage.setItem('userInfo', JSON.stringify(res))
+          message.success('昵称已更新')
         }
       } catch (error) {
-        message.error(error.message || '用户名更新失败')
-        // 恢复原用户名
-        editForm.username = userInfo.username
+        message.error(error.message || '昵称更新失败')
+        // 恢复原昵称
+        editForm.nickname = userInfo.nickname || ''
       }
+    }
+  } else if (field === 'username') {
+    const username = editForm.username.trim()
+
+    // 如果为空或与当前用户名相同，不保存
+    if (!username || username === userInfo.username) {
+      editingField[field] = false
+      return
+    }
+
+    // 如果用户名已被占用，不保存
+    if (usernameCheckStatus.exists) {
+      message.error('该用户名已被使用，请更换其他用户名')
+      return
+    }
+
+    try {
+      const res = await updateUsername(username)
+      if (res) {
+        Object.assign(userInfo, res)
+        // 同步更新 authStore
+        authStore.userInfo = res
+        // 同时更新两种存储，避免数据不一致
+        localStorage.setItem('userInfo', JSON.stringify(res))
+        sessionStorage.setItem('userInfo', JSON.stringify(res))
+        message.success('用户名已更新')
+      }
+    } catch (error) {
+      message.error(error.message || '用户名更新失败')
+      // 恢复原用户名
+      editForm.username = userInfo.username
     }
   }
   editingField[field] = false
@@ -1227,6 +1350,24 @@ async function confirmChangePassword() {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.username-edit-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.check-status {
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.check-status.error {
+  color: #ff4d4f;
 }
 
 .info-value {

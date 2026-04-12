@@ -20,10 +20,16 @@ public class User {
     private Long id;
 
     /**
-     * 用户名
+     * 用户名（登录账号，唯一）
      */
     @TableField("username")
     private String username;
+
+    /**
+     * 昵称/姓名（用于展示）
+     */
+    @TableField("nickname")
+    private String nickname;
 
     /**
      * 密码

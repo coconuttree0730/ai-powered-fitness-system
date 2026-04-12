@@ -188,4 +188,13 @@ public interface UserService {
      * @return 更新后的用户信息
      */
     UserVO uploadAvatar(Long userId, String avatarUrl);
+
+    /**
+     * 更新用户昵称
+     *
+     * @param userId 用户ID
+     * @param nickname 新昵称
+     * @return 更新后的用户信息
+     */
+    UserVO updateNickname(Long userId, String nickname);
 }

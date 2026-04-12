@@ -166,3 +166,29 @@ export function uploadAvatar(formData) {
     }
   })
 }
+
+/**
+ * 检查用户名是否已存在
+ * @param {string} username - 用户名
+ * @returns {Promise} { exists: boolean, available: boolean }
+ */
+export function checkUsernameExists(username) {
+  return request({
+    url: '/users/username/check',
+    method: 'get',
+    params: { username }
+  })
+}
+
+/**
+ * 更新用户昵称
+ * @param {string} nickname - 新昵称
+ * @returns {Promise} 更新后的用户信息
+ */
+export function updateNickname(nickname) {
+  return request({
+    url: '/users/nickname',
+    method: 'put',
+    data: { nickname }
+  })
+}

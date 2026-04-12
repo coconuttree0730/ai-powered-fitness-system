@@ -640,4 +640,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("用户头像上传成功: userId={}, avatar={}", userId, avatarUrl);
         return getUserInfo(userId);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO updateNickname(Long userId, String nickname) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 更新昵称
+        user.setNickname(nickname);
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        log.info("用户更新昵称成功: userId={}, nickname={}", userId, nickname);
+        return getUserInfo(userId);
+    }
 }

@@ -237,20 +237,39 @@ router.beforeEach(async (to, from, next) => {
   
   const authStore = useAuthStore()
   
+  // 公开页面直接放行
   if (to.meta.public) {
     next()
     return
   }
   
+  // 需要认证的页面
   if (to.meta.requiresAuth) {
+    // 检查是否已登录
     if (!authStore.isLoggedIn) {
       next({ path: '/', query: { redirect: to.fullPath } })
       return
     }
     
+    // 检查角色权限
     if (to.meta.roles && to.meta.roles.length > 0) {
+      const userRoles = authStore.userRoles
+      // 如果用户角色为空，尝试从存储中重新读取
+      if (!userRoles || userRoles.length === 0) {
+        // 尝试重新读取 userInfo
+        const storedUserInfo = JSON.parse(
+          localStorage.getItem('userInfo') ||
+          sessionStorage.getItem('userInfo') ||
+          'null'
+        )
+        if (storedUserInfo && storedUserInfo.roles) {
+          authStore.userInfo = storedUserInfo
+        }
+      }
+      
       const hasRole = to.meta.roles.some(role => authStore.userRoles.includes(role))
       if (!hasRole) {
+        // 角色不匹配，跳转到首页
         next({ name: 'Home' })
         return
       }

@@ -64,6 +64,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // 1. 从请求中获取JWT Token
             String jwt = getJwtFromRequest(request);
+            
+            log.debug("JWT认证过滤器执行, URI: {}, Token存在: {}", request.getRequestURI(), jwt != null);
 
             // 2. 验证Token : 底层原理： 判断是不是 null
             if (StringUtils.hasText(jwt)) {
@@ -93,6 +95,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     sendUnauthorizedResponse(response, "Token无效或已过期");
                     return;
                 }
+            } else {
+                log.debug("请求未携带JWT Token, URI: {}", request.getRequestURI());
             }
         } catch (Exception e) {
             // 检查是否是客户端断开连接
@@ -178,19 +182,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 白名单URL不需要过滤
+        // 白名单URL不需要过滤（与 SecurityConfig 保持一致）
         String path = request.getRequestURI();
-        List<String> whiteList = List.of(
+        
+        // 精确匹配的公开路径
+        List<String> exactMatchPaths = List.of(
                 "/api/v1/auth/login",
+                "/api/v1/auth/login/sms",
                 "/api/v1/auth/register",
+                "/api/v1/auth/refresh",
+                "/api/v1/auth/slider-verify",
+                "/api/v1/auth/sms-code",
+                "/api/v1/banners/active",
+                "/api/v1/coaches/home",
+                "/swagger-ui.html",
+                "/error",
+                "/favicon.ico"
+        );
+        
+        // 前缀匹配的公开路径
+        List<String> prefixMatchPaths = List.of(
+                "/api/v1/auth/slider-verify/",
                 "/api/v1/courses/public/",
+                "/api/v1/equipment/",
                 "/swagger-ui/",
                 "/v3/api-docs/",
-                "/swagger-ui.html",
-                "/webjars/",
-                "/error"
+                "/swagger-resources/",
+                "/webjars/"
         );
-
-        return whiteList.stream().anyMatch(path::startsWith);
+        
+        // 检查精确匹配
+        if (exactMatchPaths.contains(path)) {
+            log.debug("shouldNotFilter检查: path={}, 精确匹配白名单", path);
+            return true;
+        }
+        
+        // 检查前缀匹配
+        boolean shouldSkip = prefixMatchPaths.stream().anyMatch(path::startsWith);
+        log.debug("shouldNotFilter检查: path={}, shouldSkip={}", path, shouldSkip);
+        return shouldSkip;
     }
 }

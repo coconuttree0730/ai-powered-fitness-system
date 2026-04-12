@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
 
 const request = axios.create({
@@ -12,9 +11,14 @@ const request = axios.create({
 
 request.interceptors.request.use(
   (config) => {
-    const authStore = useAuthStore()
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`
+    // 同时检查 localStorage 和 sessionStorage，避免 Pinia store 未初始化的问题
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    console.log('[request.js] 请求拦截器 - URL:', config.url, 'Token存在:', !!token)
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      console.log('[request.js] 已添加 Authorization 头')
+    } else {
+      console.warn('[request.js] 未找到 Token，请求将不携带 Authorization 头')
     }
     return config
   },
@@ -35,9 +39,11 @@ request.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // 401错误只清除登录状态，不重定向，让页面自己处理
-          const authStore = useAuthStore()
-          authStore.logout()
+          // 401错误清除登录状态（同时清除两种存储）
+          localStorage.removeItem('token')
+          localStorage.removeItem('userInfo')
+          sessionStorage.removeItem('token')
+          sessionStorage.removeItem('userInfo')
           // 只在非公开页面时重定向到首页
           const currentPath = router.currentRoute.value.path
           const publicPaths = ['/equipments', '/courses', '/coaches']

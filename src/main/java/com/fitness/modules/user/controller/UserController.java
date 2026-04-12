@@ -300,6 +300,44 @@ public class UserController {
     }
 
     /**
+     * 检查用户名是否已存在
+     * 用于修改用户名时的实时校验
+     *
+     * @param username 用户名
+     * @return 是否存在
+     */
+    @GetMapping("/username/check")
+    public Result<Map<String, Object>> checkUsernameExists(@RequestParam String username) {
+        log.info("检查用户名是否存在: {}", username);
+        boolean exists = userService.isUsernameExists(username);
+        Map<String, Object> result = new HashMap<>();
+        result.put("exists", exists);
+        result.put("available", !exists);
+        return Result.success(result);
+    }
+
+    /**
+     * 更新用户昵称
+     *
+     * @param request 包含昵称的请求体
+     * @return 更新后的用户信息
+     */
+    @PutMapping("/nickname")
+    @PreAuthorize("isAuthenticated()")
+    public Result<UserVO> updateNickname(@RequestBody Map<String, String> request) {
+        Long userId = getCurrentUserId();
+        String nickname = request.get("nickname");
+
+        if (nickname == null || nickname.trim().isEmpty()) {
+            return Result.error("昵称不能为空");
+        }
+
+        log.info("更新昵称请求, userId: {}, nickname: {}", userId, nickname);
+        UserVO userVO = userService.updateNickname(userId, nickname.trim());
+        return Result.success(userVO);
+    }
+
+    /**
      * 从SecurityContext获取当前用户ID
      *
      * @return 用户ID

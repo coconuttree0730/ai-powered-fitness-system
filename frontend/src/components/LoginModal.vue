@@ -563,14 +563,14 @@ async function handleLogin() {
     if (loginType.value === 'password') {
       // 密码登录
       const credentials = { username: form.username, password: form.password }
-      result = await authStore.login(credentials)
+      result = await authStore.login(credentials, rememberMe.value)
     } else {
       // 短信验证码登录
       const data = await loginBySms({ phone: form.phone, smsCode: form.code })
       console.log('短信登录返回数据:', data)
       if (data && data.token) {
-        // 保存登录状态
-        await authStore.setLoginState(data)
+        // 保存登录状态，传递 rememberMe 参数
+        await authStore.setLoginState(data, rememberMe.value)
         result = { success: true }
       } else {
         result = { success: false, message: '登录失败，未获取到token' }
@@ -920,6 +920,25 @@ onUnmounted(() => {
 
 .input-wrapper input::placeholder {
   color: rgba(255, 255, 255, 0.35);
+}
+
+/* 浏览器自动填充样式优化 */
+.input-wrapper input:-webkit-autofill,
+.input-wrapper input:-webkit-autofill:hover,
+.input-wrapper input:-webkit-autofill:focus,
+.input-wrapper input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #1A1A25 inset !important;
+  -webkit-text-fill-color: #fff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Firefox 自动填充样式 */
+.input-wrapper input:autofill,
+.input-wrapper input:autofill:hover,
+.input-wrapper input:autofill:focus,
+.input-wrapper input:autofill:active {
+  box-shadow: 0 0 0 1000px #1A1A25 inset !important;
+  -webkit-text-fill-color: #fff !important;
 }
 
 .toggle-password {
