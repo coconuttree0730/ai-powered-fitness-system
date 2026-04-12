@@ -81,7 +81,7 @@ mybatis-plus:
 
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-signing-must-be-at-least-32-characters-long} # JWT 密钥；可环境变量配置；默认
-  expiration: ${JWT_EXPIRATION:259200000}  # 3天 = 3 * 24 * 60 * 60 * 1000 = 259200000 毫秒
+  expiration: ${JWT_EXPIRATION:259200000}  # 登录状态保留时间：3天 = 3 * 24 * 60 * 60 * 1000 = 259200000 毫秒
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # JWT 刷新令牌过期时间；可环境变量配置；默认 7 天
   issuer: ai-fitness-system
   audience: fitness-users

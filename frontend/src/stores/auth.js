@@ -27,10 +27,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(credentials, rememberMe = false) {
     try {
       const res = await loginApi(credentials)
-      console.log('[auth.js] loginApi 返回数据:', res)
-      console.log('[auth.js] res.token:', res?.token)
-      console.log('[auth.js] res.userInfo:', res?.userInfo)
-      
       if (res && res.token) {
         // 先清除所有旧数据，避免 localStorage 和 sessionStorage 数据不一致
         localStorage.removeItem('token')
@@ -43,11 +39,9 @@ export const useAuthStore = defineStore('auth', () => {
         if (rememberMe) {
           // 长期保存到 localStorage
           localStorage.setItem('token', res.token)
-          console.log('[auth.js] Token 存储到 localStorage')
         } else {
           // 会话级保存到 sessionStorage
           sessionStorage.setItem('token', res.token)
-          console.log('[auth.js] Token 存储到 sessionStorage')
         }
 
         if (res.userInfo) {
@@ -60,15 +54,12 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         const roles = res.userInfo?.roles || []
-        console.log('[auth.js] 用户角色:', roles)
         const redirect = router.currentRoute.value.query.redirect || getDashboardPathByRoles(roles)
-        console.log('[auth.js] 跳转到:', redirect)
         router.push(redirect)
         return { success: true }
       }
       return { success: false, message: '登录失败' }
     } catch (error) {
-      console.error('[auth.js] 登录错误:', error)
       return { success: false, message: error.message || '登录失败' }
     }
   }

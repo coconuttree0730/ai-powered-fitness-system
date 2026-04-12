@@ -232,25 +232,23 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
   document.title = to.meta.title ? `${to.meta.title} - 智能健身房` : '智能健身房'
-  
+
   const authStore = useAuthStore()
-  
+
   // 公开页面直接放行
   if (to.meta.public) {
-    next()
-    return
+    return true
   }
-  
+
   // 需要认证的页面
   if (to.meta.requiresAuth) {
     // 检查是否已登录
     if (!authStore.isLoggedIn) {
-      next({ path: '/', query: { redirect: to.fullPath } })
-      return
+      return { path: '/', query: { redirect: to.fullPath } }
     }
-    
+
     // 检查角色权限
     if (to.meta.roles && to.meta.roles.length > 0) {
       const userRoles = authStore.userRoles
@@ -266,17 +264,16 @@ router.beforeEach(async (to, from, next) => {
           authStore.userInfo = storedUserInfo
         }
       }
-      
+
       const hasRole = to.meta.roles.some(role => authStore.userRoles.includes(role))
       if (!hasRole) {
         // 角色不匹配，跳转到首页
-        next({ name: 'Home' })
-        return
+        return { name: 'Home' }
       }
     }
   }
-  
-  next()
+
+  return true
 })
 
 export default router

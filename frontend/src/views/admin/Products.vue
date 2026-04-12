@@ -270,8 +270,8 @@
           <el-col :span="8">
             <el-form-item label="状态" prop="status">
               <el-radio-group v-model="form.status">
-                <el-radio label="ACTIVE">上架</el-radio>
-                <el-radio label="INACTIVE">下架</el-radio>
+                <el-radio value="ACTIVE">上架</el-radio>
+                <el-radio value="INACTIVE">下架</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -359,8 +359,8 @@
         <el-form :model="stockForm" label-width="100px">
           <el-form-item label="操作类型">
             <el-radio-group v-model="stockForm.type">
-              <el-radio label="IN">入库</el-radio>
-              <el-radio label="OUT">出库</el-radio>
+              <el-radio value="IN">入库</el-radio>
+              <el-radio value="OUT">出库</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="数量">

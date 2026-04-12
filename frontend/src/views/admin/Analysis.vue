@@ -10,9 +10,9 @@
       <!-- 筛选区域 -->
       <div class="filter-section">
         <el-radio-group v-model="timeFilter" size="default" @change="handleFilterChange">
-          <el-radio-button label="today">本日</el-radio-button>
-          <el-radio-button label="month">本月</el-radio-button>
-          <el-radio-button label="year">本年</el-radio-button>
+          <el-radio-button value="today">本日</el-radio-button>
+          <el-radio-button value="month">本月</el-radio-button>
+          <el-radio-button value="year">本年</el-radio-button>
         </el-radio-group>
         <el-tag type="info" effect="plain" class="count-tag">
           共 {{ total }} 条记录

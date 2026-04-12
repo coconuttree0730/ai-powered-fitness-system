@@ -71,7 +71,7 @@ public class FitnessPlanController {
     }
 
     /**
-     * 获取计划详情 //TODO 计划详情页面
+     * 获取计划详情
      *
      * @param planId 计划ID
      * @return 计划详情

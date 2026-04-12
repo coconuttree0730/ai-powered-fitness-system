@@ -16,11 +16,13 @@ export function sendMessage(data) {
 }
 
 export function sendMessageStream(data, signal) {
+  // 同时检查 localStorage 和 sessionStorage
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
   return fetch('/api/v1/chat/messages/stream', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
+      'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify(data),
     signal

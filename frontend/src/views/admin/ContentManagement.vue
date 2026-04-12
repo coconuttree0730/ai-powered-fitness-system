@@ -331,8 +331,8 @@
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="bannerForm.status">
-            <el-radio :label="1">显示</el-radio>
-            <el-radio :label="0">隐藏</el-radio>
+            <el-radio :value="1">显示</el-radio>
+            <el-radio :value="0">隐藏</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -369,8 +369,8 @@
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="noticeForm.status">
-            <el-radio :label="0">草稿</el-radio>
-            <el-radio :label="1">立即发布</el-radio>
+            <el-radio :value="0">草稿</el-radio>
+            <el-radio :value="1">立即发布</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="发布时间" prop="publishTime" v-if="noticeForm.status === 0">

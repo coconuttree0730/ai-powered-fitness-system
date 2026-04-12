@@ -1024,7 +1024,7 @@ function getDefaultMarqueeItems() {
   ]
 }
 
-// 品牌理念
+// 品牌理念 // TODO ：首页-品牌理念内容（硬编码）
 const philosophyValues = [
   { icon: svgIcons.target, title: '精准定制', desc: 'AI算法分析身体数据，生成专属训练方案' },
   { icon: svgIcons.trending, title: '科学追踪', desc: '实时监测训练数据，动态调整计划强度' },
@@ -1094,7 +1094,7 @@ async function fetchHomePageCourses() {
   }
 }
 
-// 默认课程数据（降级方案：加载失败..）
+// 默认课程数据（降级方案：加载失败..）*********
 function getDefaultCoursesData() {
   return [
     {
@@ -1137,7 +1137,7 @@ function handleCoachImageError(event) {
   }
 }
 
-// 会员方案
+// 会员方案 //TODO：实现真实请求后台数据（或者内容管理数据）
 const membershipSlide = ref(0)
 const membershipPlans = [
   {
@@ -1247,7 +1247,7 @@ async function fetchHomePageCoaches() {
   }
 }
 
-// 默认教练数据
+// 默认教练数据(没有加载出来时的数据显示)
 function getDefaultCoaches() {
   return [
     { name: '王强', title: '高级私人教练', experience: '8+', students: '2000+', rating: '99%', image: defaultCoachImage, tags: ['增肌塑形', '体态矫正', '运动康复'] },
@@ -1258,13 +1258,13 @@ function getDefaultCoaches() {
 }
 
 // 成功案例
-const testimonialSlide = ref(0)
+/*const testimonialSlide = ref(0)
 const testimonials = [
   { name: '李明', occupation: 'IT工程师', duration: '训练12个月', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', before: '85kg', beforeLabel: '减重前', after: '72kg', afterLabel: '现在', quote: '作为一名程序员，长期久坐让我体重飙升。加入FutureFit 未来健身后，AI为我定制了科学的训练计划，配合营养指导，12个月成功减重13kg，现在精力充沛，工作效率也提高了！' },
   { name: '王芳', occupation: '全职妈妈', duration: '训练8个月', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop', before: '产后', beforeLabel: '开始', after: '马甲线', afterLabel: '现在', quote: '产后身材走形让我很自卑，FutureFit 未来健身的产后恢复课程和教练的专业指导让我重拾自信。现在不仅恢复了产前身材，还练出了马甲线！' },
   { name: '张浩', occupation: '大学生', duration: '训练6个月', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop', before: '瘦弱', beforeLabel: '增肌前', after: '+8kg', afterLabel: '肌肉增长', quote: '从小就是瘦弱的体质，一直想要增肌。FutureFit 未来健身的AI训练计划非常科学，6个月增肌8kg，现在终于有了理想的身材，感谢FutureFit 未来健身！' },
   { name: '刘婷', occupation: '企业高管', duration: '训练10个月', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop', before: '亚健康', beforeLabel: '开始', after: '活力', afterLabel: '现在', quote: '高强度工作让我身心俱疲，瑜伽和普拉提课程帮我找到了工作与健康的平衡。现在睡眠质量好了，工作效率也更高了。' }
-]
+]*/
 
 // 健身设备
 const activeEquipmentTab = ref('all')

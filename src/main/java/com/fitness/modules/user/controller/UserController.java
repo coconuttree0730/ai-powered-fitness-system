@@ -179,7 +179,7 @@ public class UserController {
     }
 
     /**
-     * 发送邮箱验证码
+     * 发送————邮箱验证码————
      *
      * @param dto 发送邮箱验证码DTO
      * @return 操作结果

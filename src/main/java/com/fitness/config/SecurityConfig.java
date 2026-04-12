@@ -103,6 +103,11 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // 配置 SecurityContext 以支持异步请求（SSE 流式响应）//TODO LLM-stream的流式处理
+                .securityContext(securityContext ->
+                        securityContext.requireExplicitSave(false)
+                )
+
                 // 配置异常处理
                 .exceptionHandling(exception ->
                         exception

@@ -13,12 +13,8 @@ request.interceptors.request.use(
   (config) => {
     // 同时检查 localStorage 和 sessionStorage，避免 Pinia store 未初始化的问题
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-    console.log('[request.js] 请求拦截器 - URL:', config.url, 'Token存在:', !!token)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-      console.log('[request.js] 已添加 Authorization 头')
-    } else {
-      console.warn('[request.js] 未找到 Token，请求将不携带 Authorization 头')
     }
     return config
   },
