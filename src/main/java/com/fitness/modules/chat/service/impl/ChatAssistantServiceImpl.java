@@ -185,6 +185,20 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
                     SecurityContextHolder.clearContext();
                 }
             })
+            .doOnError(error -> {
+                // 在异步线程中恢复安全上下文以记录错误
+                SecurityContextHolder.setContext(securityContext);
+                try {
+                    log.error("流式发送消息失败: sessionId={}, userId={}, error={}", 
+                        session.getId(), userId, error.getMessage());
+                } finally {
+                    SecurityContextHolder.clearContext();
+                }
+            })
+            .onErrorResume(error -> {
+                // 返回友好的错误消息流
+                return Flux.just("抱歉，AI服务暂时不可用，请稍后重试。");
+            })
             .subscribeOn(Schedulers.boundedElastic());
     }
 

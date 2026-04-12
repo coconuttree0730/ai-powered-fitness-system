@@ -13,6 +13,11 @@ import java.util.List;
 public class RepairDTO {
 
     /**
+     * 关联的器材ID
+     */
+    private Long equipmentId;
+
+    /**
      * 问题描述
      */
     @NotBlank(message = "问题描述不能为空")

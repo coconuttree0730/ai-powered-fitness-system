@@ -153,4 +153,11 @@ public interface EquipmentService {
      * @param repairId 报修ID
      */
     void deleteRepair(Long repairId);
+
+    /**
+     * 获取所有正常状态的器材列表（用于下拉选择）
+     *
+     * @return 器材简单信息列表
+     */
+    List<EquipmentVO> getActiveEquipmentList();
 }

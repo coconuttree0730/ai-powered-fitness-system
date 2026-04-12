@@ -22,6 +22,21 @@ public class RepairVO {
     private Long userId;
 
     /**
+     * 关联的器材ID
+     */
+    private Long equipmentId;
+
+    /**
+     * 器材编号
+     */
+    private String equipmentNo;
+
+    /**
+     * 器材名称
+     */
+    private String equipmentName;
+
+    /**
      * 报修用户名称
      */
     private String userName;

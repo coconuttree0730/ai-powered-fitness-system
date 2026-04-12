@@ -7,6 +7,9 @@
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="user_name" property="userName"/>
+        <result column="equipment_id" property="equipmentId"/>
+        <result column="equipment_no" property="equipmentNo"/>
+        <result column="equipment_name" property="equipmentName"/>
         <result column="description" property="description"/>
         <result column="image_urls" property="imageUrls" typeHandler="com.fitness.modules.equipment.handler.ImageUrlsTypeHandler"/>
         <result column="status" property="status"/>
@@ -15,12 +18,29 @@
         <result column="handle_time" property="handleTime"/>
     </resultMap>
 
-    <!-- 查询器材的报修记录 -->
-    <select id="selectRepairList" resultMap="RepairVOResultMap">
+    <!-- 我的报修记录VO结果映射 -->
+    <resultMap id="MyRepairVOResultMap" type="com.fitness.modules.equipment.model.vo.MyRepairVO">
+        <id column="id" property="id"/>
+        <result column="description" property="description"/>
+        <result column="equipment_id" property="equipmentId"/>
+        <result column="equipment_no" property="equipmentNo"/>
+        <result column="equipment_name" property="equipmentName"/>
+        <result column="image_urls" property="imageUrls" typeHandler="com.fitness.modules.equipment.handler.ImageUrlsTypeHandler"/>
+        <result column="status" property="status"/>
+        <result column="handle_remark" property="handleRemark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="handle_time" property="handleTime"/>
+    </resultMap>
+
+    <!-- 查询器材的报修记录（按器械ID过滤） -->
+    <select id="selectRepairsByEquipmentId" resultMap="RepairVOResultMap">
         SELECT
             r.id,
             r.user_id,
             u.username AS user_name,
+            r.equipment_id,
+            e.equipment_no,
+            e.equipment_name,
             r.description,
             r.image_urls,
             r.status,
@@ -29,32 +49,27 @@
             r.handle_time
         FROM fitness_equipment_repair r
         LEFT JOIN sys_user u ON r.user_id = u.id
+        LEFT JOIN fitness_equipment e ON r.equipment_id = e.id
         WHERE r.deleted = false
+          AND r.equipment_id = #{equipmentId}
         ORDER BY r.create_time DESC
     </select>
-
-    <!-- 我的报修记录VO结果映射 -->
-    <resultMap id="MyRepairVOResultMap" type="com.fitness.modules.equipment.model.vo.MyRepairVO">
-        <id column="id" property="id"/>
-        <result column="description" property="description"/>
-        <result column="image_urls" property="imageUrls" typeHandler="com.fitness.modules.equipment.handler.ImageUrlsTypeHandler"/>
-        <result column="status" property="status"/>
-        <result column="handle_remark" property="handleRemark"/>
-        <result column="create_time" property="createTime"/>
-        <result column="handle_time" property="handleTime"/>
-    </resultMap>
 
     <!-- 查询用户的报修记录 -->
     <select id="selectMyRepairs" resultMap="MyRepairVOResultMap">
         SELECT
             r.id,
             r.description,
+            r.equipment_id,
+            e.equipment_no,
+            e.equipment_name,
             r.image_urls,
             r.status,
             r.handle_remark,
             r.create_time,
             r.handle_time
         FROM fitness_equipment_repair r
+        LEFT JOIN fitness_equipment e ON r.equipment_id = e.id
         WHERE r.user_id = #{userId}
           AND r.deleted = false
         ORDER BY r.create_time DESC
@@ -66,6 +81,9 @@
             r.id,
             r.user_id,
             u.username AS user_name,
+            r.equipment_id,
+            e.equipment_no,
+            e.equipment_name,
             r.description,
             r.image_urls,
             r.status,
@@ -74,6 +92,7 @@
             r.handle_time
         FROM fitness_equipment_repair r
         LEFT JOIN sys_user u ON r.user_id = u.id
+        LEFT JOIN fitness_equipment e ON r.equipment_id = e.id
         WHERE r.deleted = false
         ORDER BY r.create_time DESC
     </select>
@@ -84,6 +103,9 @@
             r.id,
             r.user_id,
             u.username AS user_name,
+            r.equipment_id,
+            e.equipment_no,
+            e.equipment_name,
             r.description,
             r.image_urls,
             r.status,
@@ -92,6 +114,7 @@
             r.handle_time
         FROM fitness_equipment_repair r
         LEFT JOIN sys_user u ON r.user_id = u.id
+        LEFT JOIN fitness_equipment e ON r.equipment_id = e.id
         WHERE r.id = #{repairId}
           AND r.deleted = false
     </select>

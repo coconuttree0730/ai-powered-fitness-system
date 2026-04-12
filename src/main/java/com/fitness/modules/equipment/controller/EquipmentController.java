@@ -102,4 +102,16 @@ public class EquipmentController {
 
         return Result.success(result);
     }
+
+    /**
+     * 获取所有正常状态的器材列表（用于报修选择器械）
+     *
+     * @return 器材列表
+     */
+    @GetMapping("/active-list")
+    public Result<List<EquipmentVO>> getActiveEquipmentList() {
+        log.info("获取正常状态器材列表请求");
+        List<EquipmentVO> list = equipmentService.getActiveEquipmentList();
+        return Result.success(list);
+    }
 }

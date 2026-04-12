@@ -32,6 +32,12 @@
         style="width: 100%"
       >
         <el-table-column prop="userName" label="报修人" min-width="100" />
+        <el-table-column label="报修器械" width="180">
+          <template #default="{ row }">
+            <span v-if="row.equipmentName || row.equipmentNo">{{ row.equipmentNo || '-' }} - {{ row.equipmentName || '-' }}</span>
+            <span v-else style="color: #c0c4cc">未指定</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="description" label="问题描述" show-overflow-tooltip min-width="300" />
         <el-table-column label="图片" width="80">
           <template #default="{ row }">
@@ -124,6 +130,9 @@
             <el-tag :type="getStatusType(selectedRepair.status)">{{ getStatusText(selectedRepair.status) }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="报修时间" :span="2">{{ formatTime(selectedRepair.createTime) }}</el-descriptions-item>
+          <el-descriptions-item v-if="selectedRepair.equipmentName || selectedRepair.equipmentNo" label="报修器械" :span="2">
+            {{ selectedRepair.equipmentNo || '-' }} - {{ selectedRepair.equipmentName || '-' }}
+          </el-descriptions-item>
           <el-descriptions-item label="问题描述" :span="2">{{ selectedRepair.description }}</el-descriptions-item>
           <el-descriptions-item v-if="selectedRepair.handleRemark" label="处理备注" :span="2">
             {{ selectedRepair.handleRemark }}

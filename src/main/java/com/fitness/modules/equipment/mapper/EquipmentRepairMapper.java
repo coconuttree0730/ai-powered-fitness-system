@@ -35,4 +35,12 @@ public interface EquipmentRepairMapper extends BaseMapper<EquipmentRepair> {
      * @return 报修详情
      */
     RepairVO selectRepairById(@Param("repairId") Long repairId);
+
+    /**
+     * 根据器材ID查询报修记录
+     *
+     * @param equipmentId 器材ID
+     * @return 报修记录列表
+     */
+    List<RepairVO> selectRepairsByEquipmentId(@Param("equipmentId") Long equipmentId);
 }

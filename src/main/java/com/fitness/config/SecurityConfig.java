@@ -3,6 +3,7 @@ package com.fitness.config;
 import com.fitness.config.CustomAuthorizationDeniedHandler;
 import com.fitness.integration.security.CustomPermissionEvaluator;
 import com.fitness.integration.security.JwtAuthenticationFilter;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,6 +48,16 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAuthorizationDeniedHandler authorizationDeniedHandler;
+
+    /**
+     * 初始化 SecurityContextHolder 策略
+     * 设置为 MODE_INHERITABLETHREADLOCAL，使子线程可以继承父线程的 SecurityContext
+     * 这对于异步请求（如 SSE 流式响应）非常重要
+     */
+    @PostConstruct
+    public void init() {
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+    }
 
     /**
      * 白名单URL路径 ******* 首页公开内容 无拦截

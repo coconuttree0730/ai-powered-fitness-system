@@ -146,7 +146,9 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     public List<RepairVO> getRepairList(Long equipmentId) {
-        // 由于报修记录不再关联器材，返回所有报修记录
+        if (equipmentId != null) {
+            return equipmentRepairMapper.selectRepairsByEquipmentId(equipmentId);
+        }
         return equipmentRepairMapper.selectAllRepairs();
     }
 
@@ -214,6 +216,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         // 创建报修记录
         EquipmentRepair repair = new EquipmentRepair();
         repair.setUserId(userId);
+        repair.setEquipmentId(dto.getEquipmentId());
         repair.setDescription(dto.getDescription());
 
         // 处理图片URL列表
@@ -381,6 +384,16 @@ public class EquipmentServiceImpl implements EquipmentService {
         repairRecordMapper.deleteByRepairId(repairId);
 
         log.info("报修记录删除成功: repairId={}", repairId);
+    }
+
+    @Override
+    public List<EquipmentVO> getActiveEquipmentList() {
+        EquipmentQueryDTO query = new EquipmentQueryDTO();
+        query.setPageNum(1);
+        query.setPageSize(1000);
+        query.setStatus(1);
+        Page<EquipmentVO> page = equipmentMapper.selectEquipmentList(new Page<>(1, 1000), query);
+        return page.getRecords();
     }
 
     /**

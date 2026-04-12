@@ -170,6 +170,17 @@ export function getEquipmentTypes() {
 }
 
 /**
+ * 获取所有正常状态的器材列表（用于报修选择器械）
+ * @returns {Promise} 器材列表
+ */
+export function getActiveEquipmentList() {
+  return request({
+    url: '/equipment/active-list',
+    method: 'get'
+  })
+}
+
+/**
  * 获取指定器材的报修记录
  * @param {number} id 器材ID
  * @returns {Promise} 报修记录列表

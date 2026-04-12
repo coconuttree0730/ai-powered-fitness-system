@@ -6,6 +6,18 @@
         <h3 class="section-title">提交报修</h3>
       </div>
       <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="100">
+        <n-form-item label="器械编号" path="equipmentId">
+          <n-select
+            v-model:value="form.equipmentId"
+            :options="equipmentOptions"
+            placeholder="请选择报修的器械"
+            :loading="equipmentLoading"
+            filterable
+            clearable
+            size="large"
+          />
+        </n-form-item>
+
         <n-form-item label="问题描述" path="description">
           <n-input
             v-model:value="form.description"
@@ -90,6 +102,10 @@
           <span class="detail-label">报修时间</span>
           <span class="detail-value">{{ formatTime(selectedRepair.createTime) }}</span>
         </div>
+        <div v-if="selectedRepair.equipmentNo || selectedRepair.equipmentName" class="detail-row">
+          <span class="detail-label">报修器械</span>
+          <span class="detail-value">{{ selectedRepair.equipmentNo }} - {{ selectedRepair.equipmentName }}</span>
+        </div>
         <div class="detail-row">
           <span class="detail-label">问题描述</span>
           <span class="detail-value">{{ selectedRepair.description }}</span>
@@ -140,7 +156,7 @@
 import { ref, reactive, computed, onMounted, h } from 'vue'
 import { NTag, NButton, useMessage, NIcon, NTimeline, NTimelineItem, NEmpty, useDialog } from 'naive-ui'
 import { Camera as CameraIcon } from '@vicons/ionicons5'
-import { submitRepair, getMyRepairs, cancelRepair } from '@/api/equipment'
+import { submitRepair, getMyRepairs, cancelRepair, getActiveEquipmentList } from '@/api/equipment'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -156,10 +172,13 @@ const repairs = ref([])
 
 const formRef = ref(null)
 const form = reactive({
+  equipmentId: null,
   description: ''
 })
 
 const uploadedUrls = ref([])
+const equipmentOptions = ref([])
+const equipmentLoading = ref(false)
 
 // 上传请求头（携带认证token）
 const uploadHeaders = computed(() => {
@@ -195,6 +214,12 @@ const filteredRepairs = computed(() => {
 })
 
 const columns = [
+  {
+    title: '器械编号',
+    key: 'equipmentNo',
+    width: 150,
+    render: (row) => row.equipmentNo || '-'
+  },
   {
     title: '问题描述',
     key: 'description',
@@ -302,6 +327,7 @@ async function handleSubmit() {
     submitting.value = true
 
     const data = {
+      equipmentId: form.equipmentId || null,
       description: form.description,
       imageUrls: uploadedUrls.value
     }
@@ -310,6 +336,7 @@ async function handleSubmit() {
 
     message.success('报修提交成功！')
     form.description = ''
+    form.equipmentId = null
     fileList.value = []
     uploadedUrls.value = []
 
@@ -366,8 +393,25 @@ async function fetchRepairs() {
 }
 
 onMounted(() => {
+  fetchEquipmentList()
   fetchRepairs()
 })
+
+async function fetchEquipmentList() {
+  equipmentLoading.value = true
+  try {
+    const res = await getActiveEquipmentList()
+    equipmentOptions.value = (res || []).map(e => ({
+      label: `${e.equipmentNo || '-'} - ${e.equipmentName}`,
+      value: e.id
+    }))
+  } catch (error) {
+    console.error('获取器械列表失败', error)
+    message.error('获取器械列表失败')
+  } finally {
+    equipmentLoading.value = false
+  }
+}
 </script>
 
 <style scoped>

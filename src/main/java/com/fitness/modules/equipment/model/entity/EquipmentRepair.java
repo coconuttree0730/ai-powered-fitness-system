@@ -26,6 +26,12 @@ public class EquipmentRepair {
     private Long userId;
 
     /**
+     * 关联的器材ID
+     */
+    @TableField("equipment_id")
+    private Long equipmentId;
+
+    /**
      * 报修描述
      */
     @TableField("description")

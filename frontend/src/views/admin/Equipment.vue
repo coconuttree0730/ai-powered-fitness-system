@@ -202,6 +202,11 @@
 
       <el-divider content-position="left">报修记录</el-divider>
       <el-table :data="currentEquipment?.repairRecords || []" :border="false" size="small">
+        <el-table-column prop="equipmentNo" label="器械编号" width="120">
+          <template #default="{ row }">
+            {{ row.equipmentNo || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="userName" label="报修人" width="100" />
         <el-table-column prop="description" label="问题描述" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
