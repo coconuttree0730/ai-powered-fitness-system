@@ -13,91 +13,35 @@ public class PromptTemplates {
 
     /**
      * 健身计划生成 Prompt 模板（返回结构化JSON）
-     * 注意：使用字符串拼接避免 ST4 模板语法冲突
-     * 格式约束由 BeanOutputConverter 自动生成
+     * 使用 BeanOutputConverter 自动生成 JSON Schema 约束
      */
     public String generateFitnessPlanJson(Map<String, Object> variables) {
         StringBuilder prompt = new StringBuilder();
 
-        prompt.append("# Role\n");
-        prompt.append("你是一位拥有15年经验的顶级健身教练AI，擅长根据学员身体数据制定科学、个性化的周期训练计划。\n\n");
+        prompt.append("你是一位专业的健身教练。请根据学员档案制定一份7天健身训练计划。\n\n");
 
-        prompt.append("# Task\n");
-        prompt.append("根据学员档案信息，制定一份**严格7天**的周度健身训练计划，返回结构化JSON。\n");
-        prompt.append("**重要：weeklyPlan数组必须恰好包含7个元素，对应周一到周日，绝对不能有第8天！**\n\n");
+        prompt.append("## 学员档案\n");
+        prompt.append("- 身高：").append(variables.get("height")).append(" cm\n");
+        prompt.append("- 体重：").append(variables.get("weight")).append(" kg\n");
+        prompt.append("- 年龄：").append(variables.get("age")).append(" 岁\n");
+        prompt.append("- 目标：").append(variables.get("goal")).append("\n");
+        prompt.append("- 经验：").append(variables.get("experience")).append("\n\n");
 
-        prompt.append("# 学员档案\n");
-        prompt.append("| 字段 | 值 |\n");
-        prompt.append("|------|----|\n");
-        prompt.append("| 身高 | ").append(variables.get("height")).append(" cm |\n");
-        prompt.append("| 体重 | ").append(variables.get("weight")).append(" kg |\n");
-        prompt.append("| 年龄 | ").append(variables.get("age")).append(" 岁 |\n");
-        prompt.append("| 目标 | ").append(variables.get("goal")).append(" |\n");
-        prompt.append("| 经验 | ").append(variables.get("experience")).append(" |\n\n");
-
-        prompt.append("# 系统课程库（必须从中选择）\n");
+        prompt.append("## 可用课程\n");
         prompt.append(variables.get("availableCourses")).append("\n\n");
 
-        prompt.append("# 系统器械库（必须从中选择）\n");
+        prompt.append("## 可用器械\n");
         prompt.append(variables.get("availableEquipment")).append("\n\n");
 
-        prompt.append("# 输出格式约束 - JSON Schema\n");
-        prompt.append("返回JSON必须严格符合以下结构：\n");
-        prompt.append("- subtitle: 计划标题（简短有力，如\"7天增肌高级训练计划\"）\n");
-        prompt.append("- userInfo: { height, weight, bmi(计算值), goal, intensity }\n");
-        prompt.append("- weeklyPlan: **长度必须恰好为7的数组**，每个元素包含：\n");
-        prompt.append("  * dayName: \"周一\"~\"周日\"，**仅此7个值，不可出现\"周一（次周）\"等额外天**\n");
-        prompt.append("  * focus: 当天训练重点描述（如\"全身复合动作强化\"）\n");
-        prompt.append("  * courses: 课程数组，**每天必须推荐2~3门课程**（训练日至少2门，最多3门不同课程组合，严禁只推荐1门）；休息日设为 null\n");
-        prompt.append("    - 每门课程: { name, description, coverImage, duration, id, **category** }\n");
-        prompt.append("    - name/coverImage/category 必须**一字不差**匹配课程库\n");
-        prompt.append("    - **category必须与当天focus的训练目标一致**（如focus=胸部训练→category=力量训练）\n");
-        prompt.append("  * equipment: 器械数组，从系统器械库中选择；休息日设为 []\n");
-        prompt.append("    - name/image 必须**一字不差**匹配器械库\n");
-        prompt.append("  * exercises: 动作数组 [{ name, sets, reps, restSeconds }]；休息日设为 []\n\n");
-
-        prompt.append("# ⚠️ 关键规则（违反任一条将导致输出无效）\n");
-        prompt.append("1. 【最高优先级】weeklyPlan数组必须恰好包含7个元素！对应：周一、周二、周三、周四、周五、周六、周日\n");
-        prompt.append("   ❌ 错误：返回8天或更多天的数据\n");
-        prompt.append("   ❌ 错误：在周日后面又出现\"周一\"（第二周）\n");
-        prompt.append("   ✅ 正确：只有7天，从周一到周日结束\n");
-        prompt.append("2. 【强制】休息日的 courses=null, equipment=[], exercises=[] —— 不允许有课程、器械、动作、tips\n");
-        prompt.append("3. 【强制】每天 courses 数量必须在2~3之间（训练日至少2门不同课程，最多3门，**绝对禁止只返回1门课程**）\n");
-        prompt.append("4. 【强制】course.name / course.coverImage 必须与系统课程库完全一致，禁止编造\n");
-        prompt.append("5. 【强制】equipment.name / equipment.image 必须与系统器械库完全一致，禁止编造\n");
-        //prompt.append("6. 【强制】不要输出 tips 字段，不要输出任何提示建议类字段\n");
-        prompt.append("7. 【强制】dayName 只能是：周一、周二、周三、周四、周五、周六、周日\n");
-        prompt.append("8. 【强制】【课程匹配】每天推荐的courses的category必须与当天focus高度相关！例如：\n");
-        prompt.append("   - focus含\"胸/背/肩/臂/腿/力量\" → 选择category=\"力量训练\"的课程\n");
-        prompt.append("   - focus含\"有氧/燃脂/心肺\" → 选择category=\"有氧燃脂\"的课程\n");
-        prompt.append("   - focus含\"核心/腹/瑜伽/柔韧\" → 选择category=\"瑜伽普拉提\"的课程\n");
-        prompt.append("   - focus含\"拳击/格斗\" → 选择category=\"拳击格斗\"的课程\n");
-        prompt.append("   - focus含\"舞蹈/操课\" → 选择category=\"舞蹈操课\"的课程\n");
-        prompt.append("   - focus含\"康复/体态/矫正\" → 选择category=\"康复体态\"的课程\n");
-        prompt.append("9. 【强制】【器械匹配】每天推荐的equipment必须与当天训练类型匹配！例如：\n");
-        prompt.append("   - 力量训练日 → 选择STRENGTH/FREE_WEIGHT类型器械（史密斯机、深蹲架、哑铃套装、杠铃等）\n");
-        prompt.append("   - 有氧训练日 → 选择CARDIO类型器械（跑步机、动感单车、划船机、椭圆机等）\n");
-        prompt.append("   - 核心/瑜伽日 → 选择FUNCTIONAL类型器械（瑜伽垫、瑜伽球、弹力带、泡沫轴等）\n");
-        prompt.append("10. 【强制】【器械多样性】不同训练日的equipment必须有所区别！严禁每天都推荐相同的器械组合！\n");
-        prompt.append("    每天至少推荐2-3件不同的器械，且相邻两天尽量避免重复相同器械\n\n");
-
-        prompt.append("#  JSON格式强制要求（违反将导致解析失败）\n");
-        prompt.append("1. 【绝对禁止】在字符串值中嵌入JSON片段！例如以下错误示例：\n");
-        prompt.append("    错误：\"image\": \"http://example.com/1,name\":\"杠铃\",\"image\":\"http://example.com/2.webp\"\n");
-        prompt.append("   正确：\"image\": \"http://example.com/1.webp\"\n");
-        prompt.append("2. 【绝对禁止】字符串值未闭合或JSON结构不完整\n");
-        prompt.append("3. 【绝对禁止】返回超过7天的数据（周一到周日，共7天，不能有第8天）\n");
-        prompt.append("4. 【强制】所有字符串值必须用双引号包裹，且引号内不能包含未转义的双引号\n");
-        prompt.append("5. 【强制】image字段的值必须是完整的URL字符串，不能包含逗号、花括号等JSON字符\n");
-        prompt.append("6. 【强制】确保JSON完整闭合，所有 { 必须有对应的 }，所有 [ 必须有对应的 ]\n\n");
-
-        prompt.append("# 设计原则\n");
-        prompt.append("- 遵循渐进超负荷原则，强度合理递进\n");
-        prompt.append("- 每周安排1天完全休息日（通常为周日），确保恢复\n");
-        prompt.append("- 相邻训练日避免同一肌群连续高强度刺激\n");
-        prompt.append("- 【重要】课程选择要与当天 focus 的训练目标高度匹配（category必须对应）\n");
-        prompt.append("- 【重要】器械选择要符合当天训练类型（力量日用力量器械，有氧日用有氧器械）\n");
-        prompt.append("- 【重要】每天使用2-3件不同器械，7天内的器械组合要有变化和丰富度\n");
+        prompt.append("## 计划要求\n");
+        prompt.append("1. weeklyPlan 必须恰好包含7天（周一到周日）\n");
+        prompt.append("2. 周日可以设置成休息日，当然，你可以分析安排在哪天，例如遵循3分化、4分化、5分化、...,如果是休息日，格式是：courses=null, equipment=[], exercises=[]\n");
+        prompt.append("3. 训练日每天推荐2-4门课程，courses的category要与当天focus匹配\n");
+        prompt.append("4. 课程和器械必须从提供的列表中选择，禁止编造，且必须和训练日的动作符合！且是随机的，不能每次都推荐那几门！\n");
+        prompt.append("5. 器械选择要符合训练类型：力量日用力量器械，有氧日用有氧器械\n");
+        prompt.append("6. 训练日每天必须包含6-8个具体训练动作(exercises)，每个动作包含：name(动作名称), sets(组数), reps(次数), restSeconds(休息秒数)\n");
+        prompt.append("   - 力量训练日示例：杠铃深蹲(3组x8次,休息90秒)、硬拉(3组x5次,休息120秒)\n");
+        prompt.append("   - 有氧训练日示例：跑步机慢跑(1组x30分钟,休息60秒)、动感单车(1组x20分钟,休息30秒)\n\n");
 
         return prompt.toString();
     }
@@ -203,8 +147,8 @@ public class PromptTemplates {
                 - 只输出纯文本内容
 
                 【例子】
-                原文：“龙门架”；
-                润色：“这款双滑轮龙门架设计专业，支持多样化的拉力训练，全方位刺激目标肌群。配备80kg配重系统，阻力调节灵活精准，满足从基础塑形到力量进阶的不同需求。其运行平稳流畅，是打造家庭健身房或提升商业健身区专业度的理想选择。”
+                原文："龙门架"；
+                润色："这款双滑轮龙门架设计专业，支持多样化的拉力训练，全方位刺激目标肌群。配备80kg配重系统，阻力调节灵活精准，满足从基础塑形到力量进阶的不同需求。其运行平稳流畅，是打造家庭健身房或提升商业健身区专业度的理想选择。"
                 """;
     }
 

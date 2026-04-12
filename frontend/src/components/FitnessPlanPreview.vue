@@ -510,29 +510,33 @@ function getDefaultImage(type, name = '') {
 /* 器械网格 */
 .equipment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 36px;
 }
 
 .equipment-item {
-  text-align: center;
-  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px;
   background: #f9fafb;
-  border-radius: 10px;
+  border-radius: 32px;
 }
 
 .equipment-item img {
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 8px;
+  border-radius: 18px;
+  margin-bottom: 18px;
 }
 
 .equipment-item span {
   font-size: 12px;
   color: #4b5563;
   font-weight: 500;
+  text-align: center;
+  line-height: 2;
 }
 
 /* 底部操作按钮 */

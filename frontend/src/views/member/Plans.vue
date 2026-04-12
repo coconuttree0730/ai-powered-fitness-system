@@ -586,7 +586,7 @@ function formatDateTime(dateStr) {
 .equipment-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 12px;
+  gap: 20px;
 }
 
 .equipment-item {
@@ -597,8 +597,8 @@ function formatDateTime(dateStr) {
 }
 
 .equipment-item img {
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 8px;
