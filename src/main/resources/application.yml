@@ -94,6 +94,7 @@ minio:
   secure: ${MINIO_SECURE:false}
 
 aliyun:
+  # 阿里云短信服务
   sms:
     access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID}
     access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET}
