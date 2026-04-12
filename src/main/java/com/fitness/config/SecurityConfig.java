@@ -63,6 +63,8 @@ public class SecurityConfig {
             "/api/v1/courses/public/**",
             // 公开轮播图
             "/api/v1/banners/active",
+            // 公开公告（首页展示用）
+            "/api/v1/announcements/published",
             // 公开教练列表（首页展示用）
             "/api/v1/coaches/home",
             // 公开教练详情
