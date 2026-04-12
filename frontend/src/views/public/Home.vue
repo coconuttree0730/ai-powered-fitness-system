@@ -19,13 +19,7 @@
       <div class="navbar-container">
         <router-link to="/" class="logo">
           <div class="logo-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6.5 6.5l11 11"/>
-              <path d="M21 21l-1-1"/>
-              <path d="M3 3l1 1"/>
-              <path d="M18 22l4-4"/>
-              <path d="M2 6l4-4"/>
-            </svg>
+            <img src="/weightlifting.svg" alt="Logo" style="width: 24px; height: 24px;" />
           </div>  <!-- logo位置 -->
           <div class="logo-text">FutureFit<span>·未来健身</span></div>
         </router-link>
@@ -649,13 +643,7 @@
           <div class="footer-brand">
             <div class="footer-logo">
               <div class="footer-logo-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6.5 6.5l11 11"/>
-                  <path d="M21 21l-1-1"/>
-                  <path d="M3 3l1 1"/>
-                  <path d="M18 22l4-4"/>
-                  <path d="M2 6l4-4"/>
-                </svg>
+                <img src="/weightlifting.svg" alt="Logo" style="width: 24px; height: 24px;" />
               </div>
               <div class="footer-logo-text">FutureFit 未来健身</div>
             </div>

@@ -5,14 +5,15 @@ import lombok.Data;
 
 /**
  * 用户登录请求DTO
+ * 支持手机号或用户名登录
  */
 @Data
 public class LoginDTO {
 
     /**
-     * 用户名
+     * 登录账号（手机号或用户名）
      */
-    @NotBlank(message = "用户名不能为空")
+    @NotBlank(message = "手机号/用户名不能为空")
     private String username;
 
     /**

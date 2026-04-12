@@ -13,13 +13,9 @@
               <div class="left-content">
                 <div class="left-logo">
                   <div class="logo-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#FF6B35"/>
-                      <path d="M2 17L12 22L22 17" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M2 12L12 17L22 12" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <img src="/weightlifting.svg" alt="Logo" style="width: 24px; height: 24px;" />
                   </div>
-                  <div class="logo-text">智健<span>AI</span></div>
+                  <div class="logo-text">FutureFit<span>·未来健身</span></div>
                 </div>
                 <div class="left-main-content">
                   <div class="left-title">
@@ -129,17 +125,17 @@
                             <circle cx="12" cy="16" r="1"/>
                           </svg>
                         </span>
-                        <input 
-                          v-model="form.code" 
-                          type="text" 
+                        <input
+                          v-model="form.code"
+                          type="text"
                           placeholder="请输入验证码"
                           maxlength="6"
                           @keyup.enter="handleRegister"
                         />
                       </div>
-                      <button 
+                      <button
                         type="button"
-                        class="send-code-btn-compact" 
+                        class="send-code-btn-compact"
                         :disabled="countdown > 0 || !isPhoneValid || isSendingCode"
                         @click="sendCode"
                       >
@@ -148,7 +144,7 @@
                         <span v-else>获取验证码</span>
                       </button>
                     </div>
-                    
+
                     <!-- 滑块验证（紧凑内嵌） -->
                     <Transition name="slider-compact">
                       <div v-if="showSliderVerify && !isSliderVerified" class="slider-compact-wrapper">
@@ -377,7 +373,7 @@ async function sendCode() {
 
   // 显示滑块验证（嵌入表单）
   showSliderVerify.value = true
-  
+
   // 等待DOM更新后获取容器宽度
   setTimeout(() => {
     updateSliderWidth()
@@ -971,15 +967,15 @@ onUnmounted(() => {
 .slider-compact-track {
   position: relative;
   height: 100%;
-  background: 
-    linear-gradient(90deg, 
-      rgba(255, 107, 53, 0.05) 0%, 
+  background:
+    linear-gradient(90deg,
+      rgba(255, 107, 53, 0.05) 0%,
       rgba(255, 107, 53, 0.02) 50%,
       rgba(255, 107, 53, 0.05) 100%);
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(255, 107, 53, 0.15);
-  box-shadow: 
+  box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.4),
     0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -1004,8 +1000,8 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, 
-    rgba(255, 107, 53, 0.2) 0%, 
+  background: linear-gradient(90deg,
+    rgba(255, 107, 53, 0.2) 0%,
     rgba(255, 140, 97, 0.35) 100%);
   border-radius: 18px;
   transition: width 0.05s linear;
@@ -1019,8 +1015,8 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 60px;
   height: 60px;
-  background: radial-gradient(circle, 
-    rgba(255, 107, 53, 0.3) 0%, 
+  background: radial-gradient(circle,
+    rgba(255, 107, 53, 0.3) 0%,
     rgba(255, 107, 53, 0.1) 40%,
     transparent 70%);
   border-radius: 50%;
@@ -1044,10 +1040,10 @@ onUnmounted(() => {
   cursor: grab;
   color: #fff;
   z-index: 3;
-  transition: 
+  transition:
     transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s ease;
-  box-shadow: 
+  box-shadow:
     0 3px 10px rgba(255, 107, 53, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.2) inset,
     0 -2px 4px rgba(0, 0, 0, 0.1) inset;
@@ -1058,8 +1054,8 @@ onUnmounted(() => {
   position: absolute;
   inset: 3px;
   border-radius: 50%;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.3) 0%,
     transparent 50%,
     rgba(0, 0, 0, 0.1) 100%);
   pointer-events: none;
@@ -1067,7 +1063,7 @@ onUnmounted(() => {
 
 .slider-compact-handle:hover {
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 
+  box-shadow:
     0 5px 15px rgba(255, 107, 53, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.25) inset,
     0 -2px 4px rgba(0, 0, 0, 0.1) inset;
@@ -1076,7 +1072,7 @@ onUnmounted(() => {
 .slider-compact-handle.moving {
   cursor: grabbing;
   transform: translateY(-50%) scale(0.95);
-  box-shadow: 
+  box-shadow:
     0 2px 6px rgba(255, 107, 53, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.15) inset,
     0 -2px 4px rgba(0, 0, 0, 0.1) inset;

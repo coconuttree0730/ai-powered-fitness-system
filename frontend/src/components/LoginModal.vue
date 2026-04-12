@@ -13,13 +13,9 @@
               <div class="left-content">
                 <div class="left-logo">
                   <div class="logo-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#FF6B35"/>
-                      <path d="M2 17L12 22L22 17" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M2 12L12 17L22 12" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <img src="/weightlifting.svg" alt="Logo" style="width: 24px; height: 24px;" />
                   </div>
-                  <div class="logo-text">FutureFit<span>未来健身</span></div>
+                  <div class="logo-text">FutureFit<span>·未来健身</span></div>
                 </div>
                 <div class="left-main-content">
                   <div class="left-title">
@@ -82,14 +78,14 @@
 
                 <!-- 登录方式切换 -->
                 <div class="login-tabs">
-                  <button 
-                    :class="['tab-btn', { active: loginType === 'password' }]" 
+                  <button
+                    :class="['tab-btn', { active: loginType === 'password' }]"
                     @click="loginType = 'password'"
                   >
                     密码登录
                   </button>
-                  <button 
-                    :class="['tab-btn', { active: loginType === 'sms' }]" 
+                  <button
+                    :class="['tab-btn', { active: loginType === 'sms' }]"
                     @click="loginType = 'sms'"
                   >
                     短信登录
@@ -99,7 +95,7 @@
                 <!-- 密码登录表单 -->
                 <div v-if="loginType === 'password'" class="login-form">
                   <div class="form-group">
-                    <label>手机号/邮箱</label>
+                    <label>手机号/用户名</label>
                     <div class="input-wrapper">
                       <span class="input-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -107,10 +103,10 @@
                           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.username" 
-                        type="text" 
-                        placeholder="请输入手机号或邮箱"
+                      <input
+                        v-model="form.username"
+                        type="text"
+                        placeholder="请输入手机号或用户名"
                         @keyup.enter="handleLogin"
                       />
                     </div>
@@ -125,9 +121,9 @@
                           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.password" 
-                        :type="showPassword ? 'text' : 'password'" 
+                      <input
+                        v-model="form.password"
+                        :type="showPassword ? 'text' : 'password'"
                         placeholder="请输入密码"
                         @keyup.enter="handleLogin"
                       />
@@ -153,8 +149,8 @@
                     <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">忘记密码？</a>
                   </div>
 
-                  <button 
-                    class="login-submit-btn" 
+                  <button
+                    class="login-submit-btn"
                     :disabled="loading"
                     @click="handleLogin"
                   >
@@ -174,9 +170,9 @@
                           <path d="M12 18h.01"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.phone" 
-                        type="text" 
+                      <input
+                        v-model="form.phone"
+                        type="text"
                         placeholder="请输入手机号"
                         maxlength="11"
                       />
@@ -193,16 +189,16 @@
                           <circle cx="12" cy="16" r="1"/>
                         </svg>
                       </span>
-                      <input 
-                        v-model="form.code" 
-                        type="text" 
+                      <input
+                        v-model="form.code"
+                        type="text"
                         placeholder="请输入验证码"
                         maxlength="6"
                         @keyup.enter="handleLogin"
                       />
-                      <button 
+                      <button
                         type="button"
-                        class="send-code-btn" 
+                        class="send-code-btn"
                         :disabled="countdown > 0 || !isPhoneValid || isSendingCode"
                         @click="sendCode"
                       >
@@ -232,8 +228,8 @@
                     </div>
                   </Transition>
 
-                  <button 
-                    class="login-submit-btn" 
+                  <button
+                    class="login-submit-btn"
                     :disabled="loading"
                     @click="handleLogin"
                   >
@@ -386,7 +382,7 @@ async function sendCode() {
 
   // 显示滑块验证（嵌入表单）
   showSliderVerify.value = true
-  
+
   // 等待DOM更新后获取容器宽度
   setTimeout(() => {
     updateSliderWidth()
@@ -541,7 +537,7 @@ async function handleLogin() {
   // 表单验证
   if (loginType.value === 'password') {
     if (!form.username.trim()) {
-      message.error('请输入手机号或邮箱')
+      message.error('请输入手机号或用户名')
       return
     }
     if (!form.password) {
@@ -560,10 +556,10 @@ async function handleLogin() {
   }
 
   loading.value = true
-  
+
   try {
     let result
-    
+
     if (loginType.value === 'password') {
       // 密码登录
       const credentials = { username: form.username, password: form.password }
@@ -580,7 +576,7 @@ async function handleLogin() {
         result = { success: false, message: '登录失败，未获取到token' }
       }
     }
-    
+
     if (result.success) {
       emit('login-success')
       handleClose()
@@ -1253,15 +1249,15 @@ onUnmounted(() => {
 .slider-compact-track {
   position: relative;
   height: 100%;
-  background: 
-    linear-gradient(90deg, 
-      rgba(255, 107, 53, 0.05) 0%, 
+  background:
+    linear-gradient(90deg,
+      rgba(255, 107, 53, 0.05) 0%,
       rgba(255, 107, 53, 0.02) 50%,
       rgba(255, 107, 53, 0.05) 100%);
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(255, 107, 53, 0.15);
-  box-shadow: 
+  box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.4),
     0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -1286,8 +1282,8 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, 
-    rgba(255, 107, 53, 0.2) 0%, 
+  background: linear-gradient(90deg,
+    rgba(255, 107, 53, 0.2) 0%,
     rgba(255, 140, 97, 0.35) 100%);
   border-radius: 18px;
   transition: width 0.05s linear;
@@ -1301,8 +1297,8 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 60px;
   height: 60px;
-  background: radial-gradient(circle, 
-    rgba(255, 107, 53, 0.3) 0%, 
+  background: radial-gradient(circle,
+    rgba(255, 107, 53, 0.3) 0%,
     rgba(255, 107, 53, 0.1) 40%,
     transparent 70%);
   border-radius: 50%;
@@ -1326,10 +1322,10 @@ onUnmounted(() => {
   cursor: grab;
   color: #fff;
   z-index: 3;
-  transition: 
+  transition:
     transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s ease;
-  box-shadow: 
+  box-shadow:
     0 3px 10px rgba(255, 107, 53, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.2) inset,
     0 -2px 4px rgba(0, 0, 0, 0.1) inset;
@@ -1340,8 +1336,8 @@ onUnmounted(() => {
   position: absolute;
   inset: 3px;
   border-radius: 50%;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.3) 0%,
     transparent 50%,
     rgba(0, 0, 0, 0.1) 100%);
   pointer-events: none;
@@ -1349,7 +1345,7 @@ onUnmounted(() => {
 
 .slider-compact-handle:hover {
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 
+  box-shadow:
     0 5px 15px rgba(255, 107, 53, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.25) inset,
     0 -2px 4px rgba(0, 0, 0, 0.1) inset;
@@ -1358,7 +1354,7 @@ onUnmounted(() => {
 .slider-compact-handle.moving {
   cursor: grabbing;
   transform: translateY(-50%) scale(0.95);
-  box-shadow: 
+  box-shadow:
     0 2px 6px rgba(255, 107, 53, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.15) inset,
     0 -2px 4px rgba(0, 0, 0, 0.1) inset;
@@ -1397,23 +1393,23 @@ onUnmounted(() => {
     max-height: 90vh;
     overflow-y: auto;
   }
-  
+
   .login-modal-left {
     display: none;
   }
-  
+
   .login-modal-right {
     padding: 32px 24px;
   }
-  
+
   .right-header {
     margin-bottom: 24px;
   }
-  
+
   .login-tabs {
     margin-bottom: 24px;
   }
-  
+
   .other-login {
     padding-top: 24px;
   }

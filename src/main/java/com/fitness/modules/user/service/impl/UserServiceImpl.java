@@ -92,12 +92,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * 用户名和密码登录方式
+     * 用户名/手机号和密码登录方式
+     * 支持手机号 + 密码 或 用户名 + 密码 登录
      */
     @Override
     public Map<String, Object> login(LoginDTO dto) {
-        // 查询用户 （改成手机号 + 密码 登录： 只需要 dto.getPhone()）
-        User user = userMapper.selectByUsername(dto.getUsername());
+        String account = dto.getUsername();
+        User user = null;
+
+        // 判断输入的是手机号还是用户名（手机号以1开头且长度为11位）
+        if (isPhoneNumber(account)) {
+            // 手机号登录
+            user = userMapper.selectByPhone(account);
+        } else {
+            // 用户名登录
+            user = userMapper.selectByUsername(account);
+        }
+
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
@@ -115,7 +126,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<Role> roles = userMapper.selectRolesByUserId(user.getId());
         List<String> roleCodes = roles.stream()
                 .map(Role::getRoleCode) //角色编码：ROLE_USER 、 ROLE_ADMIN 、 ROLE_MANAGER
-
                 .collect(Collectors.toList()); //一个用户可以有多个角色：list
 
         // 生成JWT Token
@@ -461,6 +471,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             password.append(chars.charAt(random.nextInt(chars.length())));
         }
         return password.toString();
+    }
+
+    /**
+     * 判断输入的账号是否为手机号
+     * 规则：以1开头，且长度为11位的纯数字
+     *
+     * @param account 登录账号
+     * @return true-是手机号，false-是用户名
+     */
+    private boolean isPhoneNumber(String account) {
+        if (account == null || account.length() != 11) {
+            return false;
+        }
+        // 检查是否以1开头且全部为数字
+        return account.matches("^1\\d{10}$");
     }
 
     @Override
