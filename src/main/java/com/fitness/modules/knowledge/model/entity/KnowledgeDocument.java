@@ -25,6 +25,8 @@ public class KnowledgeDocument {
 
     private Integer chunkCount;
 
+    private Long categoryId;
+
     private Long createBy;
 
     @TableLogic(value = "false", delval = "true")

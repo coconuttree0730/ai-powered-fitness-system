@@ -105,10 +105,10 @@ public class RAGServiceImpl implements RAGService {
             vectorResults = chunkService.vectorSearch(queryEmbedding, topK * 2, categoryId, similarityThreshold);
             log.info("【混合检索】向量检索完成，获取 {} 个结果", vectorResults.size());
 
-            // 打印向量检索Top结果
+            // 打印向量检索Top结果（DEBUG级别）
             for (int i = 0; i < Math.min(vectorResults.size(), topK); i++) {
                 KnowledgeChunkVO chunk = vectorResults.get(i);
-                log.info("【混合检索】向量结果 #{} - 文档: '{}', 相似度: {:.4f}, 内容预览: {}",
+                log.debug("【混合检索】向量结果 #{} - 文档: '{}', 相似度: {:.4f}, 内容预览: {}",
                         i + 1,
                         chunk.getDocumentTitle(),
                         chunk.getSimilarity(),
@@ -126,10 +126,10 @@ public class RAGServiceImpl implements RAGService {
         log.info("【混合检索】关键词检索完成，获取 {} 个结果，耗时: {}ms",
                 keywordResults.size(), System.currentTimeMillis() - keywordStart);
 
-        // 打印关键词检索Top结果
+        // 打印关键词检索Top结果（DEBUG级别）
         for (int i = 0; i < Math.min(keywordResults.size(), topK); i++) {
             KnowledgeChunkVO chunk = keywordResults.get(i);
-            log.info("【混合检索】关键词结果 #{} - 文档: '{}', 内容预览: {}",
+            log.debug("【混合检索】关键词结果 #{} - 文档: '{}', 内容预览: {}",
                     i + 1,
                     chunk.getDocumentTitle(),
                     chunk.getContent().substring(0, Math.min(80, chunk.getContent().length())) + "..."
@@ -177,15 +177,15 @@ public class RAGServiceImpl implements RAGService {
 
         log.info("【混合检索】RRF融合完成，最终返回 {} 个结果", finalResults.size());
 
-        // 打印最终Top-K结果
-        log.info("【混合检索】========== Top-{} 匹配结果 ==========", finalResults.size());
+        // 打印最终Top-K结果（DEBUG级别）
+        log.debug("【混合检索】========== Top-{} 匹配结果 ==========", finalResults.size());
         for (int i = 0; i < finalResults.size(); i++) {
             RAGSearchResultVO.RetrievedChunk chunk = finalResults.get(i);
             String sourceType = chunk.getSource() == 1 ? "向量" : (chunk.getSource() == 2 ? "关键词" : "混合");
-            log.info("【混合检索】Top-{} [来源: {}] 文档: '{}'", i + 1, sourceType, chunk.getDocumentTitle());
-            log.info("【混合检索】Top-{} 相似度分数: {:.6f}", i + 1, chunk.getSimilarity());
-            log.info("【混合检索】Top-{} 匹配文本: {}", i + 1, chunk.getContent());
-            log.info("【混合检索】----------------------------------------");
+            log.debug("【混合检索】Top-{} [来源: {}] 文档: '{}'", i + 1, sourceType, chunk.getDocumentTitle());
+            log.debug("【混合检索】Top-{} 相似度分数: {:.6f}", i + 1, chunk.getSimilarity());
+            log.debug("【混合检索】Top-{} 匹配文本: {}", i + 1, chunk.getContent());
+            log.debug("【混合检索】----------------------------------------");
         }
 
         return finalResults;

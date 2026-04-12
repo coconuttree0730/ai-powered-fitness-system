@@ -36,6 +36,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     private final DocumentProcessorService documentProcessorService;
     private final EmbeddingService embeddingService;
     private final FileService fileService;
+    private final KnowledgeCategoryService categoryService;
 
     private static final List<String> ALLOWED_FILE_TYPES = Arrays.asList("md", "txt");
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024L;
@@ -75,8 +76,8 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long uploadDocument(MultipartFile file, String title) {
-        log.info("【文档上传】开始上传文档，文件名: {}, 标题: {}", file.getOriginalFilename(), title);
+    public Long uploadDocument(MultipartFile file, String title, Long categoryId) {
+        log.info("【文档上传】开始上传文档，文件名: {}, 标题: {}, 分类ID: {}", file.getOriginalFilename(), title, categoryId);
 
         validateFile(file);
 
@@ -94,11 +95,12 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         document.setFileName(originalFilename);
         document.setFileType(fileType);
         document.setFileSize(file.getSize());
+        document.setCategoryId(categoryId);  // 设置分类ID
         document.setStatus(DocumentStatus.DRAFT.getCode());
         document.setCreateBy(SecurityUtils.getCurrentUserId());
 
         documentMapper.insert(document);
-        log.info("【文档上传】文档记录创建成功，文档ID: {}", document.getId());
+        log.info("【文档上传】文档记录创建成功，文档ID: {}, 分类ID: {}", document.getId(), categoryId);
 
         return document.getId();
     }
@@ -108,6 +110,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     public void update(KnowledgeDocumentDTO dto) {
         KnowledgeDocument document = getEntityById(dto.getId());
         document.setTitle(dto.getTitle());
+        document.setCategoryId(dto.getCategoryId());
         documentMapper.updateById(document);
     }
 
@@ -252,6 +255,14 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         DocumentStatus status = DocumentStatus.fromCode(document.getStatus());
         if (status != null) {
             vo.setStatusDesc(status.getDescription());
+        }
+
+        // 设置分类名称
+        if (document.getCategoryId() != null) {
+            var category = categoryService.getById(document.getCategoryId());
+            if (category != null) {
+                vo.setCategoryName(category.getName());
+            }
         }
 
         return vo;

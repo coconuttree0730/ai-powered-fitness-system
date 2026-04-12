@@ -39,6 +39,19 @@
               <el-option label="已发布" :value="1" />
               <el-option label="草稿" :value="0" />
             </el-select>
+            <el-select
+              v-model="searchForm.categoryId"
+              placeholder="全部分类"
+              clearable
+              style="width: 180px"
+            >
+              <el-option
+                v-for="cat in categoryList"
+                :key="cat.id"
+                :label="cat.name"
+                :value="cat.id"
+              />
+            </el-select>
             <el-button type="primary" @click="handleSearch">
               <el-icon><Search /></el-icon>搜索
             </el-button>
@@ -71,6 +84,13 @@
                 <div class="kb-desc">{{ row.summary || row.fileName || '暂无描述' }}</div>
               </div>
             </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="分类" width="140">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.categoryName ? 'primary' : 'info'">
+              {{ row.categoryName || '未分类' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="切片数" width="100" align="center">
@@ -165,6 +185,22 @@
           />
         </el-form-item>
 
+        <el-form-item label="所属分类" prop="categoryId">
+          <el-select
+            v-model="form.categoryId"
+            placeholder="请选择分类"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="cat in categoryList"
+              :key="cat.id"
+              :label="cat.name"
+              :value="cat.id"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item v-if="!isEdit" label="上传文件" prop="file">
           <el-upload
             ref="uploadRef"
@@ -215,7 +251,8 @@ import {
   publishKnowledgeDocument,
   archiveKnowledgeDocument,
   reindexKnowledgeDocument,
-  uploadKnowledgeDocument
+  uploadKnowledgeDocument,
+  getKnowledgeCategories
 } from '@/api/knowledge'
 
 // 统计数据
@@ -230,9 +267,13 @@ const stats = ref([
 const searchForm = reactive({
   keyword: '',
   status: null,
+  categoryId: null,
   pageNum: 1,
   pageSize: 10
 })
+
+// 分类列表
+const categoryList = ref([])
 
 // 表格数据
 const loading = ref(false)
@@ -256,7 +297,8 @@ const uploadRef = ref(null)
 const form = reactive({
   id: null,
   title: '',
-  status: 0
+  status: 0,
+  categoryId: null
 })
 
 // 当前选中的文件
@@ -265,6 +307,16 @@ const currentFile = ref(null)
 // 表单验证规则
 const rules = {
   title: [{ required: true, message: '请输入文档标题', trigger: 'blur' }]
+}
+
+// 获取分类列表
+async function fetchCategories() {
+  try {
+    const data = await getKnowledgeCategories()
+    categoryList.value = data || []
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+  }
 }
 
 // 获取文档列表
@@ -313,6 +365,7 @@ function handleSearch() {
 function handleReset() {
   searchForm.keyword = ''
   searchForm.status = null
+  searchForm.categoryId = null
   handleSearch()
 }
 
@@ -322,7 +375,8 @@ function handleAdd() {
   Object.assign(form, {
     id: null,
     title: '',
-    status: 0
+    status: 0,
+    categoryId: null
   })
   currentFile.value = null
   dialogVisible.value = true
@@ -336,7 +390,8 @@ async function handleEdit(row) {
     Object.assign(form, {
       id: data.id,
       title: data.title,
-      status: data.status
+      status: data.status,
+      categoryId: data.categoryId
     })
     dialogVisible.value = true
   } catch (error) {
@@ -419,7 +474,8 @@ async function handleSubmit() {
         // 编辑模式
         await updateKnowledgeDocument(form.id, {
           title: form.title,
-          status: form.status
+          status: form.status,
+          categoryId: form.categoryId
         })
         ElMessage.success('编辑成功')
       } else {
@@ -433,6 +489,9 @@ async function handleSubmit() {
         formData.append('file', currentFile.value)
         if (form.title) {
           formData.append('title', form.title)
+        }
+        if (form.categoryId) {
+          formData.append('categoryId', form.categoryId)
         }
         const docId = await uploadKnowledgeDocument(formData)
 
@@ -473,6 +532,7 @@ function formatDate(date) {
 }
 
 onMounted(() => {
+  fetchCategories()
   fetchDocuments()
 })
 </script>

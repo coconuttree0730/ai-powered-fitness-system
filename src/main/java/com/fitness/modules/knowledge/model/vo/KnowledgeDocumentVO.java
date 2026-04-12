@@ -24,6 +24,10 @@ public class KnowledgeDocumentVO {
 
     private Integer chunkCount;
 
+    private Long categoryId;
+
+    private String categoryName;
+
     private Long createBy;
 
     private String createByName;

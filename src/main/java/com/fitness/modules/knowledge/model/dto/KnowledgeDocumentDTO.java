@@ -15,5 +15,7 @@ public class KnowledgeDocumentDTO {
 
     private Integer status;
 
+    private Long categoryId;
+
     private MultipartFile file;
 }

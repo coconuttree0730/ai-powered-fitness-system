@@ -200,6 +200,12 @@ const routes = [
         meta: { title: '知识库管理' }
       },
       {
+        path: 'knowledge-categories',
+        name: 'KnowledgeCategoryManagement',
+        component: () => import('@/views/admin/KnowledgeCategory.vue'),
+        meta: { title: '知识库分类管理' }
+      },
+      {
         path: 'equipment',
         name: 'EquipmentManagement',
         component: () => import('@/views/admin/Equipment.vue'),

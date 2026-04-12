@@ -55,8 +55,9 @@ public class KnowledgeDocumentController {
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Long> upload(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "title", required = false) String title) {
-        return Result.success(documentService.uploadDocument(file, title));
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "categoryId", required = false) Long categoryId) {
+        return Result.success(documentService.uploadDocument(file, title, categoryId));
     }
 
     @PutMapping("/{id}")

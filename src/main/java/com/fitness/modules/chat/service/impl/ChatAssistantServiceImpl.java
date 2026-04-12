@@ -428,7 +428,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     }
 
     private String buildRAGPrompt(String userMessage) {
-        log.info("【健小助RAG】开始检索知识库，查询内容: '{}'", userMessage);
+        log.debug("【健小助RAG】开始检索知识库，查询内容: '{}'", userMessage);
 
         // 构建RAG查询参数 - 降低相似度阈值以提高召回率
         RAGQueryDTO queryDTO = new RAGQueryDTO();
@@ -442,7 +442,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         // 构建上下文内容
         StringBuilder contextBuilder = new StringBuilder();
         if (searchResult != null && CollUtil.isNotEmpty(searchResult.getChunks())) {
-            log.info("【健小助RAG】检索到 {} 个相关切片", searchResult.getChunks().size());
+            log.debug("【健小助RAG】检索到 {} 个相关切片", searchResult.getChunks().size());
 
             for (int i = 0; i < searchResult.getChunks().size(); i++) {
                 RAGSearchResultVO.RetrievedChunk chunk = searchResult.getChunks().get(i);
@@ -455,7 +455,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         }
 
         String ragContext = contextBuilder.toString();
-        log.info("【健小助RAG】构建的上下文长度: {} 字符", ragContext.length());
+        log.debug("【健小助RAG】构建的上下文长度: {} 字符", ragContext.length());
 
         // 构建带RAG上下文的提示词
         return chatPromptTemplates.buildRAGPrompt(userMessage, ragContext);
