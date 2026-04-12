@@ -37,7 +37,7 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     // 验证码长度
     private static final int CODE_LENGTH = 6;
     // 每日发送限制次数
-    private static final int DAILY_LIMIT = 15;
+    private static final int DAILY_LIMIT = 5;
 
     @Override
     public boolean sendSmsCode(String phone) {
