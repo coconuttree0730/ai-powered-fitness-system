@@ -208,6 +208,12 @@ public class EquipmentServiceImpl implements EquipmentService {
         repairRecordMapper.insert(record);
 
         log.info("报修处理成功: repairId={}, status={}, handlerId={}", repairId, dto.getStatus(), handlerId);
+
+        if (repair.getEquipmentId() != null) {
+            if (dto.getStatus().equals(RepairStatus.COMPLETED.getCode()) || dto.getStatus().equals(RepairStatus.CLOSED.getCode())) {
+                updateEquipmentStatusOnRepair(repair.getEquipmentId(), EquipmentStatus.NORMAL.getCode());
+            }
+        }
     }
 
     @Override
@@ -243,7 +249,12 @@ public class EquipmentServiceImpl implements EquipmentService {
         record.setDeleted(false);
         repairRecordMapper.insert(record);
 
-        log.info("报修提交成功: repairId={}, userId={}", repair.getId(), userId);
+        log.info("报修提交成功: repairId={}, userId={}, equipmentId={}", repair.getId(), userId, dto.getEquipmentId());
+
+        if (dto.getEquipmentId() != null) {
+            updateEquipmentStatusOnRepair(dto.getEquipmentId(), EquipmentStatus.MAINTENANCE.getCode());
+        }
+
         return repair.getId();
     }
 
@@ -414,6 +425,18 @@ public class EquipmentServiceImpl implements EquipmentService {
                     log.warn("报修图片删除失败: imageUrl={}, error={}", url, e.getMessage());
                 }
             }
+        }
+    }
+
+    private void updateEquipmentStatusOnRepair(Long equipmentId, Integer status) {
+        Equipment equipment = equipmentMapper.selectById(equipmentId);
+        if (equipment != null && !equipment.getDeleted()) {
+            Integer oldStatus = equipment.getStatus();
+            equipment.setStatus(status);
+            equipment.setUpdateTime(LocalDateTime.now());
+            equipmentMapper.updateById(equipment);
+            log.info("报修联动更新器械状态: equipmentId={}, {} -> {}", equipmentId,
+                    EquipmentStatus.getNameByCode(oldStatus), EquipmentStatus.getNameByCode(status));
         }
     }
 }

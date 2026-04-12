@@ -13,8 +13,12 @@
           <el-col :span="20">
             <el-space wrap>
               <el-input v-model="searchForm.keyword" placeholder="搜索器材名称" clearable style="width: 200px" @keyup.enter="handleSearch" />
-              <el-select v-model="searchForm.typeCode" :options="typeOptions" placeholder="选择类型" clearable style="width: 150px" />
-              <el-select v-model="searchForm.status" :options="statusOptions" placeholder="选择状态" clearable style="width: 150px" />
+              <el-select v-model="searchForm.typeCode" placeholder="选择类型" clearable style="width: 150px">
+                <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+              <el-select v-model="searchForm.status" placeholder="选择状态" clearable style="width: 150px">
+                <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
               <el-button type="primary" @click="handleSearch">搜索</el-button>
               <el-button @click="handleReset">重置</el-button>
             </el-space>
@@ -94,23 +98,17 @@
           <el-input v-model="form.equipmentNo" placeholder="请输入器材编号（可选）" />
         </el-form-item>
         <el-form-item label="器材类型" prop="typeCode">
-          <el-select
-            v-model="form.typeCode"
-            :options="typeOptions"
-            placeholder="请选择器材类型"
-            style="width: 100%"
-          />
+          <el-select v-model="form.typeCode" placeholder="请选择器材类型" style="width: 100%">
+            <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
         </el-form-item>
         <el-form-item label="位置" prop="location">
           <el-input v-model="form.location" placeholder="请输入器材位置，如：有氧区-A01" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select
-            v-model="form.status"
-            :options="statusOptions"
-            placeholder="请选择状态"
-            style="width: 100%"
-          />
+          <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
         </el-form-item>
         <el-form-item label="购买日期" prop="purchaseDate">
           <el-date-picker v-model="form.purchaseDate" type="date" placeholder="请选择购买日期" style="width: 100%" value-format="YYYY-MM-DD" />
