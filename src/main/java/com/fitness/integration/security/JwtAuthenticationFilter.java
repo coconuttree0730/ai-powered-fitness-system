@@ -195,6 +195,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/v1/auth/sms-code",
                 "/api/v1/banners/active",
                 "/api/v1/coaches/home",
+                "/api/v1/payment/alipay/notify",
                 "/swagger-ui.html",
                 "/error",
                 "/favicon.ico"

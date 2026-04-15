@@ -116,7 +116,7 @@ alipay:
   # 支付宝网关（沙箱环境）
   server-url: ${ALIPAY_SERVER_URL:https://openapi-sandbox.dl.alipaydev.com/gateway.do}
   # 异步通知回调地址（需要配置外网可访问的地址）
-  notify-url: ${ALIPAY_NOTIFY_URL:http://your-domain.com/api/v1/payment/alipay/notify}
+  notify-url: ${ALIPAY_NOTIFY_URL:https://2af8a342.r24.cpolar.top/api/v1/payment/alipay/notify}
   # 同步跳转地址（支付成功后跳转的页面）
   return-url: ${ALIPAY_RETURN_URL:http://localhost:3000/member/cards}
 

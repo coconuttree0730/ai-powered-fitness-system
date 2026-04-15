@@ -1,6 +1,5 @@
 package com.fitness.modules.system.controller;
 
-import com.fitness.common.result.PageResult;
 import com.fitness.common.result.Result;
 import com.fitness.modules.system.model.dto.SysDictDTO;
 import com.fitness.modules.system.service.SysDictService;

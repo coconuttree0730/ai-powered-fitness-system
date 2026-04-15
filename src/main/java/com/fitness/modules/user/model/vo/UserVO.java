@@ -53,6 +53,16 @@ public class UserVO {
     private List<String> roles;
 
     /**
+     * 积分
+     */
+    private Integer points;
+
+    /**
+     * 余额
+     */
+    private java.math.BigDecimal balance;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

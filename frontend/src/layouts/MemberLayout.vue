@@ -19,7 +19,7 @@
           <template #icon>
             <n-icon :component="DiamondOutline" />
           </template>
-          580
+          {{ userPoints }}
         </n-tag>
         <n-button text class="menu-toggle" @click="showMobileMenu = !showMobileMenu">
           <n-icon :size="24" :component="showMobileMenu ? CloseOutline : MenuOutline" />
@@ -108,7 +108,7 @@
                 <template #icon>
                   <n-icon :component="DiamondOutline" />
                 </template>
-                580 积分
+                {{ userPoints }} 积分
               </n-tag>
               <n-dropdown :options="userOptions" @select="handleUserSelect">
                 <n-button text class="user-menu">
@@ -149,6 +149,7 @@ import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NAvatar } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
+import { getCurrentUser } from '@/api/user'
 import {
   CalendarOutline,
   DocumentTextOutline,
@@ -184,6 +185,21 @@ const userAvatar = computed(() => authStore.userInfo?.avatar || '')
 const username = computed(() => authStore.userInfo?.username || '')
 const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '用')
 
+// 用户积分
+const userPoints = ref(0)
+
+// 获取用户积分
+async function loadUserPoints() {
+  try {
+    const data = await getCurrentUser()
+    if (data && data.points !== undefined) {
+      userPoints.value = data.points
+    }
+  } catch (error) {
+    console.error('获取用户积分失败:', error)
+  }
+}
+
 // 检测屏幕尺寸
 function checkScreenSize() {
   const width = window.innerWidth
@@ -204,6 +220,7 @@ function checkScreenSize() {
 onMounted(() => {
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
+  loadUserPoints()
 })
 
 onUnmounted(() => {

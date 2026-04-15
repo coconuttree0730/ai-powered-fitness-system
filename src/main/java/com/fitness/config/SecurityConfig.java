@@ -91,7 +91,9 @@ public class SecurityConfig {
             "/webjars/**",
             // 错误页面
             "/error",
-            "/favicon.ico"
+            "/favicon.ico",
+            // 支付宝支付回调（需要公开访问）
+            "/api/v1/payment/alipay/notify"
     };
 
     /**
