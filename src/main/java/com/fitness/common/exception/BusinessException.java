@@ -23,4 +23,8 @@ public class BusinessException extends BaseException {
     public BusinessException(Integer code, String message) {
         super(code, message);
     }
+
+    public BusinessException(ErrorCode errorCode, String message) {
+        super(errorCode.getCode(), message);
+    }
 }

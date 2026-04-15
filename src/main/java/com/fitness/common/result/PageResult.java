@@ -1,5 +1,6 @@
 package com.fitness.common.result;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Data;
 
 import java.util.List;
@@ -42,5 +43,16 @@ public class PageResult<T> {
      */
     public static <T> PageResult<T> of(List<T> records, Long total) {
         return new PageResult<>(records, total);
+    }
+
+    /**
+     * 从 MyBatis-Plus IPage 创建分页结果
+     *
+     * @param page MyBatis-Plus 分页对象
+     * @param <T>  数据类型
+     * @return 分页结果
+     */
+    public static <T> PageResult<T> of(IPage<T> page) {
+        return new PageResult<>(page.getRecords(), page.getTotal());
     }
 }

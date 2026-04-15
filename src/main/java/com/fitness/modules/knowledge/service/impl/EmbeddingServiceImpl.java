@@ -46,7 +46,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
             if (!response.isOk()) {
                 log.error("Ollama embedding 请求失败: {}", response.body());
-                throw new BusinessException(ErrorCode.INTERNAL_ERROR.getCode(), "向量嵌入服务调用失败");
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR, "向量嵌入服务调用失败");
             }
 
             JSONObject result = JSONUtil.parseObj(response.body());
@@ -62,7 +62,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
             throw e;
         } catch (Exception e) {
             log.error("调用 Ollama embedding 服务失败", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR.getCode(), "向量嵌入服务调用失败: " + e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "向量嵌入服务调用失败: " + e.getMessage());
         }
     }
 

@@ -171,7 +171,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         RepairStatus newStatus = RepairStatus.getByCode(dto.getStatus());
 
         if (newStatus == null) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "无效的状态值");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "无效的状态值");
         }
 
         // 如果是关闭状态，删除报修图片
@@ -312,7 +312,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
         // 只能取消待处理的报修
         if (!repair.getStatus().equals(RepairStatus.PENDING.getCode())) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "只能取消待处理的报修");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "只能取消待处理的报修");
         }
 
         Integer oldStatus = repair.getStatus();

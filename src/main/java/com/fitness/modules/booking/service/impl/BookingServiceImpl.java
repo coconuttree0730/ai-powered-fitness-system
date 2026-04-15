@@ -45,7 +45,7 @@ public class BookingServiceImpl implements BookingService {
 
         // 2. 检查课程是否已开始
         if (course.getStartTime().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND.getCode(), "课程已开始，无法预约");
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程已开始，无法预约");
         }
 
         // 3. 检查课程是否已满
@@ -99,13 +99,13 @@ public class BookingServiceImpl implements BookingService {
 
         // 3. 检查预约状态是否可以取消
         if (booking.getStatus() == 2) {
-            throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL.getCode(), "预约已取消");
+            throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "预约已取消");
         }
 
         // 4. 获取课程信息，检查课程是否已开始
         Course course = courseMapper.selectById(booking.getCourseId());
         if (course != null && course.getStartTime().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL.getCode(), "课程已开始，无法取消");
+            throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "课程已开始，无法取消");
         }
 
         // 5. 取消预约
@@ -171,7 +171,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (booking.getStatus() != 0) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR.getCode(), "只能确认待确认的预约");
+            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能确认待确认的预约");
         }
 
         int updated = bookingMapper.updateStatus(bookingId, 1); // 已确认
@@ -193,7 +193,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (booking.getStatus() != 0) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR.getCode(), "只能拒绝待确认的预约");
+            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能拒绝待确认的预约");
         }
 
         // 更新预约状态为已取消
@@ -219,7 +219,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (booking.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR.getCode(), "只能完成已确认的预约");
+            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能完成已确认的预约");
         }
 
         int updated = bookingMapper.updateStatus(bookingId, 3); // 已完成

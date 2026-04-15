@@ -17,22 +17,22 @@ public class MinioProperties {
     /**
      * MinIO 服务地址
      */
-    private String endpoint = "http://localhost:9000";
+    private String endpoint /* /* = "http://localhost:9000 */;
 
     /**
      * 访问密钥
      */
-    private String accessKey = "minioadmin";
+    private String accessKey /* /* = "minioadmin */;
 
     /**
      * 私有密钥
      */
-    private String secretKey = "minioadmin";
+    private String secretKey /* /* = "minioadmin */;
 
     /**
      * 存储桶名称
      */
-    private String bucketName = "fitness-bucket";
+    private String bucketName /* /* = "fitness-bucket */;
 
     /**
      * 是否使用 HTTPS

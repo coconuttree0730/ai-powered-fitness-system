@@ -54,7 +54,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     public BannerVO getBannerById(Long id) {
         Banner banner = getById(id);
         if (banner == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "轮播图不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND, "轮播图不存在");
         }
         return convertToVO(banner);
     }
@@ -79,7 +79,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     public BannerVO updateBanner(Long id, BannerDTO bannerDTO) {
         Banner existingBanner = getById(id);
         if (existingBanner == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "轮播图不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND, "轮播图不存在");
         }
 
         String oldImageUrl = existingBanner.getImageUrl();
@@ -110,7 +110,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     public void deleteBanner(Long id) {
         Banner banner = getById(id);
         if (banner == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "轮播图不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND, "轮播图不存在");
         }
 
         // 删除图片文件
@@ -158,7 +158,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     public void updateBannerStatus(Long id, Integer status) {
         Banner banner = getById(id);
         if (banner == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "轮播图不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND, "轮播图不存在");
         }
 
         banner.setStatus(status);

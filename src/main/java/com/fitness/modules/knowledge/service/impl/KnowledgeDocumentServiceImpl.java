@@ -136,7 +136,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         KnowledgeDocument document = getEntityById(id);
 
         if (StrUtil.isBlank(document.getFileUrl())) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "文档文件为空，无法发布");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "文档文件为空，无法发布");
         }
 
         document.setStatus(DocumentStatus.PUBLISHED.getCode());
@@ -213,7 +213,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     public KnowledgeDocument getEntityById(Long id) {
         KnowledgeDocument document = documentMapper.selectById(id);
         if (document == null || document.getDeleted()) {
-            throw new BusinessException(ErrorCode.DATA_NOT_FOUND.getCode(), "文档不存在");
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "文档不存在");
         }
         return document;
     }
@@ -237,7 +237,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
 
         String fileType = getFileExtension(file.getOriginalFilename());
         if (!ALLOWED_FILE_TYPES.contains(fileType.toLowerCase())) {
-            throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED.getCode(), "仅支持 md、txt 格式文件");
+            throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "仅支持 md、txt 格式文件");
         }
     }
 

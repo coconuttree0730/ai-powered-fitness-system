@@ -119,16 +119,16 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     private void validateUsername(String username, Long userId) {
         // 校验用户名长度和格式
         if (username.length() < 6 || username.length() > 20) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名长度必须在6-20个字符之间");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "用户名长度必须在6-20个字符之间");
         }
         if (!username.matches("^[a-zA-Z0-9_]+$")) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名只能包含字母、数字和下划线");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "用户名只能包含字母、数字和下划线");
         }
 
         // 校验用户名唯一性
         User existingUser = userMapper.selectByUsername(username);
         if (existingUser != null && !existingUser.getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名已被使用");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "用户名已被使用");
         }
     }
 
@@ -322,15 +322,15 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         }
 
         if (tags.size() > MAX_TAG_COUNT) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "标签数量不能超过" + MAX_TAG_COUNT + "个");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "标签数量不能超过" + MAX_TAG_COUNT + "个");
         }
 
         for (String tag : tags) {
             if (tag == null || tag.trim().isEmpty()) {
-                throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "标签不能为空");
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "标签不能为空");
             }
             if (tag.length() > MAX_TAG_LENGTH) {
-                throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "标签长度不能超过" + MAX_TAG_LENGTH + "个字符");
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "标签长度不能超过" + MAX_TAG_LENGTH + "个字符");
             }
         }
     }

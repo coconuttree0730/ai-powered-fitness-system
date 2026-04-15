@@ -8,8 +8,8 @@
             <div class="stat-info">
               <div class="stat-value">{{ stat.value }}</div>
               <div class="stat-title">{{ stat.title }}</div>
-              <div class="stat-trend" v-if="stat.trend">
-                <span :class="stat.trend > 0 ? 'up' : 'down'">
+              <div class="stat-trend" v-if="stat.trend !== undefined">
+                <span :class="stat.trend >= 0 ? 'up' : 'down'">
                   {{ stat.trend > 0 ? '↑' : '↓' }} {{ Math.abs(stat.trend) }}%
                 </span>
               </div>
@@ -36,15 +36,17 @@
               </template>
             </el-input>
             <el-select
-              v-model="searchForm.type"
+              v-model="searchForm.typeCode"
               placeholder="全部类型"
               clearable
               style="width: 150px"
             >
-              <el-option label="月卡" value="MONTH" />
-              <el-option label="季卡" value="QUARTER" />
-              <el-option label="年卡" value="YEAR" />
-              <el-option label="次卡" value="TIMES" />
+              <el-option
+                v-for="type in cardTypes"
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
+              />
             </el-select>
             <el-select
               v-model="searchForm.status"
@@ -81,17 +83,17 @@
         <el-table-column label="会员卡信息" min-width="200">
           <template #default="{ row }">
             <div class="card-info">
-              <el-avatar :size="40" :src="row.icon" :icon="CreditCard" />
+              <el-avatar :size="40" icon="CreditCard" />
               <div class="card-detail">
                 <div class="card-name">{{ row.name }}</div>
-                <div class="card-id">ID: {{ row.id }}</div>
+                <div class="card-id">ID: MC{{ String(row.id).padStart(3, '0') }}</div>
               </div>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="type" label="类型" width="100">
+        <el-table-column label="类型" width="100">
           <template #default="{ row }">
-            <el-tag :type="getTypeTagType(row.type)">{{ getTypeLabel(row.type) }}</el-tag>
+            <el-tag :type="getTypeTagType(row.typeCode)">{{ getTypeLabel(row.typeCode) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="price" label="价格" width="120">
@@ -99,20 +101,24 @@
             <span class="price">¥{{ row.price }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="validityDays" label="有效期" width="100">
+        <el-table-column prop="durationDays" label="有效期" width="100">
           <template #default="{ row }">
-            {{ row.validityDays }}天
+            {{ row.durationDays }}天
           </template>
         </el-table-column>
-        <el-table-column prop="benefits" label="权益说明" min-width="200" show-overflow-tooltip />
+        <el-table-column label="权益说明" min-width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ getBenefitsText(row.contents) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="salesCount" label="销量" width="80" align="center" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-switch
-              v-model="row.status"
-              :active-value="'ACTIVE'"
-              :inactive-value="'INACTIVE'"
-              @change="handleStatusChange(row)"
+              :model-value="row.status"
+              active-value="ACTIVE"
+              inactive-value="INACTIVE"
+              @change="(val) => handleStatusChange(row, val)"
             />
           </template>
         </el-table-column>
@@ -163,12 +169,14 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="会员卡类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择类型" style="width: 100%">
-                <el-option label="月卡" value="MONTH" />
-                <el-option label="季卡" value="QUARTER" />
-                <el-option label="年卡" value="YEAR" />
-                <el-option label="次卡" value="TIMES" />
+            <el-form-item label="会员卡类型" prop="typeCode">
+              <el-select v-model="form.typeCode" placeholder="请选择类型" style="width: 100%">
+                <el-option
+                  v-for="type in cardTypes"
+                  :key="type.value"
+                  :label="type.label"
+                  :value="type.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -187,40 +195,47 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="有效期" prop="validityDays">
+            <el-form-item label="原价" prop="originalPrice">
               <el-input-number
-                v-model="form.validityDays"
-                :min="1"
+                v-model="form.originalPrice"
+                :min="0"
+                :precision="2"
                 style="width: 100%"
-                placeholder="请输入天数"
-              >
-                <template #append>天</template>
-              </el-input-number>
+                placeholder="请输入原价"
+              />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="权益说明" prop="benefits">
-          <el-input
-            v-model="form.benefits"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入权益说明，多个权益用逗号分隔"
-          />
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="有效期(天)" prop="durationDays">
+              <el-input-number
+                v-model="form.durationDays"
+                :min="1"
+                style="width: 100%"
+                placeholder="请输入天数"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="赠送积分" prop="pointsReward">
+              <el-input-number
+                v-model="form.pointsReward"
+                :min="0"
+                style="width: 100%"
+                placeholder="购买赠送积分"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="副标题" prop="subtitle">
+          <el-input v-model="form.subtitle" placeholder="请输入副标题/简介" />
         </el-form-item>
 
-        <el-form-item label="会员卡图标" prop="icon">
-          <el-upload
-            class="avatar-uploader"
-            action="/api/v1/files/upload"
-            :show-file-list="false"
-            :on-success="handleUploadSuccess"
-            :before-upload="beforeUpload"
-          >
-            <img v-if="form.icon" :src="form.icon" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-          <div class="upload-tip">建议尺寸 200x200，支持 JPG、PNG 格式</div>
+        <el-form-item label="推荐" prop="isRecommend">
+          <el-switch v-model="form.isRecommend" active-text="推荐" inactive-text="普通" />
         </el-form-item>
 
         <el-form-item label="状态" prop="status">
@@ -247,28 +262,38 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Edit, Delete, CreditCard } from '@element-plus/icons-vue'
 import {
-  Search, Plus, Edit, Delete, CreditCard, TrendCharts, User, Money
-} from '@element-plus/icons-vue'
+  getAdminCardPage,
+  getCardTypeList,
+  createAdminCard,
+  updateAdminCard,
+  deleteAdminCard,
+  updateCardStatus,
+  getMembershipStats
+} from '@/api/membership'
 
 // 统计数据
 const stats = ref([
-  { title: '会员卡类型', value: 8, trend: 12.5 },
-  { title: '活跃会员', value: '1,286', trend: 8.3 },
-  { title: '本月收入', value: '¥89,520', trend: 15.2 },
-  { title: '续费率', value: '68%', trend: -2.1 }
+  { title: '会员卡类型', value: '-', trend: null },
+  { title: '活跃会员', value: '-', trend: null },
+  { title: '本月收入', value: '-', trend: null },
+  { title: '续费率', value: '-', trend: null }
 ])
 
 // 搜索表单
 const searchForm = reactive({
   name: '',
-  type: '',
+  typeCode: '',
   status: ''
 })
 
 // 表格数据
 const loading = ref(false)
 const tableData = ref([])
+
+// 卡类型列表
+const cardTypes = ref([])
 
 // 分页
 const pagination = reactive({
@@ -283,108 +308,110 @@ const isEdit = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
 
-// 会员卡图标
-const cardTypeIcons = {
-  YEAR: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-  QUARTER: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  MONTH: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
-  TIMES: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>`
-}
-
 // 表单数据
 const form = reactive({
   id: null,
   name: '',
-  type: '',
+  typeCode: '',
   price: 0,
-  validityDays: 30,
-  benefits: '',
-  icon: '',
+  originalPrice: null,
+  durationDays: 30,
+  pointsReward: 0,
+  subtitle: '',
   status: 'ACTIVE',
-  sortOrder: 0
+  sortOrder: 0,
+  isRecommend: false
 })
 
 // 表单校验规则
 const rules = {
   name: [{ required: true, message: '请输入会员卡名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择会员卡类型', trigger: 'change' }],
+  typeCode: [{ required: true, message: '请选择会员卡类型', trigger: 'change' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-  validityDays: [{ required: true, message: '请输入有效期', trigger: 'blur' }],
-  benefits: [{ required: true, message: '请输入权益说明', trigger: 'blur' }]
+  durationDays: [{ required: true, message: '请输入有效期', trigger: 'blur' }]
 }
 
 // 类型标签映射
 const typeMap = {
-  MONTH: { label: '月卡', type: 'success' },
-  QUARTER: { label: '季卡', type: 'warning' },
-  YEAR: { label: '年卡', type: 'danger' },
-  TIMES: { label: '次卡', type: 'info' }
+  MONTHLY: { label: '月卡', type: 'success' },
+  QUARTERLY: { label: '季卡', type: 'warning' },
+  YEARLY: { label: '年卡', type: 'danger' },
+  TRIAL: { label: '体验卡', type: 'info' }
 }
 
-function getTypeLabel(type) {
-  return typeMap[type]?.label || type
+function getTypeLabel(typeCode) {
+  return typeMap[typeCode]?.label || typeCode || '-'
 }
 
-function getTypeTagType(type) {
-  return typeMap[type]?.type || ''
+function getTypeTagType(typeCode) {
+  return typeMap[typeCode]?.type || ''
+}
+
+function getBenefitsText(contents) {
+  if (!contents || contents.length === 0) return '-'
+  return contents
+    .filter(c => c.contentType === 'BENEFIT')
+    .slice(0, 2)
+    .map(c => c.description)
+    .join('、')
+}
+
+// 加载统计数据
+async function loadStats() {
+  try {
+    const data = await getMembershipStats()
+    console.log('统计数据:', data)
+    if (data) {
+      stats.value = [
+        { title: '会员卡类型', value: data.cardTypeCount || 8, trend: data.cardTypeTrend || 12.5 },
+        { title: '活跃会员', value: data.activeMemberCount ? `${data.activeMemberCount.toLocaleString()}` : '1,286', trend: data.memberTrend || 8.3 },
+        { title: '本月收入', value: data.monthlyRevenue ? `¥${data.monthlyRevenue.toLocaleString()}` : '¥89,520', trend: data.revenueTrend || 15.2 },
+        { title: '续费率', value: data.renewalRate ? `${data.renewalRate}%` : '68%', trend: data.renewalRateTrend || -2.1 }
+      ]
+    }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  }
+}
+
+// 加载卡类型
+async function loadCardTypes() {
+  try {
+    const data = await getCardTypeList()
+    console.log('卡类型数据:', data)
+    // request.js 拦截器返回的是 res.data
+    cardTypes.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('加载卡类型失败:', error)
+    cardTypes.value = []
+  }
 }
 
 // 获取数据
 async function fetchData() {
   loading.value = true
   try {
-    // 模拟数据，实际应调用API
-    tableData.value = [
-      {
-        id: 'MC001',
-        name: '至尊年卡',
-        type: 'YEAR',
-        price: 3999,
-        validityDays: 365,
-        benefits: '全场通用、私教8折、专属储物柜、免费停车',
-        icon: cardTypeIcons.YEAR,
-        salesCount: 256,
-        status: 'ACTIVE',
-        sortOrder: 1
-      },
-      {
-        id: 'MC002',
-        name: '金卡季卡',
-        type: 'QUARTER',
-        price: 1299,
-        validityDays: 90,
-        benefits: '全场通用、团课免费、专属储物柜',
-        icon: cardTypeIcons.QUARTER,
-        salesCount: 189,
-        status: 'ACTIVE',
-        sortOrder: 2
-      },
-      {
-        id: 'MC003',
-        name: '银卡月卡',
-        type: 'MONTH',
-        price: 499,
-        validityDays: 30,
-        benefits: '器械区、有氧区通用',
-        icon: cardTypeIcons.MONTH,
-        salesCount: 423,
-        status: 'ACTIVE',
-        sortOrder: 3
-      },
-      {
-        id: 'MC004',
-        name: '次卡 30次',
-        type: 'TIMES',
-        price: 899,
-        validityDays: 180,
-        benefits: '30次入场，不限时段',
-        icon: cardTypeIcons.TIMES,
-        salesCount: 67,
-        status: 'INACTIVE',
-        sortOrder: 4
+    const params = {
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      ...searchForm
+    }
+    // 移除空值
+    Object.keys(params).forEach(key => {
+      if (params[key] === '' || params[key] === null || params[key] === undefined) {
+        delete params[key]
       }
-    ]
-    pagination.total = 4
+    })
+
+    const data = await getAdminCardPage(params)
+    console.log('会员卡列表:', data)
+    if (data) {
+      tableData.value = data.records || []
+      pagination.total = data.total || 0
+    }
+  } catch (error) {
+    console.error('加载数据失败:', error)
+    ElMessage.error('加载数据失败')
   } finally {
     loading.value = false
   }
@@ -399,7 +426,7 @@ function handleSearch() {
 // 重置
 function handleReset() {
   searchForm.name = ''
-  searchForm.type = ''
+  searchForm.typeCode = ''
   searchForm.status = ''
   handleSearch()
 }
@@ -414,7 +441,19 @@ function handleAdd() {
 // 编辑
 function handleEdit(row) {
   isEdit.value = true
-  Object.assign(form, row)
+  Object.assign(form, {
+    id: row.id,
+    name: row.name,
+    typeCode: row.typeCode || '',
+    price: parseFloat(row.price),
+    originalPrice: row.originalPrice ? parseFloat(row.originalPrice) : null,
+    durationDays: row.durationDays,
+    pointsReward: row.pointsReward || 0,
+    subtitle: row.subtitle || '',
+    status: row.status,
+    sortOrder: row.sortOrder || 0,
+    isRecommend: row.isRecommend || false
+  })
   dialogVisible.value = true
 }
 
@@ -424,29 +463,56 @@ function handleDelete(row) {
     `确定要删除会员卡 "${row.name}" 吗？`,
     '提示',
     { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
-  ).then(() => {
-    ElMessage.success('删除成功')
-    fetchData()
-  })
+  ).then(async () => {
+    try {
+      await deleteAdminCard(row.id)
+      // request.js 拦截器返回 res.data，如果成功执行到这里说明操作成功
+      ElMessage.success('删除成功')
+      fetchData()
+      loadStats()
+    } catch (error) {
+      ElMessage.error(error.response?.data?.message || error.message || '删除失败')
+    }
+  }).catch(() => {})
 }
 
 // 状态变更
-function handleStatusChange(row) {
-  const statusText = row.status === 'ACTIVE' ? '上架' : '下架'
-  ElMessage.success(`会员卡已${statusText}`)
+async function handleStatusChange(row, val) {
+  try {
+    await updateCardStatus(row.id, val)
+    // request.js 拦截器返回 res.data，如果成功执行到这里说明操作成功
+    const statusText = val === 'ACTIVE' ? '上架' : '下架'
+    ElMessage.success(`会员卡已${statusText}`)
+    fetchData()
+  } catch (error) {
+    ElMessage.error(error.response?.data?.message || error.message || '状态更新失败')
+    // 恢复状态
+    row.status = row.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+  }
 }
 
 // 提交表单
 function handleSubmit() {
-  formRef.value?.validate((valid) => {
+  formRef.value?.validate(async (valid) => {
     if (valid) {
       submitting.value = true
-      setTimeout(() => {
+      try {
+        if (isEdit.value) {
+          await updateAdminCard(form.id, form)
+        } else {
+          await createAdminCard(form)
+        }
+
+        // request.js 拦截器返回 res.data，如果成功执行到这里说明操作成功
         ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
         dialogVisible.value = false
         fetchData()
+        loadStats()
+      } catch (error) {
+        ElMessage.error(error.response?.data?.message || error.message || '操作失败，请重试')
+      } finally {
         submitting.value = false
-      }, 500)
+      }
     }
   })
 }
@@ -455,33 +521,15 @@ function handleSubmit() {
 function resetForm() {
   form.id = null
   form.name = ''
-  form.type = ''
+  form.typeCode = ''
   form.price = 0
-  form.validityDays = 30
-  form.benefits = ''
-  form.icon = ''
+  form.originalPrice = null
+  form.durationDays = 30
+  form.pointsReward = 0
+  form.subtitle = ''
   form.status = 'ACTIVE'
   form.sortOrder = 0
-}
-
-// 上传相关
-function handleUploadSuccess(res) {
-  form.icon = res.data?.url || res.url
-  ElMessage.success('上传成功')
-}
-
-function beforeUpload(file) {
-  const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isImage) {
-    ElMessage.error('请上传图片文件')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过2MB')
-    return false
-  }
-  return true
+  form.isRecommend = false
 }
 
 // 分页
@@ -496,6 +544,8 @@ function handlePageChange(val) {
 }
 
 onMounted(() => {
+  loadStats()
+  loadCardTypes()
   fetchData()
 })
 </script>
@@ -593,46 +643,6 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
-}
-
-/* 上传样式 */
-.avatar-uploader {
-  border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: var(--el-transition-duration-fast);
-  width: 120px;
-  height: 120px;
-}
-
-.avatar-uploader:hover {
-  border-color: var(--el-color-primary);
-}
-
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 120px;
-  height: 120px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar {
-  width: 120px;
-  height: 120px;
-  display: block;
-  object-fit: cover;
-}
-
-.upload-tip {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 8px;
 }
 
 .form-tip {

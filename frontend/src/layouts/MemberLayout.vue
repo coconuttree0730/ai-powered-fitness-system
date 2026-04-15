@@ -165,7 +165,9 @@ import {
   TimeOutline,
   GlobeOutline,
   MoonOutline,
-  SunnyOutline
+  SunnyOutline,
+  StarOutline,
+  IdCardOutline
 } from '@vicons/ionicons5'
 
 const route = useRoute()

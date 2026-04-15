@@ -1,7 +1,6 @@
 <template>
   <div class="cards-page">
-    <!-- 我的会员卡 - 移到顶部 -->
-    <div class="my-card-section">
+    <div class="my-card-section" v-if="myMembership">
       <div class="section-header">
         <h3 class="section-title">
           <n-icon :component="CardOutline" size="20" />
@@ -16,16 +15,33 @@
       </div>
       <div class="my-card">
         <div class="my-card-info">
-          <div class="card-badge">季卡会员</div>
+          <div class="card-badge">{{ myMembership.membershipType || '会员' }}</div>
           <h3>VIP 会员卡</h3>
-          <p>有效期至: 2024年12月31日 | 剩余: 85天</p>
+          <p v-if="myMembership.expireTime">有效期至: {{ formatDate(myMembership.expireTime) }} | 剩余: {{ calcDaysLeft(myMembership.expireTime) }}天</p>
+          <p v-else>暂无会员信息</p>
         </div>
         <div class="my-card-status">
-          <n-tag type="success" size="large" round class="status-badge">有效</n-tag>
-          <p class="auto-renew">
+          <n-tag :type="myMembership.isActive ? 'success' : 'default'" size="large" round class="status-badge">{{ myMembership.isActive ? '有效' : '已过期' }}</n-tag>
+          <p class="auto-renew" v-if="myMembership.isActive">
             <n-icon :component="SyncCircleOutline" size="14" />
             自动续费已开启
           </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 未登录或无会员时显示提示 -->
+    <div class="my-card-section" v-else>
+      <div class="section-header">
+        <h3 class="section-title">
+          <n-icon :component="CardOutline" size="20" />
+          我的会员卡
+        </h3>
+      </div>
+      <div class="my-card empty-state">
+        <div class="my-card-info">
+          <h3>暂无会员卡</h3>
+          <p>购买会员卡享受更多权益</p>
         </div>
       </div>
     </div>
@@ -37,37 +53,38 @@
           <n-icon :component="CartOutline" size="20" />
           购买会员卡
         </h3>
-<!--        <n-tag type="info" size="small" round>动态加载</n-tag>-->
       </div>
-      <n-grid :cols="gridCols" :x-gap="16" :y-gap="16" class="membership-cards">
-        <n-grid-item v-for="card in membershipCards" :key="card.id">
-          <n-card
-            class="membership-card"
-            :class="{ featured: card.featured }"
-            :bordered="false"
-          >
-            <div v-if="card.featured" class="featured-badge">推荐</div>
-            <div class="card-icon" v-html="card.icon"></div>
-            <div class="card-type">{{ card.name }}</div>
-            <div class="card-duration">{{ card.duration }}</div>
-            <div class="card-price">
-              ¥{{ card.price }}<span>/{{ card.unit }}</span>
-            </div>
-            <ul class="card-features">
-              <li v-for="(feature, idx) in card.features" :key="idx">{{ feature }}</li>
-            </ul>
-            <n-button
-              :type="card.featured ? 'primary' : 'default'"
-              :class="card.featured ? 'btn-primary' : 'btn-secondary'"
-              size="large"
-              block
-              @click="handleBuy(card)"
+      <n-spin :show="loadingCards">
+        <n-grid :cols="gridCols" :x-gap="16" :y-gap="16" class="membership-cards">
+          <n-grid-item v-for="card in membershipCards" :key="card.id">
+            <n-card
+              class="membership-card"
+              :class="{ featured: card.isRecommend }"
+              :bordered="false"
             >
-              立即购买
-            </n-button>
-          </n-card>
-        </n-grid-item>
-      </n-grid>
+              <div v-if="card.isRecommend" class="featured-badge">推荐</div>
+              <div class="card-icon" v-html="getCardIcon(card.typeCode)"></div>
+              <div class="card-type">{{ card.name }}</div>
+              <div class="card-duration">{{ card.durationDays }}天</div>
+              <div class="card-price">
+                ¥{{ card.price }}<span>/{{ card.durationDays > 30 ? (Math.floor(card.durationDays/30) + '月') : card.durationDays + '天' }}</span>
+              </div>
+              <ul class="card-features">
+                <li v-for="(content, idx) in getCardFeatures(card)" :key="idx">{{ content.title }}：{{ content.description }}</li>
+              </ul>
+              <n-button
+                :type="card.isRecommend ? 'primary' : 'default'"
+                :class="card.isRecommend ? 'btn-primary' : 'btn-secondary'"
+                size="large"
+                block
+                @click="handleBuy(card)"
+              >
+                立即购买
+              </n-button>
+            </n-card>
+          </n-grid-item>
+        </n-grid>
+      </n-spin>
     </div>
 
     <!-- 购买记录 -->
@@ -84,6 +101,7 @@
         :pagination="pagination"
         :bordered="false"
         class="order-table"
+        :loading="loadingOrders"
       />
     </div>
 
@@ -96,27 +114,16 @@
       class="buy-modal"
     >
       <div class="buy-modal-content">
-        <div class="modal-card-icon" v-html="selectedCard?.icon"></div>
+        <div class="modal-card-icon" v-html="selectedCard ? getCardIcon(selectedCard.typeCode) : ''"></div>
         <h3>{{ selectedCard?.name }}</h3>
-        <p class="duration">{{ selectedCard?.duration }}</p>
+        <p class="duration">{{ selectedCard?.durationDays }}天有效期</p>
         <p class="price">¥{{ selectedCard?.price }}</p>
         <n-divider />
         <div class="payment-methods">
           <p class="label">选择支付方式:</p>
           <n-radio-group v-model:value="paymentMethod">
             <n-space vertical size="large">
-              <n-radio value="wechat" class="payment-radio">
-                <span class="payment-option">
-                  <span class="payment-icon wechat">
-                    <n-icon :component="LogoWechat" />
-                  </span>
-                  <span class="payment-text">
-                    <span class="payment-name">微信支付</span>
-                    <span class="payment-desc">推荐使用</span>
-                  </span>
-                </span>
-              </n-radio>
-              <n-radio value="alipay" class="payment-radio">
+              <n-radio value="ALIPAY" class="payment-radio">
                 <span class="payment-option">
                   <span class="payment-icon alipay">
                     <n-icon :component="LogoAlipay" />
@@ -124,6 +131,17 @@
                   <span class="payment-text">
                     <span class="payment-name">支付宝</span>
                     <span class="payment-desc">快捷支付</span>
+                  </span>
+                </span>
+              </n-radio>
+              <n-radio value="BALANCE" class="payment-radio">
+                <span class="payment-option">
+                  <span class="payment-icon balance">
+                    <n-icon :component="WalletOutline" />
+                  </span>
+                  <span class="payment-text">
+                    <span class="payment-name">余额支付</span>
+                    <span class="payment-desc">使用账户余额</span>
                   </span>
                 </span>
               </n-radio>
@@ -158,9 +176,17 @@ import {
   TimeOutline,
   RefreshOutline,
   SyncCircleOutline,
-  LogoWechat,
-  LogoAlipay
+  LogoAlipay,
+  WalletOutline
 } from '@vicons/ionicons5'
+import {
+  getMembershipCardList,
+  getMyMembership,
+  getMyMembershipOrders,
+  createMembershipOrder,
+  payMembershipOrder,
+  submitAlipayForm
+} from '@/api/membership'
 
 const message = useMessage()
 
@@ -169,100 +195,130 @@ const gridCols = computed(() => {
   const width = window.innerWidth
   if (width < 640) return 1
   if (width < 1024) return 2
-  return 4  // 现在有4种卡，用4列
+  return 4
 })
 
 // 会员卡图标
 const cardIcons = {
-  week: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-  month: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
-  quarter: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  year: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
+  TRIAL: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  MONTHLY: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  QUARTERLY: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  YEARLY: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
 }
 
-// 会员卡数据 - 支持动态添加，可从API获取
-const membershipCards = ref([
-  {
-    id: 'week',
-    name: '周卡',
-    icon: cardIcons.week,
-    duration: '7天',
-    price: 69,
-    unit: '周',
-    featured: false,
-    features: [
-      '无限次健身房使用',
-      '免费储物柜',
-      '基础体测服务',
-      '新用户体验首选'
-    ]
-  },
-  {
-    id: 'month',
-    name: '月卡',
-    icon: cardIcons.month,
-    duration: '30天',
-    price: 199,
-    unit: '月',
-    featured: false,
-    features: [
-      '无限次健身房使用',
-      '免费储物柜',
-      '基础体测服务',
-      '团课免费参与'
-    ]
-  },
-  {
-    id: 'quarter',
-    name: '季卡',
-    icon: cardIcons.quarter,
-    duration: '90天',
-    price: 499,
-    unit: '季',
-    featured: true,
-    features: [
-      '月卡全部权益',
-      '1节私教体验课',
-      '营养咨询1次',
-      '优先预约热门课程',
-      '赠送200积分'
-    ]
-  },
-  {
-    id: 'year',
-    name: '年卡',
-    icon: cardIcons.year,
-    duration: '365天',
-    price: 1599,
-    unit: '年',
-    featured: false,
-    features: [
-      '季卡全部权益',
-      '3节私教体验课',
-      '专属健身计划',
-      'VIP专属区域',
-      '赠送800积分'
-    ]
-  }
-])
+function getCardIcon(typeCode) {
+  return cardIcons[typeCode] || cardIcons.MONTHLY
+}
 
-// 模拟从API加载更多卡类型
+function getCardFeatures(card) {
+  return (card.contents || []).filter(c => c.contentType === 'BENEFIT').slice(0, 4)
+}
+
+// 数据状态
+const loadingCards = ref(false)
+const loadingOrders = ref(false)
+const membershipCards = ref([])
+const myMembership = ref(null)
+const orderData = ref([])
+
+// 加载会员卡列表
 async function loadCardsFromAPI() {
-  // 实际项目中这里调用后端API
-  // const res = await fetch('/api/membership-cards')
-  // membershipCards.value = await res.json()
+  loadingCards.value = true
+  try {
+    const data = await getMembershipCardList()
+    // request.js 拦截器返回 res.data 直接，data 是数组
+    if (Array.isArray(data)) {
+      membershipCards.value = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        subtitle: item.subtitle,
+        price: parseFloat(item.price),
+        originalPrice: item.originalPrice ? parseFloat(item.originalPrice) : null,
+        durationDays: item.durationDays,
+        pointsReward: item.pointsReward,
+        isRecommend: item.isRecommend,
+        typeCode: item.typeCode,
+        contents: item.contents || []
+      }))
+    }
+  } catch (error) {
+    console.error('加载会员卡失败:', error)
+  } finally {
+    loadingCards.value = false
+  }
+}
+
+// 加载我的会员信息
+async function loadMyMembership() {
+  try {
+    const data = await getMyMembership()
+    // request.js 拦截器返回 res.data 直接
+    if (data) {
+      myMembership.value = data
+    }
+  } catch (error) {
+    console.error('加载会员信息失败:', error)
+  }
+}
+
+// 加载我的订单
+async function loadMyOrders() {
+  loadingOrders.value = true
+  try {
+    const data = await getMyMembershipOrders()
+    // request.js 拦截器返回 res.data 直接
+    if (data) {
+      const records = data.records || data
+      orderData.value = records.map(item => ({
+        orderNo: item.orderNo,
+        cardType: item.cardName,
+        amount: parseFloat(item.payAmount),
+        createTime: item.createTime,
+        status: mapOrderStatus(item.status)
+      }))
+    }
+  } catch (error) {
+    console.error('加载订单失败:', error)
+  } finally {
+    loadingOrders.value = false
+  }
+}
+
+function mapOrderStatus(status) {
+  const statusMap = {
+    'PAID': 'completed',
+    'PENDING': 'pending',
+    'CANCELLED': 'cancelled',
+    'TIMEOUT': 'expired',
+    'REFUNDED': 'refunded'
+  }
+  return statusMap[status] || status.toLowerCase()
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+function calcDaysLeft(expireTime) {
+  if (!expireTime) return 0
+  const now = new Date()
+  const expire = new Date(expireTime)
+  const diff = expire - now
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
 }
 
 onMounted(() => {
   loadCardsFromAPI()
-  window.addEventListener('resize', () => {
-    // 触发响应式更新
-  })
+  loadMyMembership()
+  loadMyOrders()
+  window.addEventListener('resize', () => {})
 })
 
 const showBuyModal = ref(false)
 const payLoading = ref(false)
-const paymentMethod = ref('wechat')
+const paymentMethod = ref('ALIPAY')
 const selectedCard = ref(null)
 
 const columns = [
@@ -284,9 +340,12 @@ const columns = [
     render(row) {
       const statusMap = {
         'completed': { type: 'success', text: '已完成' },
-        'expired': { type: 'default', text: '已过期' }
+        'pending': { type: 'warning', text: '待支付' },
+        'cancelled': { type: 'default', text: '已取消' },
+        'expired': { type: 'default', text: '已过期' },
+        'refunded': { type: 'info', text: '已退款' }
       }
-      const status = statusMap[row.status]
+      const status = statusMap[row.status] || { type: 'default', text: row.status }
       return h(NTag, { type: status.type, size: 'small', round: true }, { default: () => status.text })
     }
   }
@@ -298,31 +357,64 @@ const pagination = {
   pageSizes: [5, 10, 20]
 }
 
-const orderData = [
-  { orderNo: 'ORD20241015001', cardType: '季卡', amount: 499, createTime: '2024-10-15', status: 'completed' },
-  { orderNo: 'ORD20240701002', cardType: '月卡', amount: 199, createTime: '2024-07-01', status: 'expired' },
-  { orderNo: 'ORD20240315003', cardType: '周卡', amount: 69, createTime: '2024-03-15', status: 'expired' }
-]
-
 function handleBuy(card) {
   selectedCard.value = card
   showBuyModal.value = true
 }
 
 function handleRenew() {
-  const quarterCard = membershipCards.value.find(c => c.id === 'quarter')
-  selectedCard.value = quarterCard
-  showBuyModal.value = true
+  const recommendCard = membershipCards.value.find(c => c.isRecommend)
+  if (recommendCard) {
+    selectedCard.value = recommendCard
+    showBuyModal.value = true
+  } else {
+    message.warning('暂无可购买的会员卡')
+  }
 }
 
-function confirmPay() {
+async function confirmPay() {
   payLoading.value = true
-  setTimeout(() => {
+  try {
+    // 创建订单
+    const orderData = await createMembershipOrder({
+      cardId: selectedCard.value.id,
+      remark: `购买${selectedCard.value.name}`
+    })
+
+    // request.js 拦截器返回 res.data 直接
+    if (!orderData || !orderData.orderNo) {
+      message.error('创建订单失败')
+      return
+    }
+
+    // 支付订单
+    const payData = await payMembershipOrder({
+      orderNo: orderData.orderNo,
+      payMethod: paymentMethod.value
+    })
+
+    if (!payData) {
+      message.error('支付请求失败')
+      return
+    }
+
+    // 支付宝支付，提交表单
+    if (paymentMethod.value === 'ALIPAY' && payData.payForm) {
+      submitAlipayForm(payData.payForm)
+    } else if (paymentMethod.value === 'BALANCE') {
+      message.success(`成功使用余额购买 ${selectedCard.value.name}！`)
+      showBuyModal.value = false
+      // 刷新数据
+      loadMyMembership()
+      loadMyOrders()
+    }
+
+  } catch (error) {
+    console.error('支付失败:', error)
+    message.error(error.response?.data?.message || error.message || '支付失败，请重试')
+  } finally {
     payLoading.value = false
-    showBuyModal.value = false
-    message.success(`成功购买 ${selectedCard.value.name}！`)
-    // 实际项目中这里调用支付API
-  }, 1500)
+  }
 }
 </script>
 
@@ -364,6 +456,10 @@ function confirmPay() {
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
+}
+
+.my-card.empty-state {
+  opacity: 0.6;
 }
 
 .my-card-info {
@@ -446,6 +542,7 @@ function confirmPay() {
 
 .membership-cards {
   margin-bottom: 32px;
+  min-height: 200px;
 }
 
 .membership-card {
@@ -690,14 +787,14 @@ function confirmPay() {
   font-size: 20px;
 }
 
-.payment-icon.wechat {
-  background: #E8F5E9;
-  color: #07C160;
-}
-
 .payment-icon.alipay {
   background: #E3F2FD;
   color: #1677FF;
+}
+
+.payment-icon.balance {
+  background: #FFF7E6;
+  color: #FA8C16;
 }
 
 .payment-text {

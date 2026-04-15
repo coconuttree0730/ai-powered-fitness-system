@@ -53,7 +53,7 @@ public class KnowledgeCategoryServiceImpl implements KnowledgeCategoryService {
         wrapper.eq(KnowledgeCategory::getCode, dto.getCode())
                .eq(KnowledgeCategory::getDeleted, false);
         if (categoryMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException(ErrorCode.DATA_ALREADY_EXISTS.getCode(), "分类编码已存在");
+            throw new BusinessException(ErrorCode.DATA_ALREADY_EXISTS, "分类编码已存在");
         }
 
         KnowledgeCategory category = new KnowledgeCategory();
@@ -72,7 +72,7 @@ public class KnowledgeCategoryServiceImpl implements KnowledgeCategoryService {
                    .eq(KnowledgeCategory::getDeleted, false)
                    .ne(KnowledgeCategory::getId, dto.getId());
             if (categoryMapper.selectCount(wrapper) > 0) {
-                throw new BusinessException(ErrorCode.DATA_ALREADY_EXISTS.getCode(), "分类编码已存在");
+                throw new BusinessException(ErrorCode.DATA_ALREADY_EXISTS, "分类编码已存在");
             }
         }
 
@@ -90,7 +90,7 @@ public class KnowledgeCategoryServiceImpl implements KnowledgeCategoryService {
     public KnowledgeCategory getEntityById(Long id) {
         KnowledgeCategory category = categoryMapper.selectById(id);
         if (category == null || category.getDeleted()) {
-            throw new BusinessException(ErrorCode.DATA_NOT_FOUND.getCode(), "分类不存在");
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "分类不存在");
         }
         return category;
     }

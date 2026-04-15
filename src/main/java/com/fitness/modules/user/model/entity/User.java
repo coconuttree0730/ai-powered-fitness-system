@@ -68,6 +68,12 @@ public class User {
     private Integer points;
 
     /**
+     * 账户余额
+     */
+    @TableField("balance")
+    private java.math.BigDecimal balance;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

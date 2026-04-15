@@ -56,9 +56,15 @@ public enum ErrorCode {
     POINTS_INSUFFICIENT(7003, "积分不足"),
     ORDER_NOT_FOUND(7004, "订单不存在"),
     ORDER_STATUS_ERROR(7005, "订单状态错误"),
+    PRODUCT_NOT_AVAILABLE(7006, "商品已下架"),
+    ORDER_TIMEOUT(7007, "订单已超时"),
+    INSUFFICIENT_BALANCE(7008, "余额不足"),
 
-    DATA_NOT_FOUND(8001, "数据不存在"),
-    DATA_ALREADY_EXISTS(8002, "数据已存在");
+    CODE_ALREADY_EXISTS(8001, "编码已存在"),
+    SIGNATURE_ERROR(8002, "签名验证失败"),
+
+    DATA_NOT_FOUND(9001, "数据不存在"),
+    DATA_ALREADY_EXISTS(9002, "数据已存在");
 
     private final Integer code;
     private final String message;

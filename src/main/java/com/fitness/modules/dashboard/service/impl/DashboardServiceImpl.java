@@ -55,7 +55,7 @@ public class DashboardServiceImpl implements DashboardService {
         stats.setTotalBookings(dashboardMapper.countTotalBookings());
         stats.setTotalEquipment(dashboardMapper.countTotalEquipment());
         stats.setTodayOrders(dashboardMapper.countTodayOrders());
-        
+
         BigDecimal todayRevenue = dashboardMapper.sumTodayRevenue();
         stats.setTodayRevenue(todayRevenue != null ? todayRevenue : BigDecimal.ZERO);
 
@@ -65,7 +65,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public MemberCardStatsVO getMemberCardStats() {
         log.info("获取会员卡销量统计（模拟数据）");
-        //TODO 当前还是 模拟数据，未开发
+        //TODO 当前还是 模拟数据，未开发（会员卡销量）
         MemberCardStatsVO stats = new MemberCardStatsVO();
         stats.setMonthCard(random.nextInt(51) + 50);   // 50-100
         stats.setQuarterCard(random.nextInt(31) + 30); // 30-60
@@ -108,9 +108,9 @@ public class DashboardServiceImpl implements DashboardService {
 
             // 解析 AI 返回结果
             AnalysisReportVO report = parseAIResponse(type, aiResponse);
-            log.info("解析后的报告标题: {}, 建议数量: {}", report.getReportTitle(), 
+            log.info("解析后的报告标题: {}, 建议数量: {}", report.getReportTitle(),
                     report.getSuggestions() != null ? report.getSuggestions().size() : 0);
-            
+
             return report;
         } catch (Exception e) {
             log.error("生成AI分析报告失败", e);
@@ -121,11 +121,11 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public List<RevenueTrendVO> getRevenueTrend(String range) {
         log.info("获取营收趋势数据，时间范围: {}", range);
-        
+
         LocalDate endDate = LocalDate.now();
         LocalDate startDate;
         String groupBy;
-        
+
         switch (range) {
             case "today":
                 startDate = endDate;
@@ -147,29 +147,29 @@ public class DashboardServiceImpl implements DashboardService {
                 startDate = endDate.minusDays(6);
                 groupBy = "day";
         }
-        
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         List<RevenueTrendVO> data = dashboardMapper.selectRevenueTrend(
-            startDate.format(formatter), 
-            endDate.format(formatter), 
+            startDate.format(formatter),
+            endDate.format(formatter),
             groupBy
         );
-        
+
         // 如果是今日数据，需要填充没有数据的小时
         if ("today".equals(range) && groupBy.equals("hour")) {
             data = fillTodayRevenueHours(data);
         }
-        
+
         return data;
     }
 
     @Override
     public List<UserGrowthVO> getUserGrowth(String range) {
         log.info("获取用户增长趋势，时间范围: {}", range);
-        
+
         LocalDate endDate = LocalDate.now();
         LocalDate startDate;
-        
+
         switch (range) {
             case "today":
                 startDate = endDate;
@@ -186,13 +186,13 @@ public class DashboardServiceImpl implements DashboardService {
             default:
                 startDate = endDate.minusDays(6);
         }
-        
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         List<UserGrowthVO> data = dashboardMapper.selectUserGrowth(
-            startDate.format(formatter), 
+            startDate.format(formatter),
             endDate.format(formatter)
         );
-        
+
         // 填充没有数据的日期
         return fillMissingDates(data, startDate, endDate);
     }
@@ -200,13 +200,13 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public EquipmentStatusVO getEquipmentStatus() {
         log.info("获取器材使用状态统计");
-        
+
         EquipmentStatusVO status = new EquipmentStatusVO();
         status.setNormal(dashboardMapper.countNormalEquipment());
         status.setMaintenance(dashboardMapper.countMaintenanceEquipment());
         status.setRepair(dashboardMapper.countRepairEquipment());
         status.setOffline(dashboardMapper.countOfflineEquipment());
-        
+
         return status;
     }
 
@@ -224,7 +224,7 @@ public class DashboardServiceImpl implements DashboardService {
         for (RevenueTrendVO vo : data) {
             dataMap.put(vo.getDate(), vo);
         }
-        
+
         List<RevenueTrendVO> filledData = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
             String hour = String.format("%02d:00", i);
@@ -245,11 +245,11 @@ public class DashboardServiceImpl implements DashboardService {
     private List<UserGrowthVO> fillMissingDates(List<UserGrowthVO> data, LocalDate startDate, LocalDate endDate) {
         Map<String, UserGrowthVO> dataMap = new HashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
-        
+
         for (UserGrowthVO vo : data) {
             dataMap.put(vo.getDate(), vo);
         }
-        
+
         List<UserGrowthVO> filledData = new ArrayList<>();
         LocalDate current = startDate;
         while (!current.isAfter(endDate)) {
@@ -315,15 +315,15 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate startDate = endDate.minusDays(6);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         List<RevenueTrendVO> revenueTrend = dashboardMapper.selectRevenueTrend(
-            startDate.format(formatter), 
-            endDate.format(formatter), 
+            startDate.format(formatter),
+            endDate.format(formatter),
             "day"
         );
         variables.put("revenueTrendData", formatRevenueTrend(revenueTrend));
 
         // 用户增长趋势（本周）
         List<UserGrowthVO> userGrowth = dashboardMapper.selectUserGrowth(
-            startDate.format(formatter), 
+            startDate.format(formatter),
             endDate.format(formatter)
         );
         variables.put("userGrowthData", formatUserGrowth(userGrowth));

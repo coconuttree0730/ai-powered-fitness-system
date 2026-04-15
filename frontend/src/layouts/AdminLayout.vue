@@ -72,6 +72,16 @@
           <el-icon><Tools /></el-icon>
           <span>报修管理</span>
         </el-menu-item>
+        <el-sub-menu index="/admin/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统设置</span>
+          </template>
+          <el-menu-item index="/admin/dict-management">
+            <el-icon><CollectionTag /></el-icon>
+            <span>数据字典</span>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     <el-container>
@@ -120,7 +130,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useLoadingStore } from '@/stores/loading'
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
-  CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder
+  CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder,
+  Setting, CollectionTag
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

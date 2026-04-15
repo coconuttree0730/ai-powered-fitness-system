@@ -90,6 +90,18 @@ const routes = [
         meta: { title: '在线购卡' }
       },
       {
+        path: 'membership-cards',
+        name: 'MembershipCards',
+        component: () => import('@/views/member/MembershipCards.vue'),
+        meta: { title: '会员卡中心' }
+      },
+      {
+        path: 'membership/:id',
+        name: 'MembershipCardDetail',
+        component: () => import('@/views/member/MembershipCardDetail.vue'),
+        meta: { title: '会员卡详情' }
+      },
+      {
         path: 'coach',
         name: 'MemberCoach',
         component: () => import('@/views/member/Coach.vue'),
@@ -204,6 +216,12 @@ const routes = [
         name: 'KnowledgeCategoryManagement',
         component: () => import('@/views/admin/KnowledgeCategory.vue'),
         meta: { title: '知识库分类管理' }
+      },
+      {
+        path: 'dict-management',
+        name: 'DictManagement',
+        component: () => import('@/views/admin/DictManagement.vue'),
+        meta: { title: '数据字典管理' }
       },
       {
         path: 'equipment',

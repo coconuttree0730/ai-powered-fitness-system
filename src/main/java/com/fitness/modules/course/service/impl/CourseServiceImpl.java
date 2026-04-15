@@ -200,7 +200,7 @@ public class CourseServiceImpl implements CourseService {
      */
     private void validateCourseTime(LocalDateTime startTime, LocalDateTime endTime) {
         if (endTime.isBefore(startTime) || endTime.isEqual(startTime)) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "结束时间必须晚于开始时间");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "结束时间必须晚于开始时间");
         }
     }
 }

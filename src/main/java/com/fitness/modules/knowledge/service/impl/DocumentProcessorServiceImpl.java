@@ -65,7 +65,7 @@ public class DocumentProcessorServiceImpl implements DocumentProcessorService {
             return content;
         } catch (Exception e) {
             log.error("文件解析失败，文件URL: {}", fileUrl, e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR.getCode(), "文件解析失败: " + e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "文件解析失败: " + e.getMessage());
         }
     }
 

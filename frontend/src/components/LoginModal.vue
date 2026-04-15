@@ -125,6 +125,7 @@
                         v-model="form.password"
                         :type="showPassword ? 'text' : 'password'"
                         placeholder="请输入密码"
+                        autocomplete="new-password"
                         @keyup.enter="handleLogin"
                       />
                       <button type="button" class="toggle-password" @click="showPassword = !showPassword">
