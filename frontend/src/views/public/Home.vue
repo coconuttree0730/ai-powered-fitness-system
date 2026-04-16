@@ -213,7 +213,7 @@
         <!-- 加载状态 -->
         <div v-if="coursesLoading" class="courses-loading">
           <div class="loading-spinner"></div>
-          <p>正在加载课程数据...</p>
+          <p>正在加载...</p>
         </div>
         <!-- 错误状态 -->
         <div v-else-if="coursesError" class="courses-error">
@@ -232,8 +232,9 @@
               {{ tab.label }}
             </button>
           </div>
-          <div class="courses-grid">
-            <div v-for="(course, index) in filteredCourses" :key="course.id || index"
+          <!-- 桌面端网格布局 -->
+          <div class="courses-grid desktop-only">
+            <div v-for="(course, index) in filteredCourses.slice(0, 6)" :key="course.id || index"
                  class="course-card"
                  v-intersect="onReveal"
                  @click="handleCourseClick(course)">
@@ -243,13 +244,12 @@
                      :alt="course.name"
                      @error="handleImageError(course)">
                 <div v-else class="course-image-placeholder">
-                  <span class="placeholder-text">图片正在加载中...</span>
+                  <span class="placeholder-text">加载中...</span>
                 </div>
                 <div class="course-overlay">
                   <span class="course-level">{{ course.level || '初级' }}</span>
                   <span class="course-duration">⏱ {{ course.duration }}分钟</span>
                 </div>
-                <!-- 悬浮查看详情提示 -->
                 <div class="course-hover-overlay">
                   <div class="hover-content">
                     <span class="hover-text">查看详情</span>
@@ -269,15 +269,54 @@
                     <svg class="emoji-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.072-2.143-2.072-2.143-1.072 2.143.214 4.286 1.286 6.429 1.072 2.143 2.858 3.214 4.286 3.214 2.858 0 4.286-2.143 4.286-4.286 0-2.858-2.143-5.715-5.715-7.144C9.858 3.214 8.5 5.5 8.5 8.5c0 2.5 1.5 4 2 6-.5 2-2 3-2 3"/></svg>
                     {{ course.calories || '200-400卡' }}
                   </span>
-                  <span class="course-bookings">课程累计参与人数：{{ course.totalBookings || 0 }} 人</span>
+                  <span class="course-bookings">{{ course.totalBookings || 0 }}人参与</span>
                 </div>
+              </div>
+            </div>
+          </div>
+          <!-- 移动端横向滑动 -->
+          <div class="courses-slider mobile-only" ref="coursesSliderRef">
+            <div class="courses-slider-track" @touchstart="handleCoursesTouchStart" @touchend="handleCoursesTouchEnd">
+              <div class="courses-slider-content" :style="{ transform: `translateX(-${coursesSlide * 85}%)` }">
+                <div v-for="(course, index) in filteredCourses" :key="course.id || index"
+                     class="courses-slide"
+                     @click="handleCourseClick(course)">
+                  <div class="course-card-mobile">
+                    <div class="course-image-mobile">
+                      <img v-if="!course.imageError && course.image"
+                           :src="course.image"
+                           :alt="course.name"
+                           @error="handleImageError(course)">
+                      <div v-else class="course-image-placeholder">
+                        <span class="placeholder-text">加载中...</span>
+                      </div>
+                      <div class="course-overlay-mobile">
+                        <span class="course-level">{{ course.level || '初级' }}</span>
+                        <span class="course-duration">{{ course.duration }}分钟</span>
+                      </div>
+                    </div>
+                    <div class="course-content-mobile">
+                      <h3 class="course-name-mobile">{{ course.name }}</h3>
+                      <p class="course-desc-mobile">{{ course.desc }}</p>
+                      <div class="course-meta-mobile">
+                        <span class="course-calories-mobile">{{ course.calories || '200-400卡' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 滑动指示器 -->
+            <div class="slider-swipe-hint">
+              <div class="swipe-hint-line">
+                <div class="swipe-hint-dot" v-for="n in Math.min(filteredCourses.length, 8)" :key="n" :class="{ active: coursesSlide === n - 1 }"></div>
               </div>
             </div>
           </div>
         </template>
         <div class="courses-more">
           <router-link to="/courses" class="btn btn-outline btn-view-all">
-            <span>查看全部课程</span>
+            <span>查看全部</span>
             <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"/>
               <polyline points="12 5 19 12 12 19"/>
@@ -295,10 +334,10 @@
           <h2 class="section-title">灵活会员方案<br><span>选择适合您的健身方式</span></h2>
           <p class="section-desc">透明定价，无隐藏费用，随时升级或取消</p>
         </div>
-        <div class="membership-slider">
+        <div class="membership-slider" ref="membershipSliderRef">
           <button class="membership-slider-btn prev" @click="prevMembershipSlide">‹</button>
-          <div class="membership-slider-track">
-            <div class="membership-slider-content" :style="{ transform: `translateX(-${membershipSlide * 33.333}%)` }">
+          <div class="membership-slider-track" @touchstart="handleMembershipTouchStart" @touchend="handleMembershipTouchEnd">
+            <div class="membership-slider-content" :style="{ transform: `translateX(-${membershipSlide * (isMobile ? 100 : 33.333)}%)` }">
               <div v-for="(plan, index) in membershipPlans" :key="index"
                    class="membership-slide"
                    :class="{ featured: plan.featured }">
@@ -327,6 +366,13 @@
             </div>
           </div>
           <button class="membership-slider-btn next" @click="nextMembershipSlide">›</button>
+          <!-- 移动端滑动指示器 -->
+          <div class="slider-swipe-hint mobile-only">
+            <div class="swipe-hint-line">
+              <div class="swipe-hint-dot" v-for="n in membershipPlans.length" :key="n" :class="{ active: membershipSlide === n - 1 }"></div>
+            </div>
+            <span class="swipe-hint-text">左右滑动切换</span>
+          </div>
         </div>
       </div>
     </section>
@@ -345,10 +391,10 @@
           <p>正在加载教练信息...</p>
         </div>
         <!-- 教练列表 -->
-        <div v-else class="coaches-slider">
+        <div v-else class="coaches-slider" ref="coachesSliderRef">
           <button class="coaches-slider-btn prev" @click="prevCoachSlide">‹</button>
-          <div class="coaches-slider-track">
-            <div class="coaches-slider-content" :style="{ transform: `translateX(-${coachSlide * 25}%)` }">
+          <div class="coaches-slider-track" @touchstart="handleCoachTouchStart" @touchend="handleCoachTouchEnd">
+            <div class="coaches-slider-content" :style="{ transform: `translateX(-${coachSlide * (isMobile ? 100 : 25)}%)` }">
               <div v-for="(coach, index) in coaches" :key="index" class="coaches-slide">
                 <div class="coach-card" @click="handleCoachClick(coach)">
                   <div class="coach-image">
@@ -391,6 +437,13 @@
             </div>
           </div>
           <button class="coaches-slider-btn next" @click="nextCoachSlide">›</button>
+          <!-- 移动端滑动指示器 -->
+          <div class="slider-swipe-hint mobile-only">
+            <div class="swipe-hint-line">
+              <div class="swipe-hint-dot" v-for="n in Math.ceil(coaches.length / (isMobile ? 1 : 2))" :key="n" :class="{ active: coachSlide === n - 1 }"></div>
+            </div>
+            <span class="swipe-hint-text">左右滑动切换</span>
+          </div>
         </div>
       </div>
     </section>
@@ -449,7 +502,7 @@
         <!-- 加载状态 -->
         <div v-if="equipmentsLoading" class="equipments-loading">
           <div class="loading-spinner"></div>
-          <p>正在加载器械数据...</p>
+          <p>正在加载...</p>
         </div>
 
         <!-- 错误状态 -->
@@ -475,8 +528,8 @@
             </button>
           </div>
 
-          <!-- 器械网格 - 瀑布流布局 -->
-          <div class="equipment-showcase-grid">
+          <!-- 桌面端瀑布流布局 -->
+          <div class="equipment-showcase-grid desktop-only">
             <div
               v-for="(equipment, index) in filteredEquipments"
               :key="equipment.id || index"
@@ -493,19 +546,11 @@
                   @error="handleEquipmentImageError(equipment)"
                 >
                 <div v-else class="equipment-image-placeholder">
-                  <span class="placeholder-text">图片加载中...</span>
+                  <span class="placeholder-text">加载中...</span>
                 </div>
                 <div class="equipment-showcase-overlay">
                   <span class="equipment-type-badge">{{ equipment.typeName || '其他' }}</span>
-                  <span v-if="equipment.location" class="equipment-location-badge">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    {{ equipment.location }}
-                  </span>
                 </div>
-                <!-- 悬浮查看详情提示 -->
                 <div class="equipment-hover-overlay">
                   <div class="hover-content">
                     <span class="hover-text">{{ authStore.isLoggedIn ? '查看详情' : '登录后查看' }}</span>
@@ -519,13 +564,51 @@
               </div>
               <div class="equipment-showcase-content">
                 <h3 class="equipment-showcase-name">{{ equipment.equipmentName }}</h3>
-                <p class="equipment-showcase-desc">{{ equipment.description || '专业健身器材，助力您的训练目标' }}</p>
+                <p class="equipment-showcase-desc">{{ equipment.description || '专业健身器材' }}</p>
                 <div class="equipment-showcase-meta">
                   <span class="equipment-status" :class="getEquipmentStatusClass(equipment.status)">
                     <span class="status-dot"></span>
                     {{ getEquipmentStatusLabel(equipment.status) }}
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 移动端横向滑动 -->
+          <div class="equipment-slider mobile-only" ref="equipmentSliderRef">
+            <div class="equipment-slider-track" @touchstart="handleEquipmentTouchStart" @touchend="handleEquipmentTouchEnd">
+              <div class="equipment-slider-content" :style="{ transform: `translateX(-${equipmentSlide * 85}%)` }">
+                <div v-for="(equipment, index) in filteredEquipments.slice(0, 8)" :key="equipment.id || index"
+                     class="equipment-slide"
+                     @click="handleEquipmentClick(equipment)">
+                  <div class="equipment-card-mobile">
+                    <div class="equipment-image-mobile">
+                      <img v-if="!equipment.imageError && equipment.imageUrl"
+                           :src="equipment.imageUrl"
+                           :alt="equipment.equipmentName"
+                           @error="handleEquipmentImageError(equipment)">
+                      <div v-else class="equipment-image-placeholder">
+                        <span class="placeholder-text">加载中...</span>
+                      </div>
+                      <div class="equipment-overlay-mobile">
+                        <span class="equipment-type-badge">{{ equipment.typeName || '其他' }}</span>
+                      </div>
+                    </div>
+                    <div class="equipment-content-mobile">
+                      <h3 class="equipment-name-mobile">{{ equipment.equipmentName }}</h3>
+                      <span class="equipment-status-mobile" :class="getEquipmentStatusClass(equipment.status)">
+                        {{ getEquipmentStatusLabel(equipment.status) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 滑动指示器 -->
+            <div class="slider-swipe-hint">
+              <div class="swipe-hint-line">
+                <div class="swipe-hint-dot" v-for="n in Math.min(filteredEquipments.length, 8)" :key="n" :class="{ active: equipmentSlide === n - 1 }"></div>
               </div>
             </div>
           </div>
@@ -537,7 +620,7 @@
               class="btn btn-outline btn-view-all"
               @click="router.push('/equipments')"
             >
-              <span>查看全部器械</span>
+              <span>查看全部</span>
               <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
@@ -548,7 +631,7 @@
               class="btn btn-outline btn-view-all"
               @click="showLoginModal = true"
             >
-              <span>查看全部器械</span>
+              <span>查看全部</span>
               <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
@@ -844,6 +927,116 @@ const showMarquee = ref(true)
 const isScrolled = ref(false)
 const activeSection = ref('home')
 const mobileMenuOpen = ref(false)
+
+// 响应式状态
+const isMobile = ref(false)
+const windowWidth = ref(window.innerWidth)
+
+// 检测是否为移动端
+function checkMobile() {
+  windowWidth.value = window.innerWidth
+  isMobile.value = windowWidth.value < 768
+}
+
+// 会员方案触摸滑动
+const membershipSliderRef = ref(null)
+let membershipTouchStartX = 0
+
+function handleMembershipTouchStart(e) {
+  membershipTouchStartX = e.touches[0].clientX
+}
+
+function handleMembershipTouchEnd(e) {
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = membershipTouchStartX - touchEndX
+  const threshold = 50
+  
+  if (Math.abs(diff) > threshold) {
+    if (diff > 0) {
+      // 向左滑动 - 下一张
+      nextMembershipSlide()
+    } else {
+      // 向右滑动 - 上一张
+      prevMembershipSlide()
+    }
+  }
+}
+
+// 教练团队触摸滑动
+const coachesSliderRef = ref(null)
+let coachTouchStartX = 0
+
+function handleCoachTouchStart(e) {
+  coachTouchStartX = e.touches[0].clientX
+}
+
+function handleCoachTouchEnd(e) {
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = coachTouchStartX - touchEndX
+  const threshold = 50
+  
+  if (Math.abs(diff) > threshold) {
+    if (diff > 0) {
+      // 向左滑动 - 下一张
+      nextCoachSlide()
+    } else {
+      // 向右滑动 - 上一张
+      prevCoachSlide()
+    }
+  }
+}
+
+// 课程滑动
+const coursesSliderRef = ref(null)
+const coursesSlide = ref(0)
+let coursesTouchStartX = 0
+
+function handleCoursesTouchStart(e) {
+  coursesTouchStartX = e.touches[0].clientX
+}
+
+function handleCoursesTouchEnd(e) {
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = coursesTouchStartX - touchEndX
+  const threshold = 50
+  const maxSlide = Math.max(0, filteredCourses.value.length - 1)
+  
+  if (Math.abs(diff) > threshold) {
+    if (diff > 0 && coursesSlide.value < maxSlide) {
+      // 向左滑动 - 下一张
+      coursesSlide.value++
+    } else if (diff < 0 && coursesSlide.value > 0) {
+      // 向右滑动 - 上一张
+      coursesSlide.value--
+    }
+  }
+}
+
+// 器械滑动
+const equipmentSliderRef = ref(null)
+const equipmentSlide = ref(0)
+let equipmentTouchStartX = 0
+
+function handleEquipmentTouchStart(e) {
+  equipmentTouchStartX = e.touches[0].clientX
+}
+
+function handleEquipmentTouchEnd(e) {
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = equipmentTouchStartX - touchEndX
+  const threshold = 50
+  const maxSlide = Math.max(0, Math.min(filteredEquipments.value.length, 8) - 1)
+  
+  if (Math.abs(diff) > threshold) {
+    if (diff > 0 && equipmentSlide.value < maxSlide) {
+      // 向左滑动 - 下一张
+      equipmentSlide.value++
+    } else if (diff < 0 && equipmentSlide.value > 0) {
+      // 向右滑动 - 上一张
+      equipmentSlide.value--
+    }
+  }
+}
 
 // 登录模态框
 const showLoginModal = ref(false)
@@ -1441,11 +1634,13 @@ function goToSlide(index) {
 }
 
 function prevMembershipSlide() {
+  const slideCount = isMobile.value ? 1 : 3
   membershipSlide.value = Math.max(0, membershipSlide.value - 1)
 }
 
 function nextMembershipSlide() {
-  membershipSlide.value = Math.min(membershipPlans.length - 3, membershipSlide.value + 1)
+  const maxSlide = isMobile.value ? membershipPlans.length - 1 : membershipPlans.length - 3
+  membershipSlide.value = Math.min(Math.max(0, maxSlide), membershipSlide.value + 1)
 }
 
 function prevCoachSlide() {
@@ -1453,7 +1648,8 @@ function prevCoachSlide() {
 }
 
 function nextCoachSlide() {
-  coachSlide.value = Math.min(coaches.value.length - 4, coachSlide.value + 1)
+  const maxSlide = isMobile.value ? coaches.value.length - 1 : coaches.value.length - 4
+  coachSlide.value = Math.min(Math.max(0, maxSlide), coachSlide.value + 1)
 }
 
 function prevTestimonial() {
@@ -1695,6 +1891,10 @@ function animateNumbers() {
 // 自动轮播
 let heroInterval
 onMounted(() => {
+  // 初始化移动端检测
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  
   window.addEventListener('scroll', handleScroll)
   animateNumbers()
 
@@ -1716,6 +1916,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', checkMobile)
   if (heroInterval) clearInterval(heroInterval)
 })
 
@@ -4076,73 +4277,7 @@ const vIntersect = {
   transform: translateX(4px);
 }
 
-/* 响应式适配 */
-@media (max-width: 1200px) {
-  .equipment-showcase-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .equipment-showcase-card.card-wide {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 992px) {
-  .equipment-showcase-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 280px);
-    gap: 16px;
-  }
-
-  /* 平板端重置所有卡片样式 */
-  .equipment-showcase-card:nth-child(1),
-  .equipment-showcase-card:nth-child(2),
-  .equipment-showcase-card:nth-child(3),
-  .equipment-showcase-card:nth-child(4),
-  .equipment-showcase-card:nth-child(5),
-  .equipment-showcase-card:nth-child(6) {
-    grid-row: auto;
-    height: 280px;
-    margin-top: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .equipment-tabs {
-    gap: 8px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 8px;
-  }
-
-  .equipment-tab {
-    padding: 10px 18px;
-    font-size: 14px;
-    white-space: nowrap;
-  }
-
-  .equipment-showcase-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(6, 240px);
-    gap: 16px;
-  }
-
-  /* 移动端重置所有卡片样式 */
-  .equipment-showcase-card:nth-child(1),
-  .equipment-showcase-card:nth-child(2),
-  .equipment-showcase-card:nth-child(3),
-  .equipment-showcase-card:nth-child(4),
-  .equipment-showcase-card:nth-child(5),
-  .equipment-showcase-card:nth-child(6) {
-    grid-row: auto;
-    height: 240px;
-    margin-top: 0;
-  }
-
-  .equipment-showcase-image {
-    height: 160px;
-  }
-}
+/* 注意：equipment-showcase-grid 的响应式样式已通过 .desktop-only 和 .mobile-only 类控制 */
 
 /* Omnichannel Section */
 .omnichannel-section {
@@ -4772,7 +4907,6 @@ const vIntersect = {
   .philosophy-grid { grid-template-columns: 1fr; gap: 50px; }
   .philosophy-content { max-width: 100%; }
   .ai-features-grid { grid-template-columns: 1fr; }
-  .courses-grid { grid-template-columns: repeat(2, 1fr); }
   .membership-slide { flex: 0 0 50%; }
   .coaches-slide { flex: 0 0 33.333%; }
   .equipment-grid { grid-template-columns: 1fr; }
@@ -4823,10 +4957,9 @@ const vIntersect = {
   .cta-container,
   .footer-container { padding: 0 20px; }
   .philosophy-values { grid-template-columns: 1fr; }
-  .courses-grid { grid-template-columns: 1fr; }
   .membership-slide { flex: 0 0 100%; }
   .membership-slide.featured { transform: scale(1); }
-  .coaches-slide { flex: 0 0 50%; }
+  .coaches-slide { flex: 0 0 100%; }
   .testimonial-header { flex-direction: column; text-align: center; }
   .testimonial-transformation { margin-left: 0; margin-top: 20px; }
   .equipment-item { flex-direction: column; }
@@ -4843,6 +4976,1382 @@ const vIntersect = {
   .hero-title { font-size: 28px; }
   .hero-badge { font-size: 12px; padding: 8px 16px; }
   .section-title { font-size: 28px; }
-  .coaches-slide { flex: 0 0 100%; }
+}
+
+/* ============================================
+   移动端深度优化 - Mobile Deep Optimization
+   ============================================ */
+
+/* 小屏手机优化 (375px - 480px) */
+@media (max-width: 480px) {
+  /* 导航栏优化 */
+  .navbar-container {
+    padding: 0 16px;
+  }
+  
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .logo-text span {
+    display: none;
+  }
+  
+  /* 用户菜单简化 */
+  .user-menu .nav-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  /* Hero区域优化 */
+  .hero-section {
+    padding: 80px 0 40px;
+    min-height: auto;
+  }
+  
+  .hero-section.has-announcement {
+    padding-top: 120px;
+  }
+  
+  .hero-container {
+    padding: 0 16px;
+  }
+  
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
+  .hero-text {
+    text-align: center;
+    max-width: 100%;
+  }
+  
+  .hero-badge {
+    font-size: 11px;
+    padding: 8px 14px;
+    margin-bottom: 20px;
+  }
+  
+  .hero-title {
+    font-size: 32px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+  }
+  
+  .hero-title br {
+    display: none;
+  }
+  
+  .hero-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+    color: var(--text-secondary);
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  
+  .hero-actions .btn {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+  
+  .hero-actions .btn-large {
+    padding: 16px 24px;
+  }
+  
+  /* 统计数据预览 */
+  .hero-stats-preview {
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  
+  .hero-stat-item {
+    align-items: center;
+  }
+  
+  .hero-stat-value {
+    font-size: 24px;
+  }
+  
+  .hero-stat-label {
+    font-size: 12px;
+  }
+  
+  /* Hero轮播图优化 */
+  .hero-visual {
+    height: 280px;
+    order: -1;
+  }
+  
+  .hero-carousel {
+    border-radius: 20px;
+  }
+  
+  .hero-carousel-nav {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .hero-carousel-nav.prev { left: 10px; }
+  .hero-carousel-nav.next { right: 10px; }
+  
+  .hero-carousel-indicators {
+    bottom: 16px;
+    gap: 8px;
+  }
+  
+  .hero-carousel-dot {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .hero-carousel-dot.active {
+    width: 24px;
+  }
+  
+  /* 公告栏优化 */
+  .announcement-bar {
+    padding: 10px 0;
+  }
+  
+  .announcement-bar-content {
+    font-size: 12px;
+    padding: 0 40px 0 16px;
+    text-align: center;
+  }
+  
+  .announcement-bar-close {
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+  
+  /* 滚动公告优化 */
+  .marquee-notice-label {
+    font-size: 14px;
+    padding: 6px 10px;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  
+  .marquee-notice-item {
+    font-size: 13px;
+    padding: 0 24px;
+  }
+  
+  .marquee-notice-close {
+    right: 8px;
+    width: 28px;
+    height: 28px;
+  }
+  
+  /* 统计区域优化 */
+  .stats-section {
+    padding: 40px 0;
+  }
+  
+  .stats-container {
+    padding: 0 16px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 16px;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .stat-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .stat-value {
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+  
+  .stat-label {
+    font-size: 13px;
+  }
+  
+  /* 通用区域优化 */
+  .section {
+    padding: 48px 0;
+  }
+  
+  .section-header {
+    margin-bottom: 32px;
+    padding: 0 16px;
+  }
+  
+  .section-tag {
+    font-size: 11px;
+    padding: 6px 12px;
+    margin-bottom: 12px;
+  }
+  
+  .section-title {
+    font-size: 26px;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  
+  .section-title br {
+    display: none;
+  }
+  
+  .section-desc {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  /* 品牌理念区域 */
+  .philosophy-container {
+    padding: 0 16px;
+  }
+  
+  .philosophy-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
+  .philosophy-quote {
+    font-size: 16px;
+    padding-left: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .philosophy-text {
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  
+  .philosophy-values {
+    gap: 16px;
+  }
+  
+  .value-item {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .value-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  
+  .value-content h4 {
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  
+  .value-content p {
+    font-size: 13px;
+  }
+  
+  .philosophy-visual {
+    order: -1;
+  }
+  
+  .philosophy-image {
+    border-radius: 16px;
+  }
+  
+  .philosophy-experience {
+    padding: 16px 20px;
+    border-radius: 12px;
+  }
+  
+  .experience-number {
+    font-size: 32px;
+  }
+  
+  /* AI功能区域 */
+  .ai-features-container {
+    padding: 0 16px;
+  }
+  
+  .ai-features-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .ai-feature-card {
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
+  
+  .ai-feature-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+  
+  .ai-feature-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .ai-feature-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  
+  .ai-feature-list {
+    gap: 8px;
+  }
+  
+  .ai-feature-list li {
+    font-size: 13px;
+    padding-left: 20px;
+  }
+  
+  /* 课程区域优化 - 移动端横向滑动 */
+  .courses-container {
+    padding: 0 16px;
+  }
+  
+  .courses-tabs {
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 0 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .courses-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .course-tab {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  /* 移动端滑动 */
+  .courses-slider.mobile-only {
+    display: block;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  
+  .courses-slider-track {
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+  }
+  
+  .courses-slider-content {
+    display: flex;
+    gap: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .courses-slide {
+    flex: 0 0 85%;
+    min-width: 280px;
+  }
+  
+  .course-card-mobile {
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .course-image-mobile {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+  }
+  
+  .course-image-mobile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .course-overlay-mobile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 50%);
+  }
+  
+  .course-overlay-mobile .course-level {
+    background: rgba(255, 107, 53, 0.9);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  
+  .course-overlay-mobile .course-duration {
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .course-content-mobile {
+    padding: 14px;
+  }
+  
+  .course-name-mobile {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+  }
+  
+  .course-desc-mobile {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .course-meta-mobile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .course-calories-mobile {
+    font-size: 12px;
+    color: #FF6B35;
+    font-weight: 500;
+  }
+  
+  .courses-more {
+    margin-top: 28px;
+  }
+  
+  .btn-view-all {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+  
+  /* 会员方案区域 */
+  .membership-container {
+    padding: 0 16px;
+  }
+  
+  .membership-slider {
+    padding: 0 40px;
+  }
+  
+  .membership-slider-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  
+  .membership-slider-btn.prev { left: 0; }
+  .membership-slider-btn.next { right: 0; }
+  
+  .membership-slide {
+    flex: 0 0 100%;
+    padding: 0 4px;
+  }
+  
+  .membership-card {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+  
+  .membership-badge {
+    font-size: 11px;
+    padding: 4px 12px;
+    top: 16px;
+    right: 16px;
+  }
+  
+  .membership-name {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  
+  .membership-price {
+    margin-bottom: 12px;
+  }
+  
+  .membership-price .currency {
+    font-size: 24px;
+  }
+  
+  .membership-price .amount {
+    font-size: 44px;
+  }
+  
+  .membership-price .period {
+    font-size: 16px;
+  }
+  
+  .membership-desc {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  
+  .membership-features {
+    margin-bottom: 20px;
+  }
+  
+  .membership-features li {
+    font-size: 13px;
+    padding: 10px 0;
+  }
+  
+  /* 教练团队区域 */
+  .coaches-container {
+    padding: 0 16px;
+  }
+  
+  .coaches-slider {
+    padding: 0 40px;
+  }
+  
+  .coaches-slider-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  
+  .coaches-slide {
+    flex: 0 0 100%;
+    padding: 0 4px;
+  }
+  
+  .coach-card {
+    border-radius: 16px;
+  }
+  
+  .coach-image {
+    height: 280px;
+  }
+  
+  .coach-stats {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .coach-stat-value {
+    font-size: 18px;
+  }
+  
+  .coach-stat-label {
+    font-size: 11px;
+  }
+  
+  .coach-info {
+    padding: 16px;
+  }
+  
+  .coach-name {
+    font-size: 18px;
+  }
+  
+  .coach-title {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  
+  .coach-tags {
+    gap: 6px;
+  }
+  
+  .coach-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  
+  /* 健身设备区域 - 移动端横向滑动 */
+  .equipment-container {
+    padding: 0 16px;
+  }
+  
+  .equipment-tabs {
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .equipment-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .equipment-tab {
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  /* 移动端滑动 */
+  .equipment-slider.mobile-only {
+    display: block;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  
+  .equipment-slider-track {
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+  }
+  
+  .equipment-slider-content {
+    display: flex;
+    gap: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .equipment-slide {
+    flex: 0 0 85%;
+    min-width: 280px;
+  }
+  
+  .equipment-card-mobile {
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .equipment-image-mobile {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+  }
+  
+  .equipment-image-mobile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .equipment-overlay-mobile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 50%);
+  }
+  
+  .equipment-overlay-mobile .equipment-type-badge {
+    background: rgba(255, 107, 53, 0.9);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  
+  .equipment-content-mobile {
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .equipment-name-mobile {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .equipment-status-mobile {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+  
+  .equipment-status-mobile.available {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+  }
+  
+  .equipment-status-mobile.maintenance {
+    background: rgba(255, 152, 0, 0.15);
+    color: #FF9800;
+  }
+  
+  .equipment-status-mobile.unavailable {
+    background: rgba(244, 67, 54, 0.15);
+    color: #F44336;
+  }
+  
+  .equipments-more {
+    margin-top: 32px;
+  }
+  
+  /* 线上线下区域 */
+  .omnichannel-container {
+    padding: 0 16px;
+  }
+  
+  .omnichannel-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
+  .omnichannel-features {
+    gap: 20px;
+    margin-top: 24px;
+  }
+  
+  .omnichannel-feature {
+    gap: 14px;
+  }
+  
+  .omnichannel-feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  
+  .omnichannel-feature-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .omnichannel-feature-content h4 {
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  
+  .omnichannel-feature-content p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  
+  .omnichannel-visual {
+    order: -1;
+  }
+  
+  .phone-mockup {
+    width: 220px;
+  }
+  
+  .phone-frame {
+    border-radius: 32px;
+    padding: 10px;
+  }
+  
+  .phone-notch {
+    width: 80px;
+    height: 20px;
+    margin-bottom: 8px;
+  }
+  
+  /* CTA区域优化 */
+  .cta-container {
+    padding: 0 16px;
+  }
+  
+  .cta-title {
+    font-size: 26px;
+    margin-bottom: 12px;
+  }
+  
+  .cta-desc {
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  
+  .cta-form {
+    flex-direction: column;
+    gap: 12px;
+    max-width: 100%;
+  }
+  
+  .cta-input {
+    padding: 14px 18px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+  
+  .cta-form .btn {
+    width: 100%;
+    padding: 14px 24px;
+  }
+  
+  .cta-guarantee {
+    font-size: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 16px;
+  }
+  
+  /* 页脚优化 - 更紧凑的布局 */
+  .footer {
+    padding: 32px 0 20px;
+  }
+  
+  .footer-container {
+    padding: 0 16px;
+  }
+  
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .footer-brand {
+    max-width: 100%;
+    text-align: center;
+  }
+  
+  .footer-logo {
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  
+  .footer-logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .footer-logo-text {
+    font-size: 18px;
+  }
+  
+  .footer-desc {
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+  }
+  
+  .footer-social {
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .footer-social a {
+    width: 36px;
+    height: 36px;
+  }
+  
+  /* 链接分组横向排列 */
+  .footer-links-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  
+  .footer-column {
+    text-align: center;
+  }
+  
+  .footer-title {
+    font-size: 13px;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  
+  .footer-links {
+    gap: 8px;
+  }
+  
+  .footer-links a {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  
+  .footer-links a:hover {
+    color: #FF6B35;
+  }
+  
+  /* 联系信息简化 */
+  .footer-contact {
+    display: none;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .footer-bottom p {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  
+  .footer-bottom-links {
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .footer-bottom-links a {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  
+  .footer-bottom-links {
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .footer-bottom-links a {
+    font-size: 12px;
+  }
+  
+  /* 移动端菜单优化 */
+  .mobile-menu {
+    gap: 20px;
+    padding: 80px 24px 40px;
+  }
+  
+  .mobile-menu a {
+    font-size: 22px;
+  }
+  
+  .mobile-menu .btn {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 8px;
+  }
+  
+  /* 按钮通用优化 */
+  .btn {
+    padding: 12px 24px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+  
+  .btn-large {
+    padding: 14px 28px;
+    font-size: 15px;
+  }
+  
+  /* 弹窗优化 */
+  .register-modal-content {
+    padding: 32px 20px 24px;
+  }
+  
+  .register-icon {
+    font-size: 44px;
+  }
+  
+  .register-title {
+    font-size: 20px;
+  }
+  
+  .register-subtitle {
+    font-size: 13px;
+  }
+  
+  .code-input-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .send-code-btn {
+    width: 100%;
+  }
+}
+
+/* 超小屏手机优化 (< 375px) */
+@media (max-width: 374px) {
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  .section-title {
+    font-size: 24px;
+  }
+  
+  .stats-grid {
+    gap: 16px 12px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .membership-price .amount {
+    font-size: 38px;
+  }
+  
+  .coach-image {
+    height: 240px;
+  }
+  
+  .phone-mockup {
+    width: 180px;
+  }
+}
+
+/* 移动端触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .course-hover-overlay,
+  .coach-hover-hint,
+  .equipment-hover-overlay {
+    display: none !important;
+  }
+  
+  .course-card:active,
+  .coach-card:active,
+  .equipment-showcase-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+  
+  .btn:active {
+    transform: scale(0.96);
+    transition: transform 0.1s;
+  }
+  
+  .mobile-menu-item:active {
+    background: rgba(255, 107, 53, 0.2);
+  }
+}
+
+/* 横屏手机优化 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .hero-section {
+    padding: 60px 0 40px;
+    min-height: auto;
+  }
+  
+  .hero-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  
+  .hero-visual {
+    height: 320px;
+    order: 0;
+  }
+  
+  .hero-title {
+    font-size: 32px;
+  }
+  
+  .hero-actions {
+    flex-direction: row;
+  }
+  
+  .hero-actions .btn {
+    width: auto;
+  }
+}
+
+/* 安全区域适配 (iPhone X+) */
+@supports (padding: max(0px)) {
+  @media (max-width: 480px) {
+    .navbar-container,
+    .hero-container,
+    .stats-container,
+    .section-header,
+    .philosophy-container,
+    .ai-features-container,
+    .courses-container,
+    .membership-container,
+    .coaches-container,
+    .equipment-container,
+    .omnichannel-container,
+    .cta-container,
+    .footer-container {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    
+    .mobile-menu {
+      padding-bottom: max(40px, env(safe-area-inset-bottom));
+    }
+    
+    .footer {
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-badge,
+  .hero-title,
+  .hero-desc,
+  .hero-actions,
+  .hero-stats-preview,
+  .particle,
+  .marquee-notice-track,
+  .app-floating-card,
+  .hero-carousel-track {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .hero-carousel-slide {
+    transition: transform 0.3s ease !important;
+  }
+}
+
+/* 显示/隐藏控制类 - 默认桌面端显示 */
+.desktop-only {
+  display: block;
+}
+
+/* Grid布局元素特殊处理 - 确保grid布局不被覆盖 */
+.courses-grid.desktop-only,
+.equipment-showcase-grid.desktop-only {
+  display: grid !important;
+}
+
+.mobile-only {
+  display: none !important;
+}
+
+/* 移动端隐藏桌面端内容 */
+@media (max-width: 768px) {
+  .desktop-only,
+  .courses-grid.desktop-only,
+  .equipment-showcase-grid.desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+/* 移动端滑动提示 */
+.slider-swipe-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .slider-swipe-hint {
+    display: flex;
+  }
+}
+
+.swipe-hint-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.swipe-hint-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.swipe-hint-dot.active {
+  background: #FF6B35;
+  width: 24px;
+  border-radius: 4px;
+}
+
+.swipe-hint-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swipe-hint-text::before,
+.swipe-hint-text::after {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--text-muted));
+}
+
+.swipe-hint-text::after {
+  background: linear-gradient(90deg, var(--text-muted), transparent);
+}
+
+/* 移动端触摸滑动优化 */
+.membership-slider-track,
+.coaches-slider-track {
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 移动端卡片滑动动画 */
+@media (max-width: 768px) {
+  .membership-slider-content,
+  .coaches-slider-content {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .membership-slide,
+  .coaches-slide {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .membership-slide:not(.active),
+  .coaches-slide:not(.active) {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* 移动端加载状态优化 */
+@media (max-width: 480px) {
+  .courses-loading,
+  .coaches-loading,
+  .equipments-loading {
+    padding: 40px 20px;
+  }
+  
+  .courses-loading p,
+  .coaches-loading p,
+  .equipments-loading p {
+    font-size: 14px;
+    margin-top: 16px;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+  
+  .courses-error,
+  .equipments-error {
+    padding: 32px 20px;
+  }
+  
+  .courses-error p,
+  .equipments-error p {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+}
+
+/* 移动端图片加载优化 */
+@media (max-width: 480px) {
+  .course-image img,
+  .coach-image img,
+  .equipment-showcase-image img,
+  .hero-carousel-slide img {
+    loading: lazy;
+  }
+  
+  .course-image-placeholder,
+  .equipment-image-placeholder {
+    min-height: 120px;
+  }
+  
+  .placeholder-text {
+    font-size: 12px;
+  }
+}
+
+/* 移动端表单优化 */
+@media (max-width: 480px) {
+  input, button, select, textarea {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+  
+  .cta-input,
+  .phone-input :deep(.n-input__input),
+  .code-input :deep(.n-input__input) {
+    font-size: 16px !important;
+  }
+}
+
+/* 移动端滚动优化 */
+@media (max-width: 768px) {
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .home-page {
+    overflow-x: hidden;
+  }
+  
+  /* 禁用横向滚动 */
+  body {
+    overflow-x: hidden;
+    position: relative;
+  }
+}
+
+/* 移动端焦点状态优化 */
+@media (max-width: 768px) {
+  .btn:focus,
+  .course-card:focus,
+  .coach-card:focus,
+  .equipment-showcase-card:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.3);
+  }
+  
+  /* 移除点击高亮 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 </style>

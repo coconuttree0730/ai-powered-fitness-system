@@ -1424,16 +1424,34 @@ onMounted(() => {
   .header-content,
   .filter-container,
   .courses-container {
-    padding: 0 20px;
+    padding: 0 12px;
   }
 
   .header-title {
     font-size: 28px;
   }
 
+  .header-subtitle {
+    font-size: 14px;
+  }
+
+  .filter-section {
+    padding: 16px 0;
+  }
+
+  .filter-container {
+    gap: 12px;
+  }
+
   .filter-group {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+  }
+
+  .filter-label {
+    font-size: 13px;
+    color: var(--text-secondary);
   }
 
   .filter-tabs {
@@ -1442,15 +1460,135 @@ onMounted(() => {
     flex-wrap: nowrap;
     padding-bottom: 8px;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-tab {
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .search-box {
+    padding: 12px 16px;
+  }
+
+  .search-input {
+    font-size: 15px;
+  }
+
+  /* 移动端双排瀑布流布局 */
   .courses-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .course-card {
+    border-radius: 16px;
   }
 
   .course-image-wrapper {
-    height: 220px;
+    height: 140px;
+  }
+
+  .course-badges {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .course-info {
+    padding: 12px;
+  }
+
+  .course-header {
+    margin-bottom: 6px;
+  }
+
+  .course-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .course-rating {
+    font-size: 12px;
+    gap: 2px;
+  }
+
+  .course-description {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .course-meta {
+    gap: 8px;
+  }
+
+  .meta-item {
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .meta-item svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .courses-section {
+    padding: 20px 0 40px;
+  }
+
+  /* 加载和空状态 */
+  .loading-state {
+    padding: 40px 20px;
+  }
+
+  .loading-state p {
+    font-size: 14px;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
+
+  /* 排序和重置 */
+  .sort-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sort-label {
+    font-size: 13px;
+  }
+
+  .reset-filters-btn {
+    padding: 8px 14px;
+    font-size: 12px;
   }
 }
 

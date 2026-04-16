@@ -167,7 +167,8 @@ import {
   MoonOutline,
   SunnyOutline,
   StarOutline,
-  IdCardOutline
+  IdCardOutline,
+  HomeOutline
 } from '@vicons/ionicons5'
 
 const route = useRoute()
@@ -230,6 +231,7 @@ const activeKey = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '会员中心')
 
 const menuOptions = [
+  { label: '网站首页', key: '/', iconComponent: HomeOutline },
   { label: '在线购卡', key: '/member/cards', iconComponent: CardOutline },
   { label: '我的教练', key: '/member/coach', iconComponent: PeopleOutline },
   { label: '健小助', key: '/member/assistant', iconComponent: ChatbubbleOutline },

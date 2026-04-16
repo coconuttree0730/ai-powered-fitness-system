@@ -262,9 +262,10 @@ const message = useMessage()
 const dialog = useDialog()
 const loading = ref(false)
 
-// 响应式状态
+// 响应式状态 - 使用更大断点避免横屏误判，同时结合触摸设备检测
 const windowWidth = ref(window.innerWidth)
-const isMobile = computed(() => windowWidth.value < 768)
+const isTouchDevice = ref('ontouchstart' in window || navigator.maxTouchPoints > 0)
+const isMobile = computed(() => isTouchDevice.value || windowWidth.value < 900)
 
 // 监听窗口大小变化
 function handleResize() {
