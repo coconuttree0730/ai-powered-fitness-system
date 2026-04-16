@@ -94,7 +94,7 @@ public class AnalysisReportController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "批量删除报告", description = "批量删除AI分析报告")
     public Result<Void> batchDeleteReports(@RequestBody List<Long> ids) {
-        Long userId = getCurrentUserId();
+        //Long userId = getCurrentUserId();
         boolean success = analysisReportService.removeByIds(ids);
         if (success) {
             return Result.success();

@@ -1,6 +1,6 @@
 package com.fitness.modules.knowledge.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+//import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.common.result.Result;
 import com.fitness.modules.knowledge.model.dto.KnowledgeCategoryDTO;
 import com.fitness.modules.knowledge.model.vo.KnowledgeCategoryVO;

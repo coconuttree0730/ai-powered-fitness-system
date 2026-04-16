@@ -121,13 +121,56 @@
       <div class="section-header">
         <h3 class="section-title">训练记录</h3>
       </div>
-      <n-data-table
-        :columns="recordColumns"
-        :data="trainingRecords"
-        :pagination="false"
-        :bordered="false"
-        class="record-table"
-      />
+      
+      <!-- 桌面端表格 -->
+      <div v-if="!isMobile" class="table-wrapper">
+        <n-data-table
+          :columns="recordColumns"
+          :data="trainingRecords"
+          :pagination="false"
+          :bordered="false"
+          class="record-table"
+        />
+      </div>
+      
+      <!-- 移动端训练记录卡片 -->
+      <div v-else class="mobile-training-list">
+        <div class="training-cards">
+          <div 
+            v-for="(record, index) in trainingRecords" 
+            :key="index"
+            class="training-card"
+            :style="{ animationDelay: `${index * 100}ms` }"
+          >
+            <div class="training-header">
+              <div class="training-date">
+                <span class="day">{{ getDay(record.date) }}</span>
+                <span class="month">{{ getMonth(record.date) }}</span>
+              </div>
+              <n-tag type="success" size="small" round class="status-tag">
+                已完成
+              </n-tag>
+            </div>
+            <div class="training-body">
+              <h4 class="course-name">{{ record.courseType }}</h4>
+              <div class="coach-info">
+                <n-icon size="14" :component="PersonOutline" />
+                <span>{{ record.coach }}</span>
+              </div>
+              <div class="training-stats">
+                <div class="stat-item">
+                  <n-icon size="16" :component="TimeOutline" />
+                  <span>{{ record.duration }}</span>
+                </div>
+                <div class="stat-item highlight">
+                  <n-icon size="16" :component="FlameOutline" />
+                  <span>{{ record.calories }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 预约课程弹窗 -->
@@ -157,13 +200,31 @@
 </template>
 
 <script setup>
-import { ref, h, onMounted, computed, nextTick } from 'vue'
-import { useMessage, NTag } from 'naive-ui'
+import { ref, h, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { useMessage, NTag, NIcon } from 'naive-ui'
+import { PersonOutline, TimeOutline, FlameOutline } from '@vicons/ionicons5'
 import { getHomePageCoaches, getMyPrivateCoach } from '@/api/coachDetail'
 
 const message = useMessage()
 const recommendedSection = ref(null)
 const sliderRef = ref(null)
+
+// 响应式状态
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
+
+// 监听窗口大小变化
+function handleResize() {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 const showBookingModal = ref(false)
 const bookingLoading = ref(false)
@@ -347,6 +408,18 @@ function confirmBooking() {
     message.success('预约成功！')
     bookingForm.value = { courseType: 'muscle', date: null, timeSlot: '14:00', note: '' }
   }, 1500)
+}
+
+// 日期格式化函数
+function getDay(dateStr) {
+  const date = new Date(dateStr)
+  return date.getDate()
+}
+
+function getMonth(dateStr) {
+  const date = new Date(dateStr)
+  const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+  return months[date.getMonth()]
 }
 
 onMounted(() => {
@@ -795,6 +868,165 @@ onMounted(() => {
   .slider-btn svg {
     width: 20px;
     height: 20px;
+  }
+}
+
+/* ==================== 移动端训练记录卡片样式 ==================== */
+.mobile-training-list {
+  padding: 8px 0;
+}
+
+.training-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.training-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  animation: slideInUp 0.5s ease forwards;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.training-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.training-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.training-date {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.training-date .day {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.training-date .month {
+  font-size: 11px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.status-tag {
+  font-size: 10px;
+}
+
+.training-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.course-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin: 0 0 8px 0;
+}
+
+.coach-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6B7280;
+  margin-bottom: 12px;
+}
+
+.training-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.training-stats .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6B7280;
+  background: #f1f5f9;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.training-stats .stat-item.highlight {
+  background: linear-gradient(135deg, #fff5f2 0%, #ffe8e0 100%);
+  color: #FF6B35;
+}
+
+.training-stats .stat-item :deep(.n-icon) {
+  color: inherit;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .training-card {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .training-date {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+  
+  .training-date .day {
+    font-size: 18px;
+  }
+  
+  .training-date .month {
+    font-size: 10px;
+  }
+  
+  .course-name {
+    font-size: 15px;
+  }
+  
+  .training-stats {
+    gap: 10px;
+  }
+  
+  .training-stats .stat-item {
+    font-size: 12px;
+    padding: 5px 10px;
   }
 }
 </style>

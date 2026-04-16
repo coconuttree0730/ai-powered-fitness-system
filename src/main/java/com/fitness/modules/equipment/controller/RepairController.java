@@ -1,7 +1,7 @@
 package com.fitness.modules.equipment.controller;
 
 import com.fitness.common.result.Result;
-import com.fitness.integration.security.SecurityUtils;
+//import com.fitness.integration.security.SecurityUtils;
 import com.fitness.integration.security.UserDetailsImpl;
 import com.fitness.modules.equipment.model.dto.RepairDTO;
 import com.fitness.modules.equipment.model.vo.MyRepairVO;

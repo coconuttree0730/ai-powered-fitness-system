@@ -66,7 +66,8 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     private final CourseService courseService;
     private final EquipmentService equipmentService;
 
-    private static final int MAX_CONTEXT_MESSAGES = 10;
+    // 最大上下文消息数（消息框可显示的消息数）
+    //private static final int MAX_CONTEXT_MESSAGES = 10;
 
     @Override
     @Transactional

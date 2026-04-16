@@ -1,6 +1,5 @@
 package com.fitness.integration.ai.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO;
 import com.fitness.integration.ai.prompt.PromptTemplates;
 import com.fitness.integration.ai.service.AIService;
@@ -23,7 +22,6 @@ public class AIServiceImpl implements AIService {
 
     private final ChatClient chatClient;
     private final PromptTemplates promptTemplates;
-    private final ObjectMapper objectMapper;
 
     @Value("${spring.ai.dashscope.chat.options.model}")
     private String model;

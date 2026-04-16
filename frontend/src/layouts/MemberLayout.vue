@@ -2,17 +2,22 @@
   <div class="member-layout">
     <!-- 移动端顶部导航栏 -->
     <div class="mobile-header" v-if="isMobile">
-      <div class="mobile-logo">
-        <div class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6.5 6.5l11 11"/>
-            <path d="M21 21l-1-1"/>
-            <path d="M3 3l1 1"/>
-            <path d="M18 22l4-4"/>
-            <path d="M2 6l4-4"/>
-          </svg>
+      <div class="mobile-logo" @click="goToProfile">
+        <div class="mobile-avatar">
+          <img
+            v-if="userAvatar"
+            :src="userAvatar"
+            class="avatar-img"
+            @error="$event.target.style.display='none'"
+          />
+          <n-avatar
+            v-else
+            round
+            :size="32"
+            class="user-avatar"
+          >{{ usernameInitial }}</n-avatar>
         </div>
-        <span>健身会员中心</span>
+        <span>{{ username || '用户' }}</span>
       </div>
       <div class="mobile-actions">
         <n-tag type="warning" size="small" round class="mobile-points">
@@ -31,12 +36,6 @@
     <template v-if="isMobile">
       <div class="mobile-menu-overlay" v-if="showMobileMenu" @click="showMobileMenu = false"></div>
       <div class="mobile-menu" :class="{ open: showMobileMenu }">
-        <div class="mobile-menu-header">
-          <span>菜单</span>
-          <n-button text @click="showMobileMenu = false">
-            <n-icon :size="24" :component="CloseOutline" />
-          </n-button>
-        </div>
         <div class="mobile-menu-items">
           <div
             v-for="item in menuOptions"
@@ -301,6 +300,10 @@ function handleUserSelect(key) {
 function handleLogout() {
   authStore.logout()
 }
+
+function goToProfile() {
+  router.push('/member/profile')
+}
 </script>
 
 <style scoped>
@@ -340,15 +343,33 @@ function handleLogout() {
   font-size: 16px;
 }
 
-.mobile-logo .logo-icon {
+.mobile-avatar {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #FF6B35, #FF8C61);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.mobile-avatar:hover {
+  border-color: #FF6B35;
+  transform: scale(1.05);
+}
+
+.mobile-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-avatar .user-avatar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #2EC4B6, #06D6A0);
+  color: white;
+  font-weight: 600;
 }
 
 .mobile-actions {

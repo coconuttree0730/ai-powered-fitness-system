@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fitness.modules.analysis.model.entity.AnalysisReport;
 import com.fitness.modules.dashboard.model.vo.AnalysisReportVO;
 
-import java.util.List;
 
 /**
  * AI数据分析报告Service接口

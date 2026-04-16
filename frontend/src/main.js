@@ -9,6 +9,7 @@ import VueEcharts from 'vue-echarts'
 import App from './App.vue'
 import router from './router'
 import './styles/main.css'
+import './styles/responsive.css'
 
 const app = createApp(App)
 

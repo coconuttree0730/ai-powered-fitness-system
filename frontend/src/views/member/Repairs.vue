@@ -5,7 +5,7 @@
       <div class="section-header">
         <h3 class="section-title">提交报修</h3>
       </div>
-      <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="100">
+      <n-form ref="formRef" :model="form" :rules="rules" :label-placement="isMobile ? 'top' : 'left'" :label-width="isMobile ? undefined : 100">
         <n-form-item label="器械编号" path="equipmentId">
           <n-select
             v-model:value="form.equipmentId"
@@ -29,24 +29,59 @@
         </n-form-item>
 
         <n-form-item label="上传图片">
-          <n-upload
-            v-model:file-list="fileList"
-            action="/api/v1/files/upload?folder=repairs"
-            list-type="image-card"
-            :max="5"
-            :headers="uploadHeaders"
-            accept="image/jpeg,image/png,image/jpg"
-            @change="handleUploadChange"
-            @finish="handleUploadFinish"
-            @error="handleUploadError"
-          >
-            <n-button size="large" dashed style="width: 120px; height: 120px;">
-              <template #icon>
-                <n-icon><camera-icon /></n-icon>
-              </template>
-              上传图片
-            </n-button>
-          </n-upload>
+          <div class="upload-container">
+            <template v-if="isMobile">
+              <n-button size="large" dashed type="primary" @click="showUploadOptions = true" style="width: 100%; max-width: 280px;">
+                <template #icon>
+                  <n-icon><camera-icon /></n-icon>
+                </template>
+                添加图片
+              </n-button>
+              <input
+                ref="cameraInputRef"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style="display: none"
+                @change="handleCameraCapture"
+              />
+              <input
+                ref="albumInputRef"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleAlbumCapture"
+              />
+              <div v-if="fileList.length > 0" class="mobile-image-preview">
+                <div v-for="(item, idx) in fileList" :key="item.id" class="mobile-image-item">
+                  <img :src="item.thumbnailUrl || item.url" alt="预览图" />
+                  <div class="mobile-image-delete" @click="removeImage(idx)">
+                    <n-icon><close-icon /></n-icon>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <n-upload
+                v-model:file-list="fileList"
+                action="/api/v1/files/upload?folder=repairs"
+                list-type="image-card"
+                :max="5"
+                :headers="uploadHeaders"
+                accept="image/jpeg,image/png,image/jpg"
+                @change="handleUploadChange"
+                @finish="handleUploadFinish"
+                @error="handleUploadError"
+              >
+                <n-button size="large" dashed style="width: 120px; height: 120px;">
+                  <template #icon>
+                    <n-icon><camera-icon /></n-icon>
+                  </template>
+                  上传图片
+                </n-button>
+              </n-upload>
+            </template>
+          </div>
           <p class="upload-tip">最多上传5张图片，支持 jpg/png 格式，单张不超过 5MB</p>
         </n-form-item>
 
@@ -66,7 +101,7 @@
 
     <!-- 报修记录 -->
     <div class="card-section">
-      <div class="section-header">
+      <div class="section-header" :class="{ 'mobile-header': isMobile }">
         <h3 class="section-title">报修记录</h3>
         <n-radio-group v-model:value="filterStatus" size="small">
           <n-radio-button value="all">全部</n-radio-button>
@@ -76,14 +111,61 @@
           <n-radio-button value="3">已关闭</n-radio-button>
         </n-radio-group>
       </div>
-      <n-data-table
-        :columns="columns"
-        :data="filteredRepairs"
-        :loading="loading"
-        :pagination="pagination"
-        :bordered="false"
-        class="repair-table"
-      />
+      
+      <!-- 桌面端表格 -->
+      <div v-if="!isMobile" class="table-wrapper">
+        <n-data-table
+          :columns="columns"
+          :data="filteredRepairs"
+          :loading="loading"
+          :pagination="pagination"
+          :bordered="false"
+          class="repair-table"
+        />
+      </div>
+      
+      <!-- 移动端卡片列表 -->
+      <div v-else class="mobile-repair-list">
+        <n-spin :show="loading">
+          <n-empty v-if="filteredRepairs.length === 0" description="暂无报修记录" />
+          <div v-else class="repair-cards">
+            <div 
+              v-for="item in filteredRepairs" 
+              :key="item.id" 
+              class="repair-card"
+              @click="viewDetail(item)"
+            >
+              <div class="repair-card-header">
+                <div class="repair-equipment">
+                  <n-icon :component="ConstructOutline" size="16" />
+                  <span>{{ item.equipmentNo || '未知器械' }}</span>
+                </div>
+                <n-tag :type="getStatusType(item.status)" size="small" round>
+                  {{ getStatusText(item.status) }}
+                </n-tag>
+              </div>
+              <div class="repair-card-body">
+                <p class="repair-desc">{{ item.description }}</p>
+                <span class="repair-time">{{ formatTime(item.createTime) }}</span>
+              </div>
+              <div class="repair-card-footer" v-if="item.status === 0" @click.stop>
+                <n-button type="error" size="small" @click="handleCancel(item.id)">
+                  取消报修
+                </n-button>
+              </div>
+            </div>
+          </div>
+          <!-- 移动端分页 -->
+          <div class="mobile-pagination" v-if="filteredRepairs.length > 0">
+            <n-pagination
+              v-model:page="pagination.page"
+              :page-count="Math.ceil(filteredRepairs.length / pagination.pageSize)"
+              :page-slot="5"
+              size="small"
+            />
+          </div>
+        </n-spin>
+      </div>
     </div>
 
     <!-- 报修详情弹窗 -->
@@ -149,18 +231,53 @@
       v-model:show="showImagePreview"
       :src="previewImageUrl"
     />
+
+    <!-- 移动端上传选项弹窗 -->
+    <n-modal v-model:show="showUploadOptions" preset="card" style="width: 320px; border-radius: 16px;" :bordered="false" :show-header="false">
+      <div class="upload-options">
+        <div class="upload-option" @click="handleUploadClick('camera')">
+          <n-icon :component="CameraIcon" size="24" />
+          <span>拍照</span>
+        </div>
+        <div class="upload-option" @click="handleUploadClick('album')">
+          <n-icon :component="ImageIcon" size="24" />
+          <span>从相册选择</span>
+        </div>
+        <div class="upload-option upload-option-cancel" @click="showUploadOptions = false">
+          <span>取消</span>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, h } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, h } from 'vue'
 import { NTag, NButton, useMessage, NIcon, NTimeline, NTimelineItem, NEmpty, useDialog } from 'naive-ui'
-import { Camera as CameraIcon } from '@vicons/ionicons5'
+import { Camera as CameraIcon, Image as ImageIcon, Close as CloseIcon, ConstructOutline } from '@vicons/ionicons5'
 import { submitRepair, getMyRepairs, cancelRepair, getActiveEquipmentList } from '@/api/equipment'
+import { uploadFile } from '@/api/file'
 
 const message = useMessage()
 const dialog = useDialog()
 const loading = ref(false)
+
+// 响应式状态
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
+
+// 监听窗口大小变化
+function handleResize() {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 const submitting = ref(false)
 const showDetailModal = ref(false)
 const showImagePreview = ref(false)
@@ -285,6 +402,96 @@ function formatTime(time) {
   if (!time) return ''
   const date = new Date(time)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const cameraInputRef = ref(null)
+const albumInputRef = ref(null)
+const showUploadOptions = ref(false)
+const uploadingCamera = ref(false)
+
+function handleUploadClick(type) {
+  showUploadOptions.value = false
+  if (fileList.value.length >= 5) {
+    message.warning('最多只能上传5张图片')
+    return
+  }
+  if (type === 'camera') {
+    cameraInputRef.value?.click()
+  } else {
+    albumInputRef.value?.click()
+  }
+}
+
+function removeImage(idx) {
+  const item = fileList.value[idx]
+  if (item && item.url) {
+    uploadedUrls.value = uploadedUrls.value.filter(u => u !== item.url)
+  }
+  if (item && item.thumbnailUrl && item.thumbnailUrl.startsWith('blob:')) {
+    URL.revokeObjectURL(item.thumbnailUrl)
+  }
+  fileList.value.splice(idx, 1)
+}
+
+async function handleCameraCapture(event) {
+  await handleFileUpload(event, '拍照')
+}
+
+async function handleAlbumCapture(event) {
+  await handleFileUpload(event, '相册选择')
+}
+
+async function handleFileUpload(event, source) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (fileList.value.length >= 5) {
+    message.warning('最多只能上传5张图片')
+    event.target.value = ''
+    return
+  }
+
+  if (!file.type.match(/image\/(jpeg|png|jpg)/i)) {
+    message.error('仅支持 jpg/png 格式的图片')
+    event.target.value = ''
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    message.error('图片大小不能超过5MB')
+    event.target.value = ''
+    return
+  }
+
+  uploadingCamera.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const res = await uploadFile(formData, 'repairs')
+    if (res && res.fileUrl) {
+      uploadedUrls.value.push(res.fileUrl)
+      
+      const thumbnailUrl = URL.createObjectURL(file)
+      fileList.value.push({
+        id: Date.now(),
+        name: file.name,
+        status: 'finished',
+        url: res.fileUrl,
+        thumbnailUrl
+      })
+      
+      message.success(`${source}成功`)
+    } else {
+      message.error('图片上传失败')
+    }
+  } catch (error) {
+    console.error('Upload error:', error)
+    message.error(error.message || '图片上传失败')
+  } finally {
+    uploadingCamera.value = false
+    event.target.value = ''
+  }
 }
 
 function handleUploadChange(data) {
@@ -455,6 +662,90 @@ async function fetchEquipmentList() {
   margin-bottom: 0;
 }
 
+.upload-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mobile-camera-btn {
+  margin-top: 0;
+}
+
+.mobile-image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.mobile-image-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mobile-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-image-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.upload-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 15px;
+  color: #1a1a2e;
+}
+
+.upload-option:hover {
+  background: #f5f5f5;
+}
+
+.upload-option:first-child {
+  border-radius: 16px 16px 0 0;
+}
+
+.upload-option:last-child {
+  border-radius: 0 0 16px 16px;
+}
+
+.upload-option-cancel {
+  justify-content: center;
+  color: #9ca3af;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 4px;
+}
+
 .repair-table :deep(.n-data-table-th) {
   font-weight: 600;
   color: #6B7280;
@@ -549,5 +840,191 @@ async function fetchEquipmentList() {
 .action-buttons {
   display: flex;
   align-items: center;
+}
+
+/* ==================== 移动端卡片样式 ==================== */
+.mobile-repair-list {
+  padding: 8px 0;
+}
+
+.repair-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.repair-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.repair-card:hover {
+  background: white;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.repair-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.repair-equipment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1a1a2e;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.repair-card-body {
+  margin-bottom: 12px;
+}
+
+.repair-desc {
+  margin: 0 0 8px 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.repair-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.repair-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.mobile-pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 768px) {
+  .repairs-page {
+    padding: 0;
+  }
+  
+  .card-section {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .section-header.mobile-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .section-title {
+    font-size: 16px;
+  }
+  
+  /* 表单移动端适配 */
+  :deep(.n-form-item) {
+    margin-bottom: 16px;
+  }
+  
+  :deep(.n-form-item-label) {
+    font-size: 14px;
+  }
+  
+  :deep(.n-input__input) {
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  /* 弹窗移动端适配 */
+  .repair-detail {
+    padding: 4px;
+  }
+  
+  .detail-header h3 {
+    font-size: 18px;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+  }
+  
+  .detail-label {
+    width: auto;
+    font-size: 13px;
+  }
+  
+  .detail-value {
+    font-size: 14px;
+  }
+  
+  .image-list {
+    gap: 8px;
+  }
+  
+  .image-item {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-section {
+    padding: 12px;
+    border-radius: 10px;
+  }
+  
+  .section-title {
+    font-size: 15px;
+  }
+  
+  .repair-card {
+    padding: 12px;
+  }
+  
+  .repair-equipment {
+    font-size: 14px;
+  }
+  
+  .repair-desc {
+    font-size: 13px;
+  }
+  
+  /* 上传容器在小屏幕上的样式 */
+  .upload-container {
+    justify-content: flex-start;
+  }
+  
+  /* 上传提示文字 */
+  .upload-tip {
+    font-size: 11px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
 }
 </style>

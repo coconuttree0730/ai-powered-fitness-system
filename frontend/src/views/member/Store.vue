@@ -1,7 +1,7 @@
 <template>
   <div class="store-page">
     <!-- 分类标签 -->
-    <div class="tabs">
+    <div class="tabs" :class="{ 'tabs-mobile': isMobile }">
       <button 
         v-for="tab in tabs" 
         :key="tab.key"
@@ -12,8 +12,51 @@
       </button>
     </div>
 
-    <!-- 商品网格 -->
-    <n-grid :cols="4" :x-gap="20" :y-gap="20" class="product-grid">
+    <!-- 商品网格 - 移动端使用不规则瀑布流布局 -->
+    <div v-if="isMobile" class="mobile-product-masonry">
+      <div 
+        v-for="(product, index) in filteredProducts" 
+        :key="product.id"
+        class="masonry-item"
+        :class="{ 'item-large': index % 3 === 0, 'item-small': index % 3 !== 0 }"
+        @click="openProductDetail(product)"
+      >
+        <div class="masonry-card" :style="{ background: product.gradient }">
+          <div class="masonry-image-wrapper">
+            <img 
+              v-if="product.imageUrl" 
+              :src="product.imageUrl" 
+              :alt="product.name"
+              class="masonry-img"
+              @error="handleImageError($event, product)"
+            />
+            <div v-else class="masonry-icon" v-html="getCategoryIcon(product.category)"></div>
+          </div>
+          <div class="masonry-content">
+            <h4 class="masonry-title">{{ product.name }}</h4>
+            <p class="masonry-desc">{{ product.description }}</p>
+            <div class="masonry-price">
+              <span class="masonry-final">¥{{ calculateFinalPrice(product) }}</span>
+              <span v-if="product.originalPrice > calculateFinalPrice(product)" class="masonry-original">
+                ¥{{ product.originalPrice }}
+              </span>
+            </div>
+            <n-button 
+              type="primary" 
+              size="small"
+              class="masonry-btn"
+              :disabled="product.stock <= 0"
+              @click.stop="openOrderModal(product)"
+            >
+              {{ product.stock > 0 ? '购买' : '缺货' }}
+            </n-button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 桌面端商品网格 -->
+    <n-grid v-else :cols="gridCols" :x-gap="20" :y-gap="20" class="product-grid">
       <n-grid-item v-for="product in filteredProducts" :key="product.id">
         <div class="product-card" @click="openProductDetail(product)">
           <div class="product-image" :style="{ background: product.gradient }">
@@ -48,7 +91,7 @@
             
             <n-button 
               type="primary" 
-              size="small" 
+              size="small"
               class="buy-btn"
               :disabled="product.stock <= 0"
               @click.stop="openOrderModal(product)"
@@ -65,13 +108,64 @@
       <div class="section-header">
         <h3 class="section-title">我的订单</h3>
       </div>
-      <n-data-table
-        :columns="orderColumns"
-        :data="orderRecords"
-        :pagination="{ pageSize: 5 }"
-        :bordered="false"
-        class="record-table"
-      />
+      
+      <!-- 桌面端表格 -->
+      <div v-if="!isMobile" class="table-wrapper">
+        <n-data-table
+          :columns="orderColumns"
+          :data="orderRecords"
+          :pagination="{ pageSize: 5 }"
+          :bordered="false"
+          class="record-table"
+        />
+      </div>
+      
+      <!-- 移动端订单卡片列表 -->
+      <div v-else class="mobile-order-list">
+        <div v-if="orderRecords.length === 0" class="empty-orders">
+          <n-empty description="暂无订单记录" />
+        </div>
+        <div v-else class="order-cards">
+          <div 
+            v-for="(order, index) in orderRecords" 
+            :key="order.orderNo"
+            class="order-card"
+            :style="{ animationDelay: `${index * 80}ms` }"
+          >
+            <div class="order-card-header">
+              <div class="order-meta">
+                <span class="order-no">{{ order.orderNo }}</span>
+                <span class="order-time">{{ formatOrderTime(order.createdAt) }}</span>
+              </div>
+              <n-tag :type="getOrderStatusType(order.status)" size="small" round class="order-status">
+                {{ getOrderStatusText(order.status) }}
+              </n-tag>
+            </div>
+            <div class="order-card-body">
+              <div class="product-info-row">
+                <div class="product-icon-mini" :style="{ background: order.productGradient || '#f3f4f6' }">
+                  <span v-if="!order.productImage">{{ order.productName?.[0] || '商' }}</span>
+                  <img v-else :src="order.productImage" class="mini-img" />
+                </div>
+                <div class="product-detail">
+                  <h4 class="product-name-text">{{ order.productName }}</h4>
+                  <div class="price-row">
+                    <span class="final-price">¥{{ order.payAmount }}</span>
+                    <span v-if="order.pointsDiscount > 0" class="discount-tag-mini">
+                      省¥{{ order.pointsDiscount }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="order-card-footer" v-if="order.status === 'PENDING'">
+              <n-button type="primary" size="small" @click="handlePay(order)">
+                去支付
+              </n-button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 购买确认弹窗 -->
@@ -175,11 +269,37 @@
 </template>
 
 <script setup>
-import { ref, computed, h, watch, onMounted } from 'vue'
+import { ref, computed, h, watch, onMounted, onUnmounted } from 'vue'
 import { useMessage, NTag, NButton } from 'naive-ui'
 import { getProducts, calculatePrice, createOrder, getOrders } from '@/api/product'
 
 const message = useMessage()
+
+// 响应式状态
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
+const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024)
+
+// 计算网格列数
+const gridCols = computed(() => {
+  if (windowWidth.value < 480) return 1
+  if (windowWidth.value < 768) return 2
+  if (windowWidth.value < 1024) return 3
+  return 4
+})
+
+// 监听窗口大小变化
+function handleResize() {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 const activeTab = ref('all')
 const userPoints = ref(580)
@@ -334,6 +454,49 @@ const orderColumns = [
     }
   }
 ]
+
+// 格式化订单时间
+function formatOrderTime(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now - date
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  
+  if (days === 0) {
+    return '今天'
+  } else if (days === 1) {
+    return '昨天'
+  } else if (days < 7) {
+    return `${days}天前`
+  } else {
+    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+  }
+}
+
+// 获取订单状态类型
+function getOrderStatusType(status) {
+  const statusMap = {
+    'PENDING': 'warning',
+    'PAID': 'processing',
+    'SHIPPED': 'success',
+    'COMPLETED': 'default',
+    'CANCELLED': 'error'
+  }
+  return statusMap[status] || 'default'
+}
+
+// 获取订单状态文本
+function getOrderStatusText(status) {
+  const statusMap = {
+    'PENDING': '待支付',
+    'PAID': '已支付',
+    'SHIPPED': '已发货',
+    'COMPLETED': '已完成',
+    'CANCELLED': '已取消'
+  }
+  return statusMap[status] || status
+}
 
 // 商品图标
 function getProductIcon(type) {
@@ -789,5 +952,525 @@ onMounted(() => {
 .detail-row.total .final {
   color: #FF6B35;
   font-size: 24px;
+}
+
+/* ==================== 移动端瀑布流布局 ==================== */
+.mobile-product-masonry {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.masonry-item {
+  break-inside: avoid;
+}
+
+.masonry-item.item-large {
+  grid-column: span 2;
+}
+
+.masonry-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: white;
+}
+
+.masonry-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.masonry-image-wrapper {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-large .masonry-image-wrapper {
+  height: 180px;
+}
+
+.masonry-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.masonry-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.masonry-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.masonry-content {
+  padding: 12px;
+  background: white;
+}
+
+.masonry-title {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-large .masonry-title {
+  font-size: 16px;
+}
+
+.masonry-desc {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.item-large .masonry-desc {
+  font-size: 13px;
+  -webkit-line-clamp: 3;
+}
+
+.masonry-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.masonry-final {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.item-large .masonry-final {
+  font-size: 22px;
+}
+
+.masonry-original {
+  font-size: 12px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.masonry-btn {
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #FF6B35, #FF8C61);
+}
+
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 1024px) {
+  .store-page {
+    padding: 0;
+  }
+  
+  .tabs {
+    margin-bottom: 20px;
+  }
+  
+  .tab {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .product-image {
+    height: 140px;
+  }
+  
+  .card-section {
+    padding: 20px;
+    border-radius: 14px;
+  }
+  
+  .section-title {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    gap: 6px;
+    padding: 4px;
+    margin-bottom: 16px;
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab {
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .mobile-product-masonry {
+    gap: 10px;
+    padding: 0 2px;
+  }
+  
+  .masonry-image-wrapper {
+    height: 120px;
+  }
+  
+  .item-large .masonry-image-wrapper {
+    height: 150px;
+  }
+  
+  .masonry-content {
+    padding: 10px;
+  }
+  
+  .masonry-title {
+    font-size: 13px;
+  }
+  
+  .item-large .masonry-title {
+    font-size: 15px;
+  }
+  
+  .masonry-desc {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  
+  .masonry-final {
+    font-size: 16px;
+  }
+  
+  .item-large .masonry-final {
+    font-size: 20px;
+  }
+  
+  .card-section {
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 24px !important;
+  }
+  
+  .section-header {
+    margin-bottom: 16px;
+  }
+  
+  .section-title {
+    font-size: 15px;
+  }
+  
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  
+  .record-table {
+    min-width: 100%;
+  }
+  
+  /* 弹窗移动端适配 */
+  .order-content {
+    padding: 4px;
+  }
+  
+  .order-header {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .order-product {
+    gap: 12px;
+  }
+  
+  .product-image-small {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+  }
+  
+  .product-info-small h4 {
+    font-size: 15px;
+  }
+  
+  .product-info-small p {
+    font-size: 12px;
+  }
+  
+  .quantity-section {
+    padding: 10px 0;
+  }
+  
+  .points-section {
+    padding: 12px;
+  }
+  
+  .detail-row {
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  
+  .detail-row.total {
+    font-size: 14px;
+  }
+  
+  .detail-row.total .final {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-product-masonry {
+    gap: 8px;
+  }
+  
+  .masonry-image-wrapper {
+    height: 100px;
+  }
+  
+  .item-large .masonry-image-wrapper {
+    height: 130px;
+  }
+  
+  .masonry-content {
+    padding: 8px;
+  }
+  
+  .masonry-title {
+    font-size: 12px;
+  }
+  
+  .item-large .masonry-title {
+    font-size: 14px;
+  }
+  
+  .masonry-desc {
+    font-size: 10px;
+    -webkit-line-clamp: 1;
+  }
+  
+  .item-large .masonry-desc {
+    -webkit-line-clamp: 2;
+  }
+  
+  .masonry-final {
+    font-size: 14px;
+  }
+  
+  .item-large .masonry-final {
+    font-size: 18px;
+  }
+  
+  .tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .card-section {
+    padding: 14px;
+  }
+  
+  .section-title {
+    font-size: 14px;
+  }
+}
+
+/* ==================== 移动端订单卡片样式 ==================== */
+.mobile-order-list {
+  padding: 8px 0;
+}
+
+.empty-orders {
+  padding: 40px 0;
+}
+
+.order-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f3f4f6;
+  animation: slideInUp 0.4s ease forwards;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.order-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-no {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  font-family: monospace;
+}
+
+.order-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.order-status {
+  flex-shrink: 0;
+}
+
+.order-card-body {
+  margin-bottom: 12px;
+}
+
+.product-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-icon-mini {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #6b7280;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.product-icon-mini .mini-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-detail {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 6px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.final-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.discount-tag-mini {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #fee2e2;
+  color: #ef4444;
+  border-radius: 10px;
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .order-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  
+  .product-icon-mini {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+  
+  .product-name-text {
+    font-size: 13px;
+  }
+  
+  .final-price {
+    font-size: 16px;
+  }
+  
+  .order-no {
+    font-size: 12px;
+  }
 }
 </style>

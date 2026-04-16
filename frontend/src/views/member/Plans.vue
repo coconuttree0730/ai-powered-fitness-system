@@ -609,4 +609,183 @@ function formatDateTime(dateStr) {
   color: #4b5563;
   font-weight: 500;
 }
+
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 1024px) {
+  .fitness-plans-page {
+    padding: 16px;
+  }
+  
+  .page-header h2 {
+    font-size: 20px;
+  }
+  
+  .plan-view-modal :deep(.n-card__content) {
+    padding: 16px;
+  }
+  
+  .courses-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  
+  .course-card img {
+    height: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fitness-plans-page {
+    padding: 12px;
+  }
+  
+  .page-header {
+    margin-bottom: 16px;
+  }
+  
+  .page-header h2 {
+    font-size: 18px;
+  }
+  
+  .page-desc {
+    font-size: 13px;
+  }
+  
+  .plan-view-modal :deep(.n-card) {
+    max-width: 95vw !important;
+  }
+  
+  .plan-view-modal :deep(.n-card__content) {
+    padding: 12px;
+    max-height: 80vh;
+  }
+  
+  .user-info-card {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  
+  .info-item {
+    gap: 6px;
+  }
+  
+  .info-item .label {
+    font-size: 12px;
+  }
+  
+  .info-item .value {
+    font-size: 13px;
+  }
+  
+  .day-tabs :deep(.n-tabs-nav) {
+    margin-bottom: 12px;
+  }
+  
+  .day-tabs :deep(.n-tabs-tab) {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .focus-banner {
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  
+  .section {
+    margin-bottom: 20px;
+  }
+  
+  .section-title {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  
+  .courses-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .course-card img {
+    height: 140px;
+  }
+  
+  .course-info {
+    padding: 12px;
+  }
+  
+  .course-info h4 {
+    font-size: 14px;
+  }
+  
+  .exercise-item {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .exercise-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .exercise-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .exercise-info .name {
+    font-size: 13px;
+  }
+  
+  .equipment-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+  }
+  
+  .equipment-item {
+    padding: 10px;
+  }
+  
+  .equipment-item img {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fitness-plans-page {
+    padding: 8px;
+  }
+  
+  .page-header h2 {
+    font-size: 16px;
+  }
+  
+  .plan-table :deep(.n-data-table-th),
+  .plan-table :deep(.n-data-table-td) {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .user-info-card {
+    padding: 10px 12px;
+  }
+  
+  .info-item .value {
+    font-size: 12px;
+  }
+  
+  .day-tabs :deep(.n-tabs-tab) {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .course-card img {
+    height: 120px;
+  }
+}
 </style>
