@@ -3,9 +3,12 @@ package com.fitness.modules.plan.controller;
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.plan.model.dto.PlanGenerateDTO;
+import com.fitness.modules.plan.model.dto.PlanGenerationTask;
 import com.fitness.modules.plan.model.dto.SaveFitnessPlanDTO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 import com.fitness.modules.plan.service.FitnessPlanService;
+import com.fitness.modules.plan.service.PlanGenerationTaskManager;
+import com.fitness.modules.plan.service.impl.FitnessPlanServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,8 @@ import java.util.Map;
 public class FitnessPlanController {
 
     private final FitnessPlanService fitnessPlanService;
+    private final FitnessPlanServiceImpl fitnessPlanServiceImpl;
+    private final PlanGenerationTaskManager taskManager;
 
     /**
      * 生成健身计划————（从个人档案自动获取数据）————
@@ -98,6 +103,36 @@ public class FitnessPlanController {
         log.info("删除计划: userId={}, planId={}", userId, planId);
         fitnessPlanService.deletePlan(userId, planId);
         return Result.success();
+    }
+
+    /**
+     * 异步生成健身计划（从个人档案）
+     * 立即返回任务ID，前端轮询获取结果
+     */
+    @PostMapping("/generate-from-profile/async")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<Map<String, String>> generatePlanFromProfileAsync() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("异步生成健身计划请求: userId={}", userId);
+        PlanGenerationTask task = taskManager.createTask();
+        fitnessPlanServiceImpl.executeAsyncGeneration(userId, task.getTaskId());
+        Map<String, String> response = new java.util.HashMap<>();
+        response.put("taskId", task.getTaskId());
+        response.put("status", task.getStatus().name());
+        return Result.success(response);
+    }
+
+    /**
+     * 查询异步生成任务状态
+     */
+    @GetMapping("/generate-from-profile/async/{taskId}")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<PlanGenerationTask> getGenerationTaskStatus(@PathVariable String taskId) {
+        PlanGenerationTask task = taskManager.getTask(taskId);
+        if (task == null) {
+            return Result.error(404, "任务不存在或已过期");
+        }
+        return Result.success(task);
     }
 
     @PostMapping("/save")

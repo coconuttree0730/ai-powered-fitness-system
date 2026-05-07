@@ -76,11 +76,13 @@ export function generateFitnessPlan(data) {
 /**
  * 从个人档案生成健身计划（返回结构化JSON给前端渲染）
  * 后端自动从用户档案获取身高、体重、目标、经验等数据
+ * 注意：此接口调用AI生成计划，耗时较长，设置120秒超时
  */
 export function generateFitnessPlanFromProfile() {
   return request({
     url: '/plans/generate-from-profile',
-    method: 'post'
+    method: 'post',
+    timeout: 120000
   })
 }
 
@@ -102,6 +104,29 @@ export function saveFitnessPlan(data) {
 export function getMyFitnessPlans() {
   return request({
     url: '/chat/fitness-plan/my',
+    method: 'get'
+  })
+}
+
+/**
+ * 异步生成健身计划（从个人档案）
+ * 立即返回 {taskId, status}，前端轮询获取结果
+ */
+export function startAsyncPlanGeneration() {
+  return request({
+    url: '/plans/generate-from-profile/async',
+    method: 'post'
+  })
+}
+
+/**
+ * 查询异步生成任务状态
+ * @param {string} taskId - 任务ID
+ * @returns {Object} {taskId, status, result, errorMessage, createTime, completeTime}
+ */
+export function getGenerationTaskStatus(taskId) {
+  return request({
+    url: `/plans/generate-from-profile/async/${taskId}`,
     method: 'get'
   })
 }

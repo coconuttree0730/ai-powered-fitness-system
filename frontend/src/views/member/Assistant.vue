@@ -31,7 +31,14 @@
                     <n-button size="small" @click="regeneratePlan">重新生成</n-button>
                   </div>
                 </div>
-                <div v-else class="markdown-content" v-html="getRenderedContent(msg)"></div>
+                <div v-else-if="msg.type === 'ai'" class="markdown-content markstream-wrapper">
+                  <MarkdownRender
+                    :custom-id="'chat-' + (msg.id || index)"
+                    :nodes="msg.nodes"
+                    :final="msg.isFinal !== false"
+                  />
+                </div>
+                <div v-else class="markdown-content" v-html="msg.content.replace(/\n/g, '<br>')"></div>
               </div>
             </template>
           </div>
@@ -375,8 +382,8 @@ import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import { useMessage, NIcon } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
+import MarkdownRender, { getMarkdown, parseMarkdownToStructure } from 'markstream-vue'
+import 'markstream-vue/index.css'
 import {
   SendOutline,
   HelpCircleOutline,
@@ -398,7 +405,9 @@ import {
   getSessionDetail,
   getSessionMessages,
   generateFitnessPlan,
-  generateFitnessPlanFromProfile
+  generateFitnessPlanFromProfile,
+  startAsyncPlanGeneration,
+  getGenerationTaskStatus
 } from '@/api/chat'
 import { saveFitnessPlan as savePlanToServer, getMyPlans, getProfile } from '@/api/plan'
 import { getCurrentUser } from '@/api/user'
@@ -410,9 +419,6 @@ const message = useMessage()
 const authStore = useAuthStore()
 const messageContainer = ref(null)
 const currentSessionId = ref(null)
-
-// 调试：检查 marked 是否可用
-console.log('marked import check:', typeof marked, marked ? 'available' : 'not available')
 
 // 消息加载相关状态
 const loadingMore = ref(false)
@@ -443,6 +449,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkScreenSize)
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 // 初始化聊天 - 加载用户的会话列表
@@ -507,12 +514,13 @@ async function loadMessages(isLoadMore = false) {
     const res = await getSessionMessages(currentSessionId.value, params)
 
     if (res && res.length > 0) {
-      // 转换消息格式，确保ID是字符串，并预渲染 Markdown
+      // 转换消息格式，确保ID是字符串
       const formattedMessages = res.map(msg => ({
         id: String(msg.id),
         type: msg.role === 'user' ? 'user' : 'ai',
         content: msg.content,
-        renderedContent: msg.role !== 'user' ? formatMessage(msg.content) : '',
+        nodes: msg.role !== 'user' ? parseToNodes(msg.content, true) : undefined,
+        isFinal: true,
         createdAt: msg.createdAt
       }))
 
@@ -578,6 +586,13 @@ const sending = ref(false)
 const isAiTyping = ref(false)
 const abortController = ref(null)
 
+const md = getMarkdown()
+
+function parseToNodes(content, isFinal = false) {
+  if (!content) return []
+  return parseMarkdownToStructure(content, md, { final: isFinal })
+}
+
 const messages = ref([])
 
 // 欢迎消息
@@ -586,7 +601,8 @@ const welcomeMessage = {
   id: 'welcome',
   type: 'ai',
   content: welcomeMessageRaw,
-  renderedContent: ''
+  nodes: parseToNodes(welcomeMessageRaw, true),
+  isFinal: true
 }
 
 const quickQuestions = [
@@ -598,61 +614,7 @@ const quickQuestions = [
   '热身动作推荐'
 ]
 
-onMounted(() => {
-  // 初始化欢迎消息的渲染内容
-  welcomeMessage.renderedContent = formatMessage(welcomeMessageRaw)
-})
 
-// 缓存已解析的 Markdown 内容
-const parsedContentCache = new Map()
-
-function formatMessage(content) {
-  if (!content) return ''
-
-  // 使用缓存避免重复解析
-  if (parsedContentCache.has(content)) {
-    return parsedContentCache.get(content)
-  }
-
-  try {
-    // marked v17+ 需要使用 parseSync 或正确处理返回值
-    const rawHtml = marked.parse(content, {
-      breaks: true,
-      gfm: true,
-      async: false
-    })
-
-    // 确保 rawHtml 是字符串（处理可能的 Promise）
-    const htmlString = typeof rawHtml === 'string' ? rawHtml : String(rawHtml)
-    const sanitizedHtml = DOMPurify.sanitize(htmlString)
-
-    // 缓存结果（限制缓存大小以避免内存泄漏）
-    if (parsedContentCache.size > 100) {
-      const firstKey = parsedContentCache.keys().next().value
-      parsedContentCache.delete(firstKey)
-    }
-    parsedContentCache.set(content, sanitizedHtml)
-
-    return sanitizedHtml
-  } catch (error) {
-    console.error('Markdown parsing error:', error)
-    return content.replace(/\n/g, '<br>')
-  }
-}
-
-// 获取消息的渲染内容 - 优先使用预渲染的内容
-function getRenderedContent(msg) {
-  // AI 消息：如果有预渲染的内容（包括空字符串），直接返回
-  if (msg.type === 'ai') {
-    // 如果 renderedContent 已定义（包括空字符串），返回它
-    if ('renderedContent' in msg) {
-      return msg.renderedContent || formatMessage(msg.content)
-    }
-    return formatMessage(msg.content)
-  }
-  // 用户消息：直接返回内容（不需要 Markdown 渲染）
-  return msg.content.replace(/\n/g, '<br>')
-}
 
 function scrollToBottom() {
   nextTick(() => {
@@ -700,7 +662,7 @@ async function sendMessage() {
   scrollToBottom()
 
   const aiMessageIndex = messages.value.length
-  messages.value.push({ type: 'ai', content: '', renderedContent: '' })
+  messages.value.push({ type: 'ai', content: '', nodes: [], isFinal: false })
 
   abortController.value = new AbortController()
   let isCompleted = false
@@ -722,7 +684,7 @@ async function sendMessage() {
       console.warn('请求超时，强制重置状态')
       resetSending()
     }
-  }, 30000)
+  }, 120000)
 
   try {
     const response = await sendMessageStream({
@@ -749,13 +711,11 @@ async function sendMessage() {
         const { done, value } = await reader.read()
         if (done) {
           console.log('SSE 流正常结束')
-          // 流结束时立即重置发送状态，避免暂停按钮延迟消失
           resetSending()
           break
         }
 
         chunkCount++
-        // 接收到第一个数据块时，隐藏"正在输入"动画
         if (chunkCount === 1) {
           isAiTyping.value = false
         }
@@ -774,28 +734,28 @@ async function sendMessage() {
           }
         }
 
-        // 使用 Object.assign 确保响应式更新
-        const renderedHtml = formatMessage(fullContent)
         messages.value[aiMessageIndex] = {
-          ...messages.value[aiMessageIndex],
+          type: 'ai',
           content: fullContent,
-          renderedContent: renderedHtml
+          nodes: parseToNodes(fullContent, false),
+          isFinal: false
         }
         scrollToBottom()
       }
 
       if (buffer.trim().startsWith('data:')) {
         fullContent += buffer.trim().slice(5).trim()
-        const renderedHtml = formatMessage(fullContent)
-        messages.value[aiMessageIndex] = {
-          ...messages.value[aiMessageIndex],
-          content: fullContent,
-          renderedContent: renderedHtml
-        }
-        scrollToBottom()
       }
 
-      console.log(`共接收 ${chunkCount} 个数据块`)
+      messages.value[aiMessageIndex] = {
+        type: 'ai',
+        content: fullContent,
+        nodes: parseToNodes(fullContent, true),
+        isFinal: true
+      }
+      scrollToBottom()
+
+      console.log(`共接收 ${chunkCount} 个数据块，最终内容长度: ${fullContent.length}`)
     } finally {
       reader.releaseLock()
     }
@@ -808,9 +768,10 @@ async function sendMessage() {
       message.error('发送消息失败，请稍后重试')
       const errorContent = '抱歉，我遇到了一些问题，请稍后再试。'
       messages.value[aiMessageIndex] = {
-        ...messages.value[aiMessageIndex],
+        type: 'ai',
         content: errorContent,
-        renderedContent: formatMessage(errorContent)
+        nodes: parseToNodes(errorContent, true),
+        isFinal: true
       }
     }
   } finally {
@@ -904,45 +865,90 @@ const experienceOptions = [
   { label: '高级', value: '高级' }
 ]
 
-// 从个人档案生成健身计划（无需手动选择）
+// 计划轮询定时器
+let pollTimer = null
+
+// 从个人档案生成健身计划（异步+轮询）
 async function generatePlanFromProfile() {
   generatingPlan.value = true
 
-  // 启用计划生成动画
   generatingPlanPreview.value = true
   planGenStep.value = 0
   startPlanGenAnimation()
 
   try {
-    // 调用后端API，后端会自动从个人档案获取数据并返回结构化JSON
-    const res = await generateFitnessPlanFromProfile()
-    
-    console.log('=== 后端返回的健身计划数据 ===')
-    console.log('返回数据类型:', typeof res)
-    console.log('返回数据:', JSON.stringify(res, null, 2))
-    console.log('=== 数据结束 ===')
-
-    // 完成步骤动画
-    completePlanGenAnimation()
-
-    if (res) {
-      // 后端已返回完整结构化数据，直接使用
-      fitnessPlanData.value = res
-      showPlanPreview.value = true
-
-      console.log('健身计划数据已设置:', fitnessPlanData.value)
-      console.log('预览组件显示状态:', showPlanPreview.value)
-
-      message.success('健身计划生成成功！')
+    const { taskId } = await startAsyncPlanGeneration()
+    if (!taskId) {
+      throw new Error('未能获取任务ID')
     }
+
+    await pollTaskStatus(taskId)
   } catch (error) {
     console.error('生成计划失败:', error)
     stopPlanGenAnimation()
+    generatingPlanPreview.value = false
     message.error(error.message || '生成计划失败，请稍后重试')
   } finally {
     generatingPlan.value = false
-    generatingPlanPreview.value = false
   }
+}
+
+async function pollTaskStatus(taskId) {
+  const maxAttempts = 60
+  const intervalMs = 2000
+  let attempts = 0
+
+  return new Promise((resolve, reject) => {
+    pollTimer = setInterval(async () => {
+      attempts++
+      try {
+        const task = await getGenerationTaskStatus(taskId)
+        if (!task) {
+          clearInterval(pollTimer)
+          stopPlanGenAnimation()
+          generatingPlanPreview.value = false
+          reject(new Error('无法获取任务状态'))
+          return
+        }
+
+        if (task.status === 'COMPLETED') {
+          clearInterval(pollTimer)
+          completePlanGenAnimation()
+          generatingPlanPreview.value = false
+
+          if (task.result) {
+            fitnessPlanData.value = task.result
+            showPlanPreview.value = true
+            message.success('健身计划生成成功！')
+            resolve(task.result)
+          } else {
+            reject(new Error('任务完成但无结果数据'))
+          }
+          return
+        }
+
+        if (task.status === 'FAILED') {
+          clearInterval(pollTimer)
+          stopPlanGenAnimation()
+          generatingPlanPreview.value = false
+          reject(new Error(task.errorMessage || '生成计划失败'))
+          return
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollTimer)
+          stopPlanGenAnimation()
+          generatingPlanPreview.value = false
+          reject(new Error('生成超时，请稍后重试'))
+        }
+      } catch (error) {
+        clearInterval(pollTimer)
+        stopPlanGenAnimation()
+        generatingPlanPreview.value = false
+        reject(error)
+      }
+    }, intervalMs)
+  })
 }
 
 // 从API响应构建预览数据（后端已返回完整结构化数据）
@@ -3084,5 +3090,121 @@ async function regeneratePlan() {
   .plan-detail-item {
     font-size: 12px;
   }
+}
+
+/* markstream-vue 样式适配 */
+.markstream-wrapper :deep(.markstream-vue) {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1A1A2E;
+}
+
+.markstream-wrapper :deep(.markstream-vue p) {
+  margin: 8px 0;
+}
+
+.markstream-wrapper :deep(.markstream-vue h1),
+.markstream-wrapper :deep(.markstream-vue h2),
+.markstream-wrapper :deep(.markstream-vue h3),
+.markstream-wrapper :deep(.markstream-vue h4) {
+  margin: 16px 0 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.markstream-wrapper :deep(.markstream-vue h1) {
+  font-size: 18px;
+  border-bottom: 1px solid #E5E7EB;
+  padding-bottom: 8px;
+}
+
+.markstream-wrapper :deep(.markstream-vue h2) {
+  font-size: 16px;
+}
+
+.markstream-wrapper :deep(.markstream-vue h3) {
+  font-size: 15px;
+}
+
+.markstream-wrapper :deep(.markstream-vue ul),
+.markstream-wrapper :deep(.markstream-vue ol) {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.markstream-wrapper :deep(.markstream-vue li) {
+  margin: 4px 0;
+}
+
+.markstream-wrapper :deep(.markstream-vue code) {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  color: #E55A2B;
+}
+
+.markstream-wrapper :deep(.markstream-vue pre) {
+  background: #1A1A2E;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.markstream-wrapper :deep(.markstream-vue pre code) {
+  background: transparent;
+  color: #E5E7EB;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.markstream-wrapper :deep(.markstream-vue blockquote) {
+  border-left: 4px solid #FF6B35;
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: rgba(255, 107, 53, 0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+.markstream-wrapper :deep(.markstream-vue table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.markstream-wrapper :deep(.markstream-vue th),
+.markstream-wrapper :deep(.markstream-vue td) {
+  padding: 8px 12px;
+  border: 1px solid #E5E7EB;
+  text-align: left;
+}
+
+.markstream-wrapper :deep(.markstream-vue th) {
+  background: #F8FAFC;
+  font-weight: 600;
+}
+
+.markstream-wrapper :deep(.markstream-vue a) {
+  color: #FF6B35;
+  text-decoration: none;
+}
+
+.markstream-wrapper :deep(.markstream-vue a:hover) {
+  text-decoration: underline;
+}
+
+.markstream-wrapper :deep(.markstream-vue strong) {
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.markstream-wrapper :deep(.markstream-vue hr) {
+  border: none;
+  border-top: 1px solid #E5E7EB;
+  margin: 16px 0;
 }
 </style>

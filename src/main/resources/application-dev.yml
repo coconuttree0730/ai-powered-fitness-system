@@ -15,9 +15,9 @@ spring:
   # Redis 配置
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:myRedisPass123}
+      host: localhost
+      port: 6379
+      password: myRedisPass123
       database: 0
       timeout: 5000ms
       lettuce:

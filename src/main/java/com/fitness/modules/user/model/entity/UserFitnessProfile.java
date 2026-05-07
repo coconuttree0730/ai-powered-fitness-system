@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Data
 @TableName("user_fitness_profile")
 public class UserFitnessProfile {
-
     /**
      * 档案ID
      */

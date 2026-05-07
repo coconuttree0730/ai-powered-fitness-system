@@ -79,6 +79,26 @@ public class GlobalExceptionHandler {
         return Result.error(ErrorCode.FORBIDDEN);
     }
 
+    /**
+     * 处理客户端连接断开异常（AsyncRequestNotUsableException）
+     * 这种情况通常是因为客户端超时或刷新页面导致的，不需要记录为错误
+     */
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsableException(org.springframework.web.context.request.async.AsyncRequestNotUsableException e) {
+        // 客户端断开连接，不需要返回任何内容，只记录调试日志
+        log.debug("客户端断开连接: {}", e.getMessage());
+    }
+
+    /**
+     * 处理客户端中止连接异常（ClientAbortException）
+     * 这是Tomcat层面的客户端断开，通常由超时或用户刷新引起
+     */
+    @ExceptionHandler(org.apache.catalina.connector.ClientAbortException.class)
+    public void handleClientAbortException(org.apache.catalina.connector.ClientAbortException e) {
+        // 客户端中止连接，不需要返回任何内容，只记录调试日志
+        log.debug("客户端中止连接: {}", e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
         log.error("系统异常: ", e);

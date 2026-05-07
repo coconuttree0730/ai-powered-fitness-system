@@ -13,9 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @RestController
@@ -24,6 +28,7 @@ import java.util.List;
 public class ChatAssistantController {
 
     private final ChatAssistantService chatAssistantService;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @PostMapping("/sessions")
     @PreAuthorize("hasRole('MEMBER')")
@@ -42,16 +47,46 @@ public class ChatAssistantController {
     }
 
     @PostMapping(value = "/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
+    public SseEmitter sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            return Flux.error(new org.springframework.security.access.AccessDeniedException("未登录或登录已过期"));
+            throw new org.springframework.security.access.AccessDeniedException("未登录或登录已过期");
         }
-        //编程式鉴权
         if (!SecurityUtils.hasRole("MEMBER")) {
-            return Flux.error(new org.springframework.security.access.AccessDeniedException("没有权限访问该资源"));
+            throw new org.springframework.security.access.AccessDeniedException("没有权限访问该资源");
         }
-        return chatAssistantService.sendMessageStream(userId, dto);
+
+        // 创建SseEmitter，设置超时为0（不超时）
+        SseEmitter emitter = new SseEmitter(0L);
+
+        // 使用线程池异步处理Flux流
+        executorService.execute(() -> {
+            try {
+                chatAssistantService.sendMessageStream(userId, dto)
+                    .doOnNext(chunk -> {
+                        try {
+                            emitter.send(SseEmitter.event().data(chunk));
+                        } catch (IOException e) {
+                            log.error("发送SSE数据失败", e);
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .doOnError(error -> {
+                        log.error("流式处理失败", error);
+                        emitter.completeWithError(error);
+                    })
+                    .doOnComplete(() -> {
+                        log.info("流式处理完成");
+                        emitter.complete();
+                    })
+                    .blockLast(); // 阻塞等待Flux完成
+            } catch (Exception e) {
+                log.error("处理流式请求失败", e);
+                emitter.completeWithError(e);
+            }
+        });
+
+        return emitter;
     }
 
     @GetMapping("/sessions")

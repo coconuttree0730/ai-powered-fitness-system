@@ -18,6 +18,7 @@ import com.fitness.modules.plan.model.entity.FitnessPlanDetail;
 import com.fitness.modules.plan.model.vo.PlanDetailVO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 import com.fitness.modules.plan.service.FitnessPlanService;
+import com.fitness.modules.plan.service.PlanGenerationTaskManager;
 import com.fitness.modules.user.model.vo.UserFitnessProfileVO;
 import com.fitness.modules.user.service.UserFitnessProfileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,6 +52,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     private final CourseService courseService;
     private final EquipmentService equipmentService;
     private final ObjectMapper objectMapper;
+    private final PlanGenerationTaskManager taskManager;
 
     // 缓存课程和器械数据，用于校验LLM返回的数据
     private List<CourseCardVO> cachedCourses;
@@ -147,6 +149,18 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
         log.info("从个人档案生成健身计划成功: userId={}", userId);
         return result;
+    }
+
+    @org.springframework.scheduling.annotation.Async
+    public void executeAsyncGeneration(Long userId, String taskId) {
+        try {
+            taskManager.markProcessing(taskId);
+            Map<String, Object> result = generatePlanFromProfile(userId);
+            taskManager.markCompleted(taskId, result);
+        } catch (Exception e) {
+            log.error("异步生成健身计划失败: userId={}, taskId={}, error={}", userId, taskId, e.getMessage(), e);
+            taskManager.markFailed(taskId, e.getMessage());
+        }
     }
 
     private String escapeJson(String str) {

@@ -45,7 +45,7 @@ spring:
       chat:
         enabled: true
         options:
-          model: ${AI_DASHSCOPE_MODEL:tongyi-xiaomi-analysis-flash}
+          model: ${AI_DASHSCOPE_MODEL:glm-5.1}
           temperature: 0.7
           top-p: 0.8
           max-tokens: 5000
@@ -124,6 +124,8 @@ logging:
   level:
     com.fitness: INFO
     org.springframework.security: INFO
+    com.alibaba.cloud.ai.graph: WARN
+    com.alibaba.cloud.ai.graph.utils: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

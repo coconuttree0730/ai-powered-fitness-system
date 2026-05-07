@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.ai.service.AIService;
+import com.fitness.modules.chat.agent.JianXiaoZhuAgentService;
 import com.fitness.modules.chat.mapper.ChatMessageMapper;
 import com.fitness.modules.chat.mapper.ChatSessionMapper;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
@@ -65,6 +66,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     private final FitnessPlanDetailMapper fitnessPlanDetailMapper;
     private final CourseService courseService;
     private final EquipmentService equipmentService;
+    private final JianXiaoZhuAgentService jianXiaoZhuAgentService;
 
     // 最大上下文消息数（消息框可显示的消息数）
     //private static final int MAX_CONTEXT_MESSAGES = 10;
@@ -109,7 +111,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         chatContextService.saveMessageToDatabase(userMessage);
         chatContextService.addMessage(session.getId(), userMessage);
 
-        String aiResponse = callAIWithRAG(session.getId(), dto.getContent());
+        String aiResponse = jianXiaoZhuAgentService.chat(userId, session.getId(), dto.getContent());
 
         ChatMessage assistantMessage = new ChatMessage();
         assistantMessage.setSessionId(session.getId());
@@ -152,18 +154,13 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         chatContextService.saveMessageToDatabase(userMessage);
         chatContextService.addMessage(session.getId(), userMessage);
 
-        // 使用RAG检索构建提示词
-        String fullPrompt = buildRAGPrompt(dto.getContent());
-
         StringBuilder fullResponse = new StringBuilder();
 
-        // 保存当前安全上下文，用于在异步线程中恢复
         SecurityContext securityContext = SecurityContextHolder.getContext();
 
-        return aiService.streamChat(fullPrompt)
+        return jianXiaoZhuAgentService.streamChat(userId, session.getId(), dto.getContent())
             .doOnNext(fullResponse::append)
             .doOnComplete(() -> {
-                // 在异步线程中恢复安全上下文
                 SecurityContextHolder.setContext(securityContext);
                 try {
                     ChatMessage assistantMessage = new ChatMessage();
@@ -187,7 +184,6 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
                 }
             })
             .doOnError(error -> {
-                // 在异步线程中恢复安全上下文以记录错误
                 SecurityContextHolder.setContext(securityContext);
                 try {
                     log.error("流式发送消息失败: sessionId={}, userId={}, error={}", 
@@ -197,7 +193,6 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
                 }
             })
             .onErrorResume(error -> {
-                // 返回友好的错误消息流
                 return Flux.just("抱歉，AI服务暂时不可用，请稍后重试。");
             })
             .subscribeOn(Schedulers.boundedElastic());
