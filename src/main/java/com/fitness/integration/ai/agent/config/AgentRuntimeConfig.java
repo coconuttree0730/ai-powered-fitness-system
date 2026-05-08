@@ -12,6 +12,7 @@ import com.fitness.modules.chat.tools.MembershipQueryTools;
 import com.fitness.modules.chat.tools.ProductQueryTools;
 import com.fitness.modules.chat.tools.ProfileQueryTools;
 import com.fitness.modules.chat.tools.RagQueryTool;
+import com.fitness.modules.chat.tools.DateTimeQueryTools;
 import com.fitness.modules.chat.tools.WeatherQueryTools;
 import lombok.RequiredArgsConstructor;
 import org.redisson.Redisson;
@@ -36,6 +37,7 @@ public class AgentRuntimeConfig {
     private final ProductQueryTools productQueryTools;
     private final CoachQueryTools coachQueryTools;
     private final ProfileQueryTools profileQueryTools;
+    private final DateTimeQueryTools dateTimeQueryTools;
     private final WeatherQueryTools weatherQueryTools;
     private final LocationQueryTools locationQueryTools;
     private final RagQueryTool ragQueryTool;
@@ -98,6 +100,7 @@ public class AgentRuntimeConfig {
                         productQueryTools,
                         coachQueryTools,
                         profileQueryTools,
+                        dateTimeQueryTools,
                         weatherQueryTools,
                         locationQueryTools,
                         ragQueryTool

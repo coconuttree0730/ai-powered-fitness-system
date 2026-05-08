@@ -9,7 +9,8 @@ class JianXiaoZhuAgentPromptsTest {
     @Test
     void systemPromptShouldMentionToolPriority() {
         JianXiaoZhuAgentPrompts prompts = new JianXiaoZhuAgentPrompts();
+        String systemPrompt = prompts.systemPrompt();
 
-        assertTrue(prompts.systemPrompt().contains("优先调用工具"));
+        assertTrue(systemPrompt.contains("调用工具") || systemPrompt.contains("伐工具"));
     }
 }

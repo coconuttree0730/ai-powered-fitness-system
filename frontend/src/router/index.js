@@ -179,7 +179,13 @@ const routes = [
         path: 'courses',
         name: 'CourseManagement',
         component: () => import('@/views/admin/Courses.vue'),
-        meta: { title: '课程管理' }
+        meta: { title: '公开课管理' }
+      },
+      {
+        path: 'video-courses',
+        name: 'VideoCourseManagement',
+        component: () => import('@/views/admin/VideoCourses.vue'),
+        meta: { title: '视频课程管理' }
       },
       {
         path: 'membership-cards',

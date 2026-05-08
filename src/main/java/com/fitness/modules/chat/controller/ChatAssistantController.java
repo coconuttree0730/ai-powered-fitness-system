@@ -1,10 +1,13 @@
 package com.fitness.modules.chat.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
 import com.fitness.modules.chat.model.vo.ChatMessageVO;
 import com.fitness.modules.chat.model.vo.ChatSessionVO;
+import com.fitness.modules.chat.model.vo.ChatStreamEventVO;
 import com.fitness.modules.chat.model.vo.FitnessPlanCardVO;
 import com.fitness.modules.chat.service.ChatAssistantService;
 import jakarta.validation.Valid;
@@ -14,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.concurrent.Executors;
 public class ChatAssistantController {
 
     private final ChatAssistantService chatAssistantService;
+    private final ObjectMapper objectMapper;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @PostMapping("/sessions")
@@ -50,42 +53,28 @@ public class ChatAssistantController {
     public SseEmitter sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            throw new org.springframework.security.access.AccessDeniedException("未登录或登录已过期");
+            throw new org.springframework.security.access.AccessDeniedException("User is not authenticated");
         }
         if (!SecurityUtils.hasRole("MEMBER")) {
-            throw new org.springframework.security.access.AccessDeniedException("没有权限访问该资源");
+            throw new org.springframework.security.access.AccessDeniedException("Access denied");
         }
 
-        // 创建SseEmitter，设置超时为0（不超时）
         SseEmitter emitter = new SseEmitter(0L);
-
-        // 使用线程池异步处理Flux流
         executorService.execute(() -> {
             try {
                 chatAssistantService.sendMessageStream(userId, dto)
-                    .doOnNext(chunk -> {
-                        try {
-                            emitter.send(SseEmitter.event().data(chunk));
-                        } catch (IOException e) {
-                            log.error("发送SSE数据失败", e);
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .doOnError(error -> {
-                        log.error("流式处理失败", error);
-                        emitter.completeWithError(error);
-                    })
-                    .doOnComplete(() -> {
-                        log.info("流式处理完成");
-                        emitter.complete();
-                    })
-                    .blockLast(); // 阻塞等待Flux完成
-            } catch (Exception e) {
-                log.error("处理流式请求失败", e);
-                emitter.completeWithError(e);
+                        .doOnNext(event -> sendEvent(emitter, event.getType(), event))
+                        .doOnComplete(() -> {
+                            sendEvent(emitter, "done", ChatStreamEventVO.done());
+                            emitter.complete();
+                        })
+                        .blockLast();
+            } catch (Exception ex) {
+                log.error("Failed to process chat stream", ex);
+                sendEvent(emitter, "error", ChatStreamEventVO.error("抱歉，健小助暂时无法完成本次回答，请稍后重试。"));
+                emitter.complete();
             }
         });
-
         return emitter;
     }
 
@@ -97,12 +86,6 @@ public class ChatAssistantController {
         return Result.success(sessions);
     }
 
-    /**
-     * 获取会话详情
-     *
-     * @param sessionId 会话ID
-     * @return 会话详情
-     */
     @GetMapping("/sessions/{sessionId}")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<ChatSessionVO> getSessionDetail(@PathVariable Long sessionId) {
@@ -130,14 +113,6 @@ public class ChatAssistantController {
         return Result.success(messages);
     }
 
-    /**
-     * 生成健身计划卡片
-     *
-     * @param goal       健身目标
-     * @param bodyPart   训练部位
-     * @param experience 经验水平
-     * @return 健身计划卡片
-     */
     @PostMapping("/fitness-plan/generate")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<FitnessPlanCardVO> generateFitnessPlan(
@@ -145,38 +120,39 @@ public class ChatAssistantController {
             @RequestParam String bodyPart,
             @RequestParam String experience) {
         Long userId = SecurityUtils.getCurrentUserId();
-        log.info("生成健身计划卡片请求: userId={}, goal={}, bodyPart={}, experience={}",
+        log.info("Generate fitness plan request: userId={}, goal={}, bodyPart={}, experience={}",
                 userId, goal, bodyPart, experience);
         FitnessPlanCardVO planCard = chatAssistantService.generateFitnessPlanCard(userId, goal, bodyPart, experience);
         return Result.success(planCard);
     }
 
-    /**
-     * 保存健身计划
-     *
-     * @param planCard 健身计划卡片
-     * @return 保存的计划ID
-     */
     @PostMapping("/fitness-plan/save")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Long> saveFitnessPlan(@RequestBody FitnessPlanCardVO planCard) {
         Long userId = SecurityUtils.getCurrentUserId();
-        log.info("保存健身计划请求: userId={}, planName={}", userId, planCard.getPlanName());
+        log.info("Save fitness plan request: userId={}, planName={}", userId, planCard.getPlanName());
         Long planId = chatAssistantService.saveFitnessPlan(userId, planCard);
         return Result.success(planId);
     }
 
-    /**
-     * 获取我的健身计划列表
-     *
-     * @return 健身计划卡片列表
-     */
     @GetMapping("/fitness-plan/my")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<List<FitnessPlanCardVO>> getMyFitnessPlans() {
         Long userId = SecurityUtils.getCurrentUserId();
-        log.info("获取我的健身计划列表: userId={}", userId);
+        log.info("List my fitness plans: userId={}", userId);
         List<FitnessPlanCardVO> plans = chatAssistantService.getUserPlans(userId);
         return Result.success(plans);
+    }
+
+    private void sendEvent(SseEmitter emitter, String eventName, ChatStreamEventVO payload) {
+        try {
+            emitter.send(SseEmitter.event()
+                    .name(eventName)
+                    .data(objectMapper.writeValueAsString(payload)));
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialize SSE payload", ex);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to send SSE payload", ex);
+        }
     }
 }

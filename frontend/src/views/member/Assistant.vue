@@ -14,40 +14,54 @@
           <div v-for="(msg, index) in messages" :key="msg.id || index"
                :class="['message', msg.type]">
             <!-- 跳过渲染空的 AI 消息（当正在显示"正在输入"动画时） -->
-            <template v-if="!(msg.type === 'ai' && !msg.content && isAiTyping)">
+            <template v-if="!(msg.type === 'ai' && !msg.content && !msg.statusText && isAiTyping)">
               <div class="message-avatar">{{ msg.type === 'ai' ? 'AI' : userAvatar }}</div>
-              <div class="message-content">
-                <div v-if="msg.isPlan" class="plan-message">
-                  <div class="plan-header">
-                    <svg class="emoji-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> {{ msg.title }}
-                  </div>
-                  <div class="plan-content">
-                    <div v-for="(day, idx) in msg.planDays" :key="idx" class="plan-day">
-                      <strong>{{ day.day }}:</strong> {{ day.content }}
+              <div class="message-bubble-wrapper">
+                <!-- 状态文字显示在气泡上方 -->
+                <div v-if="msg.type === 'ai' && msg.statusText" class="stream-status">{{ msg.statusText }}</div>
+                <div class="message-content">
+                  <div v-if="msg.isPlan" class="plan-message">
+                    <div class="plan-header">
+                      <svg class="emoji-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> {{ msg.title }}
+                    </div>
+                    <div class="plan-content">
+                      <div v-for="(day, idx) in msg.planDays" :key="idx" class="plan-day">
+                        <strong>{{ day.day }}:</strong> {{ day.content }}
+                      </div>
+                    </div>
+                    <div class="plan-actions">
+                      <n-button type="primary" size="small" @click="usePlan">使用此计划</n-button>
+                      <n-button size="small" @click="regeneratePlan">重新生成</n-button>
                     </div>
                   </div>
-                  <div class="plan-actions">
-                    <n-button type="primary" size="small" @click="usePlan">使用此计划</n-button>
-                    <n-button size="small" @click="regeneratePlan">重新生成</n-button>
+                  <div v-else-if="msg.type === 'ai'" class="ai-stream-content">
+                    <div v-if="msg.content || msg.isFinal" class="markdown-content markstream-wrapper">
+                      <MarkdownRender
+                        :custom-id="'chat-' + (msg.id || index)"
+                        :nodes="msg.nodes"
+                        :final="msg.isFinal !== false"
+                        :max-live-nodes="0"
+                        :batch-rendering="chatBatchRendering"
+                      />
+                    </div>
+                    <!-- 打字动画：当正在输入且没有内容时显示在气泡内 -->
+                    <div v-if="isAiTyping && !msg.content && !msg.isFinal" class="typing-indicator">
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                    </div>
                   </div>
+                  <div v-else class="markdown-content" v-html="msg.content.replace(/\n/g, '<br>')"></div>
                 </div>
-                <div v-else-if="msg.type === 'ai'" class="markdown-content markstream-wrapper">
-                  <MarkdownRender
-                    :custom-id="'chat-' + (msg.id || index)"
-                    :nodes="msg.nodes"
-                    :final="msg.isFinal !== false"
-                  />
-                </div>
-                <div v-else class="markdown-content" v-html="msg.content.replace(/\n/g, '<br>')"></div>
               </div>
             </template>
           </div>
 
-          <!-- AI 正在输入加载动画 -->
-          <div v-if="sending && isAiTyping" class="message ai typing-message">
+          <!-- 健身计划生成中动画 -->
+          <div v-if="planGenerationStore.isGenerating" class="message ai plan-generating-message">
             <div class="message-avatar">AI</div>
-            <div class="message-content typing-content">
-              <div v-if="generatingPlanPreview" class="plan-generating-animation">
+            <div class="message-content plan-generating-content">
+              <div class="plan-generating-animation">
                 <div class="generating-header">
                   <div class="generating-icon-wrapper">
                     <n-icon :component="FitnessOutline" size="24" />
@@ -55,39 +69,34 @@
                   </div>
                   <div class="generating-text">
                     <div class="generating-title">正在生成您的专属健身计划</div>
-                    <div class="generating-subtitle">{{ planGenStepText }}</div>
+                    <div class="generating-subtitle">{{ planGenerationStore.planGenStepText }}</div>
                   </div>
                 </div>
                 <div class="generating-progress-bar">
                   <div class="progress-track">
-                    <div class="progress-fill" :style="{ width: planGenProgress + '%' }"></div>
-                    <div class="progress-glow" :style="{ left: planGenProgress + '%' }"></div>
+                    <div class="progress-fill" :style="{ width: planGenerationStore.planGenProgress + '%' }"></div>
+                    <div class="progress-glow" :style="{ left: planGenerationStore.planGenProgress + '%' }"></div>
                   </div>
-                  <div class="progress-percentage">{{ planGenProgress }}%</div>
+                  <div class="progress-percentage">{{ planGenerationStore.planGenProgress }}%</div>
                 </div>
                 <div class="generating-steps">
-                  <div :class="['step-item', { active: planGenStep >= 1, done: planGenStep > 1 }]">
+                  <div :class="['step-item', { active: planGenerationStore.planGenStep >= 1, done: planGenerationStore.planGenStep > 1 }]">
                     <div class="step-dot"></div>
                     <span>分析档案</span>
                   </div>
-                  <div :class="['step-item', { active: planGenStep >= 2, done: planGenStep > 2 }]">
+                  <div :class="['step-item', { active: planGenerationStore.planGenStep >= 2, done: planGenerationStore.planGenStep > 2 }]">
                     <div class="step-dot"></div>
                     <span>匹配课程</span>
                   </div>
-                  <div :class="['step-item', { active: planGenStep >= 3, done: planGenStep > 3 }]">
+                  <div :class="['step-item', { active: planGenerationStore.planGenStep >= 3, done: planGenerationStore.planGenStep > 3 }]">
                     <div class="step-dot"></div>
                     <span>制定方案</span>
                   </div>
-                  <div :class="['step-item', { active: planGenStep >= 4, done: planGenStep > 4 }]">
+                  <div :class="['step-item', { active: planGenerationStore.planGenStep >= 4, done: planGenerationStore.planGenStep > 4 }]">
                     <div class="step-dot"></div>
                     <span>生成完成</span>
                   </div>
                 </div>
-              </div>
-              <div v-else class="typing-indicator">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
               </div>
             </div>
           </div>
@@ -117,9 +126,9 @@
                 v-model:value="inputMessage"
                 type="textarea"
                 class="chat-input"
-                placeholder="输入您的问题，健小助随时为您服务..."
+                :placeholder="generatingPlan ? '正在生成健身计划，请稍候...' : '输入您的问题，健小助随时为您服务...'"
                 size="large"
-                :disabled="sending"
+                :disabled="isBusy"
                 :autosize="{ minRows: 2, maxRows: 8 }"
                 @keydown="handleKeydown"
               />
@@ -139,6 +148,7 @@
                     size="small"
                     class="btn-plan"
                     :loading="generatingPlan"
+                    :disabled="isBusy"
                     @click="generatePlanFromProfile"
                   >
                     <template #icon>
@@ -151,6 +161,7 @@
                   <n-button
                     size="small"
                     class="btn-plan btn-nutrition"
+                    :disabled="isBusy"
                     @click="generateNutrition"
                   >
                     <template #icon>
@@ -165,7 +176,7 @@
                 type="primary"
                 size="small"
                 class="btn-send"
-                :disabled="!inputMessage.trim()"
+                :disabled="!inputMessage.trim() || isBusy"
                 @click="sendMessage"
               >
                 <template #icon>
@@ -378,10 +389,11 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useMessage, NIcon } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePlanGenerationStore } from '@/stores/planGeneration'
 import MarkdownRender, { getMarkdown, parseMarkdownToStructure } from 'markstream-vue'
 import 'markstream-vue/index.css'
 import {
@@ -399,15 +411,12 @@ import {
 } from '@vicons/ionicons5'
 import {
   createSession,
-  sendMessage as sendChatMessage,
   sendMessageStream,
   getUserSessions,
-  getSessionDetail,
   getSessionMessages,
   generateFitnessPlan,
   generateFitnessPlanFromProfile,
-  startAsyncPlanGeneration,
-  getGenerationTaskStatus
+  startAsyncPlanGeneration
 } from '@/api/chat'
 import { saveFitnessPlan as savePlanToServer, getMyPlans, getProfile } from '@/api/plan'
 import { getCurrentUser } from '@/api/user'
@@ -417,6 +426,7 @@ import FitnessPlanPreview from '@/components/FitnessPlanPreview.vue'
 const router = useRouter()
 const message = useMessage()
 const authStore = useAuthStore()
+const planGenerationStore = usePlanGenerationStore()
 const messageContainer = ref(null)
 const currentSessionId = ref(null)
 
@@ -445,12 +455,31 @@ onMounted(() => {
   restorePlanCard()
   // 加载推荐教练列表
   loadCoaches()
+  // 恢复进行中的计划生成任务
+  restorePlanGeneration()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkScreenSize)
-  if (pollTimer) clearInterval(pollTimer)
 })
+
+// 恢复进行中的计划生成任务
+function restorePlanGeneration() {
+  // 如果当前已经在显示预览，不再恢复（避免重复显示）
+  if (showPlanPreview.value && fitnessPlanData.value) {
+    return
+  }
+  
+  const restored = planGenerationStore.restoreTask()
+  if (restored) {
+    console.log('恢复计划生成任务:', planGenerationStore.activeTaskId)
+  }
+  // 如果 store 中有已完成的结果且当前没有显示预览，才显示预览
+  if (planGenerationStore.isCompleted && planGenerationStore.taskResult && !showPlanPreview.value) {
+    fitnessPlanData.value = planGenerationStore.taskResult
+    showPlanPreview.value = true
+  }
+}
 
 // 初始化聊天 - 加载用户的会话列表
 async function initChat() {
@@ -586,7 +615,14 @@ const sending = ref(false)
 const isAiTyping = ref(false)
 const abortController = ref(null)
 
+// 全局忙碌状态：用于互斥锁
+const isBusy = computed(() => sending.value || generatingPlan.value)
+
 const md = getMarkdown()
+const chatBatchRendering = {
+  renderBatchSize: 16,
+  renderBatchDelay: 8
+}
 
 function parseToNodes(content, isFinal = false) {
   if (!content) return []
@@ -624,6 +660,135 @@ function scrollToBottom() {
   })
 }
 
+function updateAiMessage(index, patch) {
+  messages.value[index] = {
+    ...messages.value[index],
+    ...patch
+  }
+}
+
+function flushStreamRender() {
+  return new Promise((resolve) => {
+    nextTick(() => {
+      requestAnimationFrame(() => resolve())
+    })
+  })
+}
+
+function parseSseEventBlock(block) {
+  let event = 'message'
+  const dataLines = []
+
+  for (const rawLine of block.split('\n')) {
+    if (!rawLine || rawLine.startsWith(':')) continue
+    if (rawLine.startsWith('event:')) {
+      event = rawLine.slice(6).trim() || 'message'
+      continue
+    }
+    if (rawLine.startsWith('data:')) {
+      let data = rawLine.slice(5)
+      if (data.startsWith(' ')) {
+        data = data.slice(1)
+      }
+      dataLines.push(data)
+    }
+  }
+
+  return {
+    event,
+    data: dataLines.join('\n')
+  }
+}
+
+function extractJsonEvents(buffer) {
+  const events = []
+  let start = -1
+  let depth = 0
+  let inString = false
+  let escaped = false
+  let lastConsumedIndex = 0
+
+  for (let i = 0; i < buffer.length; i++) {
+    const char = buffer[i]
+
+    if (start === -1) {
+      if (char === '{') {
+        start = i
+        depth = 1
+        inString = false
+        escaped = false
+      }
+      continue
+    }
+
+    if (inString) {
+      if (escaped) {
+        escaped = false
+        continue
+      }
+      if (char === '\\') {
+        escaped = true
+        continue
+      }
+      if (char === '"') {
+        inString = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inString = true
+      continue
+    }
+
+    if (char === '{') {
+      depth++
+      continue
+    }
+
+    if (char === '}') {
+      depth--
+      if (depth === 0) {
+        events.push({
+          event: 'message',
+          data: buffer.slice(start, i + 1)
+        })
+        lastConsumedIndex = i + 1
+        start = -1
+      }
+    }
+  }
+
+  return {
+    events,
+    remaining: buffer.slice(lastConsumedIndex)
+  }
+}
+
+function extractStreamEvents(buffer) {
+  let normalized = buffer.replace(/\r\n/g, '\n')
+  normalized = normalized.replace(/\r/g, '\n')
+  const events = []
+
+  let separatorIndex = normalized.indexOf('\n\n')
+  while (separatorIndex !== -1) {
+    const block = normalized.slice(0, separatorIndex)
+    normalized = normalized.slice(separatorIndex + 2)
+    if (block.trim()) {
+      events.push(parseSseEventBlock(block))
+    }
+    separatorIndex = normalized.indexOf('\n\n')
+  }
+
+  const jsonExtraction = extractJsonEvents(normalized)
+  events.push(...jsonExtraction.events)
+
+  return {
+    events,
+    remaining: jsonExtraction.remaining
+  }
+}
+
 function handleKeydown(e) {
   if (e.key === 'Enter') {
     if (e.shiftKey) {
@@ -638,9 +803,13 @@ function handleKeydown(e) {
 }
 
 async function sendMessage() {
-  if (!inputMessage.value.trim() || sending.value) return
+  if (!inputMessage.value.trim() || sending.value || generatingPlan.value) {
+    if (generatingPlan.value) {
+      message.warning('正在生成健身计划，请稍候再发送消息')
+    }
+    return
+  }
 
-  // 如果没有会话ID，先创建会话
   if (!currentSessionId.value) {
     try {
       const sessionRes = await createSession()
@@ -648,7 +817,7 @@ async function sendMessage() {
         currentSessionId.value = String(sessionRes.id)
       }
     } catch (error) {
-      console.error('创建会话失败:', error)
+      console.error('Create session failed:', error)
       message.error('创建会话失败，请刷新页面重试')
       return
     }
@@ -662,7 +831,13 @@ async function sendMessage() {
   scrollToBottom()
 
   const aiMessageIndex = messages.value.length
-  messages.value.push({ type: 'ai', content: '', nodes: [], isFinal: false })
+  messages.value.push({
+    type: 'ai',
+    content: '',
+    nodes: [],
+    isFinal: false,
+    statusText: '正在理解你的问题...'
+  })
 
   abortController.value = new AbortController()
   let isCompleted = false
@@ -674,14 +849,12 @@ async function sendMessage() {
       isAiTyping.value = false
       abortController.value = null
       scrollToBottom()
-      console.log('发送状态已重置')
     }
   }
 
-  // 设置超时保护，30秒后强制重置状态
   const timeoutId = setTimeout(() => {
     if (!isCompleted) {
-      console.warn('请求超时，强制重置状态')
+      console.warn('Stream request timed out')
       resetSending()
     }
   }, 120000)
@@ -704,75 +877,127 @@ async function sendMessage() {
     const decoder = new TextDecoder()
     let buffer = ''
     let fullContent = ''
-    let chunkCount = 0
+    let eventCount = 0
+    let receivedDoneEvent = false
+
+    const handleStreamEvent = async ({ event, data }) => {
+      if (!data) return
+
+      let payload
+      try {
+        payload = JSON.parse(data)
+      } catch (parseError) {
+        console.warn('SSE payload parse failed:', parseError, data)
+        return
+      }
+
+      const resolvedEvent = event === 'message' && payload.type ? payload.type : event
+      eventCount++
+      if (isAiTyping.value) {
+        isAiTyping.value = false
+      }
+
+      if (resolvedEvent === 'status') {
+        updateAiMessage(aiMessageIndex, {
+          statusText: payload.message || '正在处理中...'
+        })
+        scrollToBottom()
+        await flushStreamRender()
+        return
+      }
+
+      if (resolvedEvent === 'delta') {
+        fullContent += payload.text || ''
+        updateAiMessage(aiMessageIndex, {
+          type: 'ai',
+          content: fullContent,
+          nodes: parseToNodes(fullContent, false),
+          isFinal: false,
+          statusText: payload.message || '正在生成回答...'
+        })
+        scrollToBottom()
+        await flushStreamRender()
+        return
+      }
+
+      if (resolvedEvent === 'done') {
+        receivedDoneEvent = true
+        updateAiMessage(aiMessageIndex, {
+          type: 'ai',
+          content: fullContent,
+          nodes: parseToNodes(fullContent, true),
+          isFinal: true,
+          statusText: ''
+        })
+        scrollToBottom()
+        await flushStreamRender()
+        return
+      }
+
+      if (resolvedEvent === 'error') {
+        const errorContent = payload.message || '抱歉，我遇到了一些问题，请稍后再试。'
+        updateAiMessage(aiMessageIndex, {
+          type: 'ai',
+          content: fullContent || errorContent,
+          nodes: parseToNodes(fullContent || errorContent, true),
+          isFinal: true,
+          statusText: ''
+        })
+        if (!fullContent) {
+          message.error(errorContent)
+        }
+        await flushStreamRender()
+      }
+    }
 
     try {
       while (true) {
         const { done, value } = await reader.read()
         if (done) {
-          console.log('SSE 流正常结束')
-          resetSending()
           break
         }
 
-        chunkCount++
-        if (chunkCount === 1) {
-          isAiTyping.value = false
-        }
         buffer += decoder.decode(value, { stream: true })
-
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        for (const line of lines) {
-          const trimmedLine = line.trim()
-          if (trimmedLine.startsWith('data:')) {
-            const data = trimmedLine.slice(5).trim()
-            if (data) {
-              fullContent += data
-            }
-          }
+        const extracted = extractStreamEvents(buffer)
+        buffer = extracted.remaining
+        for (const streamEvent of extracted.events) {
+          await handleStreamEvent(streamEvent)
         }
+      }
 
-        messages.value[aiMessageIndex] = {
+      if (buffer.trim()) {
+        await handleStreamEvent(parseSseEventBlock(buffer))
+      }
+
+      if (!receivedDoneEvent) {
+        updateAiMessage(aiMessageIndex, {
           type: 'ai',
           content: fullContent,
-          nodes: parseToNodes(fullContent, false),
-          isFinal: false
-        }
+          nodes: parseToNodes(fullContent, true),
+          isFinal: true,
+          statusText: ''
+        })
         scrollToBottom()
       }
 
-      if (buffer.trim().startsWith('data:')) {
-        fullContent += buffer.trim().slice(5).trim()
-      }
-
-      messages.value[aiMessageIndex] = {
-        type: 'ai',
-        content: fullContent,
-        nodes: parseToNodes(fullContent, true),
-        isFinal: true
-      }
-      scrollToBottom()
-
-      console.log(`共接收 ${chunkCount} 个数据块，最终内容长度: ${fullContent.length}`)
+      console.log(`Received ${eventCount} SSE events, final content length: ${fullContent.length}`)
     } finally {
       reader.releaseLock()
     }
-
   } catch (error) {
     if (error.name === 'AbortError') {
-      console.log('用户暂停了回答')
+      console.log('Stream aborted by user')
     } else {
-      console.error('发送消息失败:', error)
+      console.error('Send message failed:', error)
       message.error('发送消息失败，请稍后重试')
       const errorContent = '抱歉，我遇到了一些问题，请稍后再试。'
-      messages.value[aiMessageIndex] = {
+      updateAiMessage(aiMessageIndex, {
         type: 'ai',
         content: errorContent,
         nodes: parseToNodes(errorContent, true),
-        isFinal: true
-      }
+        isFinal: true,
+        statusText: ''
+      })
     }
   } finally {
     clearTimeout(timeoutId)
@@ -791,7 +1016,7 @@ function stopMessage() {
 // 计划弹窗显示状态
 const showPlanModal = ref(false)
 const showPlanDetailModal = ref(false)
-const generatingPlan = ref(false)
+const generatingPlan = computed(() => planGenerationStore.isGenerating)
 const savingPlan = ref(false)
 const loadingPlans = ref(false)
 
@@ -801,22 +1026,22 @@ const currentPlanCard = ref(null)
 // 健身计划预览组件相关状态
 const showPlanPreview = ref(false)
 const fitnessPlanData = ref(null)
-const generatingPlanPreview = ref(false)
-const planGenStep = ref(0)
-const planGenProgress = ref(0)
-let planGenTimer = null
-let progressTimer = null
 
-// 步骤文本
-const planGenStepText = computed(() => {
-  const texts = [
-    '正在准备生成环境...',
-    '正在分析您的健身档案...',
-    '正在匹配适合您的课程...',
-    '正在制定个性化训练方案...',
-    '即将完成，正在整理数据...'
-  ]
-  return texts[planGenStep.value] || texts[0]
+// 监听 store 中的任务完成状态
+watch(() => planGenerationStore.isCompleted, (completed) => {
+  if (completed && planGenerationStore.taskResult) {
+    // 任务完成，显示计划预览
+    fitnessPlanData.value = planGenerationStore.taskResult
+    showPlanPreview.value = true
+    message.success('健身计划生成成功！')
+  }
+})
+
+// 监听 store 中的错误状态
+watch(() => planGenerationStore.taskError, (error) => {
+  if (error) {
+    message.error(error)
+  }
 })
 
 // 我的健身计划列表
@@ -865,16 +1090,12 @@ const experienceOptions = [
   { label: '高级', value: '高级' }
 ]
 
-// 计划轮询定时器
-let pollTimer = null
-
 // 从个人档案生成健身计划（异步+轮询）
 async function generatePlanFromProfile() {
-  generatingPlan.value = true
-
-  generatingPlanPreview.value = true
-  planGenStep.value = 0
-  startPlanGenAnimation()
+  if (sending.value) {
+    message.warning('正在回复消息，请稍候再生成计划')
+    return
+  }
 
   try {
     const { taskId } = await startAsyncPlanGeneration()
@@ -882,73 +1103,12 @@ async function generatePlanFromProfile() {
       throw new Error('未能获取任务ID')
     }
 
-    await pollTaskStatus(taskId)
+    // 使用 store 管理任务状态，确保跨页面保持
+    planGenerationStore.startGeneration(taskId)
   } catch (error) {
     console.error('生成计划失败:', error)
-    stopPlanGenAnimation()
-    generatingPlanPreview.value = false
     message.error(error.message || '生成计划失败，请稍后重试')
-  } finally {
-    generatingPlan.value = false
   }
-}
-
-async function pollTaskStatus(taskId) {
-  const maxAttempts = 60
-  const intervalMs = 2000
-  let attempts = 0
-
-  return new Promise((resolve, reject) => {
-    pollTimer = setInterval(async () => {
-      attempts++
-      try {
-        const task = await getGenerationTaskStatus(taskId)
-        if (!task) {
-          clearInterval(pollTimer)
-          stopPlanGenAnimation()
-          generatingPlanPreview.value = false
-          reject(new Error('无法获取任务状态'))
-          return
-        }
-
-        if (task.status === 'COMPLETED') {
-          clearInterval(pollTimer)
-          completePlanGenAnimation()
-          generatingPlanPreview.value = false
-
-          if (task.result) {
-            fitnessPlanData.value = task.result
-            showPlanPreview.value = true
-            message.success('健身计划生成成功！')
-            resolve(task.result)
-          } else {
-            reject(new Error('任务完成但无结果数据'))
-          }
-          return
-        }
-
-        if (task.status === 'FAILED') {
-          clearInterval(pollTimer)
-          stopPlanGenAnimation()
-          generatingPlanPreview.value = false
-          reject(new Error(task.errorMessage || '生成计划失败'))
-          return
-        }
-
-        if (attempts >= maxAttempts) {
-          clearInterval(pollTimer)
-          stopPlanGenAnimation()
-          generatingPlanPreview.value = false
-          reject(new Error('生成超时，请稍后重试'))
-        }
-      } catch (error) {
-        clearInterval(pollTimer)
-        stopPlanGenAnimation()
-        generatingPlanPreview.value = false
-        reject(error)
-      }
-    }, intervalMs)
-  })
 }
 
 // 从API响应构建预览数据（后端已返回完整结构化数据）
@@ -993,14 +1153,10 @@ async function generatePlan() {
     return
   }
 
-  generatingPlan.value = true
-
-  // 启用计划生成动画
-  generatingPlanPreview.value = true
-  planGenStep.value = 0
-
-  // 启动步骤动画
-  startPlanGenAnimation()
+  if (sending.value) {
+    message.warning('正在回复消息，请稍候再生成计划')
+    return
+  }
 
   try {
     // 获取用户档案数据用于填充计划预览
@@ -1020,9 +1176,6 @@ async function generatePlan() {
       experience: planForm.value.experience
     })
 
-    // 完成步骤动画
-    completePlanGenAnimation()
-
     if (res) {
       // 构建健身计划预览数据（兼容新旧格式）
       const previewData = buildFitnessPlanPreviewData(res, userProfile, planForm.value)
@@ -1040,60 +1193,8 @@ async function generatePlan() {
     }
   } catch (error) {
     console.error('生成计划失败:', error)
-    stopPlanGenAnimation()
     message.error(error.message || '生成计划失败，请稍后重试')
-  } finally {
-    generatingPlan.value = false
-    generatingPlanPreview.value = false
   }
-}
-
-// 计划生成步骤动画
-function startPlanGenAnimation() {
-  planGenStep.value = 0
-  planGenProgress.value = 0
-  
-  // 进度条动画
-  progressTimer = setInterval(() => {
-    if (planGenProgress.value < 90) {
-      // 非线性增长，越到后面越慢
-      const increment = Math.max(1, Math.floor((100 - planGenProgress.value) / 10))
-      planGenProgress.value = Math.min(90, planGenProgress.value + increment)
-    }
-  }, 200)
-  
-  // 模拟步骤进度
-  planGenTimer = setInterval(() => {
-    if (planGenStep.value < 4) {
-      planGenStep.value++
-    }
-  }, 1200)
-}
-
-function completePlanGenAnimation() {
-  if (planGenTimer) {
-    clearInterval(planGenTimer)
-    planGenTimer = null
-  }
-  if (progressTimer) {
-    clearInterval(progressTimer)
-    progressTimer = null
-  }
-  planGenStep.value = 4
-  planGenProgress.value = 100
-}
-
-function stopPlanGenAnimation() {
-  if (planGenTimer) {
-    clearInterval(planGenTimer)
-    planGenTimer = null
-  }
-  if (progressTimer) {
-    clearInterval(progressTimer)
-    progressTimer = null
-  }
-  planGenStep.value = 0
-  planGenProgress.value = 0
 }
 
 // 构建健身计划预览数据
@@ -1276,6 +1377,8 @@ function getDefaultExercises(focus, experience) {
 function handleRegenerateFromPreview() {
   showPlanPreview.value = false
   fitnessPlanData.value = null
+  // 清除 store 中的状态，避免切换页面后重复显示
+  planGenerationStore.clearState()
   handleRegeneratePlan()
 }
 
@@ -1366,6 +1469,8 @@ async function handleSavePlan() {
     fitnessPlanData.value = null
     currentPlanCard.value = null
     sessionStorage.removeItem('currentPlanCard')
+    // 清除 store 中的状态，避免切换页面后重复显示
+    planGenerationStore.clearState()
     await loadMyPlans()
   } catch (error) {
     console.error('保存计划失败:', error)
@@ -1420,6 +1525,10 @@ function formatDate(dateStr) {
 }
 
 function generateNutrition() {
+  if (generatingPlan.value) {
+    message.warning('正在生成健身计划，请稍候再操作')
+    return
+  }
   const nutritionPrompt = '请为我提供个性化的营养指导建议，包括每日饮食搭配、营养素摄入建议和饮食注意事项。'
   inputMessage.value = nutritionPrompt
   sendMessage()
@@ -1921,16 +2030,16 @@ async function regeneratePlan() {
   justify-content: flex-end;
 }
 
-/* AI 正在输入加载动画 */
-.typing-message {
+/* 健身计划生成中消息 */
+.plan-generating-message {
   animation: fadeIn 0.3s ease;
 }
 
-.typing-content {
+.plan-generating-content {
   background: #F0F2F5 !important;
   border-bottom-left-radius: 4px !important;
   padding: 18px 22px !important;
-  min-width: 80px;
+  max-width: 480px !important;
 }
 
 .typing-indicator {
@@ -3093,6 +3202,38 @@ async function regeneratePlan() {
 }
 
 /* markstream-vue 样式适配 */
+.ai-stream-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 消息气泡包装器：状态标签在上方 */
+.message-bubble-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 80%;
+}
+
+.stream-status {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 107, 53, 0.08);
+  color: #E55A2B;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* 气泡内的打字动画 */
+.ai-stream-content .typing-indicator {
+  margin-top: 4px;
+}
+
 .markstream-wrapper :deep(.markstream-vue) {
   font-size: 14px;
   line-height: 1.6;

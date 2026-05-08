@@ -27,6 +27,9 @@ frontend/dist/
 src/main/resources/application-local.yml
 src/main/resources/application-prod.yml
 
+# Environment variables
+.env
+
 # Docker volumes
 docker/volumes/
 

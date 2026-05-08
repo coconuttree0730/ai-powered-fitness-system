@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.course.mapper.VideoCourseMapper">
+
+    <resultMap id="VideoCourseVOResultMap" type="com.fitness.modules.course.model.vo.VideoCourseVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="category" property="category"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="video_url" property="videoUrl"/>
+        <result column="duration_seconds" property="durationSeconds"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="difficulty_level" property="difficultyLevel"/>
+        <result column="coach_id" property="coachId"/>
+        <result column="coach_name" property="coachName"/>
+        <result column="coach_avatar" property="coachAvatar"/>
+        <result column="status" property="status"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectVideoCourseList" resultMap="VideoCourseVOResultMap">
+        SELECT
+            v.id,
+            v.title,
+            v.description,
+            v.category,
+            v.cover_url,
+            v.video_url,
+            v.duration_seconds,
+            v.file_size,
+            v.difficulty_level,
+            v.coach_id,
+            u.username AS coach_name,
+            u.avatar AS coach_avatar,
+            v.status,
+            v.view_count,
+            v.sort_order,
+            v.create_time,
+            v.update_time
+        FROM fitness_video_course v
+        LEFT JOIN sys_user u ON v.coach_id = u.id
+        WHERE v.deleted = false
+        <if test="query.title != null and query.title != ''">
+            AND v.title LIKE '%' || #{query.title} || '%'
+        </if>
+        <if test="query.category != null and query.category != ''">
+            AND v.category = #{query.category}
+        </if>
+        <if test="query.coachId != null">
+            AND v.coach_id = #{query.coachId}
+        </if>
+        <if test="query.status != null">
+            AND v.status = #{query.status}
+        </if>
+        <if test="query.difficultyLevel != null and query.difficultyLevel != ''">
+            AND v.difficulty_level = #{query.difficultyLevel}
+        </if>
+        ORDER BY v.sort_order ASC, v.create_time DESC
+    </select>
+
+    <select id="selectVideoCourseDetail" resultMap="VideoCourseVOResultMap">
+        SELECT
+            v.id,
+            v.title,
+            v.description,
+            v.category,
+            v.cover_url,
+            v.video_url,
+            v.duration_seconds,
+            v.file_size,
+            v.difficulty_level,
+            v.coach_id,
+            u.username AS coach_name,
+            u.avatar AS coach_avatar,
+            v.status,
+            v.view_count,
+            v.sort_order,
+            v.create_time,
+            v.update_time
+        FROM fitness_video_course v
+        LEFT JOIN sys_user u ON v.coach_id = u.id
+        WHERE v.id = #{id}
+          AND v.deleted = false
+    </select>
+
+</mapper>

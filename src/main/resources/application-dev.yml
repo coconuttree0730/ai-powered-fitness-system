@@ -3,22 +3,18 @@ spring:
     activate:
       on-profile: dev
 
-
   ai:
     ollama:
-      base-url: http://172.19.55.232:11434
+      base-url: ${OLLAMA_BASE_URL}
       embedding:
-        model: embeddinggemma:300m
+        model: ${OLLAMA_EMBEDDING_MODEL}
 
-
-
-  # Redis 配置
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: myRedisPass123
-      database: 0
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DATABASE}
       timeout: 5000ms
       lettuce:
         pool:
@@ -29,9 +25,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/fitness_ai_db
-    username: fitness_user
-    password: myPostgresPass123
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -42,7 +38,6 @@ spring:
     baseline-on-migrate: true
     clean-disabled: false
     encoding: UTF-8
-
 
 logging:
   level:
@@ -55,5 +50,3 @@ logging:
     org.springframework.ai.chat: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}:%line - %msg%n"
-
-

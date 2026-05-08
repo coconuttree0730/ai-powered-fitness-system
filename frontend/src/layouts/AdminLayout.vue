@@ -20,10 +20,20 @@
           <el-icon><User /></el-icon>
           <span>用户管理</span>
         </el-menu-item>
-        <el-menu-item index="/admin/courses">
-          <el-icon><Calendar /></el-icon>
-          <span>课程管理</span>
-        </el-menu-item>
+        <el-sub-menu index="/admin/courses">
+          <template #title>
+            <el-icon><Calendar /></el-icon>
+            <span>课程管理</span>
+          </template>
+          <el-menu-item index="/admin/courses">
+            <el-icon><Reading /></el-icon>
+            <span>公开课管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/video-courses">
+            <el-icon><VideoCamera /></el-icon>
+            <span>视频课程管理</span>
+          </el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/admin/equipment">
           <el-icon><Box /></el-icon>
           <span>器材管理</span>
@@ -131,7 +141,7 @@ import { useLoadingStore } from '@/stores/loading'
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
   CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder,
-  Setting, CollectionTag
+  Setting, CollectionTag, VideoCamera, Reading
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

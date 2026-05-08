@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatAssistantServiceImpl implements ChatAssistantService {
 
+    private static final String DEFAULT_SESSION_TITLE = "\u65b0\u5bf9\u8bdd";
+
     private final ChatSessionMapper chatSessionMapper;
     private final ChatMessageMapper chatMessageMapper;
     private final ChatContextService chatContextService;
@@ -77,7 +79,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
 
         ChatSession session = new ChatSession();
         session.setUserId(userId);
-        session.setTitle("新对话");
+        session.setTitle(DEFAULT_SESSION_TITLE);
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
         session.setIsDeleted(false);
@@ -122,7 +124,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         chatContextService.saveMessageToDatabase(assistantMessage);
         chatContextService.addMessage(session.getId(), assistantMessage);
 
-        if ("新对话".equals(session.getTitle())) {
+        if (DEFAULT_SESSION_TITLE.equals(session.getTitle())) {
             session.setTitle(generateSessionTitle(dto.getContent()));
             session.setUpdatedAt(LocalDateTime.now());
             chatSessionMapper.updateById(session);
@@ -134,14 +136,14 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     }
 
     @Override
-    public Flux<String> sendMessageStream(Long userId, ChatMessageDTO dto) {
+    public Flux<ChatStreamEventVO> sendMessageStream(Long userId, ChatMessageDTO dto) {
         ChatSession session;
         if (dto.getSessionId() == null) {
             session = createSessionEntity(userId);
         } else {
             session = chatSessionMapper.selectById(dto.getSessionId());
             if (session == null || !session.getUserId().equals(userId)) {
-                return Flux.error(new BusinessException("会话不存在或无权访问"));
+                return Flux.error(new BusinessException("\u4f1a\u8bdd\u4e0d\u5b58\u5728\u6216\u65e0\u6743\u8bbf\u95ee"));
             }
         }
 
@@ -155,47 +157,47 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         chatContextService.addMessage(session.getId(), userMessage);
 
         StringBuilder fullResponse = new StringBuilder();
-
         SecurityContext securityContext = SecurityContextHolder.getContext();
 
         return jianXiaoZhuAgentService.streamChat(userId, session.getId(), dto.getContent())
-            .doOnNext(fullResponse::append)
-            .doOnComplete(() -> {
-                SecurityContextHolder.setContext(securityContext);
-                try {
-                    ChatMessage assistantMessage = new ChatMessage();
-                    assistantMessage.setSessionId(session.getId());
-                    assistantMessage.setRole("assistant");
-                    assistantMessage.setContent(fullResponse.toString());
-                    assistantMessage.setCreatedAt(LocalDateTime.now());
-
-                    chatContextService.saveMessageToDatabase(assistantMessage);
-                    chatContextService.addMessage(session.getId(), assistantMessage);
-
-                    if ("新对话".equals(session.getTitle())) {
-                        session.setTitle(generateSessionTitle(dto.getContent()));
-                        session.setUpdatedAt(LocalDateTime.now());
-                        chatSessionMapper.updateById(session);
+                .doOnNext(event -> {
+                    if ("delta".equals(event.getType()) && StrUtil.isNotBlank(event.getText())) {
+                        fullResponse.append(event.getText());
                     }
+                })
+                .doOnComplete(() -> {
+                    SecurityContextHolder.setContext(securityContext);
+                    try {
+                        ChatMessage assistantMessage = new ChatMessage();
+                        assistantMessage.setSessionId(session.getId());
+                        assistantMessage.setRole("assistant");
+                        assistantMessage.setContent(fullResponse.toString());
+                        assistantMessage.setCreatedAt(LocalDateTime.now());
 
-                    log.info("流式发送消息完成: sessionId={}, userId={}", session.getId(), userId);
-                } finally {
-                    SecurityContextHolder.clearContext();
-                }
-            })
-            .doOnError(error -> {
-                SecurityContextHolder.setContext(securityContext);
-                try {
-                    log.error("流式发送消息失败: sessionId={}, userId={}, error={}", 
-                        session.getId(), userId, error.getMessage());
-                } finally {
-                    SecurityContextHolder.clearContext();
-                }
-            })
-            .onErrorResume(error -> {
-                return Flux.just("抱歉，AI服务暂时不可用，请稍后重试。");
-            })
-            .subscribeOn(Schedulers.boundedElastic());
+                        chatContextService.saveMessageToDatabase(assistantMessage);
+                        chatContextService.addMessage(session.getId(), assistantMessage);
+
+                        if (DEFAULT_SESSION_TITLE.equals(session.getTitle())) {
+                            session.setTitle(generateSessionTitle(dto.getContent()));
+                            session.setUpdatedAt(LocalDateTime.now());
+                            chatSessionMapper.updateById(session);
+                        }
+
+                        log.info("Stream message completed: sessionId={}, userId={}", session.getId(), userId);
+                    } finally {
+                        SecurityContextHolder.clearContext();
+                    }
+                })
+                .doOnError(error -> {
+                    SecurityContextHolder.setContext(securityContext);
+                    try {
+                        log.error("Stream message failed: sessionId={}, userId={}, error={}",
+                                session.getId(), userId, error.getMessage());
+                    } finally {
+                        SecurityContextHolder.clearContext();
+                    }
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -408,7 +410,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     private ChatSession createSessionEntity(Long userId) {
         ChatSession session = new ChatSession();
         session.setUserId(userId);
-        session.setTitle("新对话");
+        session.setTitle(DEFAULT_SESSION_TITLE);
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
         session.setIsDeleted(false);
@@ -479,7 +481,7 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
 
     private String generateSessionTitle(String firstMessage) {
         if (StrUtil.isBlank(firstMessage)) {
-            return "新对话";
+            return DEFAULT_SESSION_TITLE;
         }
 
         int maxLength = 20;

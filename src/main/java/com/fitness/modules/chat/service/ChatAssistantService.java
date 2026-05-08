@@ -3,6 +3,7 @@ package com.fitness.modules.chat.service;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
 import com.fitness.modules.chat.model.vo.ChatMessageVO;
 import com.fitness.modules.chat.model.vo.ChatSessionVO;
+import com.fitness.modules.chat.model.vo.ChatStreamEventVO;
 import com.fitness.modules.chat.model.vo.FitnessPlanCardVO;
 import reactor.core.publisher.Flux;
 
@@ -29,7 +30,7 @@ public interface ChatAssistantService {
      * @param dto 消息DTO
      * @return 响应流
      */
-    Flux<String> sendMessageStream(Long userId, ChatMessageDTO dto);
+    Flux<ChatStreamEventVO> sendMessageStream(Long userId, ChatMessageDTO dto);
     /**
      * 获取用户会话列表
      *
