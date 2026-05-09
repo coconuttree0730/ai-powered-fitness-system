@@ -22,6 +22,21 @@ public class CoachDetailVO {
     private String username;
 
     /**
+     * 真实姓名
+     */
+    private String realName;
+
+    /**
+     * 性别
+     */
+    private String gender;
+
+    /**
+     * 年龄
+     */
+    private Integer age;
+
+    /**
      * 头像URL
      */
     private String avatar;

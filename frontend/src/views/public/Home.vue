@@ -335,7 +335,18 @@
           <p class="section-desc">透明定价，无隐藏费用，随时升级或取消</p>
         </div>
         <div class="membership-slider" ref="membershipSliderRef">
-          <button class="membership-slider-btn prev" @click="prevMembershipSlide">‹</button>
+          <!-- 加载状态 -->
+          <div v-if="membershipLoading" class="membership-loading">
+            <div class="loading-spinner"></div>
+            <p>正在加载会员方案...</p>
+          </div>
+          <!-- 会员卡列表 -->
+          <template v-else>
+          <button
+            v-if="membershipPlans.length > (isMobile ? 1 : 3)"
+            class="membership-slider-btn prev"
+            :class="{ disabled: membershipSlide === 0 }"
+            @click="prevMembershipSlide">‹</button>
           <div class="membership-slider-track" @touchstart="handleMembershipTouchStart" @touchend="handleMembershipTouchEnd">
             <div class="membership-slider-content" :style="{ transform: `translateX(-${membershipSlide * (isMobile ? 100 : 33.333)}%)` }">
               <div v-for="(plan, index) in membershipPlans" :key="index"
@@ -365,7 +376,11 @@
               </div>
             </div>
           </div>
-          <button class="membership-slider-btn next" @click="nextMembershipSlide">›</button>
+          <button
+            v-if="membershipPlans.length > (isMobile ? 1 : 3)"
+            class="membership-slider-btn next"
+            :class="{ disabled: membershipSlide >= (isMobile ? membershipPlans.length - 1 : Math.max(0, membershipPlans.length - 3)) }"
+            @click="nextMembershipSlide">›</button>
           <!-- 移动端滑动指示器 -->
           <div class="slider-swipe-hint mobile-only">
             <div class="swipe-hint-line">
@@ -373,6 +388,7 @@
             </div>
             <span class="swipe-hint-text">左右滑动切换</span>
           </div>
+          </template>
         </div>
       </div>
     </section>
@@ -912,6 +928,7 @@ import { getHomePageCoaches } from '@/api/coachDetail'
 import { getActiveBanners } from '@/api/banner'
 import { getPublishedAnnouncements } from '@/api/announcement'
 import { getHomePageEquipments } from '@/api/equipment'
+import { getMembershipCardList } from '@/api/membership'
 import LoginModal from '@/components/LoginModal.vue'
 import RegisterModal from '@/components/RegisterModal.vue'
 
@@ -1330,74 +1347,126 @@ function handleCoachImageError(event) {
   }
 }
 
-// 会员方案 //TODO：实现真实请求后台数据（或者内容管理数据）
+// 会员方案 - 动态加载
 const membershipSlide = ref(0)
-const membershipPlans = [
-  {
-    name: '体验卡',
-    price: '0',
-    period: '7天',
-    desc: '新用户专属，零门槛体验',
-    badge: null,
-    featured: false,
-    features: [
-      { text: '7天全时段通行', included: true },
-      { text: '基础器械使用', included: true },
-      { text: '2节团体课程', included: true },
-      { text: 'AI体测1次', included: true },
-      { text: '私教课程', included: false },
-      { text: '营养指导', included: false }
-    ]
-  },
-  {
-    name: '月卡',
-    price: '299',
-    period: '月',
-    desc: '灵活选择，随时开始',
-    badge: '热门',
-    featured: true,
-    features: [
-      { text: '全时段无限次通行', included: true },
-      { text: '全部器械使用', included: true },
-      { text: '无限团体课程', included: true },
-      { text: 'AI体测每月1次', included: true },
-      { text: '1节私教体验课', included: true },
-      { text: '营养指导', included: false }
-    ]
-  },
-  {
-    name: '季卡',
-    price: '799',
-    period: '季',
-    desc: '坚持三个月，见证改变',
-    badge: null,
-    featured: false,
-    features: [
-      { text: '全时段无限次通行', included: true },
-      { text: '全部器械使用', included: true },
-      { text: '无限团体课程', included: true },
-      { text: 'AI体测每月1次', included: true },
-      { text: '4节私教课程', included: true },
-      { text: '基础营养指导', included: true }
-    ]
-  },
-  {
-    name: '年卡',
-    price: '2599',
-    period: '年',
-    desc: '最超值选择，全年无忧',
-    badge: '最佳价值',
-    featured: false,
-    features: [
-      { text: '全时段无限次通行', included: true },
-      { text: '全部器械使用', included: true },
-      { text: '无限团体课程', included: true },
-      { text: 'AI体测不限次数', included: true },
-      { text: '12节私教课程', included: true },
-      { text: '专属营养方案', included: true }
-    ]
+const membershipPlans = ref([])
+const membershipLoading = ref(false)
+const membershipLoaded = ref(false)
+
+// 默认会员卡数据（加载失败时使用）
+function getDefaultMembershipPlans() {
+  return [
+    {
+      name: '体验卡',
+      price: '0',
+      period: '7天',
+      desc: '新用户专属，零门槛体验',
+      badge: null,
+      featured: false,
+      features: [
+        { text: '7天全时段通行', included: true },
+        { text: '基础器械使用', included: true },
+        { text: '2节团体课程', included: true },
+        { text: 'AI体测1次', included: true },
+        { text: '私教课程', included: false },
+        { text: '营养指导', included: false }
+      ]
+    },
+    {
+      name: '月卡',
+      price: '299',
+      period: '月',
+      desc: '灵活选择，随时开始',
+      badge: '热门',
+      featured: true,
+      features: [
+        { text: '全时段无限次通行', included: true },
+        { text: '全部器械使用', included: true },
+        { text: '无限团体课程', included: true },
+        { text: 'AI体测每月1次', included: true },
+        { text: '1节私教体验课', included: true },
+        { text: '营养指导', included: false }
+      ]
+    },
+    {
+      name: '季卡',
+      price: '799',
+      period: '季',
+      desc: '坚持三个月，见证改变',
+      badge: null,
+      featured: false,
+      features: [
+        { text: '全时段无限次通行', included: true },
+        { text: '全部器械使用', included: true },
+        { text: '无限团体课程', included: true },
+        { text: 'AI体测每月1次', included: true },
+        { text: '4节私教课程', included: true },
+        { text: '基础营养指导', included: true }
+      ]
+    },
+    {
+      name: '年卡',
+      price: '2599',
+      period: '年',
+      desc: '最超值选择，全年无忧',
+      badge: '最佳价值',
+      featured: false,
+      features: [
+        { text: '全时段无限次通行', included: true },
+        { text: '全部器械使用', included: true },
+        { text: '无限团体课程', included: true },
+        { text: 'AI体测不限次数', included: true },
+        { text: '12节私教课程', included: true },
+        { text: '专属营养方案', included: true }
+      ]
+    }
+  ]
+}
+
+// 获取首页会员卡数据
+async function fetchMembershipCards() {
+  if (membershipLoaded.value) {
+    return
   }
-]
+
+  membershipLoading.value = true
+  try {
+    const data = await getMembershipCardList()
+    if (data && data.length > 0) {
+      membershipPlans.value = data.map(card => ({
+        name: card.name || card.typeName,
+        price: card.price?.toString() || '0',
+        period: formatDuration(card.durationDays),
+        desc: card.subtitle || '',
+        badge: card.isRecommend ? '推荐' : null,
+        featured: card.isRecommend || false,
+        features: (card.contents || []).map(content => ({
+          text: content.title || content.description,
+          included: true
+        }))
+      }))
+    } else {
+      membershipPlans.value = getDefaultMembershipPlans()
+    }
+    membershipLoaded.value = true
+  } catch (error) {
+    console.error('获取会员卡数据失败:', error)
+    membershipPlans.value = getDefaultMembershipPlans()
+    membershipLoaded.value = true
+  } finally {
+    membershipLoading.value = false
+  }
+}
+
+// 格式化时长
+function formatDuration(days) {
+  if (!days) return '月'
+  if (days <= 7) return `${days}天`
+  if (days <= 31) return '月'
+  if (days <= 93) return '季'
+  if (days <= 366) return '年'
+  return `${days}天`
+}
 
 // 教练团队
 const coachSlide = ref(0)
@@ -1634,13 +1703,18 @@ function goToSlide(index) {
 }
 
 function prevMembershipSlide() {
-  const slideCount = isMobile.value ? 1 : 3
-  membershipSlide.value = Math.max(0, membershipSlide.value - 1)
+  if (membershipSlide.value > 0) {
+    membershipSlide.value--
+  }
 }
 
 function nextMembershipSlide() {
-  const maxSlide = isMobile.value ? membershipPlans.length - 1 : membershipPlans.length - 3
-  membershipSlide.value = Math.min(Math.max(0, maxSlide), membershipSlide.value + 1)
+  const maxSlide = isMobile.value
+    ? membershipPlans.value.length - 1
+    : Math.max(0, membershipPlans.value.length - 3)
+  if (membershipSlide.value < maxSlide) {
+    membershipSlide.value++
+  }
 }
 
 function prevCoachSlide() {
@@ -1909,6 +1983,9 @@ onMounted(() => {
 
   // 获取首页器械数据
   fetchHomePageEquipments()
+
+  // 获取会员卡数据
+  fetchMembershipCards()
 
   // 获取公告数据
   fetchAnnouncements()
@@ -3448,6 +3525,30 @@ const vIntersect = {
   position: relative;
 }
 
+.membership-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.membership-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 107, 53, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.membership-loading p {
+  font-size: 14px;
+  margin: 0;
+}
+
 .membership-slider-track {
   overflow: hidden;
 }
@@ -3459,7 +3560,7 @@ const vIntersect = {
 
 .membership-slide {
   flex: 0 0 33.333%;
-  padding: 0 15px;
+  padding: 25px 15px 15px 15px;
 }
 
 .membership-slide.featured {
@@ -3471,12 +3572,13 @@ const vIntersect = {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 24px;
-  padding: 40px 32px;
+  padding: 40px 32px 28px 32px;
   position: relative;
   transition: all 0.4s;
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 520px;
 }
 
 .membership-slide.featured .membership-card {
@@ -3541,19 +3643,43 @@ const vIntersect = {
 .membership-features {
   list-style: none;
   padding: 0;
-  margin: 0 0 32px 0;
+  margin: 16px 0 24px 0;
   flex-grow: 1;
+  overflow-y: auto;
+  max-height: 280px;
+  padding-right: 4px;
+}
+
+.membership-features::-webkit-scrollbar {
+  width: 4px;
+}
+
+.membership-features::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.membership-features::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 53, 0.5);
+  border-radius: 2px;
 }
 
 .membership-features li {
-  font-size: 15px;
-  padding: 12px 0;
+  font-size: 14px;
+  padding: 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .membership-features li.included {
   color: var(--text-primary);
+}
+
+.membership-features li .emoji-icon {
+  flex-shrink: 0;
 }
 
 .membership-slider-btn {
@@ -3582,6 +3708,17 @@ const vIntersect = {
 
 .membership-slider-btn.prev { left: -24px; }
 .membership-slider-btn.next { right: -24px; }
+
+.membership-slider-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.membership-slider-btn.disabled:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 
 /* Coaches Section */
 .coaches-section {

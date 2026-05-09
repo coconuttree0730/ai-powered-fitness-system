@@ -24,6 +24,21 @@ public class CoachDetailDTO {
     private String username;
 
     /**
+     * 真实姓名
+     */
+    private String realName;
+
+    /**
+     * 年龄
+     */
+    private Integer age;
+
+    /**
+     * 性别
+     */
+    private String gender;
+
+    /**
      * 从业年限
      */
     private Integer workYears;

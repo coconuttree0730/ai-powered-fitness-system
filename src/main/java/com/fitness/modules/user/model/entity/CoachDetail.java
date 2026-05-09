@@ -27,6 +27,24 @@ public class CoachDetail {
     private Long userId;
 
     /**
+     * 真实姓名
+     */
+    @TableField("real_name")
+    private String realName;
+
+    /**
+     * 性别
+     */
+    @TableField("gender")
+    private String gender;
+
+    /**
+     * 年龄
+     */
+    @TableField("age")
+    private Integer age;
+
+    /**
      * 个人展示图片URL（非头像，用于首页展示）
      */
     @TableField("personal_image_url")

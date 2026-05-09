@@ -576,6 +576,9 @@ async function saveProfile() {
     // 先保存基本信息（包含用户名）
     const detailData = {
       username: profileForm.username,
+      realName: profileForm.realName,
+      gender: profileForm.gender,
+      age: profileForm.age,
       workYears: profileForm.workYears,
       specialties: profileForm.specialties,
       teachingStyle: profileForm.teachingStyle,

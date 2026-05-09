@@ -69,8 +69,10 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
 
         // 保存内容项
         if (!CollectionUtils.isEmpty(dto.getContents())) {
-            log.debug("保存会员卡内容项: cardId={}, contentCount={}", card.getId(), dto.getContents().size());
+            log.info("保存会员卡内容项: cardId={}, contentCount={}", card.getId(), dto.getContents().size());
             saveContents(card.getId(), dto.getContents());
+        } else {
+            log.info("会员卡无内容项: cardId={}", card.getId());
         }
 
         log.info("创建会员卡成功: cardId={}, name={}", card.getId(), card.getName());
@@ -163,19 +165,25 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
                 .orderByAsc(MembershipCard::getSortOrder)
                 .orderByDesc(MembershipCard::getId)
                 .list();
-        return list.stream().map(this::convertToVO).collect(Collectors.toList());
+        return list.stream().map(card -> {
+            MembershipCardVO vo = convertToVO(card);
+            // 查询每个会员卡的内容项
+            List<MembershipCardContent> contents = contentMapper.selectByCardId(card.getId());
+            vo.setContents(contents.stream().map(this::convertContentToVO).collect(Collectors.toList()));
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     @Override
     public List<MembershipCardVO> listActiveCards() {
         List<MembershipCard> list = baseMapper.selectActiveCards();
-        return convertToVOList(list);
+        return convertToVOListWithContents(list);
     }
 
     @Override
     public List<MembershipCardVO> listRecommendCards(Integer limit) {
         List<MembershipCard> list = baseMapper.selectRecommendCards(limit);
-        return convertToVOList(list);
+        return convertToVOListWithContents(list);
     }
 
     @Override
@@ -205,10 +213,16 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
 
         IPage<MembershipCard> cardPage = page(page, wrapper);
 
-        // 转换为VO
-        List<MembershipCardVO> voList = cardPage.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        // 转换为VO（包含内容项）
+        List<MembershipCardVO> voList = cardPage.getRecords().stream().map(card -> {
+            MembershipCardVO vo = convertToVO(card);
+            // 查询每个会员卡的内容项
+            List<MembershipCardContent> contents = contentMapper.selectByCardId(card.getId());
+            if (!CollectionUtils.isEmpty(contents)) {
+                vo.setContents(contents.stream().map(this::convertContentToVO).collect(Collectors.toList()));
+            }
+            return vo;
+        }).collect(Collectors.toList());
 
         Page<MembershipCardVO> resultPage = new Page<>(cardPage.getCurrent(), cardPage.getSize(), cardPage.getTotal());
         resultPage.setRecords(voList);
@@ -230,6 +244,26 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
                     vo.setTypeName(type.getName());
                 }
             }
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
+    private List<MembershipCardVO> convertToVOListWithContents(List<MembershipCard> cards) {
+        if (CollectionUtils.isEmpty(cards)) {
+            return List.of();
+        }
+        return cards.stream().map(card -> {
+            MembershipCardVO vo = convertToVO(card);
+            // 补充类型名称
+            if (vo.getTypeName() == null && card.getTypeId() != null) {
+                MembershipCardType type = typeMapper.selectById(card.getTypeId());
+                if (type != null) {
+                    vo.setTypeName(type.getName());
+                }
+            }
+            // 查询内容项
+            List<MembershipCardContent> contents = contentMapper.selectByCardId(card.getId());
+            vo.setContents(contents.stream().map(this::convertContentToVO).collect(Collectors.toList()));
             return vo;
         }).collect(Collectors.toList());
     }

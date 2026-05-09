@@ -154,6 +154,7 @@
       :title="isEdit ? '编辑会员卡' : '新增会员卡'"
       width="700px"
       destroy-on-close
+      v-loading="editLoading"
     >
       <el-form
         ref="formRef"
@@ -234,6 +235,50 @@
           <el-input v-model="form.subtitle" placeholder="请输入副标题/简介" />
         </el-form-item>
 
+        <!-- 动态内容列表（权益/说明） -->
+        <el-form-item label="权益说明">
+          <div class="contents-list">
+            <div
+              v-for="(content, index) in form.contents"
+              :key="index"
+              class="content-item"
+            >
+              <el-row :gutter="10">
+                <el-col :span="10">
+                  <el-input
+                    v-model="content.title"
+                    placeholder="标题（如：全时段通行）"
+                  />
+                </el-col>
+                <el-col :span="12">
+                  <el-input
+                    v-model="content.description"
+                    placeholder="详细描述（可选）"
+                  />
+                </el-col>
+                <el-col :span="2">
+                  <el-button
+                    type="danger"
+                    :icon="Delete"
+                    circle
+                    size="small"
+                    @click="removeContent(index)"
+                  />
+                </el-col>
+              </el-row>
+            </div>
+            <el-button
+              type="primary"
+              plain
+              size="small"
+              :icon="Plus"
+              @click="addContent"
+            >
+              添加权益说明
+            </el-button>
+          </div>
+        </el-form-item>
+
         <el-form-item label="推荐" prop="isRecommend">
           <el-switch v-model="form.isRecommend" active-text="推荐" inactive-text="普通" />
         </el-form-item>
@@ -270,7 +315,8 @@ import {
   updateAdminCard,
   deleteAdminCard,
   updateCardStatus,
-  getMembershipStats
+  getMembershipStats,
+  getAdminCardDetail
 } from '@/api/membership'
 
 // 统计数据
@@ -307,6 +353,7 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
+const editLoading = ref(false)
 
 // 表单数据
 const form = reactive({
@@ -320,7 +367,8 @@ const form = reactive({
   subtitle: '',
   status: 'ACTIVE',
   sortOrder: 0,
-  isRecommend: false
+  isRecommend: false,
+  contents: []
 })
 
 // 表单校验规则
@@ -439,8 +487,33 @@ function handleAdd() {
 }
 
 // 编辑
-function handleEdit(row) {
+async function handleEdit(row) {
+  console.log('编辑会员卡 - 原始数据:', row)
+  console.log('编辑会员卡 - row.contents:', row.contents)
+
   isEdit.value = true
+  editLoading.value = true
+  dialogVisible.value = true
+
+  // 如果分页数据中没有contents，调用详情API获取
+  let contents = []
+  if (row.contents && row.contents.length > 0) {
+    contents = JSON.parse(JSON.stringify(row.contents))
+    console.log('使用分页数据的contents:', contents)
+  } else {
+    try {
+      console.log('分页数据无contents，调用详情API获取...')
+      const detail = await getAdminCardDetail(row.id)
+      console.log('详情API返回:', detail)
+      if (detail && detail.contents && detail.contents.length > 0) {
+        contents = detail.contents
+        console.log('从详情API获取到contents:', contents)
+      }
+    } catch (error) {
+      console.error('获取详情失败:', error)
+    }
+  }
+
   Object.assign(form, {
     id: row.id,
     name: row.name,
@@ -452,9 +525,14 @@ function handleEdit(row) {
     subtitle: row.subtitle || '',
     status: row.status,
     sortOrder: row.sortOrder || 0,
-    isRecommend: row.isRecommend || false
+    isRecommend: row.isRecommend || false,
+    contents: contents
   })
-  dialogVisible.value = true
+
+  console.log('编辑会员卡 - 最终表单数据:', form)
+  console.log('编辑会员卡 - form.contents:', form.contents, '长度:', form.contents.length)
+
+  editLoading.value = false
 }
 
 // 删除
@@ -497,6 +575,9 @@ function handleSubmit() {
     if (valid) {
       submitting.value = true
       try {
+        console.log('提交表单数据:', JSON.stringify(form, null, 2))
+        console.log('权益说明列表:', form.contents)
+
         if (isEdit.value) {
           await updateAdminCard(form.id, form)
         } else {
@@ -509,6 +590,7 @@ function handleSubmit() {
         fetchData()
         loadStats()
       } catch (error) {
+        console.error('提交失败:', error)
         ElMessage.error(error.response?.data?.message || error.message || '操作失败，请重试')
       } finally {
         submitting.value = false
@@ -530,6 +612,23 @@ function resetForm() {
   form.status = 'ACTIVE'
   form.sortOrder = 0
   form.isRecommend = false
+  form.contents = []
+}
+
+// 添加内容项
+function addContent() {
+  form.contents.push({
+    contentType: 'BENEFIT',
+    title: '',
+    description: '',
+    icon: '✓',
+    sortOrder: form.contents.length
+  })
+}
+
+// 删除内容项
+function removeContent(index) {
+  form.contents.splice(index, 1)
 }
 
 // 分页
@@ -653,5 +752,21 @@ onMounted(() => {
 
 .membership-form {
   padding: 10px 0;
+}
+
+.contents-list {
+  width: 100%;
+}
+
+.content-item {
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #f5f7fa;
+  border-radius: 6px;
+}
+
+.content-item .el-col {
+  display: flex;
+  align-items: center;
 }
 </style>

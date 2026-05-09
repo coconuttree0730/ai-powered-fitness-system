@@ -339,6 +339,15 @@ public class CoachDetailServiceImpl implements CoachDetailService {
      * 将DTO设置到实体
      */
     private void setDetailFromDTO(CoachDetail detail, CoachDetailDTO dto) {
+        if (dto.getRealName() != null) {
+            detail.setRealName(dto.getRealName());
+        }
+        if (dto.getGender() != null) {
+            detail.setGender(dto.getGender());
+        }
+        if (dto.getAge() != null) {
+            detail.setAge(dto.getAge());
+        }
         if (dto.getWorkYears() != null) {
             detail.setWorkYears(dto.getWorkYears());
         }
@@ -389,6 +398,9 @@ public class CoachDetailServiceImpl implements CoachDetailService {
             return vo;
         }
 
+        vo.setRealName(detail.getRealName());
+        vo.setGender(detail.getGender());
+        vo.setAge(detail.getAge());
         vo.setPersonalImageUrl(detail.getPersonalImageUrl());
         vo.setWorkYears(detail.getWorkYears());
         vo.setTeachingStyle(detail.getTeachingStyle());
