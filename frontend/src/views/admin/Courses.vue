@@ -33,22 +33,20 @@
                 clearable
                 style="width: 150px"
               />
-              <el-date-picker
-                v-model="searchForm.startDate"
-                type="date"
-                placeholder="开始日期"
+              <el-select
+                v-model="searchForm.dayOfWeek"
+                placeholder="星期"
                 clearable
-                style="width: 150px"
-                value-format="YYYY-MM-DD"
-              />
-              <el-date-picker
-                v-model="searchForm.endDate"
-                type="date"
-                placeholder="结束日期"
-                clearable
-                style="width: 150px"
-                value-format="YYYY-MM-DD"
-              />
+                style="width: 120px"
+              >
+                <el-option label="周一" :value="1" />
+                <el-option label="周二" :value="2" />
+                <el-option label="周三" :value="3" />
+                <el-option label="周四" :value="4" />
+                <el-option label="周五" :value="5" />
+                <el-option label="周六" :value="6" />
+                <el-option label="周日" :value="7" />
+              </el-select>
               <el-button type="primary" @click="handleSearch">
                 <el-icon><Search /></el-icon>
                 搜索
@@ -101,9 +99,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="coachName" label="教练名称" />
-        <el-table-column label="开始时间">
+        <el-table-column label="上课时间" width="180">
           <template #default="{ row }">
-            {{ formatTime(row.startTime) }}
+            {{ formatWeekTime(row.dayOfWeek, row.startTime, row.endTime) }}
           </template>
         </el-table-column>
         <el-table-column prop="capacity" label="容量" />
@@ -168,13 +166,26 @@
         </el-row>
         <el-row :gutter="12">
           <el-col :span="12">
-            <el-form-item label="开始时间" prop="startTime">
-              <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+            <el-form-item label="星期" prop="dayOfWeek">
+              <el-select v-model="form.dayOfWeek" placeholder="请选择星期" style="width: 100%">
+                <el-option label="周一" :value="1" />
+                <el-option label="周二" :value="2" />
+                <el-option label="周三" :value="3" />
+                <el-option label="周四" :value="4" />
+                <el-option label="周五" :value="5" />
+                <el-option label="周六" :value="6" />
+                <el-option label="周日" :value="7" />
+              </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="6">
+            <el-form-item label="开始时间" prop="startTime">
+              <el-time-picker v-model="form.startTime" placeholder="开始时间" style="width: 100%" value-format="HH:mm:ss" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
             <el-form-item label="结束时间" prop="endTime">
-              <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+              <el-time-picker v-model="form.endTime" placeholder="结束时间" style="width: 100%" value-format="HH:mm:ss" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -323,7 +334,7 @@
             <div class="course-meta">
               <div class="meta-item">
                 <el-icon><Clock /></el-icon>
-                <span>{{ formatTime(currentCourse.startTime) }}</span>
+                <span>{{ formatWeekTime(currentCourse.dayOfWeek, currentCourse.startTime, currentCourse.endTime) }}</span>
               </div>
               <div class="meta-item">
                 <el-icon><User /></el-icon>
@@ -456,6 +467,7 @@ const form = reactive({
   courseName: '',
   category: null,
   coachId: null,
+  dayOfWeek: null,
   startTime: null,
   endTime: null,
   capacity: 20,
@@ -472,14 +484,14 @@ const searchForm = reactive({
   courseName: '',
   category: null,
   coachId: null,
-  startDate: null,
-  endDate: null
+  dayOfWeek: null
 })
 
 const rules = {
   courseName: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
   category: [{ required: true, message: '请选择分类', trigger: 'change' }],
   coachId: [{ required: true, message: '请选择教练', trigger: 'change' }],
+  dayOfWeek: [{ required: true, message: '请选择星期', trigger: 'change' }],
   startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
   endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
   capacity: [{ required: true, message: '请输入容量', trigger: 'blur' }]
@@ -554,11 +566,8 @@ function buildSearchParams() {
   if (searchForm.coachId) {
     params.coachId = searchForm.coachId
   }
-  if (searchForm.startDate) {
-    params.startDate = searchForm.startDate
-  }
-  if (searchForm.endDate) {
-    params.endDate = searchForm.endDate
+  if (searchForm.dayOfWeek) {
+    params.dayOfWeek = searchForm.dayOfWeek
   }
   return params
 }
@@ -572,8 +581,7 @@ function handleReset() {
   searchForm.courseName = ''
   searchForm.category = null
   searchForm.coachId = null
-  searchForm.startDate = null
-  searchForm.endDate = null
+  searchForm.dayOfWeek = null
   paginationReactive.page = 1
   fetchCourses()
 }
@@ -585,6 +593,7 @@ function handleAdd() {
     courseName: '',
     category: null,
     coachId: null,
+    dayOfWeek: null,
     startTime: null,
     endTime: null,
     capacity: 20,
@@ -612,6 +621,7 @@ function handleEdit(row) {
     courseName: row.courseName,
     category: row.category,
     coachId: row.coachId,
+    dayOfWeek: row.dayOfWeek,
     startTime: row.startTime,
     endTime: row.endTime,
     capacity: row.capacity,
@@ -670,6 +680,7 @@ async function handleSubmit() {
     const data = {
       ...form,
       coachId: form.coachId ? Number(form.coachId) : null,
+      dayOfWeek: form.dayOfWeek ? Number(form.dayOfWeek) : null,
       capacity: form.capacity ? Number(form.capacity) : null,
       durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
       caloriesMin: form.caloriesMin ? Number(form.caloriesMin) : null,
@@ -717,6 +728,17 @@ function handleDelete(row) {
 function formatTime(time) {
   if (!time) return ''
   return new Date(time).toLocaleString('zh-CN')
+}
+
+function formatWeekTime(dayOfWeek, startTime, endTime) {
+  const weekMap = { 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六', 7: '周日' }
+  const week = weekMap[dayOfWeek] || ''
+  const start = startTime || ''
+  const end = endTime || ''
+  if (week && start && end) {
+    return `${week} ${start}-${end}`
+  }
+  return week || start || end || '-'
 }
 
 function getCategoryLabel(category) {

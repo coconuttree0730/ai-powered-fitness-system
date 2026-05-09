@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 
 import cn.hutool.core.bean.BeanUtil;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -198,8 +199,8 @@ public class CourseServiceImpl implements CourseService {
      * @param startTime 开始时间
      * @param endTime   结束时间
      */
-    private void validateCourseTime(LocalDateTime startTime, LocalDateTime endTime) {
-        if (endTime.isBefore(startTime) || endTime.isEqual(startTime)) {
+    private void validateCourseTime(LocalTime startTime, LocalTime endTime) {
+        if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "结束时间必须晚于开始时间");
         }
     }

@@ -1,14 +1,16 @@
 package com.fitness.modules.course.model.dto;
 
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 课程创建/更新请求DTO
+ * 业务场景：公开课是周期性课程（每周固定某天某时段）
  */
 @Data
 public class CourseDTO {
@@ -37,18 +39,24 @@ public class CourseDTO {
     private String category;
 
     /**
-     * 开始时间
+     * 星期几：1-周一, 2-周二, 3-周三, 4-周四, 5-周五, 6-周六, 7-周日
      */
-    @NotNull(message = "开始时间不能为空")
-    @Future(message = "开始时间必须是未来时间")
-    private LocalDateTime startTime;
+    @NotNull(message = "星期几不能为空")
+    @Min(value = 1, message = "星期几必须在1-7之间")
+    @Max(value = 7, message = "星期几必须在1-7之间")
+    private Integer dayOfWeek;
 
     /**
-     * 结束时间
+     * 开始时间（时分秒，如 14:00:00）
+     */
+    @NotNull(message = "开始时间不能为空")
+    private LocalTime startTime;
+
+    /**
+     * 结束时间（时分秒，如 15:30:00）
      */
     @NotNull(message = "结束时间不能为空")
-    @Future(message = "结束时间必须是未来时间")
-    private LocalDateTime endTime;
+    private LocalTime endTime;
 
     /**
      * 容量（可预约人数）

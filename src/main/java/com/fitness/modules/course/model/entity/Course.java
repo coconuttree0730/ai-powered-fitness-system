@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 课程实体类
  * 对应 fitness_course 表
+ * 业务场景：公开课是周期性课程（每周固定某天某时段）
  */
 @Data
 @TableName("fitness_course")
@@ -44,16 +46,22 @@ public class Course {
     private String category;
 
     /**
-     * 开始时间
+     * 星期几：1-周一, 2-周二, 3-周三, 4-周四, 5-周五, 6-周六, 7-周日
      */
-    @TableField("start_time")
-    private LocalDateTime startTime;
+    @TableField("day_of_week")
+    private Integer dayOfWeek;
 
     /**
-     * 结束时间
+     * 开始时间（时分秒，如 14:00:00）
+     */
+    @TableField("start_time")
+    private LocalTime startTime;
+
+    /**
+     * 结束时间（时分秒，如 15:30:00）
      */
     @TableField("end_time")
-    private LocalDateTime endTime;
+    private LocalTime endTime;
 
     /**
      * 容量（可预约人数）

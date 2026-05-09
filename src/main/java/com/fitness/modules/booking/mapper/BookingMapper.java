@@ -25,7 +25,7 @@ public interface BookingMapper extends BaseMapper<Booking> {
      * @return 预约列表
      */
     @Select("SELECT b.id, b.course_id, c.course_name, u.username as coach_name, " +
-            "c.start_time, c.end_time, b.booking_time, b.status " +
+            "c.day_of_week, c.start_time, c.end_time, b.booking_time, b.status " +
             "FROM fitness_booking b " +
             "LEFT JOIN fitness_course c ON b.course_id = c.id " +
             "LEFT JOIN sys_user u ON c.coach_id = u.id " +
@@ -40,8 +40,8 @@ public interface BookingMapper extends BaseMapper<Booking> {
      * @return 预约详情
      */
     @Select("SELECT b.id, b.user_id, su.username, b.course_id, c.course_name, " +
-            "c.coach_id, u.username as coach_name, c.start_time, c.end_time, " +
-            "c.location, b.booking_time, b.status, b.cancel_reason, b.create_time " +
+            "c.coach_id, u.username as coach_name, c.day_of_week, c.start_time, c.end_time, " +
+            "b.booking_time, b.status, b.cancel_reason, b.create_time " +
             "FROM fitness_booking b " +
             "LEFT JOIN fitness_course c ON b.course_id = c.id " +
             "LEFT JOIN sys_user u ON c.coach_id = u.id " +

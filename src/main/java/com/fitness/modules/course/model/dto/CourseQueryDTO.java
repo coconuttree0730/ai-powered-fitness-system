@@ -2,8 +2,6 @@ package com.fitness.modules.course.model.dto;
 
 import lombok.Data;
 
-import java.time.LocalDate;
-
 /**
  * 课程查询条件DTO
  */
@@ -26,14 +24,9 @@ public class CourseQueryDTO {
     private String sortBy;
 
     /**
-     * 开始日期
+     * 星期几筛选：1-周一, 2-周二, ..., 7-周日
      */
-    private LocalDate startDate;
-
-    /**
-     * 结束日期
-     */
-    private LocalDate endDate;
+    private Integer dayOfWeek;
 
     /**
      * 关键词（课程名称）

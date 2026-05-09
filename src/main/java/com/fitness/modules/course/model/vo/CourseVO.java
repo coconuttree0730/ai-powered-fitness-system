@@ -2,7 +2,7 @@ package com.fitness.modules.course.model.vo;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 课程信息展示VO
@@ -46,14 +46,19 @@ public class CourseVO {
     private String category;
 
     /**
-     * 开始时间
+     * 星期几：1-周一, 2-周二, 3-周三, 4-周四, 5-周五, 6-周六, 7-周日
      */
-    private LocalDateTime startTime;
+    private Integer dayOfWeek;
 
     /**
-     * 结束时间
+     * 开始时间（时分秒，如 14:00:00）
      */
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+
+    /**
+     * 结束时间（时分秒，如 15:30:00）
+     */
+    private LocalTime endTime;
 
     /**
      * 容量（可预约人数）

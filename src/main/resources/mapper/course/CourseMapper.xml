@@ -12,6 +12,7 @@
         <result column="coach_name" property="coachName"/>
         <result column="coach_avatar" property="coachAvatar"/>
         <result column="category" property="category"/>
+        <result column="day_of_week" property="dayOfWeek"/>
         <result column="start_time" property="startTime"/>
         <result column="end_time" property="endTime"/>
         <result column="capacity" property="capacity"/>
@@ -35,6 +36,7 @@
             u.username AS coach_name,
             u.avatar AS coach_avatar,
             c.category,
+            c.day_of_week,
             c.start_time,
             c.end_time,
             c.capacity,
@@ -57,11 +59,8 @@
         <if test="query.level != null and query.level != ''">
             AND c.difficulty_level = #{query.level}
         </if>
-        <if test="query.startDate != null">
-            AND c.start_time::DATE >= #{query.startDate}::DATE
-        </if>
-        <if test="query.endDate != null">
-            AND c.end_time::DATE &lt;= #{query.endDate}::DATE
+        <if test="query.dayOfWeek != null">
+            AND c.day_of_week = #{query.dayOfWeek}
         </if>
         <if test="query.keyword != null and query.keyword != ''">
             AND (c.course_name LIKE '%' || #{query.keyword} || '%' OR u.username LIKE '%' || #{query.keyword} || '%')
@@ -110,6 +109,7 @@
             u.username AS coach_name,
             u.avatar AS coach_avatar,
             c.category,
+            c.day_of_week,
             c.start_time,
             c.end_time,
             c.capacity,

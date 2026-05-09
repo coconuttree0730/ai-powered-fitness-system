@@ -18,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -43,8 +45,8 @@ public class BookingServiceImpl implements BookingService {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
         }
 
-        // 2. 检查课程是否已开始
-        if (course.getStartTime().isBefore(LocalDateTime.now())) {
+        // 2. 检查课程是否已开始（周期性课程：对比今天星期几+当前时间）
+        if (isCourseStarted(course)) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程已开始，无法预约");
         }
 
@@ -104,7 +106,7 @@ public class BookingServiceImpl implements BookingService {
 
         // 4. 获取课程信息，检查课程是否已开始
         Course course = courseMapper.selectById(booking.getCourseId());
-        if (course != null && course.getStartTime().isBefore(LocalDateTime.now())) {
+        if (course != null && isCourseStarted(course)) {
             throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "课程已开始，无法取消");
         }
 
@@ -260,5 +262,30 @@ public class BookingServiceImpl implements BookingService {
             case 3 -> vo.setStatusDesc("已完成");
             default -> vo.setStatusDesc("未知");
         }
+    }
+
+    /**
+     * 判断周期性课程是否已开始
+     * 逻辑：对比当前星期几 + 当前时间 与 课程的 dayOfWeek + startTime
+     *
+     * @param course 课程实体
+     * @return true-课程已开始或正在进行中
+     */
+    private boolean isCourseStarted(Course course) {
+        if (course.getDayOfWeek() == null || course.getStartTime() == null) {
+            return false;
+        }
+
+        DayOfWeek today = LocalDateTime.now().getDayOfWeek();
+        int todayValue = today.getValue(); // MONDAY=1, ..., SUNDAY=7
+        LocalTime now = LocalTime.now();
+
+        // 今天不是课程日 → 未开始
+        if (todayValue != course.getDayOfWeek()) {
+            return false;
+        }
+
+        // 今天是课程日，检查当前时间是否已过上课时间
+        return !now.isBefore(course.getStartTime());
     }
 }
