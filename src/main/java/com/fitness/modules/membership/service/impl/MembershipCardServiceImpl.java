@@ -231,23 +231,6 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
         return resultPage;
     }
 
-    private List<MembershipCardVO> convertToVOList(List<MembershipCard> cards) {
-        if (CollectionUtils.isEmpty(cards)) {
-            return List.of();
-        }
-        return cards.stream().map(card -> {
-            MembershipCardVO vo = convertToVO(card);
-            // 补充类型名称，convertToVO中可能未完全覆盖或为了保持一致性再次确认
-            if (vo.getTypeName() == null && card.getTypeId() != null) {
-                MembershipCardType type = typeMapper.selectById(card.getTypeId());
-                if (type != null) {
-                    vo.setTypeName(type.getName());
-                }
-            }
-            return vo;
-        }).collect(Collectors.toList());
-    }
-
     private List<MembershipCardVO> convertToVOListWithContents(List<MembershipCard> cards) {
         if (CollectionUtils.isEmpty(cards)) {
             return List.of();

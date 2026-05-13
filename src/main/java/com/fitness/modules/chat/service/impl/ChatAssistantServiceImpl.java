@@ -1,6 +1,5 @@
 package com.fitness.modules.chat.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,16 +13,12 @@ import com.fitness.modules.chat.model.dto.ChatMessageDTO;
 import com.fitness.modules.chat.model.entity.ChatMessage;
 import com.fitness.modules.chat.model.entity.ChatSession;
 import com.fitness.modules.chat.model.vo.*;
-import com.fitness.modules.chat.prompt.ChatPromptTemplates;
 import com.fitness.modules.chat.service.ChatAssistantService;
 import com.fitness.modules.chat.service.ChatContextService;
 import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.service.CourseService;
 import com.fitness.modules.equipment.model.vo.EquipmentVO;
 import com.fitness.modules.equipment.service.EquipmentService;
-import com.fitness.modules.knowledge.model.dto.RAGQueryDTO;
-import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
-import com.fitness.modules.knowledge.service.RAGService;
 import com.fitness.modules.plan.model.entity.FitnessPlan;
 import com.fitness.modules.plan.model.entity.FitnessPlanDetail;
 import com.fitness.modules.plan.mapper.FitnessPlanMapper;
@@ -32,10 +27,6 @@ import com.fitness.modules.user.model.vo.UserFitnessProfileVO;
 import com.fitness.modules.user.service.UserFitnessProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -61,8 +52,6 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
     private final ChatMessageMapper chatMessageMapper;
     private final ChatContextService chatContextService;
     private final AIService aiService;
-    private final ChatPromptTemplates chatPromptTemplates;
-    private final RAGService ragService;
     private final UserFitnessProfileService userFitnessProfileService;
     private final FitnessPlanMapper fitnessPlanMapper;
     private final FitnessPlanDetailMapper fitnessPlanDetailMapper;
@@ -416,67 +405,6 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
         session.setIsDeleted(false);
         chatSessionMapper.insert(session);
         return session;
-    }
-
-    private String callAIWithRAG(Long sessionId, String userMessage) {
-        // 使用RAG检索构建提示词
-        String fullPrompt = buildRAGPrompt(userMessage);
-
-        return aiService.chat(fullPrompt);
-    }
-
-    private String buildRAGPrompt(String userMessage) {
-        log.debug("【健小助RAG】开始检索知识库，查询内容: '{}'", userMessage);
-
-        // 构建RAG查询参数 - 降低相似度阈值以提高召回率
-        RAGQueryDTO queryDTO = new RAGQueryDTO();
-        queryDTO.setQuery(userMessage);
-        queryDTO.setTopK(5);
-        queryDTO.setSimilarityThreshold(0.3);  // 降低阈值，提高召回率
-
-        // 调用RAG服务检索相关知识
-        RAGSearchResultVO searchResult = ragService.search(queryDTO);
-
-        // 构建上下文内容
-        StringBuilder contextBuilder = new StringBuilder();
-        if (searchResult != null && CollUtil.isNotEmpty(searchResult.getChunks())) {
-            log.debug("【健小助RAG】检索到 {} 个相关切片", searchResult.getChunks().size());
-
-            for (int i = 0; i < searchResult.getChunks().size(); i++) {
-                RAGSearchResultVO.RetrievedChunk chunk = searchResult.getChunks().get(i);
-                contextBuilder.append("【参考内容").append(i + 1).append("】\n");
-                contextBuilder.append("来源: ").append(chunk.getDocumentTitle()).append("\n");
-                contextBuilder.append("内容: ").append(chunk.getContent()).append("\n\n");
-            }
-        } else {
-            log.warn("【健小助RAG】未检索到相关知识库内容");
-        }
-
-        String ragContext = contextBuilder.toString();
-        log.debug("【健小助RAG】构建的上下文长度: {} 字符", ragContext.length());
-
-        // 构建带RAG上下文的提示词
-        return chatPromptTemplates.buildRAGPrompt(userMessage, ragContext);
-    }
-
-    private List<Message> buildMessages(List<ChatMessage> contextMessages, String currentMessage) {
-        List<Message> messages = new ArrayList<>();
-
-        messages.add(new SystemMessage(chatPromptTemplates.getSystemPrompt()));
-
-        if (CollUtil.isNotEmpty(contextMessages)) {
-            for (ChatMessage msg : contextMessages) {
-                if ("user".equals(msg.getRole())) {
-                    messages.add(new UserMessage(msg.getContent()));
-                } else if ("assistant".equals(msg.getRole())) {
-                    messages.add(new AssistantMessage(msg.getContent()));
-                }
-            }
-        }
-
-        messages.add(new UserMessage(currentMessage));
-
-        return messages;
     }
 
     private String generateSessionTitle(String firstMessage) {

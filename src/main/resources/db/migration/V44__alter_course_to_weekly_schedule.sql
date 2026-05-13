@@ -9,15 +9,17 @@ ALTER TABLE fitness_course ADD COLUMN IF NOT EXISTS day_of_week SMALLINT NOT NUL
 
 COMMENT ON COLUMN fitness_course.day_of_week IS '星期几：1-周一, 2-周二, 3-周三, 4-周四, 5-周五, 6-周六, 7-周日';
 
--- 2. 将 start_time 从 TIMESTAMP 改为 TIME（仅保留时分秒）
+-- 2. 先从旧 TIMESTAMP 数据推算 day_of_week（必须在类型转换之前执行！）
+UPDATE fitness_course SET day_of_week = EXTRACT(ISODOW FROM start_time)::SMALLINT
+WHERE (day_of_week IS NULL OR day_of_week = 0)
+  AND start_time IS NOT NULL;
+
+-- 3. 将 start_time 从 TIMESTAMP 改为 TIME（仅保留时分秒）
 ALTER TABLE fitness_course ALTER COLUMN start_time TYPE TIME USING (start_time::TIME);
 
 COMMENT ON COLUMN fitness_course.start_time IS '开始时间（时分秒，如 14:00:00）';
 
--- 3. 将 end_time 从 TIMESTAMP 改为 TIME（仅保留时分秒）
+-- 4. 将 end_time 从 TIMESTAMP 改为 TIME（仅保留时分秒）
 ALTER TABLE fitness_course ALTER COLUMN end_time TYPE TIME USING (end_time::TIME);
 
 COMMENT ON COLUMN fitness_course.end_time IS '结束时间（时分秒，如 15:30:00）';
-
--- 4. 根据现有数据的日期推算 day_of_week 值（兼容旧数据）
-UPDATE fitness_course SET day_of_week = EXTRACT(ISODOW FROM start_time)::SMALLINT WHERE day_of_week IS NULL OR day_of_week = 0;

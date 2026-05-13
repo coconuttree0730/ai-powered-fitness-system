@@ -1,6 +1,5 @@
 package com.fitness.modules.user.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -456,21 +455,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Random random = new Random();
         int randomSuffix = random.nextInt(10000);
         return String.format("user_%s_%04d", phoneSuffix, randomSuffix);
-    }
-
-    /**
-     * 生成随机密码
-     *
-     * @return 随机密码
-     */
-    private String generateRandomPassword() {
-        Random random = new Random();
-        StringBuilder password = new StringBuilder();
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
-        for (int i = 0; i < 16; i++) {
-            password.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return password.toString();
     }
 
     /**

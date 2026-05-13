@@ -16,7 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -48,7 +48,7 @@ class BookingServiceTest {
         validCourse.setCourseName("瑜伽课程");
         validCourse.setCapacity(20);
         validCourse.setBookedCount(5);
-        validCourse.setStartTime(LocalDateTime.now().plusDays(1));
+        validCourse.setStartTime(LocalTime.now());
         validCourse.setDeleted(false);
 
         // 准备有效的预约数据
@@ -112,7 +112,7 @@ class BookingServiceTest {
 
         Course startedCourse = new Course();
         startedCourse.setId(1L);
-        startedCourse.setStartTime(LocalDateTime.now().minusHours(1));
+        startedCourse.setStartTime(LocalTime.now());
         startedCourse.setDeleted(false);
 
         when(courseMapper.selectById(1L)).thenReturn(startedCourse);
@@ -134,7 +134,7 @@ class BookingServiceTest {
         fullCourse.setId(1L);
         fullCourse.setCapacity(20);
         fullCourse.setBookedCount(20);
-        fullCourse.setStartTime(LocalDateTime.now().plusDays(1));
+        fullCourse.setStartTime(LocalTime.now());
         fullCourse.setDeleted(false);
 
         when(courseMapper.selectById(1L)).thenReturn(fullCourse);

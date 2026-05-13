@@ -11,75 +11,70 @@ import com.fitness.modules.booking.model.entity.Booking;
 import com.fitness.modules.booking.model.vo.BookingListVO;
 import com.fitness.modules.booking.model.vo.BookingVO;
 import com.fitness.modules.booking.service.BookingService;
-import com.fitness.modules.course.mapper.CourseMapper;
-import com.fitness.modules.course.model.entity.Course;
+import com.fitness.modules.course.mapper.CourseSessionMapper;
+import com.fitness.modules.course.model.vo.CourseSessionVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * 预约服务实现类
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
     private final BookingMapper bookingMapper;
-    private final CourseMapper courseMapper;
+    private final CourseSessionMapper sessionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createBooking(Long userId, BookingDTO dto) {
-        log.info("创建预约: userId={}, courseId={}", userId, dto.getCourseId());
+        log.info("创建预约: userId={}, sessionId={}", userId, dto.getSessionId());
 
-        // 1. 检查课程是否存在
-        Course course = courseMapper.selectById(dto.getCourseId());
-        if (course == null || Boolean.TRUE.equals(course.getDeleted())) {
-            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        // 1. 检查课程实例是否存在且可预约
+        CourseSessionVO session = sessionMapper.selectSessionDetail(dto.getSessionId());
+        if (session == null) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程不存在");
         }
 
-        // 2. 检查课程是否已开始（周期性课程：对比今天星期几+当前时间）
-        if (isCourseStarted(course)) {
+        // 2. 检查课程实例是否已开始或已结束
+        if (isSessionStarted(session)) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程已开始，无法预约");
         }
 
-        // 3. 检查课程是否已满
-        if (course.getBookedCount() >= course.getCapacity()) {
+        // 3. 检查是否已满员
+        if (session.getBookedCount() >= session.getCapacity()) {
             throw new BusinessException(ErrorCode.COURSE_FULL);
         }
 
-        // 4. 检查用户是否已预约该课程
-        int existingBooking = bookingMapper.countByUserIdAndCourseId(userId, dto.getCourseId());
-        if (existingBooking > 0) {
-            throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS);
+        // 4. 检查用户是否已预约该实例（同一个session不能重复预约）
+        int existing = bookingMapper.countByUserIdAndSessionId(userId, dto.getSessionId());
+        if (existing > 0) {
+            throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS, "您已预约了这节课");
         }
 
-        // 5. 增加课程预约人数（当前预约数）
-        int updated = courseMapper.updateBookedCount(dto.getCourseId(), 1);
+        // 5. 原子性增加实例预约人数
+        int updated = sessionMapper.updateBookedCount(dto.getSessionId(), 1);
         if (updated == 0) {
-            throw new BusinessException(ErrorCode.COURSE_FULL);
+            throw new BusinessException(ErrorCode.COURSE_FULL, "名额已满，请选择其他时间");
         }
 
-        // 6. 原子性增加总预约人数（统计所有预约过该课程的独立会员数量）
-        courseMapper.incrementTotalBookingCount(dto.getCourseId());
-
-        // 7. 创建预约记录
+        // 6. 创建预约记录（绑定具体实例）
         Booking booking = new Booking();
         booking.setUserId(userId);
-        booking.setCourseId(dto.getCourseId());
+        booking.setCourseId(session.getCourseId());
+        booking.setSessionId(dto.getSessionId());
         booking.setBookingTime(LocalDateTime.now());
-        booking.setStatus(0); // 待确认
+        booking.setStatus(0);
 
         bookingMapper.insert(booking);
 
-        log.info("预约创建成功: bookingId={}", booking.getId());
+        log.info("预约创建成功: bookingId={}, sessionId={}", booking.getId(), dto.getSessionId());
         return booking.getId();
     }
 
@@ -88,36 +83,34 @@ public class BookingServiceImpl implements BookingService {
     public void cancelBooking(Long userId, Long bookingId, BookingCancelDTO dto) {
         log.info("取消预约: userId={}, bookingId={}", userId, bookingId);
 
-        // 1. 检查预约是否存在
         Booking booking = bookingMapper.selectById(bookingId);
         if (booking == null || Boolean.TRUE.equals(booking.getDeleted())) {
             throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
         }
-
-        // 2. 检查是否是自己的预约
         if (!booking.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
-
-        // 3. 检查预约状态是否可以取消
         if (booking.getStatus() == 2) {
             throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "预约已取消");
         }
 
-        // 4. 获取课程信息，检查课程是否已开始
-        Course course = courseMapper.selectById(booking.getCourseId());
-        if (course != null && isCourseStarted(course)) {
-            throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "课程已开始，无法取消");
+        // 基于实例判断是否可取消
+        if (booking.getSessionId() != null) {
+            CourseSessionVO session = sessionMapper.selectSessionDetail(booking.getSessionId());
+            if (session != null && isSessionStarted(session)) {
+                throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "课程已开始，无法取消");
+            }
         }
 
-        // 5. 取消预约
         int updated = bookingMapper.cancelBooking(bookingId, dto.getCancelReason());
         if (updated == 0) {
             throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL);
         }
 
-        // 6. 减少课程预约人数
-        courseMapper.updateBookedCount(booking.getCourseId(), -1);
+        // 减少实例预约人数
+        if (booking.getSessionId() != null) {
+            sessionMapper.updateBookedCount(booking.getSessionId(), -1);
+        }
 
         log.info("预约取消成功: bookingId={}", bookingId);
     }
@@ -126,7 +119,6 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingListVO> getMyBookings(Long userId) {
         log.info("获取我的预约列表: userId={}", userId);
         List<BookingListVO> list = bookingMapper.selectBookingListByUserId(userId);
-        // 设置状态描述
         list.forEach(this::setStatusDesc);
         return list;
     }
@@ -139,8 +131,6 @@ public class BookingServiceImpl implements BookingService {
         if (bookingVO == null) {
             throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
         }
-
-        // 检查是否是自己的预约（管理员可以查看所有）
         if (!bookingVO.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
@@ -151,7 +141,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Page<BookingListVO> getBookingList(BookingQueryDTO query) {
-        log.info("查询预约列表: userId={}, courseId={}, status={}",
+        log.info("查询预约列表: userId={}, sessionId={}, status={}",
                 query.getUserId(), query.getCourseId(), query.getStatus());
 
         Page<BookingListVO> page = new Page<>(query.getPageNum(), query.getPageSize());
@@ -171,12 +161,11 @@ public class BookingServiceImpl implements BookingService {
         if (booking == null || Boolean.TRUE.equals(booking.getDeleted())) {
             throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
         }
-
         if (booking.getStatus() != 0) {
             throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能确认待确认的预约");
         }
 
-        int updated = bookingMapper.updateStatus(bookingId, 1); // 已确认
+        int updated = bookingMapper.updateStatus(bookingId, 1);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR);
         }
@@ -193,19 +182,18 @@ public class BookingServiceImpl implements BookingService {
         if (booking == null || Boolean.TRUE.equals(booking.getDeleted())) {
             throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
         }
-
         if (booking.getStatus() != 0) {
             throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能拒绝待确认的预约");
         }
 
-        // 更新预约状态为已取消
-        int updated = bookingMapper.updateStatus(bookingId, 2); // 已取消
+        int updated = bookingMapper.updateStatus(bookingId, 2);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR);
         }
 
-        // 减少课程预约人数
-        courseMapper.updateBookedCount(booking.getCourseId(), -1);
+        if (booking.getSessionId() != null) {
+            sessionMapper.updateBookedCount(booking.getSessionId(), -1);
+        }
 
         log.info("预约拒绝成功: bookingId={}", bookingId);
     }
@@ -219,12 +207,11 @@ public class BookingServiceImpl implements BookingService {
         if (booking == null || Boolean.TRUE.equals(booking.getDeleted())) {
             throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
         }
-
         if (booking.getStatus() != 1) {
             throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能完成已确认的预约");
         }
 
-        int updated = bookingMapper.updateStatus(bookingId, 3); // 已完成
+        int updated = bookingMapper.updateStatus(bookingId, 3);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR);
         }
@@ -232,13 +219,8 @@ public class BookingServiceImpl implements BookingService {
         log.info("预约完成: bookingId={}", bookingId);
     }
 
-    /**
-     * 设置状态描述
-     */
     private void setStatusDesc(BookingListVO vo) {
-        if (vo.getStatus() == null) {
-            return;
-        }
+        if (vo.getStatus() == null) return;
         switch (vo.getStatus()) {
             case 0 -> vo.setStatusDesc("待确认");
             case 1 -> vo.setStatusDesc("已确认");
@@ -248,13 +230,8 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    /**
-     * 设置状态描述
-     */
     private void setStatusDesc(BookingVO vo) {
-        if (vo.getStatus() == null) {
-            return;
-        }
+        if (vo.getStatus() == null) return;
         switch (vo.getStatus()) {
             case 0 -> vo.setStatusDesc("待确认");
             case 1 -> vo.setStatusDesc("已确认");
@@ -265,27 +242,26 @@ public class BookingServiceImpl implements BookingService {
     }
 
     /**
-     * 判断周期性课程是否已开始
-     * 逻辑：对比当前星期几 + 当前时间 与 课程的 dayOfWeek + startTime
-     *
-     * @param course 课程实体
-     * @return true-课程已开始或正在进行中
+     * 判断课程实例是否已开始
+     * 基于具体的 session_date + start_time 判断
      */
-    private boolean isCourseStarted(Course course) {
-        if (course.getDayOfWeek() == null || course.getStartTime() == null) {
+    private boolean isSessionStarted(CourseSessionVO session) {
+        if (session.getSessionDate() == null || session.getStartTime() == null) {
             return false;
         }
 
-        DayOfWeek today = LocalDateTime.now().getDayOfWeek();
-        int todayValue = today.getValue(); // MONDAY=1, ..., SUNDAY=7
+        LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
-        // 今天不是课程日 → 未开始
-        if (todayValue != course.getDayOfWeek()) {
+        // 实例日期在今天之前 → 已结束
+        if (session.getSessionDate().isBefore(today)) {
+            return true;
+        }
+        // 实例日期在今天之后 → 未开始
+        if (session.getSessionDate().isAfter(today)) {
             return false;
         }
-
-        // 今天是课程日，检查当前时间是否已过上课时间
-        return !now.isBefore(course.getStartTime());
+        // 今天就是上课日 → 比较时间
+        return !now.isBefore(session.getStartTime());
     }
 }

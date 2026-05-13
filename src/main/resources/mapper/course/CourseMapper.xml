@@ -40,8 +40,8 @@
             c.start_time,
             c.end_time,
             c.capacity,
-            c.booked_count,
-            (c.capacity - c.booked_count) AS remaining_count,
+            COALESCE(s.total_booked, 0) AS booked_count,
+            (c.capacity - COALESCE(s.total_booked, 0)) AS remaining_count,
             c.status,
             c.image_url,
             c.difficulty_level,
@@ -52,6 +52,12 @@
             c.create_time
         FROM fitness_course c
         LEFT JOIN sys_user u ON c.coach_id = u.id
+        LEFT JOIN (
+            SELECT course_id, SUM(booked_count) AS total_booked
+            FROM fitness_course_session
+            WHERE deleted = false
+            GROUP BY course_id
+        ) s ON c.id = s.course_id
         WHERE c.deleted = false
         <if test="query.category != null and query.category != ''">
             AND c.category = #{query.category}
@@ -113,8 +119,8 @@
             c.start_time,
             c.end_time,
             c.capacity,
-            c.booked_count,
-            (c.capacity - c.booked_count) AS remaining_count,
+            COALESCE(s.total_booked, 0) AS booked_count,
+            (c.capacity - COALESCE(s.total_booked, 0)) AS remaining_count,
             c.status,
             c.image_url,
             c.difficulty_level,
@@ -123,6 +129,12 @@
             c.calories_max
         FROM fitness_course c
         LEFT JOIN sys_user u ON c.coach_id = u.id
+        LEFT JOIN (
+            SELECT course_id, SUM(booked_count) AS total_booked
+            FROM fitness_course_session
+            WHERE deleted = false
+            GROUP BY course_id
+        ) s ON c.id = s.course_id
         WHERE c.id = #{courseId}
           AND c.deleted = false
     </select>

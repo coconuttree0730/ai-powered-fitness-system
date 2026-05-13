@@ -1,7 +1,5 @@
 package com.fitness.modules.knowledge.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fitness.modules.knowledge.mapper.KnowledgeChunkMapper;
 import com.fitness.modules.knowledge.model.entity.KnowledgeChunk;
@@ -13,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

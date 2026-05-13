@@ -2,6 +2,7 @@ package com.fitness.modules.booking.model.vo;
 
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -11,38 +12,34 @@ import java.time.LocalTime;
 @Data
 public class BookingListVO {
 
-    /**
-     * 预约ID
-     */
     private Long id;
 
-    /**
-     * 课程ID
-     */
     private Long courseId;
-
-    /**
-     * 课程名称
-     */
     private String courseName;
-
-    /**
-     * 教练名称
-     */
     private String coachName;
 
     /**
-     * 星期几：1-周一, 2-周二, ..., 7-周日
+     * 课程实例ID
+     */
+    private Long sessionId;
+
+    /**
+     * 上课日期（具体某一天）
+     */
+    private LocalDate sessionDate;
+
+    /**
+     * 星期几
      */
     private Integer dayOfWeek;
 
     /**
-     * 课程开始时间（时分秒，如 14:00:00）
+     * 开始时间（时分秒）
      */
     private LocalTime startTime;
 
     /**
-     * 课程结束时间（时分秒，如 15:30:00）
+     * 结束时间（时分秒）
      */
     private LocalTime endTime;
 

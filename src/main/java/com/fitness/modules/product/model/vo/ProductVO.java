@@ -25,6 +25,7 @@ public class ProductVO {
     private Boolean isNew;
     private Boolean isRecommend;
     private Integer sortOrder;
+    private Long coachId;
     private LocalDateTime createdAt;
     
     private BigDecimal calculatedDiscount;

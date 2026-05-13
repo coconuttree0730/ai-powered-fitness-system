@@ -14,7 +14,9 @@ import com.fitness.modules.product.model.vo.PriceCalculationVO;
 import com.fitness.modules.product.model.vo.ProductOrderVO;
 import com.fitness.modules.product.service.ProductOrderService;
 import com.fitness.modules.user.mapper.UserMapper;
+import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import com.fitness.modules.user.model.entity.User;
+import com.fitness.modules.user.model.entity.UserFitnessProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     private final ProductOrderMapper productOrderMapper;
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
+    private final UserFitnessProfileMapper userFitnessProfileMapper;
 
     private static final BigDecimal POINTS_TO_MONEY_RATE = new BigDecimal("0.01");
 
@@ -96,8 +99,20 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
+        if (!"ACTIVE".equals(product.getStatus())) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_AVAILABLE);
+        }
+
         if (product.getStock() < dto.getQuantity()) {
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+        }
+
+        if (product.getCoachId() != null) {
+            UserFitnessProfile profile = userFitnessProfileMapper.selectByUserId(userId);
+            if (profile != null && profile.getPrivateCoachId() != null
+                    && !profile.getPrivateCoachId().equals(product.getCoachId())) {
+                throw new BusinessException(ErrorCode.COACH_ALREADY_BOUND);
+            }
         }
 
         CalculatePriceDTO calculateDTO = new CalculatePriceDTO();
@@ -133,6 +148,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         order.setStatus("PENDING");
         order.setAddress(dto.getAddress());
         order.setRemark(dto.getRemark());
+        order.setCoachId(product.getCoachId());
 
         save(order);
 
@@ -156,7 +172,27 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         order.setPayTime(LocalDateTime.now());
         updateById(order);
 
+        if (order.getCoachId() != null) {
+            bindCoachToMember(order.getUserId(), order.getCoachId());
+        }
+
         return convertToVO(order);
+    }
+
+    private void bindCoachToMember(Long userId, Long coachId) {
+        UserFitnessProfile profile = userFitnessProfileMapper.selectByUserId(userId);
+        if (profile == null) {
+            profile = new UserFitnessProfile();
+            profile.setUserId(userId);
+            profile.setPrivateCoachId(coachId);
+            profile.setCreateTime(LocalDateTime.now());
+            profile.setUpdateTime(LocalDateTime.now());
+            userFitnessProfileMapper.insert(profile);
+        } else {
+            profile.setPrivateCoachId(coachId);
+            profile.setUpdateTime(LocalDateTime.now());
+            userFitnessProfileMapper.updateById(profile);
+        }
     }
 
     @Override

@@ -117,6 +117,11 @@ public class CoachHomePageVO {
     private String username;
 
     /**
+     * 真实姓名
+     */
+    private String realName;
+
+    /**
      * 头像
      */
     private String avatar;

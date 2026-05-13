@@ -39,4 +39,5 @@ public class ProductDTO {
     private Boolean isNew;
     private Boolean isRecommend;
     private Integer sortOrder;
+    private Long coachId;
 }

@@ -34,8 +34,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 健身计划服务实现类
@@ -193,7 +191,6 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 解析并校验AI返回的DTO响应，替换假数据为真实数据
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseAndValidateAiResponse(FitnessPlanResponseDTO aiResponse, String bmi, String goal, String experience) {
         try {
             Map<String, Object> planData = new HashMap<>();

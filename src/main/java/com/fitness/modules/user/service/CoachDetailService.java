@@ -4,6 +4,7 @@ import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
+import com.fitness.modules.product.model.vo.ProductVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -78,4 +79,12 @@ public interface CoachDetailService {
      * @return 专属教练信息，如果没有则返回null
      */
     MyPrivateCoachVO getMyPrivateCoach();
+
+    /**
+     * 获取指定教练的可购买私教套餐列表
+     *
+     * @param coachId 教练用户ID
+     * @return 套餐商品列表
+     */
+    List<ProductVO> getCoachPackages(Long coachId);
 }

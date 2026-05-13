@@ -25,12 +25,13 @@ public interface BookingMapper extends BaseMapper<Booking> {
      * @return 预约列表
      */
     @Select("SELECT b.id, b.course_id, c.course_name, u.username as coach_name, " +
-            "c.day_of_week, c.start_time, c.end_time, b.booking_time, b.status " +
+            "s.session_date, s.day_of_week, s.start_time, s.end_time, b.booking_time, b.status " +
             "FROM fitness_booking b " +
+            "LEFT JOIN fitness_course_session s ON b.session_id = s.id " +
             "LEFT JOIN fitness_course c ON b.course_id = c.id " +
             "LEFT JOIN sys_user u ON c.coach_id = u.id " +
             "WHERE b.user_id = #{userId} AND b.deleted = false " +
-            "ORDER BY b.create_time DESC")
+            "ORDER BY s.session_date ASC, s.start_time ASC")
     List<BookingListVO> selectBookingListByUserId(@Param("userId") Long userId);
 
     /**
@@ -40,10 +41,12 @@ public interface BookingMapper extends BaseMapper<Booking> {
      * @return 预约详情
      */
     @Select("SELECT b.id, b.user_id, su.username, b.course_id, c.course_name, " +
-            "c.coach_id, u.username as coach_name, c.day_of_week, c.start_time, c.end_time, " +
+            "c.coach_id, u.username as coach_name, b.session_id, " +
+            "s.session_date, s.day_of_week, s.start_time, s.end_time, " +
             "b.booking_time, b.status, b.cancel_reason, b.create_time " +
             "FROM fitness_booking b " +
             "LEFT JOIN fitness_course c ON b.course_id = c.id " +
+            "LEFT JOIN fitness_course_session s ON b.session_id = s.id " +
             "LEFT JOIN sys_user u ON c.coach_id = u.id " +
             "LEFT JOIN sys_user su ON b.user_id = su.id " +
             "WHERE b.id = #{bookingId} AND b.deleted = false")
@@ -64,7 +67,19 @@ public interface BookingMapper extends BaseMapper<Booking> {
                                           @Param("status") Integer status);
 
     /**
-     * 检查用户是否已预约课程
+     * 检查用户是否已预约课程实例
+     *
+     * @param userId    用户ID
+     * @param sessionId 课程实例ID
+     * @return 已存在的预约记录数
+     */
+    @Select("SELECT COUNT(*) FROM fitness_booking " +
+            "WHERE user_id = #{userId} AND session_id = #{sessionId} " +
+            "AND status IN (0, 1) AND deleted = false")
+    int countByUserIdAndSessionId(@Param("userId") Long userId, @Param("sessionId") Long sessionId);
+
+    /**
+     * 检查用户是否已预约课程（兼容旧数据）
      *
      * @param userId   用户ID
      * @param courseId 课程ID

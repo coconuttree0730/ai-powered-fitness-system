@@ -196,14 +196,135 @@
         </n-space>
       </template>
     </n-modal>
+
+    <!-- 教练详情弹窗 -->
+    <n-modal v-model:show="showDetailModal" preset="card" style="width: 640px; max-width: 90vw" title="教练详情">
+      <div v-if="coachDetail" class="coach-detail-content">
+        <div class="detail-hero">
+          <img v-if="coachDetail.personalImageUrl || coachDetail.avatar"
+               :src="coachDetail.personalImageUrl || coachDetail.avatar"
+               class="detail-hero-img" />
+          <div v-else class="detail-hero-placeholder">
+            <span>{{ (coachDetail.realName || coachDetail.username || '?')[0] }}</span>
+          </div>
+        </div>
+        <div class="detail-header">
+          <h3 class="detail-name">{{ coachDetail.realName || coachDetail.username }}</h3>
+          <div class="detail-tags" v-if="coachDetail.tags && coachDetail.tags.length > 0">
+            <n-tag v-for="(tag, idx) in coachDetail.tags" :key="idx" size="small" type="success">{{ tag }}</n-tag>
+          </div>
+          <div class="detail-stats">
+            <span v-if="coachDetail.workYears" class="detail-stat">从业 {{ coachDetail.workYears }} 年</span>
+            <span v-if="coachDetail.studentCount" class="detail-stat">{{ coachDetail.studentCount }} 名学员</span>
+            <span v-if="coachDetail.rating" class="detail-stat">好评率 {{ coachDetail.rating }}</span>
+          </div>
+        </div>
+        <div class="detail-body">
+          <div v-if="coachDetail.specialties && coachDetail.specialties.length > 0" class="detail-section">
+            <h4 class="detail-section-title">擅长领域</h4>
+            <div class="detail-specialties">
+              <span v-for="(s, idx) in coachDetail.specialties" :key="idx" class="specialty-tag">{{ s }}</span>
+            </div>
+          </div>
+          <div v-if="coachDetail.teachingStyle" class="detail-section">
+            <h4 class="detail-section-title">教学风格</h4>
+            <p class="detail-text">{{ coachDetail.teachingStyle }}</p>
+          </div>
+          <div v-if="coachDetail.bio" class="detail-section">
+            <h4 class="detail-section-title">个人简介</h4>
+            <p class="detail-text">{{ coachDetail.bio }}</p>
+          </div>
+          <div v-if="coachDetail.experience" class="detail-section">
+            <h4 class="detail-section-title">教学经验</h4>
+            <p class="detail-text">{{ coachDetail.experience }}</p>
+          </div>
+          <div v-if="coachDetail.education" class="detail-section">
+            <h4 class="detail-section-title">教育背景</h4>
+            <p class="detail-text">{{ coachDetail.education }}</p>
+          </div>
+          <div v-if="coachDetail.training" class="detail-section">
+            <h4 class="detail-section-title">培训经历</h4>
+            <p class="detail-text">{{ coachDetail.training }}</p>
+          </div>
+          <div v-if="coachDetail.honors && coachDetail.honors.length > 0" class="detail-section">
+            <h4 class="detail-section-title">荣誉</h4>
+            <ul class="detail-list">
+              <li v-for="(h, idx) in coachDetail.honors" :key="idx">{{ h }}</li>
+            </ul>
+          </div>
+          <div v-if="coachDetail.languages && coachDetail.languages.length > 0" class="detail-section">
+            <h4 class="detail-section-title">语言能力</h4>
+            <p class="detail-text">{{ coachDetail.languages.join('、') }}</p>
+          </div>
+        </div>
+      </div>
+      <div v-else class="detail-loading">
+        <n-spin size="medium" />
+        <p>加载教练信息中...</p>
+      </div>
+      <template #footer>
+        <n-space justify="space-between" style="width: 100%">
+          <span></span>
+          <n-button
+            type="primary"
+            :disabled="detailBtnDisabled"
+            :loading="detailBtnLoading"
+            @click="handleBecomeTrainee"
+          >
+            {{ detailBtnText }}
+          </n-button>
+        </n-space>
+      </template>
+    </n-modal>
+
+    <!-- 套餐选择弹窗 -->
+    <n-modal v-model:show="showPackageModal" preset="card" style="width: 520px; max-width: 90vw" title="选择私教套餐">
+      <div class="package-list">
+        <div
+          v-for="pkg in coachPackages"
+          :key="pkg.id"
+          class="package-item"
+          :class="{ 'package-selected': selectedPackage && selectedPackage.id === pkg.id }"
+          @click="handlePackageSelect(pkg)"
+        >
+          <div class="package-radio">
+            <div class="radio-circle" :class="{ 'radio-checked': selectedPackage && selectedPackage.id === pkg.id }">
+              <div v-if="selectedPackage && selectedPackage.id === pkg.id" class="radio-dot"></div>
+            </div>
+          </div>
+          <div class="package-info">
+            <h4 class="package-name">{{ pkg.name }}</h4>
+            <p class="package-desc">{{ pkg.description }}</p>
+            <p class="package-price">参考价格: ¥{{ pkg.originalPrice }}</p>
+          </div>
+        </div>
+        <div v-if="coachPackages.length === 0" class="package-empty">
+          <p>该教练暂未配置可购买套餐</p>
+        </div>
+      </div>
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showPackageModal = false">取消</n-button>
+          <n-button
+            type="primary"
+            :disabled="!selectedPackage"
+            :loading="buyLoading"
+            @click="handleConfirmBuy"
+          >
+            确认购买
+          </n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, h, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { useMessage, NTag, NIcon } from 'naive-ui'
+import { useMessage, NTag, NIcon, NSpin } from 'naive-ui'
 import { PersonOutline, TimeOutline, FlameOutline } from '@vicons/ionicons5'
-import { getHomePageCoaches, getMyPrivateCoach } from '@/api/coachDetail'
+import { getHomePageCoaches, getMyPrivateCoach, getCoachDetail, getCoachPackages } from '@/api/coachDetail'
+import { createOrder, payOrder } from '@/api/product'
 
 const message = useMessage()
 const recommendedSection = ref(null)
@@ -231,6 +352,16 @@ const bookingLoading = ref(false)
 const myPrivateCoach = ref(null)
 const recommendedCoaches = ref([])
 const loading = ref(false)
+
+const showDetailModal = ref(false)
+const coachDetail = ref(null)
+const detailBtnLoading = ref(false)
+const selectedCoachId = ref(null)
+
+const showPackageModal = ref(false)
+const coachPackages = ref([])
+const selectedPackage = ref(null)
+const buyLoading = ref(false)
 
 // 滚动状态
 const scrollPosition = ref(0)
@@ -366,9 +497,96 @@ function scrollRight() {
   sliderRef.value.scrollBy({ left: scrollAmount, behavior: 'smooth' })
 }
 
+const detailBtnText = computed(() => {
+  if (!myPrivateCoach.value || !coachDetail.value) return '成为学员'
+  if (myPrivateCoach.value.id === coachDetail.value.userId) return '已是我的教练'
+  return '成为学员'
+})
+
+const detailBtnDisabled = computed(() => {
+  if (!myPrivateCoach.value || !coachDetail.value) return false
+  if (myPrivateCoach.value.id === coachDetail.value.userId) return true
+  return false
+})
+
 // 查看教练详情
-function viewCoachDetail(coach) {
-  message.info(`查看 ${coach.name} 的详情功能开发中...`)
+async function viewCoachDetail(coach) {
+  selectedCoachId.value = coach.id
+  coachDetail.value = null
+  showDetailModal.value = true
+  detailBtnLoading.value = false
+
+  try {
+    const data = await getCoachDetail(coach.id)
+    coachDetail.value = data
+  } catch (error) {
+    console.error('获取教练详情失败:', error)
+    message.error('获取教练详情失败')
+    showDetailModal.value = false
+  }
+}
+
+async function handleBecomeTrainee() {
+  if (myPrivateCoach.value && myPrivateCoach.value.id !== coachDetail.value.userId) {
+    message.warning('您已有专属教练，当前版本暂不支持直接切换')
+    return
+  }
+
+  detailBtnLoading.value = true
+  try {
+    const packages = await getCoachPackages(selectedCoachId.value)
+    coachPackages.value = packages || []
+    selectedPackage.value = null
+    if (coachPackages.value.length === 0) {
+      message.warning('该教练暂未配置可购买套餐')
+    } else {
+      showPackageModal.value = true
+    }
+  } catch (error) {
+    console.error('获取套餐失败:', error)
+    message.error('获取套餐列表失败')
+  } finally {
+    detailBtnLoading.value = false
+  }
+}
+
+function handlePackageSelect(pkg) {
+  selectedPackage.value = pkg
+}
+
+async function handleConfirmBuy() {
+  if (!selectedPackage.value) return
+
+  buyLoading.value = true
+  try {
+    const orderResult = await createOrder({
+      productId: selectedPackage.value.id,
+      quantity: 1,
+      usePoints: 0
+    })
+
+    const payResult = await payOrder(orderResult.orderNo, 'BALANCE')
+
+    showPackageModal.value = false
+    showDetailModal.value = false
+
+    message.success('购买成功，您已成为该教练的学员')
+
+    await refreshAll()
+  } catch (error) {
+    console.error('购买失败:', error)
+    const msg = error?.response?.data?.message || error?.message || '购买失败，请稍后重试'
+    message.error(msg)
+  } finally {
+    buyLoading.value = false
+  }
+}
+
+async function refreshAll() {
+  await Promise.all([
+    fetchMyPrivateCoach(),
+    fetchRecommendedCoaches()
+  ])
 }
 
 // 获取推荐教练列表
@@ -1028,5 +1246,218 @@ onMounted(() => {
     font-size: 12px;
     padding: 5px 10px;
   }
+}
+
+/* ==================== 教练详情弹窗样式 ==================== */
+.coach-detail-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  gap: 16px;
+  color: #6B7280;
+}
+
+.detail-hero {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #2EC4B6, #06D6A0);
+}
+
+.detail-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-hero-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  font-weight: 600;
+  color: white;
+}
+
+.detail-header {
+  margin-bottom: 20px;
+}
+
+.detail-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin: 0 0 10px 0;
+}
+
+.detail-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.detail-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.detail-stat {
+  font-size: 13px;
+  color: #6B7280;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+}
+
+.detail-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.detail-text {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.detail-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.8;
+}
+
+.detail-specialties {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.specialty-tag {
+  font-size: 13px;
+  padding: 4px 12px;
+  background: #ecfdf5;
+  color: #059669;
+  border-radius: 12px;
+}
+
+/* ==================== 套餐选择弹窗样式 ==================== */
+.package-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.package-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 2px solid #f3f4f6;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.package-item:hover {
+  border-color: #2EC4B6;
+  background: #f0fdfa;
+}
+
+.package-selected {
+  border-color: #2EC4B6;
+  background: #f0fdfa;
+}
+
+.package-radio {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.radio-checked {
+  border-color: #2EC4B6;
+}
+
+.radio-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2EC4B6;
+}
+
+.package-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.package-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin: 0 0 4px 0;
+}
+
+.package-desc {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0 0 6px 0;
+  line-height: 1.5;
+}
+
+.package-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2EC4B6;
+  margin: 0;
+}
+
+.package-empty {
+  text-align: center;
+  padding: 32px 0;
+  color: #9ca3af;
+  font-size: 14px;
 }
 </style>

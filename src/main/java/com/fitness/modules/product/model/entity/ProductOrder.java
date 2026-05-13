@@ -30,6 +30,7 @@ public class ProductOrder {
     private String carrier;
     private String address;
     private String remark;
+    private Long coachId;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

@@ -105,7 +105,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="capacity" label="容量" />
-        <el-table-column prop="bookingCount" label="预约数" />
+        <el-table-column prop="bookedCount" label="预约数" />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)" size="small">
@@ -342,7 +342,7 @@
               </div>
               <div class="meta-item">
                 <el-icon><Calendar /></el-icon>
-                <span>已预约 {{ currentCourse.bookingCount || 0 }} 人</span>
+                <span>已预约 {{ currentCourse.bookedCount || 0 }} 人</span>
               </div>
             </div>
             <!-- 新增字段显示 -->

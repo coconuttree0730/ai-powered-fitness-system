@@ -2,6 +2,8 @@ package com.fitness.modules.course.model.dto;
 
 import lombok.Data;
 
+import java.time.LocalDate;
+
 /**
  * 课程查询条件DTO
  */
@@ -34,9 +36,24 @@ public class CourseQueryDTO {
     private String keyword;
 
     /**
+     * 上课日期起始值
+     */
+    private LocalDate startDate;
+
+    /**
+     * 上课日期结束值
+     */
+    private LocalDate endDate;
+
+    /**
      * 课程名称
      */
     private String courseName;
+
+    /**
+     * 课程ID
+     */
+    private Long courseId;
 
     /**
      * 教练ID

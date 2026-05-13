@@ -6,6 +6,7 @@ import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
+import com.fitness.modules.product.model.vo.ProductVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -116,5 +117,17 @@ public class CoachDetailController {
     public Result<MyPrivateCoachVO> getMyPrivateCoach() {
         MyPrivateCoachVO vo = coachDetailService.getMyPrivateCoach();
         return Result.success(vo);
+    }
+
+    /**
+     * 获取指定教练的可购买私教套餐列表
+     *
+     * @param id 教练用户ID
+     * @return 套餐商品列表
+     */
+    @GetMapping("/{id}/packages")
+    public Result<List<ProductVO>> getCoachPackages(@PathVariable Long id) {
+        List<ProductVO> packages = coachDetailService.getCoachPackages(id);
+        return Result.success(packages);
     }
 }

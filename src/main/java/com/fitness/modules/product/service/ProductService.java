@@ -25,4 +25,10 @@ public interface ProductService extends IService<Product> {
     void updateProductStatus(Long id, String status);
 
     ProductVO updateStock(Long id, StockUpdateDTO dto);
+
+    List<ProductVO> getProductsByCoachId(Long coachId);
+
+    void deleteCoachProduct(Long productId, Long coachId);
+
+    void updateCoachProductStatus(Long productId, Long coachId, String status);
 }

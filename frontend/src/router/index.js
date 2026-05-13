@@ -145,6 +145,12 @@ const routes = [
         meta: { title: '我的课程' }
       },
       {
+        path: 'packages',
+        name: 'CoachPackages',
+        component: () => import('@/views/coach/Packages.vue'),
+        meta: { title: '我的套餐' }
+      },
+      {
         path: 'students',
         name: 'CoachStudents',
         component: () => import('@/views/coach/Students.vue'),

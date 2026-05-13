@@ -26,5 +26,6 @@ public class ProductOrderVO {
     private String carrier;
     private String address;
     private String remark;
+    private Long coachId;
     private LocalDateTime createdAt;
 }

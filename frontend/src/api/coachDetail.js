@@ -101,3 +101,15 @@ export function getMyPrivateCoach() {
     method: 'get'
   })
 }
+
+/**
+ * 获取指定教练的可购买私教套餐列表
+ * @param {number} coachId 教练用户ID
+ * @returns {Promise}
+ */
+export function getCoachPackages(coachId) {
+  return request({
+    url: `/coaches/${coachId}/packages`,
+    method: 'get'
+  })
+}

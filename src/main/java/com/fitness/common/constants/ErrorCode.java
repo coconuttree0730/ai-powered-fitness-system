@@ -59,6 +59,9 @@ public enum ErrorCode {
     PRODUCT_NOT_AVAILABLE(7006, "商品已下架"),
     ORDER_TIMEOUT(7007, "订单已超时"),
     INSUFFICIENT_BALANCE(7008, "余额不足"),
+    COACH_ALREADY_BOUND(7009, "您已有专属教练，当前版本暂不支持直接切换"),
+    COACH_PRODUCT_MISMATCH(7010, "该商品不属于当前教练"),
+    COACH_PACKAGE_NOT_FOUND(7011, "该教练暂未配置可购买套餐"),
 
     CODE_ALREADY_EXISTS(8001, "编码已存在"),
     SIGNATURE_ERROR(8002, "签名验证失败"),

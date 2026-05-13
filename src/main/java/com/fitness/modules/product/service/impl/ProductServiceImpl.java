@@ -21,8 +21,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
 
-    private final ProductMapper productMapper;
-
     @Override
     public List<ProductVO> getProductList(String category) {
         List<Product> products;
@@ -78,6 +76,37 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         BeanUtil.copyProperties(dto, product);
         save(product);
         return convertToVO(product);
+    }
+
+    @Override
+    public List<ProductVO> getProductsByCoachId(Long coachId) {
+        List<Product> products = lambdaQuery()
+            .eq(Product::getCoachId, coachId)
+            .eq(Product::getCategory, "COURSE")
+            .orderByAsc(Product::getSortOrder)
+            .list();
+        return products.stream().map(this::convertToVO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteCoachProduct(Long productId, Long coachId) {
+        Product product = getById(productId);
+        if (product == null || !coachId.equals(product.getCoachId())) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        removeById(productId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCoachProductStatus(Long productId, Long coachId, String status) {
+        Product product = getById(productId);
+        if (product == null || !coachId.equals(product.getCoachId())) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        product.setStatus(status);
+        updateById(product);
     }
 
     @Override

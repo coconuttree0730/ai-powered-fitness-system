@@ -124,7 +124,7 @@ public class AuthController {
         sliderVerifyService.invalidateToken(dto.getVerifyToken());
 
         // 4. 发送短信验证码
-        boolean sent = smsCodeService.sendSmsCode(dto.getPhone());
+        smsCodeService.sendSmsCode(dto.getPhone());
 
         Map<String, Object> result = new HashMap<>();
         result.put("sent", true);

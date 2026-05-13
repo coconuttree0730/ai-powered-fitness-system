@@ -15,9 +15,12 @@ import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.CoachHomePageVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
+import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import com.fitness.modules.user.service.CoachDetailService;
 import com.fitness.modules.user.model.entity.UserFitnessProfile;
-import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
+import com.fitness.modules.product.mapper.ProductMapper;
+import com.fitness.modules.product.model.entity.Product;
+import com.fitness.modules.product.model.vo.ProductVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     private final UserMapper userMapper;
     private final UserFitnessProfileMapper userFitnessProfileMapper;
     private final FileService fileService;
+    private final ProductMapper productMapper;
 
     /**
      * 标签最大数量
@@ -439,7 +443,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         HomePageCoachVO vo = new HomePageCoachVO();
 
         vo.setId(detail.getUserId());
-        vo.setName(detail.getUsername());
+        vo.setName(detail.getRealName() != null && !detail.getRealName().isEmpty() ? detail.getRealName() : detail.getUsername());
 
         // 根据专业领域生成职称
         vo.setTitle(generateCoachTitle(detail));
@@ -585,10 +589,10 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         // 转换为VO
         MyPrivateCoachVO vo = new MyPrivateCoachVO();
         vo.setId(coachId);
-        vo.setName(coachUser.getUsername());
         vo.setAvatar(coachUser.getAvatar());
 
         if (coachDetail != null) {
+            vo.setName(coachDetail.getRealName() != null && !coachDetail.getRealName().isEmpty() ? coachDetail.getRealName() : coachUser.getUsername());
             vo.setPersonalImageUrl(coachDetail.getPersonalImageUrl());
             vo.setWorkYears(coachDetail.getWorkYears());
             vo.setStudentCount(coachDetail.getStudentCount());
@@ -605,8 +609,35 @@ public class CoachDetailServiceImpl implements CoachDetailService {
             if (specialtiesJson != null) {
                 vo.setSpecialties(JSONUtil.parseArray(specialtiesJson).toList(String.class));
             }
+        } else {
+            vo.setName(coachUser.getUsername());
         }
 
         return vo;
+    }
+
+    @Override
+    public List<ProductVO> getCoachPackages(Long coachId) {
+        List<Product> products = productMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Product>()
+                .eq(Product::getCoachId, coachId)
+                .eq(Product::getCategory, "COURSE")
+                .eq(Product::getStatus, "ACTIVE")
+                .orderByAsc(Product::getSortOrder)
+        );
+
+        return products.stream().map(product -> {
+            ProductVO vo = new ProductVO();
+            vo.setId(product.getId());
+            vo.setName(product.getName());
+            vo.setCode(product.getCode());
+            vo.setDescription(product.getDescription());
+            vo.setOriginalPrice(product.getOriginalPrice());
+            vo.setStatus(product.getStatus());
+            vo.setCoachId(product.getCoachId());
+            vo.setImageUrl(product.getImageUrl());
+            vo.setStock(product.getStock());
+            return vo;
+        }).collect(java.util.stream.Collectors.toList());
     }
 }

@@ -46,18 +46,13 @@ export function deleteCourse(id) {
   })
 }
 
-export function bookCourse(courseId) {
-  return request({
-    url: '/bookings',
-    method: 'post',
-    data: { courseId }
-  })
-}
+// ========== 预约相关（基于课程实例） ==========
 
-export function cancelBooking(bookingId) {
+export function cancelBooking(bookingId, data = {}) {
   return request({
     url: `/bookings/${bookingId}/cancel`,
-    method: 'put'
+    method: 'put',
+    data
   })
 }
 
@@ -97,4 +92,84 @@ export function getHomePageCourseCards(limit = 6) {
     method: 'get',
     params: { limit }
   })
+}
+
+// ========== 课程实例（周期性课程的具体某一次） ==========
+
+/**
+ * 获取课程实例列表
+ */
+export function getCourseSessions(params) {
+  return request({
+    url: '/course-sessions/list',
+    method: 'get',
+    params
+  })
+}
+
+function getTodayKey() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * 获取课程实例详情
+ */
+export function getSessionDetail(sessionId) {
+  return request({
+    url: `/course-sessions/${sessionId}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 获取即将开始的课程实例
+ */
+export function getUpcomingSessions(limit = 10) {
+  return request({
+    url: '/course-sessions/upcoming',
+    method: 'get',
+    params: { limit }
+  })
+}
+
+/**
+ * 手动生成未来N周的课程实例
+ */
+export function generateFutureSessions(weeksAhead = 4) {
+  return request({
+    url: '/course-sessions/generate',
+    method: 'post',
+    params: { weeksAhead }
+  })
+}
+
+/**
+ * 预约课程实例（基于具体某一天）
+ */
+export function bookSession(sessionId, courseId) {
+  return request({
+    url: '/bookings',
+    method: 'post',
+    data: { sessionId, courseId }
+  })
+}
+
+export async function bookCourse(courseId) {
+  const page = await getCourseSessions({
+    courseId,
+    pageNum: 1,
+    pageSize: 1,
+    startDate: getTodayKey()
+  })
+
+  const session = page?.records?.[0]
+  if (!session) {
+    throw new Error('当前课程暂无可预约场次')
+  }
+
+  return bookSession(session.id, courseId)
 }

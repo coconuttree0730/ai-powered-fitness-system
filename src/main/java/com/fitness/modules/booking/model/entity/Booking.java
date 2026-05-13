@@ -26,10 +26,16 @@ public class Booking {
     private Long userId;
 
     /**
-     * 课程ID
+     * 课程ID（关联课程模板）
      */
     @TableField("course_id")
     private Long courseId;
+
+    /**
+     * 课程实例ID（关联具体某一次上课）
+     */
+    @TableField("session_id")
+    private Long sessionId;
 
     /**
      * 预约时间

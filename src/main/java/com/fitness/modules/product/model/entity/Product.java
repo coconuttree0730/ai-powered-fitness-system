@@ -29,6 +29,7 @@ public class Product {
     private Boolean isNew;
     private Boolean isRecommend;
     private Integer sortOrder;
+    private Long coachId;
     
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

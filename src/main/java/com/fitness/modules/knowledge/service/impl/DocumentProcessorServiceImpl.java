@@ -16,18 +16,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 public class DocumentProcessorServiceImpl implements DocumentProcessorService {
-
-    // 增大切片大小，保留更多完整信息
-    private static final int DEFAULT_CHUNK_SIZE = 800;
-    // 增大重叠区域，保持上下文连贯性
-    private static final int DEFAULT_CHUNK_OVERLAP = 150;
-    private static final int MIN_CHUNK_SIZE = 100;
 
     @Value("${knowledge.chunk.size:800}")
     private int chunkSize;
@@ -35,10 +27,7 @@ public class DocumentProcessorServiceImpl implements DocumentProcessorService {
     @Value("${knowledge.chunk.overlap:150}")
     private int chunkOverlap;
 
-    // Markdown 标题正则
-    private static final Pattern HEADING_PATTERN = Pattern.compile("^(#{1,6}\\s+.+)$", Pattern.MULTILINE);
-    // 列表项正则
-    private static final Pattern LIST_ITEM_PATTERN = Pattern.compile("^([\\s]*[-*+]|\\d+\\.)\\s+(.+)$", Pattern.MULTILINE);
+    private static final int MIN_CHUNK_SIZE = 100;
 
     /**
      * 解析文件并返回内容

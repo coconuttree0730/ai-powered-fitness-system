@@ -82,7 +82,7 @@ public class KnowledgeCategoryServiceImpl implements KnowledgeCategoryService {
 
     @Override
     public void delete(Long id) {
-        KnowledgeCategory category = getEntityById(id);
+        getEntityById(id);
         categoryMapper.deleteById(id);
     }
 

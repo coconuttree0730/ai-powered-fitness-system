@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.course.mapper.CourseSessionMapper">
+
+    <resultMap id="CourseSessionVOResultMap" type="com.fitness.modules.course.model.vo.CourseSessionVO">
+        <id column="id" property="id"/>
+        <result column="course_id" property="courseId"/>
+        <result column="course_name" property="courseName"/>
+        <result column="description" property="description"/>
+        <result column="category" property="category"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="difficulty_level" property="difficultyLevel"/>
+        <result column="duration_minutes" property="durationMinutes"/>
+        <result column="calories_min" property="caloriesMin"/>
+        <result column="calories_max" property="caloriesMax"/>
+        <result column="coach_id" property="coachId"/>
+        <result column="coach_name" property="coachName"/>
+        <result column="coach_avatar" property="coachAvatar"/>
+        <result column="day_of_week" property="dayOfWeek"/>
+        <result column="session_date" property="sessionDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="capacity" property="capacity"/>
+        <result column="booked_count" property="bookedCount"/>
+        <result column="remaining_count" property="remainingCount"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 分页查询课程实例列表 -->
+    <select id="selectSessionList" resultMap="CourseSessionVOResultMap">
+        SELECT
+            s.id,
+            s.course_id,
+            c.course_name,
+            c.description,
+            c.category,
+            c.image_url,
+            c.difficulty_level,
+            c.duration_minutes,
+            c.calories_min,
+            c.calories_max,
+            c.coach_id,
+            u.username AS coach_name,
+            u.avatar AS coach_avatar,
+            s.day_of_week,
+            s.session_date,
+            s.start_time,
+            s.end_time,
+            s.status,
+            s.capacity,
+            s.booked_count,
+            (s.capacity - s.booked_count) AS remaining_count,
+            s.create_time
+        FROM fitness_course_session s
+        INNER JOIN fitness_course c ON s.course_id = c.id AND c.deleted = false
+        LEFT JOIN sys_user u ON c.coach_id = u.id
+        WHERE s.deleted = false
+          AND s.session_date >= CURRENT_DATE
+        <if test="query.courseId != null">
+            AND c.id = #{query.courseId}
+        </if>
+        <if test="query.category != null and query.category != ''">
+            AND c.category = #{query.category}
+        </if>
+        <if test="query.dayOfWeek != null">
+            AND s.day_of_week = #{query.dayOfWeek}
+        </if>
+        <if test="query.startDate != null">
+            AND s.session_date &gt;= #{query.startDate}
+        </if>
+        <if test="query.endDate != null">
+            AND s.session_date &lt;= #{query.endDate}
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (c.course_name LIKE '%' || #{query.keyword} || '%' OR u.username LIKE '%' || #{query.keyword} || '%')
+        </if>
+        <if test="query.coachId != null">
+            AND c.coach_id = #{query.coachId}
+        </if>
+        ORDER BY s.session_date ASC, s.start_time ASC
+    </select>
+
+    <!-- 查询课程实例详情 -->
+    <select id="selectSessionDetail" resultMap="CourseSessionVOResultMap">
+        SELECT
+            s.id,
+            s.course_id,
+            c.course_name,
+            c.description,
+            c.category,
+            c.image_url,
+            c.difficulty_level,
+            c.duration_minutes,
+            c.calories_min,
+            c.calories_max,
+            c.coach_id,
+            u.username AS coach_name,
+            u.avatar AS coach_avatar,
+            s.day_of_week,
+            s.session_date,
+            s.start_time,
+            s.end_time,
+            s.status,
+            s.capacity,
+            s.booked_count,
+            (s.capacity - s.booked_count) AS remaining_count,
+            s.create_time
+        FROM fitness_course_session s
+        INNER JOIN fitness_course c ON s.course_id = c.id AND c.deleted = false
+        LEFT JOIN sys_user u ON c.coach_id = u.id
+        WHERE s.id = #{sessionId}
+          AND s.deleted = false
+    </select>
+
+    <!-- 查询即将开始的课程实例（用于首页展示） -->
+    <select id="selectUpcomingSessions" resultMap="CourseSessionVOResultMap">
+        SELECT
+            s.id,
+            s.course_id,
+            c.course_name,
+            c.description,
+            c.category,
+            c.image_url,
+            c.difficulty_level,
+            c.duration_minutes,
+            c.calories_min,
+            c.calories_max,
+            c.coach_id,
+            u.username AS coach_name,
+            u.avatar AS coach_avatar,
+            s.day_of_week,
+            s.session_date,
+            s.start_time,
+            s.end_time,
+            s.status,
+            s.capacity,
+            s.booked_count,
+            (s.capacity - s.booked_count) AS remaining_count,
+            s.create_time
+        FROM fitness_course_session s
+        INNER JOIN fitness_course c ON s.course_id = c.id AND c.deleted = false
+        LEFT JOIN sys_user u ON c.coach_id = u.id
+        WHERE s.deleted = false
+          AND s.session_date >= CURRENT_DATE
+          AND s.status IN (0, 1)
+          AND s.booked_count &lt; s.capacity
+        ORDER BY s.session_date ASC, s.start_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询某课程的已有实例（避免重复生成） -->
+    <select id="selectSessionsByCourseId" resultMap="CourseSessionVOResultMap">
+        SELECT s.id, s.session_date
+        FROM fitness_course_session s
+        WHERE s.course_id = #{courseId}
+          AND s.deleted = false
+          AND s.session_date &lt;= #{maxDate}
+        ORDER BY s.session_date ASC
+    </select>
+
+    <!-- 更新预约人数 -->
+    <update id="updateBookedCount">
+        UPDATE fitness_course_session
+        SET booked_count = booked_count + #{delta},
+            update_time = CURRENT_TIMESTAMP
+        WHERE id = #{sessionId}
+          AND deleted = false
+    </update>
+</mapper>

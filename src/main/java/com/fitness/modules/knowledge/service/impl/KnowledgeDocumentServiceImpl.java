@@ -170,7 +170,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
             log.info("【文档索引】文件内容解析完成，内容长度: {} 字符", content != null ? content.length() : 0);
         }
 
-        if (StrUtil.isBlank(content)) {
+        if (content == null || content.isBlank()) {
             log.warn("【文档索引】文档内容为空，无法建立索引，文档ID: {}", id);
             return;
         }

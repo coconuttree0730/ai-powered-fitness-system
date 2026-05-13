@@ -2,6 +2,7 @@ package com.fitness.modules.booking.model.vo;
 
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 
@@ -45,6 +46,16 @@ public class BookingVO {
      * 教练名称
      */
     private String coachName;
+
+    /**
+     * 课程实例ID
+     */
+    private Long sessionId;
+
+    /**
+     * 上课日期（具体某一天）
+     */
+    private LocalDate sessionDate;
 
     /**
      * 星期几：1-周一, 2-周二, ..., 7-周日

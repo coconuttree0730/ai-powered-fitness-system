@@ -1,6 +1,5 @@
 package com.fitness.modules.user.service.impl;
 
-import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.sms.service.AliyunSmsService;
 import com.fitness.modules.user.service.SmsCodeService;
 import lombok.RequiredArgsConstructor;

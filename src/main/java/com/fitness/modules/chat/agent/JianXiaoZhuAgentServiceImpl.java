@@ -51,6 +51,7 @@ public class JianXiaoZhuAgentServiceImpl implements JianXiaoZhuAgentService {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Flux<ChatStreamEventVO> streamChat(Long userId, Long sessionId, String userMessage) {
         String finalPrompt = buildPrompt(userId, userMessage);
         RunnableConfig runnableConfig = buildRunnableConfig(sessionId);

@@ -59,7 +59,8 @@ import {
   PersonOutline,
   CalendarOutline,
   PeopleOutline,
-  TimeOutline
+  TimeOutline,
+  PricetagsOutline
 } from '@vicons/ionicons5'
 
 const route = useRoute()
@@ -82,6 +83,7 @@ const menuOptions = [
   { label: '工作台', key: '/coach', icon: renderIcon(HomeOutline) },
   { label: '个人信息', key: '/coach/profile', icon: renderIcon(PersonOutline) },
   { label: '我的课程', key: '/coach/courses', icon: renderIcon(CalendarOutline) },
+  { label: '我的套餐', key: '/coach/packages', icon: renderIcon(PricetagsOutline) },
   { label: '课程日程', key: '/coach/schedule', icon: renderIcon(TimeOutline) },
   { label: '我的学员', key: '/coach/students', icon: renderIcon(PeopleOutline) }
 ]

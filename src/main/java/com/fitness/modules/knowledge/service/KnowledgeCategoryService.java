@@ -1,6 +1,5 @@
 package com.fitness.modules.knowledge.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.modules.knowledge.model.dto.KnowledgeCategoryDTO;
 import com.fitness.modules.knowledge.model.entity.KnowledgeCategory;
 import com.fitness.modules.knowledge.model.vo.KnowledgeCategoryVO;

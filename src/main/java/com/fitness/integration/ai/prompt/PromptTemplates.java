@@ -1,6 +1,5 @@
 package com.fitness.integration.ai.prompt;
 
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
