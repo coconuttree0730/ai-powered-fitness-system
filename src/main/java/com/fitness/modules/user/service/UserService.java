@@ -158,7 +158,6 @@ public interface UserService {
      * @param userId 当前用户ID（排除自己）
      * @return 是否已被绑定
      */
-    boolean isPhoneBoundByOther(String phone, Long userId);
 
     /**
      * 检查邮箱是否已被其他用户绑定
@@ -167,7 +166,6 @@ public interface UserService {
      * @param userId 当前用户ID（排除自己）
      * @return 是否已被绑定
      */
-    boolean isEmailBoundByOther(String email, Long userId);
 
     /**
      * 通过短信验证码修改密码

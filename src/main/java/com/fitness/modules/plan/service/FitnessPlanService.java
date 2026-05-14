@@ -13,6 +13,8 @@ public interface FitnessPlanService {
 
     Map<String, Object> generatePlanFromProfile(Long userId);
 
+    void executeAsyncGeneration(Long userId, String taskId);
+
     List<PlanVO> getPlanList(Long userId);
 
     PlanVO getPlanDetail(Long userId, Long planId);

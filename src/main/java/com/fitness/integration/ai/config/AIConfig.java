@@ -3,7 +3,6 @@ package com.fitness.integration.ai.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.template.NoOpTemplateRenderer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,14 +30,17 @@ public class AIConfig {
      * @return 配置好的 ChatClient
      */
     @Bean
-    public ChatClient chatClient(ChatModel chatModel) {
+    public ChatClient.Builder chatClientBuilder(ChatModel chatModel) {
         log.info("=== Spring AI Alibaba 配置信息 ===");
         log.info("API Key: {}...", apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) + "***" : "N/A");
         log.info("Model: {}", model);
         log.info("================================");
 
-        return ChatClient.builder(chatModel)
-                .defaultTemplateRenderer(new NoOpTemplateRenderer())
-                .build();
+        return ChatClient.builder(chatModel);
+    }
+
+    @Bean
+    public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
+        return chatClientBuilder.build();
     }
 }

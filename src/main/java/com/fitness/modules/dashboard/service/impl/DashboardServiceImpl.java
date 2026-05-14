@@ -2,6 +2,7 @@ package com.fitness.modules.dashboard.service.impl;
 
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
+import com.fitness.integration.ai.prompt.AiPromptSpec;
 import com.fitness.integration.ai.prompt.DashboardPromptTemplates;
 import com.fitness.integration.ai.service.AIService;
 import com.fitness.modules.dashboard.mapper.DashboardMapper;
@@ -99,12 +100,12 @@ public class DashboardServiceImpl implements DashboardService {
             log.info("收集到的分析数据变量: {}", variables.keySet());
 
             // 构建分析 Prompt
-            String prompt = buildAnalysisPrompt(type, variables);
-            log.info("生成的Prompt内容:\n{}", prompt);
+            AiPromptSpec prompt = buildAnalysisPrompt(type, variables);
+            log.info("分析提示词已生成，system长度={}, user长度={}", prompt.system().length(), prompt.user().length());
 
             // 调用 AI 生成报告
-            String aiResponse = aiService.chat(prompt);
-            log.info("AI返回的原始响应:\n{}", aiResponse);
+            String aiResponse = aiService.chat(prompt.system(), prompt.user());
+            log.info("AI 返回报告长度: {}", aiResponse != null ? aiResponse.length() : 0);
 
             // 解析 AI 返回结果
             AnalysisReportVO report = parseAIResponse(type, aiResponse);
@@ -348,12 +349,12 @@ public class DashboardServiceImpl implements DashboardService {
     /**
      * 构建分析 Prompt
      */
-    private String buildAnalysisPrompt(AnalysisType type, Map<String, Object> variables) {
+    private AiPromptSpec buildAnalysisPrompt(AnalysisType type, Map<String, Object> variables) {
         return switch (type) {
-            case MEMBER -> dashboardPromptTemplates.generateMemberAnalysis(variables);
-            case COURSE -> dashboardPromptTemplates.generateCourseAnalysis(variables);
-            case EQUIPMENT -> dashboardPromptTemplates.generateEquipmentAnalysis(variables);
-            default -> dashboardPromptTemplates.generateOverallAnalysis(variables);
+            case MEMBER -> dashboardPromptTemplates.createMemberAnalysisPrompt(variables);
+            case COURSE -> dashboardPromptTemplates.createCourseAnalysisPrompt(variables);
+            case EQUIPMENT -> dashboardPromptTemplates.createEquipmentAnalysisPrompt(variables);
+            default -> dashboardPromptTemplates.createOverallAnalysisPrompt(variables);
         };
     }
 

@@ -113,15 +113,7 @@ public class JianXiaoZhuAgentServiceImpl implements JianXiaoZhuAgentService {
         longTermMemoryService.refreshProfileMemories(userId, profile);
         String memoryContext = longTermMemoryService.buildMemoryContext(userId);
 
-        StringBuilder promptBuilder = new StringBuilder();
-        if (!memoryContext.isBlank()) {
-            promptBuilder.append("用户长期记忆:\n")
-                    .append(memoryContext)
-                    .append("\n\n");
-        }
-        promptBuilder.append("用户问题:\n").append(userMessage);
-
         log.info("ReactAgent system prompt loaded: {}", chatPromptTemplates.getSystemPrompt().length());
-        return promptBuilder.toString();
+        return chatPromptTemplates.buildAgentUserPrompt(userMessage, memoryContext);
     }
 }

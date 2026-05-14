@@ -20,6 +20,15 @@ public interface AIService {
     String chat(String message);
 
     /**
+     * 使用 system / user 双层提示词对话。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户提示词
+     * @return AI 回复内容
+     */
+    String chat(String systemPrompt, String userPrompt);
+
+    /**
      * 使用 PromptTemplate 的对话接口
      *
      * @param prompt    Prompt 模板字符串

@@ -53,9 +53,6 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     private final PlanGenerationTaskManager taskManager;
 
     // 缓存课程和器械数据，用于校验LLM返回的数据
-    private List<CourseCardVO> cachedCourses;
-    private List<EquipmentVO> cachedEquipment;
-
     @Override
     public Map<String, Object> generatePlanFromProfile(Long userId) {
         log.info("从个人档案生成健身计划: userId={}", userId);
@@ -76,10 +73,10 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
 
         // 3. 查询系统可用课程列表（用于AI选择）——优化：只查询前20个热门课程
-        cachedCourses = courseService.getHomePageCourseCards(20);
+        PlanCatalog planCatalog = loadPlanCatalog();
         StringBuilder coursesJson = new StringBuilder("[");
-        for (int i = 0; i < cachedCourses.size(); i++) {
-            CourseCardVO c = cachedCourses.get(i);
+        for (int i = 0; i < planCatalog.courses().size(); i++) {
+            CourseCardVO c = planCatalog.courses().get(i);
             coursesJson.append(String.format(
                 "{\"id\":%d,\"name\":\"%s\",\"coverImage\":\"%s\",\"description\":\"%s\",\"duration\":%d,\"category\":\"%s\"}",
                 c.getId(),
@@ -89,27 +86,23 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                 c.getDuration() != null ? c.getDuration() : 45,
                 escapeJson(c.getCategory())
             ));
-            if (i < cachedCourses.size() - 1) {
+            if (i < planCatalog.courses().size() - 1) {
                 coursesJson.append(",");
             }
         }
         coursesJson.append("]");
 
         // 4. 查询系统可用器械列表（只查正常状态的）——优化：只查询前15个器械
-        EquipmentQueryDTO equipQuery = new EquipmentQueryDTO();
-        equipQuery.setStatus(1);
-        equipQuery.setPageSize(15);
-        cachedEquipment = equipmentService.getEquipmentList(equipQuery).getRecords();
         StringBuilder equipmentJson = new StringBuilder("[");
-        for (int i = 0; i < cachedEquipment.size(); i++) {
-            EquipmentVO e = cachedEquipment.get(i);
+        for (int i = 0; i < planCatalog.equipment().size(); i++) {
+            EquipmentVO e = planCatalog.equipment().get(i);
             equipmentJson.append(String.format(
                 "{\"id\":%d,\"name\":\"%s\",\"image\":\"%s\"}",
                 e.getId(),
                 escapeJson(e.getEquipmentName()),
                 escapeJson(e.getImageUrl())
             ));
-            if (i < cachedEquipment.size() - 1) {
+            if (i < planCatalog.equipment().size() - 1) {
                 equipmentJson.append(",");
             }
         }
@@ -142,13 +135,13 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
 
         // 7. 解析DTO（强制约束llm返回格式）响应并校验替换假数据
-        Map<String, Object> result = parseAndValidateAiResponse(aiResponse, bmi,
-                goalText, expText);
+        Map<String, Object> result = parseAndValidateAiResponse(aiResponse, bmi, goalText, expText, planCatalog);
 
         log.info("从个人档案生成健身计划成功: userId={}", userId);
         return result;
     }
 
+    @Override
     @org.springframework.scheduling.annotation.Async
     public void executeAsyncGeneration(Long userId, String taskId) {
         try {
@@ -188,10 +181,29 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
     }
 
+    private PlanCatalog loadPlanCatalog() {
+        List<CourseCardVO> courses = courseService.getHomePageCourseCards(20);
+
+        EquipmentQueryDTO equipQuery = new EquipmentQueryDTO();
+        equipQuery.setStatus(1);
+        equipQuery.setPageSize(15);
+        List<EquipmentVO> equipment = equipmentService.getEquipmentList(equipQuery).getRecords();
+
+        return new PlanCatalog(
+                courses != null ? courses : Collections.emptyList(),
+                equipment != null ? equipment : Collections.emptyList()
+        );
+    }
+
     /**
      * 解析并校验AI返回的DTO响应，替换假数据为真实数据
      */
-    private Map<String, Object> parseAndValidateAiResponse(FitnessPlanResponseDTO aiResponse, String bmi, String goal, String experience) {
+    private Map<String, Object> parseAndValidateAiResponse(
+            FitnessPlanResponseDTO aiResponse,
+            String bmi,
+            String goal,
+            String experience,
+            PlanCatalog planCatalog) {
         try {
             Map<String, Object> planData = new HashMap<>();
 
@@ -214,7 +226,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                 for (int i = 0; i < limit; i++) {
                     FitnessPlanResponseDTO.DayPlanDTO dayPlanDTO = days.get(i);
                     Map<String, Object> dayPlan = convertDayPlanDTOToMap(dayPlanDTO);
-                    validateAndReplaceDayPlan(dayPlan);
+                    validateAndReplaceDayPlan(dayPlan, planCatalog);
                     weeklyPlanList.add(dayPlan);
                 }
                 if (days.size() > 7) {
@@ -226,7 +238,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             return planData;
         } catch (Exception e) {
             log.warn("解析AI DTO失败，使用默认计划: error={}", e.getMessage());
-            return generateDefaultPlanData(bmi, goal, experience);
+            return generateDefaultPlanData(bmi, goal, experience, planCatalog);
         }
     }
 
@@ -293,7 +305,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
      * 校验并替换每天的计划数据
      */
     @SuppressWarnings("unchecked")
-    private void validateAndReplaceDayPlan(Map<String, Object> dayPlan) {
+    private void validateAndReplaceDayPlan(Map<String, Object> dayPlan, PlanCatalog planCatalog) {
         String focus = (String) dayPlan.getOrDefault("focus", "");
 
         // 休息日强制清空课程、器械、动作
@@ -312,7 +324,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
             for (Map<String, Object> course : courses) {
                 String courseName = (String) course.getOrDefault("name", "");
-                CourseCardVO matchedCourse = findMatchingCourse(courseName, focus);
+                CourseCardVO matchedCourse = findMatchingCourse(planCatalog.courses(), courseName);
 
                 // 如果name匹配失败，尝试按ID匹配（LLM可能只返回了id没有返回name）
                 if (matchedCourse == null) {
@@ -320,7 +332,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                     if (courseIdObj != null) {
                         try {
                             Long courseId = Long.valueOf(courseIdObj.toString());
-                            matchedCourse = findMatchingCourseById(courseId);
+                            matchedCourse = findMatchingCourseById(planCatalog.courses(), courseId);
                             log.debug("通过ID匹配到课程: id={}", courseId);
                         } catch (NumberFormatException e) {
                             log.debug("课程ID格式无效: {}", courseIdObj);
@@ -348,7 +360,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             }
 
             if (validatedCourses.isEmpty()) {
-                CourseCardVO randomCourse = findRandomCourseByFocus(focus);
+                CourseCardVO randomCourse = findRandomCourseByFocus(planCatalog.courses(), focus);
                 if (randomCourse != null) {
                     Map<String, Object> fallbackCourse = new HashMap<>();
                     fallbackCourse.put("name", randomCourse.getName());
@@ -362,7 +374,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
             }
 
             while (validatedCourses.size() < 2) {
-                CourseCardVO extraCourse = findRandomCourseByFocusExcluding(focus, validatedCourses);
+                CourseCardVO extraCourse = findRandomCourseByFocusExcluding(planCatalog.courses(), focus, validatedCourses);
                 if (extraCourse != null) {
                     Map<String, Object> extraCourseMap = new HashMap<>();
                     extraCourseMap.put("name", extraCourse.getName());
@@ -388,7 +400,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                 String equipName = (String) equip.getOrDefault("name", "");
 
                 // 在缓存的器械列表中查找匹配的器械
-                EquipmentVO matchedEquip = findMatchingEquipment(equipName, focus);
+                EquipmentVO matchedEquip = findMatchingEquipment(planCatalog.equipment(), equipName);
                 if (matchedEquip != null) {
                     Map<String, Object> validEquip = new HashMap<>();
                     validEquip.put("name", matchedEquip.getEquipmentName());
@@ -397,7 +409,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                     log.debug("替换器械: {} -> {}", equipName, matchedEquip.getEquipmentName());
                 } else {
                     // 如果没有匹配的器械，尝试找相关的器械
-                    EquipmentVO randomEquip = findRandomEquipmentByFocus(focus);
+                    EquipmentVO randomEquip = findRandomEquipmentByFocus(planCatalog.equipment(), focus);
                     if (randomEquip != null) {
                         Map<String, Object> validEquip = new HashMap<>();
                         validEquip.put("name", randomEquip.getEquipmentName());
@@ -410,7 +422,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
             // 如果没有任何有效器械，添加默认器械
             if (validatedEquipment.isEmpty()) {
-                EquipmentVO defaultEquip = findRandomEquipmentByFocus(focus);
+                EquipmentVO defaultEquip = findRandomEquipmentByFocus(planCatalog.equipment(), focus);
                 if (defaultEquip != null) {
                     Map<String, Object> validEquip = new HashMap<>();
                     validEquip.put("name", defaultEquip.getEquipmentName());
@@ -426,18 +438,18 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 根据名称查找匹配的课程
      */
-    private CourseCardVO findMatchingCourse(String courseName, String focus) {
-        if (cachedCourses == null || cachedCourses.isEmpty()) return null;
+    private CourseCardVO findMatchingCourse(List<CourseCardVO> courses, String courseName) {
+        if (courses == null || courses.isEmpty()) return null;
 
         // 先尝试精确匹配
-        for (CourseCardVO course : cachedCourses) {
+        for (CourseCardVO course : courses) {
             if (course.getName() != null && course.getName().equals(courseName)) {
                 return course;
             }
         }
 
         // 再尝试包含匹配
-        for (CourseCardVO course : cachedCourses) {
+        for (CourseCardVO course : courses) {
             if (course.getName() != null && courseName != null &&
                     (course.getName().contains(courseName) || courseName.contains(course.getName()))) {
                 return course;
@@ -450,9 +462,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 根据ID精确查找匹配的课程（当LLM未返回name时使用）
      */
-    private CourseCardVO findMatchingCourseById(Long courseId) {
-        if (cachedCourses == null || cachedCourses.isEmpty() || courseId == null) return null;
-        for (CourseCardVO course : cachedCourses) {
+    private CourseCardVO findMatchingCourseById(List<CourseCardVO> courses, Long courseId) {
+        if (courses == null || courses.isEmpty() || courseId == null) return null;
+        for (CourseCardVO course : courses) {
             if (courseId.equals(course.getId())) {
                 return course;
             }
@@ -463,14 +475,14 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 根据训练重点随机选择相关课程
      */
-    private CourseCardVO findRandomCourseByFocus(String focus) {
-        if (cachedCourses == null || cachedCourses.isEmpty()) return null;
+    private CourseCardVO findRandomCourseByFocus(List<CourseCardVO> courses, String focus) {
+        if (courses == null || courses.isEmpty()) return null;
 
         // 根据focus关键词匹配课程
         List<CourseCardVO> matchedCourses = new ArrayList<>();
         String focusLower = focus.toLowerCase();
 
-        for (CourseCardVO course : cachedCourses) {
+        for (CourseCardVO course : courses) {
             String category = course.getCategory() != null ? course.getCategory().toLowerCase() : "";
             String name = course.getName() != null ? course.getName().toLowerCase() : "";
             String desc = course.getDesc() != null ? course.getDesc().toLowerCase() : "";
@@ -483,8 +495,8 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
         // 如果没有匹配到，返回随机课程
         if (matchedCourses.isEmpty()) {
-            int randomIndex = (int) (Math.random() * cachedCourses.size());
-            return cachedCourses.get(randomIndex);
+            int randomIndex = (int) (Math.random() * courses.size());
+            return courses.get(randomIndex);
         }
 
         // 随机返回一个匹配的课程
@@ -495,8 +507,11 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 根据训练重点随机选择相关课程（排除已选课程）
      */
-    private CourseCardVO findRandomCourseByFocusExcluding(String focus, List<Map<String, Object>> excludedCourses) {
-        if (cachedCourses == null || cachedCourses.isEmpty()) return null;
+    private CourseCardVO findRandomCourseByFocusExcluding(
+            List<CourseCardVO> courses,
+            String focus,
+            List<Map<String, Object>> excludedCourses) {
+        if (courses == null || courses.isEmpty()) return null;
 
         Set<Long> excludedIds = new HashSet<>();
         for (Map<String, Object> course : excludedCourses) {
@@ -509,7 +524,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         List<CourseCardVO> matchedCourses = new ArrayList<>();
         String focusLower = focus.toLowerCase();
 
-        for (CourseCardVO course : cachedCourses) {
+        for (CourseCardVO course : courses) {
             if (excludedIds.contains(course.getId())) continue;
             String category = course.getCategory() != null ? course.getCategory().toLowerCase() : "";
             String name = course.getName() != null ? course.getName().toLowerCase() : "";
@@ -520,7 +535,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
 
         if (matchedCourses.isEmpty()) {
-            for (CourseCardVO course : cachedCourses) {
+            for (CourseCardVO course : courses) {
                 if (!excludedIds.contains(course.getId())) {
                     matchedCourses.add(course);
                 }
@@ -585,18 +600,18 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 根据名称查找匹配的器械
      */
-    private EquipmentVO findMatchingEquipment(String equipName, String focus) {
-        if (cachedEquipment == null || cachedEquipment.isEmpty()) return null;
+    private EquipmentVO findMatchingEquipment(List<EquipmentVO> equipment, String equipName) {
+        if (equipment == null || equipment.isEmpty()) return null;
 
         // 先尝试精确匹配
-        for (EquipmentVO equip : cachedEquipment) {
+        for (EquipmentVO equip : equipment) {
             if (equip.getEquipmentName() != null && equip.getEquipmentName().equals(equipName)) {
                 return equip;
             }
         }
 
         // 再尝试包含匹配
-        for (EquipmentVO equip : cachedEquipment) {
+        for (EquipmentVO equip : equipment) {
             if (equip.getEquipmentName() != null && equipName != null &&
                     (equip.getEquipmentName().contains(equipName) || equipName.contains(equip.getEquipmentName()))) {
                 return equip;
@@ -609,14 +624,14 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 根据训练重点随机选择相关器械
      */
-    private EquipmentVO findRandomEquipmentByFocus(String focus) {
-        if (cachedEquipment == null || cachedEquipment.isEmpty()) return null;
+    private EquipmentVO findRandomEquipmentByFocus(List<EquipmentVO> equipment, String focus) {
+        if (equipment == null || equipment.isEmpty()) return null;
 
         // 根据focus关键词匹配器械
         List<EquipmentVO> matchedEquipment = new ArrayList<>();
         String focusLower = focus.toLowerCase();
 
-        for (EquipmentVO equip : cachedEquipment) {
+        for (EquipmentVO equip : equipment) {
             String name = equip.getEquipmentName() != null ? equip.getEquipmentName().toLowerCase() : "";
             String desc = equip.getDescription() != null ? equip.getDescription().toLowerCase() : "";
 
@@ -628,8 +643,8 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
         // 如果没有匹配到，返回随机器械
         if (matchedEquipment.isEmpty()) {
-            int randomIndex = (int) (Math.random() * cachedEquipment.size());
-            return cachedEquipment.get(randomIndex);
+            int randomIndex = (int) (Math.random() * equipment.size());
+            return equipment.get(randomIndex);
         }
 
         // 随机返回一个匹配的器械
@@ -697,7 +712,11 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 生成默认计划数据（当AI解析失败时使用）
      */
-    private Map<String, Object> generateDefaultPlanData(String bmi, String goal, String experience) {
+    private Map<String, Object> generateDefaultPlanData(
+            String bmi,
+            String goal,
+            String experience,
+            PlanCatalog planCatalog) {
         Map<String, Object> result = new HashMap<>();
 
         // 用户信息
@@ -713,19 +732,19 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         List<Map<String, Object>> weeklyPlan = new ArrayList<>();
 
         // 周一 - 胸部训练
-        weeklyPlan.add(createDefaultDayPlan("周一", "胸部训练", "胸肌", 1));
+        weeklyPlan.add(createDefaultDayPlan("周一", "胸部训练", "胸肌", 1, planCatalog));
         // 周二 - 有氧运动
-        weeklyPlan.add(createDefaultDayPlan("周二", "有氧运动", "心肺", 2));
+        weeklyPlan.add(createDefaultDayPlan("周二", "有氧运动", "心肺", 2, planCatalog));
         // 周三 - 背部训练
-        weeklyPlan.add(createDefaultDayPlan("周三", "背部训练", "背部", 3));
+        weeklyPlan.add(createDefaultDayPlan("周三", "背部训练", "背部", 3, planCatalog));
         // 周四 - 休息日
-        weeklyPlan.add(createDefaultDayPlan("周四", "休息日", "恢复", 4));
+        weeklyPlan.add(createDefaultDayPlan("周四", "休息日", "恢复", 4, planCatalog));
         // 周五 - 腿部训练
-        weeklyPlan.add(createDefaultDayPlan("周五", "腿部训练", "腿部", 5));
+        weeklyPlan.add(createDefaultDayPlan("周五", "腿部训练", "腿部", 5, planCatalog));
         // 周六 - 肩部训练
-        weeklyPlan.add(createDefaultDayPlan("周六", "肩部训练", "肩部", 6));
+        weeklyPlan.add(createDefaultDayPlan("周六", "肩部训练", "肩部", 6, planCatalog));
         // 周日 - 全身训练
-        weeklyPlan.add(createDefaultDayPlan("周日", "全身训练", "全身", 7));
+        weeklyPlan.add(createDefaultDayPlan("周日", "全身训练", "全身", 7, planCatalog));
 
         result.put("weeklyPlan", weeklyPlan);
         return result;
@@ -734,7 +753,12 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     /**
      * 创建默认的每日计划
      */
-    private Map<String, Object> createDefaultDayPlan(String day, String focus, String focusKey, int dayIndex) {
+    private Map<String, Object> createDefaultDayPlan(
+            String day,
+            String focus,
+            String focusKey,
+            int dayIndex,
+            PlanCatalog planCatalog) {
         Map<String, Object> dayPlan = new HashMap<>();
         dayPlan.put("day", day);
         dayPlan.put("focus", focus);
@@ -747,7 +771,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         }
 
         List<Map<String, Object>> coursesList = new ArrayList<>();
-        CourseCardVO course = findRandomCourseByFocus(focusKey);
+        CourseCardVO course = findRandomCourseByFocus(planCatalog.courses(), focusKey);
         if (course != null) {
             Map<String, Object> courseMap = new HashMap<>();
             courseMap.put("id", course.getId());
@@ -761,14 +785,14 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
         // 查找匹配的器械
         List<Map<String, Object>> equipmentList = new ArrayList<>();
-        EquipmentVO equip1 = findRandomEquipmentByFocus(focusKey);
+        EquipmentVO equip1 = findRandomEquipmentByFocus(planCatalog.equipment(), focusKey);
         if (equip1 != null) {
             Map<String, Object> equipMap = new HashMap<>();
             equipMap.put("name", equip1.getEquipmentName());
             equipMap.put("image", equip1.getImageUrl());
             equipmentList.add(equipMap);
         }
-        EquipmentVO equip2 = findRandomEquipmentByFocus(focusKey);
+        EquipmentVO equip2 = findRandomEquipmentByFocus(planCatalog.equipment(), focusKey);
         if (equip2 != null && !equip2.getId().equals(equip1 != null ? equip1.getId() : null)) {
             Map<String, Object> equipMap = new HashMap<>();
             equipMap.put("name", equip2.getEquipmentName());
@@ -1040,6 +1064,9 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
 
         log.info("保存健身计划成功: planId={}", plan.getId());
         return plan.getId();
+    }
+
+    private record PlanCatalog(List<CourseCardVO> courses, List<EquipmentVO> equipment) {
     }
 
 }

@@ -8,7 +8,6 @@ import com.fitness.modules.plan.model.dto.SaveFitnessPlanDTO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 import com.fitness.modules.plan.service.FitnessPlanService;
 import com.fitness.modules.plan.service.PlanGenerationTaskManager;
-import com.fitness.modules.plan.service.impl.FitnessPlanServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import java.util.Map;
 public class FitnessPlanController {
 
     private final FitnessPlanService fitnessPlanService;
-    private final FitnessPlanServiceImpl fitnessPlanServiceImpl;
     private final PlanGenerationTaskManager taskManager;
 
     /**
@@ -115,7 +113,7 @@ public class FitnessPlanController {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("异步生成健身计划请求: userId={}", userId);
         PlanGenerationTask task = taskManager.createTask();
-        fitnessPlanServiceImpl.executeAsyncGeneration(userId, task.getTaskId());
+        fitnessPlanService.executeAsyncGeneration(userId, task.getTaskId());
         Map<String, String> response = new java.util.HashMap<>();
         response.put("taskId", task.getTaskId());
         response.put("status", task.getStatus().name());

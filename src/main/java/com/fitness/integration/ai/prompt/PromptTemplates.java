@@ -1,161 +1,191 @@
 package com.fitness.integration.ai.prompt;
 
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-/**
- * AI提示词模板管理类
- */
 @Component
 public class PromptTemplates {
 
-    /**
-     * 健身计划生成 Prompt 模板（返回结构化JSON）
-     * 使用 BeanOutputConverter 自动生成 JSON Schema 约束
-     */
-    public String generateFitnessPlanJson(Map<String, Object> variables) {
-        StringBuilder prompt = new StringBuilder();
+    private static final String FITNESS_PLAN_SYSTEM_PROMPT = """
+            You are a professional fitness coach for a gym management platform.
+            Generate safe, practical, and personalized guidance based only on the provided profile, course catalog, and equipment catalog.
 
-        prompt.append("你是一位专业的健身教练。请根据学员档案制定一份7天健身训练计划。\n\n");
+            Rules:
+            1. Do not invent courses, equipment, or venue facts.
+            2. Keep the plan realistic, balanced, and aligned with common exercise science.
+            3. When structured output is required, keep field names complete and semantically accurate.
+            4. Do not include prompt explanations or meta commentary.
+            5. Respond in Simplified Chinese.
+            """;
 
-        prompt.append("## 学员档案\n");
-        prompt.append("- 身高：").append(variables.get("height")).append(" cm\n");
-        prompt.append("- 体重：").append(variables.get("weight")).append(" kg\n");
-        prompt.append("- 年龄：").append(variables.get("age")).append(" 岁\n");
-        prompt.append("- 目标：").append(variables.get("goal")).append("\n");
-        prompt.append("- 经验：").append(variables.get("experience")).append("\n\n");
+    private static final String FITNESS_PLAN_USER_TEMPLATE = """
+            Generate a 7-day training plan from the following member profile.
 
-        prompt.append("## 可用课程\n");
-        prompt.append(variables.get("availableCourses")).append("\n\n");
+            Member profile:
+            - Height: {height} cm
+            - Weight: {weight} kg
+            - Age: {age}
+            - Goal: {goal}
+            - Experience: {experience}
 
-        prompt.append("## 可用器械\n");
-        prompt.append(variables.get("availableEquipment")).append("\n\n");
+            Available courses:
+            {availableCourses}
 
-        prompt.append("## 计划要求\n");
-        prompt.append("1. weeklyPlan 必须恰好包含7天（周一到周日）\n");
-        prompt.append("2. 周日可以设置成休息日，当然，你可以分析安排在哪天，例如遵循3分化、4分化、5分化、...,如果是休息日，格式是：courses=null, equipment=[], exercises=[]\n");
-        prompt.append("3. 训练日每天推荐2-4门课程，courses的category要与当天focus匹配\n");
-        prompt.append("4. 课程和器械必须从提供的列表中选择，禁止编造，且必须和训练日的动作符合！且是随机的，不能每次都推荐那几门！\n");
-        prompt.append("5. 器械选择要符合训练类型：力量日用力量器械，有氧日用有氧器械\n");
-        prompt.append("6. 训练日每天必须包含6-8个具体训练动作(exercises)，每个动作包含：name(动作名称), sets(组数), reps(次数), restSeconds(休息秒数)\n");
-        prompt.append("   - 力量训练日示例：杠铃深蹲(3组x8次,休息90秒)、硬拉(3组x5次,休息120秒)\n");
-        prompt.append("   - 有氧训练日示例：跑步机慢跑(1组x30分钟,休息60秒)、动感单车(1组x20分钟,休息30秒)\n\n");
+            Available equipment:
+            {availableEquipment}
 
-        return prompt.toString();
+            Output requirements:
+            1. weeklyPlan must contain exactly 7 days.
+            2. Rest days are allowed. On a rest day use courses=null, equipment=[], exercises=[].
+            3. Training days should prioritize 2 to 4 courses and match the daily focus.
+            4. Courses and equipment must be selected only from the provided catalogs.
+            5. Equipment must match the training type.
+            6. Each training day must contain 6 to 8 exercises, and each exercise must include name, sets, reps, restSeconds.
+            7. Keep the plan executable and avoid repeating the exact same arrangement every day.
+            """;
+
+    private static final String LEGACY_FITNESS_PLAN_USER_TEMPLATE = """
+            Create a 7-day fitness plan for the following member.
+
+            Member information:
+            - Goal: {goal}
+            - Preferred body part: {bodyPart}
+            - Experience: {experience}
+            - Height: {height} cm
+            - Weight: {weight} kg
+            - Age: {age}
+
+            Write a natural-language answer that includes:
+            1. Daily training theme
+            2. Daily training items
+            3. Sets, reps, or duration
+            4. Notes and precautions
+
+            Respond in Simplified Chinese.
+            """;
+
+    private static final String FITNESS_ANALYSIS_SYSTEM_PROMPT = """
+            You are a professional fitness coach and data analyst.
+            Provide an objective analysis, training evaluation, and next-step recommendations.
+            Return the answer directly in Simplified Chinese.
+            """;
+
+    private static final String FITNESS_ANALYSIS_USER_TEMPLATE = """
+            Analyze the following fitness data and provide:
+            1. Summary
+            2. Training effect evaluation
+            3. Improvement suggestions
+            4. Next-stage focus
+
+            Data:
+            {data}
+            """;
+
+    private static final String NUTRITION_SYSTEM_PROMPT = """
+            You are a professional nutrition advisor.
+            Provide balanced, practical dietary advice that fits the user's goal and physical condition.
+            Avoid unsafe or exaggerated suggestions.
+            Respond in Simplified Chinese.
+            """;
+
+    private static final String NUTRITION_USER_TEMPLATE = """
+            Provide nutrition advice based on the following information:
+
+            - Goal: {goal}
+            - Height: {height} cm
+            - Weight: {weight} kg
+            - Age: {age}
+            - Activity level: {activityLevel}
+
+            Include:
+            1. Daily calorie suggestion
+            2. Protein, carbohydrate, and fat ratio suggestion
+            3. Recommended foods
+            4. Meal timing suggestions
+            """;
+
+    private static final String EXERCISE_GUIDE_SYSTEM_PROMPT = """
+            You are a professional fitness coach.
+            Explain movements clearly, accurately, and safely.
+            Emphasize proper form and risk awareness.
+            Respond in Simplified Chinese.
+            """;
+
+    private static final String EXERCISE_GUIDE_USER_TEMPLATE = """
+            Provide guidance for the following exercise:
+            - Exercise name: {exerciseName}
+            - Target muscle: {targetMuscle}
+            - Difficulty: {difficulty}
+
+            Include:
+            1. Key technique points
+            2. Common mistakes
+            3. Precautions
+            4. Alternative exercises
+            """;
+
+    private static final String TEXT_POLISH_SYSTEM_PROMPT = """
+            You are a professional fitness-industry content editor.
+
+            Rules:
+            1. Only polish the text. Do not add unrelated information.
+            2. Output only the final polished result.
+            3. Preserve the original meaning.
+            4. Make the wording professional and natural for gym business scenarios.
+            5. Respond in Simplified Chinese.
+            """;
+
+    private static final String TEXT_POLISH_USER_TEMPLATE = """
+            Polish the following text and return only the polished result:
+
+            {text}
+            """;
+
+    public AiPromptSpec createFitnessPlanPrompt(Map<String, Object> variables) {
+        return new AiPromptSpec(
+                FITNESS_PLAN_SYSTEM_PROMPT,
+                render(FITNESS_PLAN_USER_TEMPLATE, variables)
+        );
     }
 
-    /**
-     * 健身计划生成 Prompt 模板（旧版兼容）
-     */
-    public String generateFitnessPlan(Map<String, Object> variables) {
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("你是一位专业的健身教练。请为以下学员制定一份周度健身计划（7天）：\n\n");
-        prompt.append("学员信息：\n");
-        prompt.append("- 健身目标：").append(variables.get("goal")).append("\n");
-        prompt.append("- 训练部位偏好：").append(variables.get("bodyPart")).append("\n");
-        prompt.append("- 健身经验：").append(variables.get("experience")).append("\n");
-        prompt.append("- 身高：").append(variables.get("height")).append("cm\n");
-        prompt.append("- 体重：").append(variables.get("weight")).append("kg\n");
-        prompt.append("- 年龄：").append(variables.get("age")).append("岁\n\n");
-        prompt.append("请按照以下格式返回：\n");
-        prompt.append("周一：...\n周二：...\n周三：...\n周四：...\n周五：...\n周六：...\n周日：...\n\n");
-        prompt.append("每个训练日请包含：\n");
-        prompt.append("1. 训练项目\n");
-        prompt.append("2. 组数和次数\n");
-        prompt.append("3. 训练时长\n");
-        prompt.append("4. 注意事项\n\n");
-        prompt.append("请确保计划科学合理，符合学员的身体状况和健身目标。");
-        return prompt.toString();
+    public AiPromptSpec createLegacyFitnessPlanPrompt(Map<String, Object> variables) {
+        return new AiPromptSpec(
+                FITNESS_PLAN_SYSTEM_PROMPT,
+                render(LEGACY_FITNESS_PLAN_USER_TEMPLATE, variables)
+        );
     }
 
-    /**
-     * 营养建议 Prompt 模板
-     */
-    public String generateNutritionAdvice(Map<String, Object> variables) {
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("你是一位专业的营养师。请根据以下信息提供营养建议：\n\n");
-        prompt.append("用户信息：\n");
-        prompt.append("- 健身目标：").append(variables.get("goal")).append("\n");
-        prompt.append("- 身高：").append(variables.get("height")).append("cm\n");
-        prompt.append("- 体重：").append(variables.get("weight")).append("kg\n");
-        prompt.append("- 年龄：").append(variables.get("age")).append("岁\n");
-        prompt.append("- 活动水平：").append(variables.get("activityLevel")).append("\n\n");
-        prompt.append("请提供：\n");
-        prompt.append("1. 每日热量摄入建议\n");
-        prompt.append("2. 蛋白质、碳水化合物、脂肪摄入比例\n");
-        prompt.append("3. 推荐的食物列表\n");
-        prompt.append("4. 饮食时间安排建议");
-        return prompt.toString();
+    public AiPromptSpec createFitnessAnalysisPrompt(Map<String, Object> variables) {
+        return new AiPromptSpec(
+                FITNESS_ANALYSIS_SYSTEM_PROMPT,
+                render(FITNESS_ANALYSIS_USER_TEMPLATE, variables)
+        );
     }
 
-    /**
-     * 健身数据分析 Prompt 模板
-     */
-    public String generateFitnessAnalysis(Map<String, Object> variables) {
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("你是一位专业的健身教练。请分析以下健身数据并提供建议：\n\n");
-        prompt.append("健身数据：\n");
-        prompt.append(variables.get("data")).append("\n\n");
-        prompt.append("请提供：\n");
-        prompt.append("1. 数据分析总结\n");
-        prompt.append("2. 训练效果评估\n");
-        prompt.append("3. 改进建议\n");
-        prompt.append("4. 下阶段训练重点");
-        return prompt.toString();
+    public AiPromptSpec createNutritionAdvicePrompt(Map<String, Object> variables) {
+        return new AiPromptSpec(
+                NUTRITION_SYSTEM_PROMPT,
+                render(NUTRITION_USER_TEMPLATE, variables)
+        );
     }
 
-    /**
-     * 运动动作指导 Prompt 模板
-     */
-    public String generateExerciseGuide(Map<String, Object> variables) {
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("你是一位专业的健身教练。请为以下动作提供详细指导：\n\n");
-        prompt.append("动作名称：").append(variables.get("exerciseName")).append("\n");
-        prompt.append("目标肌群：").append(variables.get("targetMuscle")).append("\n");
-        prompt.append("难度等级：").append(variables.get("difficulty")).append("\n\n");
-        prompt.append("请提供：\n");
-        prompt.append("1. 动作要领\n");
-        prompt.append("2. 常见错误\n");
-        prompt.append("3. 注意事项\n");
-        prompt.append("4. 替代动作");
-        return prompt.toString();
+    public AiPromptSpec createExerciseGuidePrompt(Map<String, Object> variables) {
+        return new AiPromptSpec(
+                EXERCISE_GUIDE_SYSTEM_PROMPT,
+                render(EXERCISE_GUIDE_USER_TEMPLATE, variables)
+        );
     }
 
-    /**
-     * 文本润色 System Prompt
-     * 设定角色行为规范
-     */
-    public String getTextPolishSystemPrompt() {
-        return """
-                你是一位专业的健身房内容编辑。
-
-                【你的职责】
-                精准描述健身房的介绍（如设备介绍、课程简介等）。
-
-                【必须遵守的规则】
-                1. 只润色，不添加任何解释、说明或多余文字！！！
-                2. 只输出一个最终润色结果，不提供选项
-                3. 保持原文核心意思，不添加无关信息
-                4. 语言专业，符合健身房场景
-
-                【严格禁止】
-                - 不要说"根据指令"、"这里提供"、"如需"、"可选"等
-                - 不要解释你的润色思路
-                - 不要分段、不要列点、不要编号
-                - 只输出纯文本内容
-
-                【例子】
-                原文："龙门架"；
-                润色："这款双滑轮龙门架设计专业，支持多样化的拉力训练，全方位刺激目标肌群。配备80kg配重系统，阻力调节灵活精准，满足从基础塑形到力量进阶的不同需求。其运行平稳流畅，是打造家庭健身房或提升商业健身区专业度的理想选择。"
-                """;
+    public AiPromptSpec createTextPolishPrompt(String text) {
+        return new AiPromptSpec(
+                TEXT_POLISH_SYSTEM_PROMPT,
+                render(TEXT_POLISH_USER_TEMPLATE, Map.of("text", text))
+        );
     }
 
-    /**
-     * 文本润色 User Prompt 模板
-     * 适用于设备管理、课程管理等表单描述字段的简短文本润色
-     */
-    public String generateTextPolishUserPrompt(String text) {
-        return "原文：" + text + "\n\n润色后的文本：";
+    private String render(String template, Map<String, Object> variables) {
+        return new PromptTemplate(template).render(variables);
     }
 }

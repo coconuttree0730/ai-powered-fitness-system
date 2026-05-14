@@ -2,6 +2,7 @@ package com.fitness.modules.user.service;
 
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
+import com.fitness.integration.minio.model.vo.FileUploadVO;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.user.mapper.CoachDetailMapper;
@@ -21,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -292,6 +294,29 @@ class CoachDetailServiceTest {
             // Then
             assertNotNull(result);
             assertEquals(CURRENT_USERNAME, result.getUsername());
+        }
+    }
+
+    @Test
+    void uploadPersonalImageShouldDeleteOldImageBeforeSavingNewOne() {
+        MockMultipartFile file = new MockMultipartFile("file", "coach.png", "image/png", "png".getBytes());
+        existingDetail.setPersonalImageUrl("http://minio/coach-old.png");
+
+        FileUploadVO uploadVO = FileUploadVO.builder()
+                .fileUrl("http://minio/coach-new.png")
+                .build();
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(CURRENT_USER_ID);
+
+            when(coachDetailMapper.selectByUserId(CURRENT_USER_ID)).thenReturn(existingDetail);
+            when(fileService.uploadFile(file, "coach-images/" + CURRENT_USER_ID)).thenReturn(uploadVO);
+
+            String result = coachDetailService.uploadPersonalImage(file);
+
+            assertEquals("http://minio/coach-new.png", result);
+            verify(fileService).deleteFile("http://minio/coach-old.png");
+            verify(coachDetailMapper).updateById(existingDetail);
         }
     }
 }
