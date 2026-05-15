@@ -26,6 +26,7 @@ public class CoachDetailDTO {
     /**
      * 真实姓名
      */
+    @NotBlank(message = "真实姓名不能为空")
     private String realName;
 
     /**

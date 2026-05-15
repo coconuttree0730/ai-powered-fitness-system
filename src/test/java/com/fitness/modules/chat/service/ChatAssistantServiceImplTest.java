@@ -1,6 +1,5 @@
 package com.fitness.modules.chat.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO;
 import com.fitness.integration.ai.service.AIService;
 import com.fitness.modules.chat.agent.JianXiaoZhuAgentService;
@@ -9,14 +8,14 @@ import com.fitness.modules.chat.mapper.ChatSessionMapper;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
 import com.fitness.modules.chat.model.entity.ChatMessage;
 import com.fitness.modules.chat.model.entity.ChatSession;
+import com.fitness.modules.chat.model.vo.ChatMessageVO;
+import com.fitness.modules.chat.model.vo.ChatSessionVO;
 import com.fitness.modules.chat.model.vo.ChatStreamEventVO;
+import com.fitness.modules.chat.model.vo.DayPlanVO;
 import com.fitness.modules.chat.model.vo.FitnessPlanCardVO;
 import com.fitness.modules.chat.service.impl.ChatAssistantServiceImpl;
-import com.fitness.modules.course.model.vo.CourseCardVO;
-import com.fitness.modules.course.service.CourseService;
-import com.fitness.modules.equipment.model.vo.EquipmentVO;
-import com.fitness.modules.equipment.service.EquipmentService;
-import com.fitness.modules.knowledge.service.RAGService;
+import com.fitness.modules.chat.service.impl.FitnessPlanParser;
+import com.fitness.modules.chat.util.ExerciseJsonSerializer;
 import com.fitness.modules.plan.mapper.FitnessPlanDetailMapper;
 import com.fitness.modules.plan.mapper.FitnessPlanMapper;
 import com.fitness.modules.user.model.vo.UserFitnessProfileVO;
@@ -34,7 +33,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -54,19 +52,19 @@ class ChatAssistantServiceImplTest {
     @Mock
     private AIService aiService;
     @Mock
-    private RAGService ragService;
-    @Mock
     private UserFitnessProfileService userFitnessProfileService;
     @Mock
     private FitnessPlanMapper fitnessPlanMapper;
     @Mock
     private FitnessPlanDetailMapper fitnessPlanDetailMapper;
     @Mock
-    private CourseService courseService;
-    @Mock
-    private EquipmentService equipmentService;
-    @Mock
     private JianXiaoZhuAgentService jianXiaoZhuAgentService;
+    @Mock
+    private RecommendationService recommendationService;
+    @Mock
+    private FitnessPlanParser fitnessPlanParser;
+    @Mock
+    private ExerciseJsonSerializer exerciseJsonSerializer;
 
     @InjectMocks
     private ChatAssistantServiceImpl service;
@@ -122,8 +120,8 @@ class ChatAssistantServiceImplTest {
     void generateFitnessPlanCardShouldPreferStructuredAiResponse() {
         when(userFitnessProfileService.isProfileComplete(1L)).thenReturn(true);
         when(userFitnessProfileService.getProfile(1L)).thenReturn(buildProfile());
-        when(courseService.getHomePageCourseCards(anyInt())).thenReturn(List.of(buildCourse()));
-        when(equipmentService.getEquipmentList(any())).thenReturn(new Page<EquipmentVO>().setRecords(List.of(buildEquipment())));
+        when(recommendationService.buildAvailableCourseCatalog()).thenReturn("[courses]");
+        when(recommendationService.buildAvailableEquipmentCatalog()).thenReturn("[equipment]");
         when(aiService.generateFitnessPlanFromProfile(any())).thenReturn(buildAiPlanResponse());
 
         FitnessPlanCardVO result = service.generateFitnessPlanCard(1L, "MUSCLE_GAIN", "CHEST", "BEGINNER");
@@ -133,8 +131,6 @@ class ChatAssistantServiceImplTest {
         Assertions.assertEquals(1, result.getWeeklyPlan().size());
         Assertions.assertEquals("Monday", result.getWeeklyPlan().get(0).getDayName());
         Assertions.assertEquals("Bench Press", result.getWeeklyPlan().get(0).getExercises().get(0).getName());
-        Assertions.assertEquals("Catalog Course", result.getRecommendedCourses().get(0).getCourseName());
-        Assertions.assertEquals("Treadmill", result.getRecommendedEquipment().get(0).getEquipmentName());
         verify(aiService, never()).generateFitnessPlan(anyString(), anyString(), anyString(), any(), any(), any());
     }
 
@@ -142,9 +138,10 @@ class ChatAssistantServiceImplTest {
     void generateFitnessPlanCardShouldFallbackToLegacyTextParsingWhenStructuredAiResponseIsMissing() {
         when(userFitnessProfileService.isProfileComplete(1L)).thenReturn(true);
         when(userFitnessProfileService.getProfile(1L)).thenReturn(buildProfile());
-        when(courseService.getHomePageCourseCards(anyInt())).thenReturn(List.of(buildCourse()));
-        when(equipmentService.getEquipmentList(any())).thenReturn(new Page<EquipmentVO>().setRecords(List.of(buildEquipment())));
+        when(recommendationService.buildAvailableCourseCatalog()).thenReturn("[courses]");
+        when(recommendationService.buildAvailableEquipmentCatalog()).thenReturn("[equipment]");
         when(aiService.generateFitnessPlanFromProfile(any())).thenReturn(null);
+        when(fitnessPlanParser.parseWeeklyPlan("No structured weekly plan")).thenReturn(generateDefaultWeeklyPlan());
         when(aiService.generateFitnessPlan(anyString(), anyString(), anyString(), any(), any(), any()))
                 .thenReturn("No structured weekly plan");
 
@@ -165,29 +162,6 @@ class ChatAssistantServiceImplTest {
         return profile;
     }
 
-    private CourseCardVO buildCourse() {
-        CourseCardVO course = new CourseCardVO();
-        course.setId(1L);
-        course.setName("Catalog Course");
-        course.setCategory("strength");
-        course.setLevel("BEGINNER");
-        course.setDuration(45);
-        course.setImage("course.png");
-        course.setDesc("Course description");
-        return course;
-    }
-
-    private EquipmentVO buildEquipment() {
-        EquipmentVO equipment = new EquipmentVO();
-        equipment.setId(2L);
-        equipment.setEquipmentName("Treadmill");
-        equipment.setTypeName("Cardio");
-        equipment.setLocation("A-01");
-        equipment.setImageUrl("equipment.png");
-        equipment.setDescription("Equipment description");
-        return equipment;
-    }
-
     private FitnessPlanResponseDTO buildAiPlanResponse() {
         FitnessPlanResponseDTO response = new FitnessPlanResponseDTO();
         response.setSubtitle("AI plan");
@@ -205,5 +179,17 @@ class ChatAssistantServiceImplTest {
 
         response.setWeeklyPlan(List.of(dayPlan));
         return response;
+    }
+
+    private List<DayPlanVO> generateDefaultWeeklyPlan() {
+        List<DayPlanVO> weeklyPlan = new java.util.ArrayList<>();
+        for (int i = 1; i <= 7; i++) {
+            DayPlanVO dayPlan = new DayPlanVO();
+            dayPlan.setDayOfWeek(i);
+            dayPlan.setDayName(new String[]{"", "周一", "周二", "周三", "周四", "周五", "周六", "周日"}[i]);
+            dayPlan.setExercises(new java.util.ArrayList<>());
+            weeklyPlan.add(dayPlan);
+        }
+        return weeklyPlan;
     }
 }

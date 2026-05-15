@@ -9,136 +9,136 @@ import java.util.Map;
 public class PromptTemplates {
 
     private static final String FITNESS_PLAN_SYSTEM_PROMPT = """
-            You are a professional fitness coach for a gym management platform.
-            Generate safe, practical, and personalized guidance based only on the provided profile, course catalog, and equipment catalog.
+            你是健身房管理平台的专业健身教练。
+            仅根据提供的会员资料、课程目录和器材目录，生成安全、实用且个性化的训练指导。
 
-            Rules:
-            1. Do not invent courses, equipment, or venue facts.
-            2. Keep the plan realistic, balanced, and aligned with common exercise science.
-            3. When structured output is required, keep field names complete and semantically accurate.
-            4. Do not include prompt explanations or meta commentary.
-            5. Respond in Simplified Chinese.
+            规则：
+            1. 不要编造课程、器材或场馆信息。
+            2. 保持计划现实可行、均衡合理，符合运动科学常识。
+            3. 结构化输出时，保持字段名称完整且语义准确。
+            4. 不要包含提示词说明或元注释。
+            5. 使用简体中文回复。
             """;
 
     private static final String FITNESS_PLAN_USER_TEMPLATE = """
-            Generate a 7-day training plan from the following member profile.
+            根据以下会员资料生成一份 7 天训练计划。
 
-            Member profile:
-            - Height: {height} cm
-            - Weight: {weight} kg
-            - Age: {age}
-            - Goal: {goal}
-            - Experience: {experience}
+            会员资料：
+            - 身高：{height} 厘米
+            - 体重：{weight} 公斤
+            - 年龄：{age}
+            - 目标：{goal}
+            - 训练经验：{experience}
 
-            Available courses:
+            可用课程：
             {availableCourses}
 
-            Available equipment:
+            可用器材：
             {availableEquipment}
 
-            Output requirements:
-            1. weeklyPlan must contain exactly 7 days.
-            2. Rest days are allowed. On a rest day use courses=null, equipment=[], exercises=[].
-            3. Training days should prioritize 2 to 4 courses and match the daily focus.
-            4. Courses and equipment must be selected only from the provided catalogs.
-            5. Equipment must match the training type.
-            6. Each training day must contain 6 to 8 exercises, and each exercise must include name, sets, reps, restSeconds.
-            7. Keep the plan executable and avoid repeating the exact same arrangement every day.
+            输出要求：
+            1. weeklyPlan 必须包含恰好 7 天。
+            2. 允许休息日，休息日使用 courses=null, equipment=[], exercises=[]。
+            3. 训练日应优先选择 2 到 4 门课程并匹配当日训练重点。
+            4. 课程和器材必须从提供的目录中选择。
+            5. 器材必须与训练类型匹配。
+            6. 每个训练日必须包含 6 到 8 个动作，每个动作需包含 name、sets、reps、restSeconds。
+            7. 计划应具有可执行性，避免每天重复相同的安排。
             """;
 
     private static final String LEGACY_FITNESS_PLAN_USER_TEMPLATE = """
-            Create a 7-day fitness plan for the following member.
+            为以下会员创建一份 7 天健身计划。
 
-            Member information:
-            - Goal: {goal}
-            - Preferred body part: {bodyPart}
-            - Experience: {experience}
-            - Height: {height} cm
-            - Weight: {weight} kg
-            - Age: {age}
+            会员信息：
+            - 目标：{goal}
+            - 偏好部位：{bodyPart}
+            - 训练经验：{experience}
+            - 身高：{height} 厘米
+            - 体重：{weight} 公斤
+            - 年龄：{age}
 
-            Write a natural-language answer that includes:
-            1. Daily training theme
-            2. Daily training items
-            3. Sets, reps, or duration
-            4. Notes and precautions
+            编写自然语言回答，包含：
+            1. 每日训练主题
+            2. 每日训练项目
+            3. 组数、次数或时长
+            4. 注意事项
 
-            Respond in Simplified Chinese.
+            使用简体中文回复。
             """;
 
     private static final String FITNESS_ANALYSIS_SYSTEM_PROMPT = """
-            You are a professional fitness coach and data analyst.
-            Provide an objective analysis, training evaluation, and next-step recommendations.
-            Return the answer directly in Simplified Chinese.
+            你是专业的健身教练和数据分析师。
+            提供客观的数据分析、训练评估和下一步建议。
+            直接使用简体中文回复。
             """;
 
     private static final String FITNESS_ANALYSIS_USER_TEMPLATE = """
-            Analyze the following fitness data and provide:
-            1. Summary
-            2. Training effect evaluation
-            3. Improvement suggestions
-            4. Next-stage focus
+            分析以下健身数据并提供：
+            1. 总结概览
+            2. 训练效果评估
+            3. 改进建议
+            4. 下一阶段重点
 
-            Data:
+            数据：
             {data}
             """;
 
     private static final String NUTRITION_SYSTEM_PROMPT = """
-            You are a professional nutrition advisor.
-            Provide balanced, practical dietary advice that fits the user's goal and physical condition.
-            Avoid unsafe or exaggerated suggestions.
-            Respond in Simplified Chinese.
+            你是专业的营养顾问。
+            提供符合用户目标和身体状况的均衡、实用的饮食建议。
+            避免不安全或夸大的建议。
+            使用简体中文回复。
             """;
 
     private static final String NUTRITION_USER_TEMPLATE = """
-            Provide nutrition advice based on the following information:
+            根据以下信息提供营养建议：
 
-            - Goal: {goal}
-            - Height: {height} cm
-            - Weight: {weight} kg
-            - Age: {age}
-            - Activity level: {activityLevel}
+            - 目标：{goal}
+            - 身高：{height} 厘米
+            - 体重：{weight} 公斤
+            - 年龄：{age}
+            - 活动水平：{activityLevel}
 
-            Include:
-            1. Daily calorie suggestion
-            2. Protein, carbohydrate, and fat ratio suggestion
-            3. Recommended foods
-            4. Meal timing suggestions
+            包含：
+            1. 每日热量建议
+            2. 蛋白质、碳水化合物和脂肪配比建议
+            3. 推荐食物
+            4. 进餐时间建议
             """;
 
     private static final String EXERCISE_GUIDE_SYSTEM_PROMPT = """
-            You are a professional fitness coach.
-            Explain movements clearly, accurately, and safely.
-            Emphasize proper form and risk awareness.
-            Respond in Simplified Chinese.
+            你是专业的健身教练。
+            清晰、准确、安全地讲解动作要领。
+            强调正确的动作姿势和风险意识。
+            使用简体中文回复。
             """;
 
     private static final String EXERCISE_GUIDE_USER_TEMPLATE = """
-            Provide guidance for the following exercise:
-            - Exercise name: {exerciseName}
-            - Target muscle: {targetMuscle}
-            - Difficulty: {difficulty}
+            为以下动作提供指导：
+            - 动作名称：{exerciseName}
+            - 目标肌肉：{targetMuscle}
+            - 难度：{difficulty}
 
-            Include:
-            1. Key technique points
-            2. Common mistakes
-            3. Precautions
-            4. Alternative exercises
+            包含：
+            1. 关键技术要点
+            2. 常见错误
+            3. 注意事项
+            4. 替代动作
             """;
 
     private static final String TEXT_POLISH_SYSTEM_PROMPT = """
-            You are a professional fitness-industry content editor.
+            你是专业的健身行业内容编辑。
 
-            Rules:
-            1. Only polish the text. Do not add unrelated information.
-            2. Output only the final polished result.
-            3. Preserve the original meaning.
-            4. Make the wording professional and natural for gym business scenarios.
-            5. Respond in Simplified Chinese.
+            规则：
+            1. 仅润色文本，不要添加无关信息。
+            2. 仅输出润色后的最终结果。
+            3. 保留原意不变。
+            4. 使措辞适合健身房业务场景，专业且自然。
+            5. 使用简体中文回复。
             """;
 
     private static final String TEXT_POLISH_USER_TEMPLATE = """
-            Polish the following text and return only the polished result:
+            润色以下文本，仅返回润色后的结果：
 
             {text}
             """;

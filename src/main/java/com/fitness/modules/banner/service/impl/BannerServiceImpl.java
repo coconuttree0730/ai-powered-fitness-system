@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,8 +64,6 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
         Banner banner = new Banner();
         BeanUtil.copyProperties(bannerDTO, banner);
         banner.setId(null);
-        banner.setCreateTime(LocalDateTime.now());
-        banner.setUpdateTime(LocalDateTime.now());
 
         save(banner);
         log.info("创建轮播图成功: id={}, title={}", banner.getId(), banner.getTitle());
@@ -87,7 +84,6 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
 
         BeanUtil.copyProperties(bannerDTO, existingBanner);
         existingBanner.setId(id);
-        existingBanner.setUpdateTime(LocalDateTime.now());
 
         updateById(existingBanner);
 
@@ -162,7 +158,6 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
         }
 
         banner.setStatus(status);
-        banner.setUpdateTime(LocalDateTime.now());
         updateById(banner);
         log.info("更新轮播图状态成功: id={}, status={}", id, status);
     }

@@ -15,9 +15,9 @@ public class ChatSessionVO {
 
     private String title;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 
     private List<ChatMessageVO> messages;
 }

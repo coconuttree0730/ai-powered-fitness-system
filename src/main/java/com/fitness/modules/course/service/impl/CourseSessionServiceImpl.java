@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -124,8 +123,6 @@ public class CourseSessionServiceImpl implements CourseSessionService {
             session.setStatus(0);
             session.setCapacity(course.getCapacity() != null ? course.getCapacity() : 20);
             session.setBookedCount(0);
-            session.setCreateTime(LocalDateTime.now());
-            session.setUpdateTime(LocalDateTime.now());
 
             sessionMapper.insert(session);
             generated++;

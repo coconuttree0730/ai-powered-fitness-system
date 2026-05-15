@@ -109,6 +109,9 @@ alipay:
   notify-url: ${ALIPAY_NOTIFY_URL}
   return-url: ${ALIPAY_RETURN_URL}
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
 logging:
   level:
     com.fitness: INFO

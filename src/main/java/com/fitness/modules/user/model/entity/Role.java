@@ -1,17 +1,18 @@
 package com.fitness.modules.user.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 /**
  * 角色实体类
  * 对应 sys_role 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_role")
-public class Role {
+public class Role extends BaseEntity {
 
     /**
      * 角色ID
@@ -36,23 +37,4 @@ public class Role {
      */
     @TableField("description")
     private String description;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 软删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

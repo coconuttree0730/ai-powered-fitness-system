@@ -75,7 +75,7 @@ public class ChatContextServiceImpl implements ChatContextService {
         List<ChatMessage> messages = chatMessageMapper.selectList(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ChatMessage>()
                 .eq(ChatMessage::getSessionId, sessionId)
-                .orderByDesc(ChatMessage::getCreatedAt)
+                .orderByDesc(ChatMessage::getCreateTime)
                 .last("LIMIT " + limit)
         );
         

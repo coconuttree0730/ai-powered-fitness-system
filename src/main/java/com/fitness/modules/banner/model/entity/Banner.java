@@ -1,16 +1,17 @@
 package com.fitness.modules.banner.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 /**
  * 轮播图实体类
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_banner")
-public class Banner {
+public class Banner extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -44,20 +45,4 @@ public class Banner {
      * 状态：0-隐藏，1-显示
      */
     private Integer status;
-
-    /**
-     * 软删除标识
-     */
-    @TableLogic(value = "false", delval = "true")
-    private Boolean deleted;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
 }

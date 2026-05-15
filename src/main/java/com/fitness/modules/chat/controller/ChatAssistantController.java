@@ -14,14 +14,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Slf4j
 @RestController
@@ -31,7 +29,6 @@ public class ChatAssistantController {
 
     private final ChatAssistantService chatAssistantService;
     private final ObjectMapper objectMapper;
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @PostMapping("/sessions")
     @PreAuthorize("hasRole('MEMBER')")
@@ -50,32 +47,32 @@ public class ChatAssistantController {
     }
 
     @PostMapping(value = "/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
+    public Flux<ServerSentEvent<String>> sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            throw new org.springframework.security.access.AccessDeniedException("User is not authenticated");
+            return Flux.error(new org.springframework.security.access.AccessDeniedException("User is not authenticated"));
         }
         if (!SecurityUtils.hasRole("MEMBER")) {
-            throw new org.springframework.security.access.AccessDeniedException("Access denied");
+            return Flux.error(new org.springframework.security.access.AccessDeniedException("Access denied"));
         }
 
-        SseEmitter emitter = new SseEmitter(0L);
-        executorService.execute(() -> {
-            try {
-                chatAssistantService.sendMessageStream(userId, dto)
-                        .doOnNext(event -> sendEvent(emitter, event.getType(), event))
-                        .doOnComplete(() -> {
-                            sendEvent(emitter, "done", ChatStreamEventVO.done());
-                            emitter.complete();
-                        })
-                        .blockLast();
-            } catch (Exception ex) {
-                log.error("Failed to process chat stream", ex);
-                sendEvent(emitter, "error", ChatStreamEventVO.error("抱歉，健小助暂时无法完成本次回答，请稍后重试。"));
-                emitter.complete();
-            }
-        });
-        return emitter;
+        return chatAssistantService.sendMessageStream(userId, dto)
+                .map(event -> ServerSentEvent.<String>builder()
+                        .id(event.getType())
+                        .event(event.getType())
+                        .data(toJson(event))
+                        .build())
+                .concatWith(Flux.just(ServerSentEvent.<String>builder()
+                        .event("done")
+                        .data(toJson(ChatStreamEventVO.done()))
+                        .build()))
+                .onErrorResume(ex -> {
+                    log.error("Failed to process chat stream", ex);
+                    return Flux.just(ServerSentEvent.<String>builder()
+                            .event("error")
+                            .data(toJson(ChatStreamEventVO.error("抱歉，健小助暂时无法完成本次回答，请稍后重试。")))
+                            .build());
+                });
     }
 
     @GetMapping("/sessions")
@@ -144,15 +141,12 @@ public class ChatAssistantController {
         return Result.success(plans);
     }
 
-    private void sendEvent(SseEmitter emitter, String eventName, ChatStreamEventVO payload) {
+    private String toJson(Object obj) {
         try {
-            emitter.send(SseEmitter.event()
-                    .name(eventName)
-                    .data(objectMapper.writeValueAsString(payload)));
-        } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Failed to serialize SSE payload", ex);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Failed to send SSE payload", ex);
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize payload to JSON", e);
+            return "{}";
         }
     }
 }

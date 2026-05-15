@@ -1,16 +1,18 @@
 package com.fitness.modules.plan.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import com.fitness.common.mybatis.JsonbTypeHandler;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName(value = "fitness_plan", autoResultMap = true)
-public class FitnessPlan {
+public class FitnessPlan extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -53,14 +55,4 @@ public class FitnessPlan {
 
     @TableField(value = "plan_data_json", typeHandler = JsonbTypeHandler.class)
     private Map<String, Object> planDataJson;
-
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

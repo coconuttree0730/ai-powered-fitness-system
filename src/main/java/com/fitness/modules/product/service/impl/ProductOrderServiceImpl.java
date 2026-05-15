@@ -185,12 +185,9 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             profile = new UserFitnessProfile();
             profile.setUserId(userId);
             profile.setPrivateCoachId(coachId);
-            profile.setCreateTime(LocalDateTime.now());
-            profile.setUpdateTime(LocalDateTime.now());
             userFitnessProfileMapper.insert(profile);
         } else {
             profile.setPrivateCoachId(coachId);
-            profile.setUpdateTime(LocalDateTime.now());
             userFitnessProfileMapper.updateById(profile);
         }
     }

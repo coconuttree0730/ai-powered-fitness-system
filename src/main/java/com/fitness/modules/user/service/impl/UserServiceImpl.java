@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +109,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户修改密码成功: {}", user.getUsername());
@@ -196,7 +194,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (dto.getAvatar() != null) {
             user.setAvatar(dto.getAvatar());
         }
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("更新用户成功: userId={}", userId);
@@ -207,7 +204,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void resetPassword(Long userId, ResetPasswordDTO dto) {
         User user = getRequiredUser(userId);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("管理员重置用户密码成功: userId={}", userId);
@@ -230,7 +226,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void updateUserStatus(Long userId, Integer status) {
         User user = getRequiredUser(userId);
         user.setStatus(status);
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("更新用户状态成功: userId={}, status={}", userId, status);
@@ -282,7 +277,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         user.setUsername(username);
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户修改用户名成功: userId={}, newUsername={}", userId, username);
@@ -306,7 +300,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         user.setPhone(phone);
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户修改手机号成功: userId={}, newPhone={}", userId, phone);
@@ -325,7 +318,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         user.setEmail(email);
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户修改邮箱成功: userId={}, newEmail={}", userId, email);
@@ -350,7 +342,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户通过短信验证码修改密码成功: userId={}", userId);
@@ -364,7 +355,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         deleteAvatarQuietly(userId, user.getAvatar());
 
         user.setAvatar(avatarUrl);
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户头像上传成功: userId={}, avatar={}", userId, avatarUrl);
@@ -376,7 +366,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public UserVO updateNickname(Long userId, String nickname) {
         User user = getRequiredUser(userId);
         user.setNickname(nickname);
-        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         log.info("用户更新昵称成功: userId={}, nickname={}", userId, nickname);
@@ -439,8 +428,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setEmail(email);
         user.setAvatar(avatar);
         user.setStatus(1);
-        user.setCreateTime(LocalDateTime.now());
-        user.setUpdateTime(LocalDateTime.now());
         return user;
     }
 

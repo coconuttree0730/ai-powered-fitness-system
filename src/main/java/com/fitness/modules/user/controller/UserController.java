@@ -6,7 +6,9 @@ import com.fitness.common.result.Result;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.user.model.dto.SendEmailCodeDTO;
 import com.fitness.modules.user.model.dto.UpdateEmailDTO;
+import com.fitness.modules.user.model.dto.UpdateNicknameDTO;
 import com.fitness.modules.user.model.dto.UpdatePasswordBySmsDTO;
+import com.fitness.modules.user.model.dto.UpdatePasswordDTO;
 import com.fitness.modules.user.model.dto.UpdatePhoneDTO;
 import com.fitness.modules.user.model.dto.UpdateUsernameDTO;
 import com.fitness.modules.user.model.vo.UserVO;
@@ -66,27 +68,16 @@ public class UserController {
      */
     @PutMapping("/password")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> updatePassword(@RequestBody Map<String, String> request) {
+    public Result<Void> updatePassword(@Valid @RequestBody UpdatePasswordDTO dto) {
         Long userId = getCurrentUserId();
-        String oldPassword = request.get("oldPassword");
-        String newPassword = request.get("newPassword");
-
-        if (oldPassword == null || oldPassword.isEmpty()) {
-            return Result.error("旧密码不能为空");
-        }
-        if (newPassword == null || newPassword.isEmpty()) {
-            return Result.error("新密码不能为空");
-        }
-
         log.info("修改密码请求, userId: {}", userId);
-        boolean success = userService.updatePassword(userId, oldPassword, newPassword);
+        boolean success = userService.updatePassword(userId, dto.getOldPassword(), dto.getNewPassword());
         if (success) {
             return Result.success();
         } else {
             return Result.error("修改密码失败");
         }
     }
-
     /**
      * 更新用户名
      *
@@ -119,21 +110,7 @@ public class UserController {
             return Result.error("当前用户未绑定手机号");
         }
 
-        if (!smsCodeService.canSend(phone)) {
-            long remaining = smsCodeService.getRemainingCooldown(phone);
-            Map<String, Object> data = new HashMap<>();
-            data.put("remainingSeconds", remaining);
-            return Result.error(ErrorCode.SMS_CODE_SEND_TOO_FREQUENT.getCode(), "发送过于频繁，请稍后再试");
-        }
-
-        boolean success = smsCodeService.sendSmsCode(phone);
-        if (success) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("remainingSeconds", 60);
-            return Result.success(data);
-        } else {
-            return Result.error("验证码发送失败");
-        }
+        return sendSmsCodeAndBuildResponse(phone);
     }
 
     /**
@@ -146,21 +123,7 @@ public class UserController {
     @PostMapping("/phone/code/new")
     @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> sendNewPhoneCode(@RequestParam String phone) {
-        if (!smsCodeService.canSend(phone)) {
-            long remaining = smsCodeService.getRemainingCooldown(phone);
-            Map<String, Object> data = new HashMap<>();
-            data.put("remainingSeconds", remaining);
-            return Result.error(ErrorCode.SMS_CODE_SEND_TOO_FREQUENT.getCode(), "发送过于频繁，请稍后再试");
-        }
-
-        boolean success = smsCodeService.sendSmsCode(phone);
-        if (success) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("remainingSeconds", 60);
-            return Result.success(data);
-        } else {
-            return Result.error("验证码发送失败");
-        }
+        return sendSmsCodeAndBuildResponse(phone);
     }
 
     /**
@@ -324,16 +287,11 @@ public class UserController {
      */
     @PutMapping("/nickname")
     @PreAuthorize("isAuthenticated()")
-    public Result<UserVO> updateNickname(@RequestBody Map<String, String> request) {
+    public Result<UserVO> updateNickname(@Valid @RequestBody UpdateNicknameDTO dto) {
         Long userId = getCurrentUserId();
-        String nickname = request.get("nickname");
 
-        if (nickname == null || nickname.trim().isEmpty()) {
-            return Result.error("昵称不能为空");
-        }
-
-        log.info("更新昵称请求, userId: {}, nickname: {}", userId, nickname);
-        UserVO userVO = userService.updateNickname(userId, nickname.trim());
+        log.info("更新昵称请求, userId: {}, nickname: {}", userId, dto.getNickname());
+        UserVO userVO = userService.updateNickname(userId, dto.getNickname().trim());
         return Result.success(userVO);
     }
 
@@ -342,6 +300,23 @@ public class UserController {
      *
      * @return 用户ID
      */
+    private Result<Map<String, Object>> sendSmsCodeAndBuildResponse(String phone) {
+        if (!smsCodeService.canSend(phone)) {
+            long remaining = smsCodeService.getRemainingCooldown(phone);
+            Map<String, Object> data = new HashMap<>();
+            data.put("remainingSeconds", remaining);
+            return Result.error(ErrorCode.SMS_CODE_SEND_TOO_FREQUENT.getCode(), "发送过于频繁，请稍后再试");
+        }
+
+        boolean success = smsCodeService.sendSmsCode(phone);
+        if (success) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("remainingSeconds", 60);
+            return Result.success(data);
+        }
+        return Result.error("验证码发送失败");
+    }
+
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

@@ -1,13 +1,14 @@
 package com.fitness.modules.course.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("fitness_video_course")
-public class VideoCourse {
+public class VideoCourse extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -47,14 +48,4 @@ public class VideoCourse {
 
     @TableField("sort_order")
     private Integer sortOrder;
-
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

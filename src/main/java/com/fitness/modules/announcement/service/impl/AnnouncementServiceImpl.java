@@ -2,14 +2,14 @@ package com.fitness.modules.announcement.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fitness.common.exception.BusinessException;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.common.constants.ErrorCode;
+import com.fitness.common.exception.BusinessException;
 import com.fitness.modules.announcement.mapper.AnnouncementMapper;
 import com.fitness.modules.announcement.model.dto.AnnouncementDTO;
 import com.fitness.modules.announcement.model.entity.Announcement;
 import com.fitness.modules.announcement.model.vo.AnnouncementVO;
 import com.fitness.modules.announcement.service.AnnouncementService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +17,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 公告Service实现类
- */
 @Service
-@RequiredArgsConstructor
-public class AnnouncementServiceImpl implements AnnouncementService {
-
-    private final AnnouncementMapper announcementMapper;
+public class AnnouncementServiceImpl extends ServiceImpl<AnnouncementMapper, Announcement> implements AnnouncementService {
 
     @Override
     public List<AnnouncementVO> getPublishedAnnouncements() {
@@ -34,7 +28,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
                .eq(Announcement::getDeleted, false)
                .orderByDesc(Announcement::getPublishTime);
         //获取公告列表
-        List<Announcement> announcements = announcementMapper.selectList(wrapper);
+        List<Announcement> announcements = this.list(wrapper);
         return announcements.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
@@ -45,7 +39,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
         LambdaQueryWrapper<Announcement> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Announcement::getDeleted, false)
                .orderByDesc(Announcement::getCreateTime);
-        List<Announcement> announcements = announcementMapper.selectList(wrapper);
+        List<Announcement> announcements = this.list(wrapper);
         return announcements.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
@@ -53,7 +47,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
 
     @Override
     public AnnouncementVO getAnnouncementById(Long id) {
-        Announcement announcement = announcementMapper.selectById(id);
+        Announcement announcement = this.getById(id);
         if (announcement == null || announcement.getDeleted()) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }
@@ -72,14 +66,14 @@ public class AnnouncementServiceImpl implements AnnouncementService {
         }
 
         announcement.setViewCount(0);
-        announcementMapper.insert(announcement);
+        this.save(announcement);
         return convertToVO(announcement);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AnnouncementVO updateAnnouncement(Long id, AnnouncementDTO announcementDTO) {
-        Announcement existing = announcementMapper.selectById(id);
+        Announcement existing = this.getById(id);
         if (existing == null || existing.getDeleted()) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }
@@ -91,18 +85,18 @@ public class AnnouncementServiceImpl implements AnnouncementService {
             existing.setPublishTime(LocalDateTime.now());
         }
 
-        announcementMapper.updateById(existing);
+        this.updateById(existing);
         return convertToVO(existing);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteAnnouncement(Long id) {
-        Announcement existing = announcementMapper.selectById(id);
+        Announcement existing = this.getById(id);
         if (existing == null || existing.getDeleted()) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }
-        announcementMapper.deleteById(id);
+        this.removeById(id);
     }
 
     @Override
@@ -112,36 +106,36 @@ public class AnnouncementServiceImpl implements AnnouncementService {
             //不存在直接返回
             return;
         }
-        announcementMapper.deleteByIds(ids);
+        this.removeByIds(ids);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishAnnouncement(Long id) {
-        Announcement existing = announcementMapper.selectById(id);
+        Announcement existing = this.getById(id);
         if (existing == null || existing.getDeleted()) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }
         existing.setStatus(1);
         existing.setPublishTime(LocalDateTime.now());
-        announcementMapper.updateById(existing);
+        this.updateById(existing);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unpublishAnnouncement(Long id) {
-        Announcement existing = announcementMapper.selectById(id);
+        Announcement existing = this.getById(id);
         if (existing == null || existing.getDeleted()) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }
         existing.setStatus(0);
-        announcementMapper.updateById(existing);
+        this.updateById(existing);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        announcementMapper.incrementViewCount(id);
+        baseMapper.incrementViewCount(id);
     }
 
     /**

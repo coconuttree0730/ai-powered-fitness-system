@@ -15,6 +15,7 @@ import com.fitness.modules.chat.tools.RagQueryTool;
 import com.fitness.modules.chat.tools.DateTimeQueryTools;
 import com.fitness.modules.chat.tools.WeatherQueryTools;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class AgentRuntimeConfig {
@@ -50,18 +52,15 @@ public class AgentRuntimeConfig {
         int port = redisProperties.getPort() != 0 ? redisProperties.getPort() : 6379;
         String password = redisProperties.getPassword();
 
-        // 调试日志
-        System.out.println("[RedissonConfig] Redis Host: " + host);
-        System.out.println("[RedissonConfig] Redis Port: " + port);
-        System.out.println("[RedissonConfig] Redis Password: '" + password + "'");
-        System.out.println("[RedissonConfig] Redis Password length: " + (password != null ? password.length() : 0));
+        log.debug("Redisson Redis Host: {}, Port: {}", host, port);
+        log.debug("Redisson Redis Password configured: {}", password != null ? "YES" : "NO");
 
         String address = "redis://" + host + ":" + port;
         if (password == null || password.isBlank()) {
-            System.out.println("[RedissonConfig] Connecting to Redis without password");
+            log.debug("Connecting to Redis without password");
             config.useSingleServer().setAddress(address);
         } else {
-            System.out.println("[RedissonConfig] Connecting to Redis with password");
+            log.debug("Connecting to Redis with password");
             config.useSingleServer().setAddress(address).setPassword(password);
         }
         return Redisson.create(config);

@@ -1,7 +1,9 @@
 package com.fitness.modules.announcement.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -9,8 +11,9 @@ import java.time.LocalDateTime;
  * 公告实体类
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_announcement")
-public class Announcement {
+public class Announcement extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -44,20 +47,4 @@ public class Announcement {
      * 发布时间
      */
     private LocalDateTime publishTime;
-
-    /**
-     * 软删除标识
-     */
-    @TableLogic(value = "false", delval = "true")
-    private Boolean deleted;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
 }

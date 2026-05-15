@@ -32,7 +32,7 @@ public class AIConfig {
     @Bean
     public ChatClient.Builder chatClientBuilder(ChatModel chatModel) {
         log.info("=== Spring AI Alibaba 配置信息 ===");
-        log.info("API Key: {}...", apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) + "***" : "N/A");
+        log.info("API Key configured: {}", apiKey != null ? "YES" : "MISSING");
         log.info("Model: {}", model);
         log.info("================================");
 

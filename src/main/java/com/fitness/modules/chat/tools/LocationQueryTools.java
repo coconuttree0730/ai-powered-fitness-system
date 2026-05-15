@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.time.Duration;
 
 @Slf4j
 @Component
@@ -15,9 +19,16 @@ public class LocationQueryTools {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
+    @Value("${chat.tools.location.default-city:北京}")
+    private String defaultCity;
+
     public LocationQueryTools() {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(10));
+        requestFactory.setReadTimeout(Duration.ofSeconds(10));
         this.restClient = RestClient.builder()
                 .baseUrl("https://ipapi.co")
+                .requestFactory(requestFactory)
                 .build();
         this.objectMapper = new ObjectMapper();
     }
@@ -41,7 +52,6 @@ public class LocationQueryTools {
             String countryName = root.path("country_name").asText();
 
             if (city == null || city.isBlank()) {
-                String defaultCity = "北京";
                 log.warn("\n========== toolmessage ==========\n工具: 位置查询\n返回结果:\n{}\n========== toolmessage end ==========\n", defaultCity);
                 return defaultCity;
             }
@@ -51,7 +61,6 @@ public class LocationQueryTools {
             return city;
 
         } catch (Exception e) {
-            String defaultCity = "北京";
             log.error("\n========== toolmessage ==========\n工具: 位置查询\n异常: {}\n返回结果:\n{}\n========== toolmessage end ==========\n", e.getMessage(), defaultCity);
             return defaultCity;
         }

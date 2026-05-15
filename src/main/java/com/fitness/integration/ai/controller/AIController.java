@@ -4,7 +4,6 @@ import com.fitness.common.result.Result;
 import com.fitness.integration.ai.model.dto.TextPolishDTO;
 import com.fitness.integration.ai.model.vo.TextPolishVO;
 import com.fitness.integration.ai.service.AIService;
-import com.fitness.integration.security.SecurityUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -64,10 +63,8 @@ public class AIController {
      * @return AI 流式回复
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("isAuthenticated()")
     public Flux<String> streamChat(@Valid @RequestBody ChatRequest request) {
-        if (!SecurityUtils.isAuthenticated()) {
-            return Flux.error(new org.springframework.security.access.AccessDeniedException("未登录或登录已过期"));
-        }
         log.info("AI 流式对话请求: {}", request.getMessage());
         return aiService.streamChat(request.getMessage());
     }

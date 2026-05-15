@@ -1,17 +1,20 @@
 package com.fitness.modules.user.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 /**
  * 用户实体类
  * 对应 sys_user 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_user")
-public class User {
+public class User extends BaseEntity {
 
     /**
      * 用户ID
@@ -72,23 +75,4 @@ public class User {
      */
     @TableField("balance")
     private java.math.BigDecimal balance;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 软删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

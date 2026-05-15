@@ -1,7 +1,9 @@
 package com.fitness.modules.booking.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -10,8 +12,9 @@ import java.time.LocalDateTime;
  * 对应 fitness_booking 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("fitness_booking")
-public class Booking {
+public class Booking extends BaseEntity {
 
     /**
      * 预约ID
@@ -54,23 +57,4 @@ public class Booking {
      */
     @TableField("cancel_reason")
     private String cancelReason;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 逻辑删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

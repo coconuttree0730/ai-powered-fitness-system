@@ -1,7 +1,9 @@
 package com.fitness.modules.equipment.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -10,8 +12,9 @@ import java.time.LocalDateTime;
  * 对应 fitness_equipment_repair 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("fitness_equipment_repair")
-public class EquipmentRepair {
+public class EquipmentRepair extends BaseEntity {
 
     /**
      * 报修ID
@@ -56,27 +59,8 @@ public class EquipmentRepair {
     private String handleRemark;
 
     /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
      * 处理时间
      */
     @TableField("handle_time")
     private LocalDateTime handleTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 逻辑删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

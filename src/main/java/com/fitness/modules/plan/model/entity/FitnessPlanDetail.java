@@ -1,17 +1,18 @@
 package com.fitness.modules.plan.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 /**
  * 健身计划详情实体类
  * 对应 fitness_plan_detail 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("fitness_plan_detail")
-public class FitnessPlanDetail {
+public class FitnessPlanDetail extends BaseEntity {
 
     /**
      * 详情ID
@@ -84,23 +85,4 @@ public class FitnessPlanDetail {
      */
     @TableField("sort_order")
     private Integer sortOrder;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 软删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

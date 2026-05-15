@@ -2,10 +2,12 @@ package com.fitness.common.exception;
 
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.result.Result;
+import com.fitness.integration.ai.exception.AiIntegrationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +31,12 @@ public class GlobalExceptionHandler {
         return Result.error(e.getCode(), e.getMessage());
     }
 
+    @ExceptionHandler(AiIntegrationException.class)
+    public Result<Void> handleAiIntegrationException(AiIntegrationException e) {
+        log.error("AI 服务调用异常: {}", e.getMessage(), e);
+        return Result.error(ErrorCode.AI_GENERATE_ERROR);
+    }
+
     /**
      * 用于处理方法__参数校验__失败的情况，返回参数校验错误信息
      * @param e 参数校验失败异常
@@ -36,31 +44,26 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        Map<String, String> errors = new HashMap<>();
-        e.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+        Map<String, String> errors = extractFieldErrors(e.getBindingResult());
         log.warn("参数校验失败: {}", errors);
         return Result.error(ErrorCode.PARAM_ERROR.getCode(), "参数校验失败: " + errors);
     }
 
-    /**
-     * 用于处理参数绑定失败的情况，返回参数绑定错误信息
-     * @param e 参数绑定失败异常
-     * @return 参数绑定错误信息
-     */
     @ExceptionHandler(BindException.class)
     public Result<Map<String, String>> handleBindException(BindException e) {
+        Map<String, String> errors = extractFieldErrors(e.getBindingResult());
+        log.warn("参数绑定失败: {}", errors);
+        return Result.error(ErrorCode.PARAM_ERROR.getCode(), "参数绑定失败: " + errors);
+    }
+
+    private Map<String, String> extractFieldErrors(BindingResult bindingResult) {
         Map<String, String> errors = new HashMap<>();
-        e.getBindingResult().getAllErrors().forEach(error -> {
+        bindingResult.getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        log.warn("参数绑定失败: {}", errors);
-        return Result.error(ErrorCode.PARAM_ERROR.getCode(), "参数绑定失败: " + errors);
+        return errors;
     }
 
     @ExceptionHandler(AccessDeniedException.class)

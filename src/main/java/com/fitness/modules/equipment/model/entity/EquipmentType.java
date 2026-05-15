@@ -1,17 +1,18 @@
 package com.fitness.modules.equipment.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 /**
  * 器材类型实体类
  * 对应 fitness_equipment_type 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("fitness_equipment_type")
-public class EquipmentType {
+public class EquipmentType extends BaseEntity {
 
     /**
      * 类型ID
@@ -48,23 +49,4 @@ public class EquipmentType {
      */
     @TableField("description")
     private String description;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 逻辑删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

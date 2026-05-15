@@ -1,31 +1,23 @@
 package com.fitness.modules.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import com.fitness.modules.user.model.dto.UserFitnessProfileDTO;
 import com.fitness.modules.user.model.entity.UserFitnessProfile;
 import com.fitness.modules.user.model.vo.UserFitnessProfileVO;
 import com.fitness.modules.user.service.UserFitnessProfileService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
-/**
- * ___用户健身档案___服务实现类
- */
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class UserFitnessProfileServiceImpl implements UserFitnessProfileService {
-
-    private final UserFitnessProfileMapper userFitnessProfileMapper;
+public class UserFitnessProfileServiceImpl extends ServiceImpl<UserFitnessProfileMapper, UserFitnessProfile> implements UserFitnessProfileService {
 
     @Override
     public UserFitnessProfileVO getProfile(Long userId) {
-        UserFitnessProfile profile = userFitnessProfileMapper.selectByUserId(userId);
+        UserFitnessProfile profile = baseMapper.selectByUserId(userId);
         if (profile == null) {
             return null;
         }
@@ -36,24 +28,21 @@ public class UserFitnessProfileServiceImpl implements UserFitnessProfileService 
     @Transactional(rollbackFor = Exception.class)
     public UserFitnessProfileVO saveOrUpdateProfile(Long userId, UserFitnessProfileDTO dto) {
         // 查询是否已存在档案
-        UserFitnessProfile existingProfile = userFitnessProfileMapper.selectByUserId(userId);
+        UserFitnessProfile existingProfile = baseMapper.selectByUserId(userId);
 
         UserFitnessProfile profile;
         if (existingProfile == null) {
             // 创建新档案
             profile = new UserFitnessProfile();
             profile.setUserId(userId);
-            profile.setCreateTime(LocalDateTime.now());
             BeanUtil.copyProperties(dto, profile);
-            profile.setUpdateTime(LocalDateTime.now());
-            userFitnessProfileMapper.insert(profile);
+            this.save(profile);
             log.info("创建用户健身档案成功, userId: {}", userId);
         } else {
             // 更新现有档案
             profile = existingProfile;
             BeanUtil.copyProperties(dto, profile);
-            profile.setUpdateTime(LocalDateTime.now());
-            userFitnessProfileMapper.updateById(profile);
+            this.updateById(profile);
             log.info("更新用户健身档案成功, userId: {}", userId);
         }
 
@@ -62,7 +51,7 @@ public class UserFitnessProfileServiceImpl implements UserFitnessProfileService 
 
     @Override
     public boolean isProfileComplete(Long userId) {
-        UserFitnessProfile profile = userFitnessProfileMapper.selectByUserId(userId);
+        UserFitnessProfile profile = baseMapper.selectByUserId(userId);
         if (profile == null) {
             return false;
         }

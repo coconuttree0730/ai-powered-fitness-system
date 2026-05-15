@@ -1,8 +1,11 @@
 package com.fitness.modules.course.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
+import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.course.mapper.CourseMapper;
 import com.fitness.modules.course.model.dto.CourseDTO;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
@@ -10,7 +13,6 @@ import com.fitness.modules.course.model.entity.Course;
 import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.model.vo.CourseCategoryVO;
 import com.fitness.modules.course.model.vo.CourseVO;
-import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.course.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,21 +20,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import cn.hutool.core.bean.BeanUtil;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 课程服务实现类
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CourseServiceImpl implements CourseService {
+public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements CourseService {
 
-    private final CourseMapper courseMapper;
     private final FileService fileService;
 
     @Override
@@ -45,10 +41,8 @@ public class CourseServiceImpl implements CourseService {
         BeanUtil.copyProperties(dto, course);
         course.setBookedCount(0);
         course.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
-        course.setCreateTime(LocalDateTime.now());
-        course.setUpdateTime(LocalDateTime.now());
 
-        courseMapper.insert(course);
+        this.save(course);
         log.info("课程创建成功: courseId={}, courseName={}", course.getId(), course.getCourseName());
 
         return course.getId();
@@ -57,7 +51,7 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCourse(Long courseId, CourseDTO dto) {
-        Course existingCourse = courseMapper.selectById(courseId);
+        Course existingCourse = this.getById(courseId);
         if (existingCourse == null || existingCourse.getDeleted()) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
         }
@@ -82,21 +76,19 @@ public class CourseServiceImpl implements CourseService {
         if (dto.getStatus() == null) {
             existingCourse.setStatus(originalStatus);
         }
-        existingCourse.setUpdateTime(LocalDateTime.now());
 
-        courseMapper.updateById(existingCourse);
+        this.updateById(existingCourse);
         log.info("课程更新成功: courseId={}", courseId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCourse(Long courseId) {
-        Course existingCourse = courseMapper.selectById(courseId);
+        Course existingCourse = this.getById(courseId);
         if (existingCourse == null || existingCourse.getDeleted()) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
         }
 
-        // 删除课程图片
         if (StringUtils.hasText(existingCourse.getImageUrl())) {
             try {
                 fileService.deleteFile(existingCourse.getImageUrl());
@@ -106,13 +98,13 @@ public class CourseServiceImpl implements CourseService {
             }
         }
 
-        courseMapper.deleteById(courseId);
+        this.removeById(courseId);
         log.info("课程删除成功: courseId={}", courseId);
     }
 
     @Override
     public CourseVO getCourseById(Long courseId) {
-        CourseVO courseVO = courseMapper.selectCourseDetail(courseId);
+        CourseVO courseVO = baseMapper.selectCourseDetail(courseId);
         if (courseVO == null) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
         }
@@ -122,19 +114,18 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public Page<CourseVO> getCourseList(CourseQueryDTO query) {
         Page<Course> page = new Page<>(query.getPageNum(), query.getPageSize());
-        return courseMapper.selectCourseList(page, query);
+        return baseMapper.selectCourseList(page, query);
     }
 
     @Override
     public Page<CourseVO> getPublicCourseList(CourseQueryDTO query) {
-        // 公开列表只显示未开始和进行中的课程
         Page<Course> page = new Page<>(query.getPageNum(), query.getPageSize());
-        return courseMapper.selectCourseList(page, query);
+        return baseMapper.selectCourseList(page, query);
     }
 
     @Override
     public List<String> getCourseCategories() {
-        return courseMapper.selectDistinctCategories();
+        return baseMapper.selectDistinctCategories();
     }
 
     @Override
@@ -146,21 +137,21 @@ public class CourseServiceImpl implements CourseService {
         CourseCategoryVO allCategory = new CourseCategoryVO();
         allCategory.setKey("all");
         allCategory.setLabel("全部课程");
-        allCategory.setCourses(courseMapper.selectHomePageCourses(6));
+        allCategory.setCourses(baseMapper.selectHomePageCourses(6));
         result.add(allCategory);
 
         // 力量训练
         CourseCategoryVO strengthCategory = new CourseCategoryVO();
         strengthCategory.setKey("strength");
         strengthCategory.setLabel("力量训练");
-        strengthCategory.setCourses(courseMapper.selectHomePageCoursesByCategory("力量训练", 6));
+        strengthCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("力量训练", 6));
         result.add(strengthCategory);
 
         // 有氧燃脂
         CourseCategoryVO cardioCategory = new CourseCategoryVO();
         cardioCategory.setKey("cardio");
         cardioCategory.setLabel("有氧燃脂");
-        cardioCategory.setCourses(courseMapper.selectHomePageCoursesByCategory("有氧燃脂", 6));
+        cardioCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("有氧燃脂", 6));
         result.add(cardioCategory);
 
         // 瑜伽普拉提
@@ -168,7 +159,7 @@ public class CourseServiceImpl implements CourseService {
         yogaCategory.setKey("yoga");
         yogaCategory.setLabel("瑜伽普拉提");
         List<CourseCardVO> yogaCourses = new ArrayList<>();
-        yogaCourses.addAll(courseMapper.selectHomePageCoursesByCategory("瑜伽普拉提", 6));
+        yogaCourses.addAll(baseMapper.selectHomePageCoursesByCategory("瑜伽普拉提", 6));
         yogaCategory.setCourses(yogaCourses);
         result.add(yogaCategory);
 
@@ -176,7 +167,7 @@ public class CourseServiceImpl implements CourseService {
         CourseCategoryVO boxingCategory = new CourseCategoryVO();
         boxingCategory.setKey("boxing");
         boxingCategory.setLabel("拳击格斗");
-        boxingCategory.setCourses(courseMapper.selectHomePageCoursesByCategory("拳击格斗", 6));
+        boxingCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("拳击格斗", 6));
         result.add(boxingCategory);
 
         log.info("获取首页课程体系数据成功，共{}个分类", result.size());
@@ -188,7 +179,7 @@ public class CourseServiceImpl implements CourseService {
         if (limit == null || limit <= 0) {
             limit = 6;
         }
-        List<CourseCardVO> courses = courseMapper.selectHomePageCourses(limit);
+        List<CourseCardVO> courses = baseMapper.selectHomePageCourses(limit);
         log.info("获取首页课程卡片数据成功，共{}条", courses.size());
         return courses;
     }

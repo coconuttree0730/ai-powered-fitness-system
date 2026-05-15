@@ -56,8 +56,6 @@ public class EquipmentServiceImpl implements EquipmentService {
         Equipment equipment = new Equipment();
         BeanUtil.copyProperties(dto, equipment);
         equipment.setStatus(dto.getStatus() != null ? dto.getStatus() : EquipmentStatus.NORMAL.getCode());
-        equipment.setCreateTime(LocalDateTime.now());
-        equipment.setUpdateTime(LocalDateTime.now());
         equipment.setDeleted(false);
 
         equipmentMapper.insert(equipment);
@@ -91,7 +89,6 @@ public class EquipmentServiceImpl implements EquipmentService {
         if (dto.getStatus() == null) {
             existingEquipment.setStatus(originalStatus);
         }
-        existingEquipment.setUpdateTime(LocalDateTime.now());
 
         equipmentMapper.updateById(existingEquipment);
         log.info("器材更新成功: equipmentId={}", id);
@@ -191,7 +188,6 @@ public class EquipmentServiceImpl implements EquipmentService {
             repair.setHandleTime(LocalDateTime.now());
         }
 
-        repair.setUpdateTime(LocalDateTime.now());
         equipmentRepairMapper.updateById(repair);
 
         // 添加处理记录
@@ -231,8 +227,6 @@ public class EquipmentServiceImpl implements EquipmentService {
         }
 
         repair.setStatus(RepairStatus.PENDING.getCode());
-        repair.setCreateTime(LocalDateTime.now());
-        repair.setUpdateTime(LocalDateTime.now());
         repair.setDeleted(false);
 
         equipmentRepairMapper.insert(repair);
@@ -325,7 +319,6 @@ public class EquipmentServiceImpl implements EquipmentService {
         // 更新报修状态为已关闭
         repair.setStatus(RepairStatus.CLOSED.getCode());
         repair.setHandleTime(LocalDateTime.now());
-        repair.setUpdateTime(LocalDateTime.now());
         equipmentRepairMapper.updateById(repair);
 
         // 添加处理记录
@@ -433,7 +426,6 @@ public class EquipmentServiceImpl implements EquipmentService {
         if (equipment != null && !equipment.getDeleted()) {
             Integer oldStatus = equipment.getStatus();
             equipment.setStatus(status);
-            equipment.setUpdateTime(LocalDateTime.now());
             equipmentMapper.updateById(equipment);
             log.info("报修联动更新器械状态: equipmentId={}, {} -> {}", equipmentId,
                     EquipmentStatus.getNameByCode(oldStatus), EquipmentStatus.getNameByCode(status));

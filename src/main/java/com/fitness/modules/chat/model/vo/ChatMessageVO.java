@@ -16,5 +16,5 @@ public class ChatMessageVO {
 
     private String content;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 }

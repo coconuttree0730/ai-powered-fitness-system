@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.time.Duration;
 
 @Slf4j
 @Component
@@ -16,8 +19,12 @@ public class WeatherQueryTools {
     private final ObjectMapper objectMapper;
 
     public WeatherQueryTools() {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(10));
+        requestFactory.setReadTimeout(Duration.ofSeconds(10));
         this.restClient = RestClient.builder()
                 .baseUrl("https://wttr.in")
+                .requestFactory(requestFactory)
                 .build();
         this.objectMapper = new ObjectMapper();
     }

@@ -1,11 +1,12 @@
 package com.fitness.modules.course.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.LocalDateTime;
 
 /**
  * 课程周实例实体类
@@ -13,8 +14,9 @@ import java.time.LocalDateTime;
  * 将周期性课程模板展开为每周具体的一次上课实例
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("fitness_course_session")
-public class CourseSession {
+public class CourseSession extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -42,14 +44,4 @@ public class CourseSession {
 
     @TableField("booked_count")
     private Integer bookedCount;
-
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

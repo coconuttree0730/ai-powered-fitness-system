@@ -1,18 +1,20 @@
 package com.fitness.modules.user.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * 用户健身档案实体类
  * 对应 user_fitness_profile 表
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("user_fitness_profile")
-public class UserFitnessProfile {
+public class UserFitnessProfile extends BaseEntity {
     /**
      * 档案ID
      */
@@ -66,23 +68,4 @@ public class UserFitnessProfile {
      */
     @TableField("private_coach_id")
     private Long privateCoachId;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 软删除标志
-     */
-    @TableLogic(value = "false", delval = "true")
-    @TableField("deleted")
-    private Boolean deleted;
 }

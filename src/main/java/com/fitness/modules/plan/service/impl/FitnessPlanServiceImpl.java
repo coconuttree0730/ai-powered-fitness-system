@@ -32,7 +32,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -835,8 +834,6 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         plan.setDuration(dto.getDuration());
         plan.setLevel(dto.getLevel());
         plan.setStatus(1);
-        plan.setCreateTime(LocalDateTime.now());
-        plan.setUpdateTime(LocalDateTime.now());
 
         fitnessPlanMapper.insert(plan);
 
@@ -885,7 +882,6 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
                     }
                 }
 
-                detail.setCreateTime(LocalDateTime.now());
                 fitnessPlanDetailMapper.insert(detail);
             }
         }
@@ -1037,8 +1033,6 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         plan.setExperience(dto.getExperience());
         plan.setFitnessGoal(dto.getFitnessGoal());
         plan.setStatus(1);
-        plan.setCreateTime(LocalDateTime.now());
-        plan.setUpdateTime(LocalDateTime.now());
 
         String planName = "AI健身计划";
         Object subtitle = dto.getPlanDataJson().get("subtitle");
