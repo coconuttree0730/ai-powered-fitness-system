@@ -7,6 +7,7 @@ import com.fitness.modules.system.model.vo.SysDictVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/admin/dict")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class SysDictController {
 
     private final SysDictService dictService;
@@ -59,6 +61,7 @@ public class SysDictController {
 
     @Operation(summary = "获取字典选项（下拉用）")
     @GetMapping("/options/{dictCode}")
+    @PreAuthorize("isAuthenticated()")
     public Result<List<Map<String, Object>>> getOptions(@PathVariable String dictCode) {
         return Result.success(dictService.getOptionsByCode(dictCode));
     }

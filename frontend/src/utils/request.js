@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from '@/router'
+import { useAuthStore } from '@/stores/auth'
 
 const request = axios.create({
   baseURL: '/api/v1',
@@ -9,10 +10,69 @@ const request = axios.create({
   }
 })
 
+let isRefreshing = false
+let pendingRequests = []
+
+function getAccessToken() {
+  return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || ''
+}
+
+function getRefreshToken() {
+  return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken') || ''
+}
+
+function saveAccessToken(token) {
+  localStorage.setItem('accessToken', token)
+  sessionStorage.setItem('accessToken', token)
+
+  const authStore = useAuthStore()
+  authStore.accessToken = token
+}
+
+function clearAllTokens() {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('userInfo')
+  sessionStorage.removeItem('accessToken')
+  sessionStorage.removeItem('refreshToken')
+  sessionStorage.removeItem('userInfo')
+
+  const authStore = useAuthStore()
+  authStore.accessToken = ''
+  authStore.refreshToken = ''
+  authStore.userInfo = null
+}
+
+function resolvePendingRequests(token) {
+  pendingRequests.forEach(cb => cb(token))
+  pendingRequests = []
+}
+
+function rejectPendingRequests() {
+  pendingRequests.forEach(cb => cb(null))
+  pendingRequests = []
+}
+
+async function tryRefreshToken() {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return null
+
+  try {
+    const response = await axios.post('/api/v1/auth/refresh', { refreshToken })
+    if (response.data && response.data.code === 200) {
+      const newAccessToken = response.data.data.accessToken
+      saveAccessToken(newAccessToken)
+      return newAccessToken
+    }
+  } catch (e) {
+    console.error('刷新Token失败:', e)
+  }
+  return null
+}
+
 request.interceptors.request.use(
   (config) => {
-    // 同时检查 localStorage 和 sessionStorage，避免 Pinia store 未初始化的问题
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    const token = getAccessToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -31,35 +91,46 @@ request.interceptors.response.use(
     }
     return res.data
   },
-  (error) => {
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          // 401错误清除登录状态（同时清除两种存储）
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          sessionStorage.removeItem('token')
-          sessionStorage.removeItem('userInfo')
-          // 只在非公开页面时重定向到首页
-          const currentPath = router.currentRoute.value.path
-          const publicPaths = ['/equipments', '/courses', '/coaches']
-          const isPublicPath = publicPaths.some(path => currentPath.startsWith(path))
-          if (!isPublicPath && currentPath !== '/') {
-            router.push('/')
-          }
-          break
-        case 403:
-          router.push('/403')
-          break
-        case 404:
-          router.push('/404')
-          break
-        default:
-          console.error('请求错误:', error.response.data)
+  async (error) => {
+    const originalRequest = error.config
+
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          pendingRequests.push((token) => {
+            if (token) {
+              originalRequest.headers.Authorization = `Bearer ${token}`
+              originalRequest._retry = true
+              resolve(request(originalRequest))
+            } else {
+              reject(error)
+            }
+          })
+        })
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const newAccessToken = await tryRefreshToken()
+        if (newAccessToken) {
+          resolvePendingRequests(newAccessToken)
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+          return request(originalRequest)
+        } else {
+          rejectPendingRequests()
+          clearAllTokens()
+          return Promise.reject(error)
+        }
+      } finally {
+        isRefreshing = false
       }
     }
+
     return Promise.reject(error)
   }
 )
 
+export { getAccessToken, getRefreshToken, saveAccessToken, clearAllTokens }
 export default request

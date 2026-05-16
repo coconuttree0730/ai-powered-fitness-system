@@ -23,4 +23,6 @@ public class SmsCodeLoginDTO {
     @NotBlank(message = "验证码不能为空")
     @Pattern(regexp = "^\\d{6}$", message = "验证码必须是6位数字")
     private String smsCode;
+
+    private Boolean rememberMe = false;
 }

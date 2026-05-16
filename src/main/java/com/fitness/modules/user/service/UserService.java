@@ -111,7 +111,15 @@ public interface UserService {
      * @param smsCode 短信验证码
      * @return Token信息
      */
-    Map<String, Object> loginBySmsCode(String phone, String smsCode);
+    Map<String, Object> loginBySmsCode(String phone, String smsCode, boolean rememberMe);
+
+    /**
+     * 刷新Access Token
+     *
+     * @param refreshToken Refresh Token
+     * @return 新的Token信息
+     */
+    Map<String, Object> refreshToken(String refreshToken);
 
     /**
      * 更新用户名

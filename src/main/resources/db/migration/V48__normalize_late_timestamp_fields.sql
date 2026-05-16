@@ -1,0 +1,18 @@
+-- Normalize late-created BaseEntity tables to the project timestamp convention.
+ALTER TABLE IF EXISTS sys_banner
+    ALTER COLUMN create_time TYPE TIMESTAMP WITHOUT TIME ZONE USING create_time AT TIME ZONE current_setting('TIMEZONE'),
+    ALTER COLUMN update_time TYPE TIMESTAMP WITHOUT TIME ZONE USING update_time AT TIME ZONE current_setting('TIMEZONE'),
+    ALTER COLUMN create_time SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN update_time SET DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE IF EXISTS coach_detail
+    ALTER COLUMN create_time TYPE TIMESTAMP WITHOUT TIME ZONE USING create_time AT TIME ZONE current_setting('TIMEZONE'),
+    ALTER COLUMN update_time TYPE TIMESTAMP WITHOUT TIME ZONE USING update_time AT TIME ZONE current_setting('TIMEZONE'),
+    ALTER COLUMN create_time SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN update_time SET DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE IF EXISTS fitness_repair_record
+    ALTER COLUMN create_time TYPE TIMESTAMP WITHOUT TIME ZONE USING create_time AT TIME ZONE current_setting('TIMEZONE'),
+    ALTER COLUMN update_time TYPE TIMESTAMP WITHOUT TIME ZONE USING update_time AT TIME ZONE current_setting('TIMEZONE'),
+    ALTER COLUMN create_time SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN update_time SET DEFAULT CURRENT_TIMESTAMP;

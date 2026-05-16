@@ -300,9 +300,8 @@ const equipmentLoading = ref(false)
 
 // 上传请求头（携带认证token）
 const uploadHeaders = computed(() => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
   return token ? { Authorization: `Bearer ${token}` } : {}
-  return {}
 })
 const rules = {
   description: [{ required: true, message: '请描述问题', trigger: 'blur' }]

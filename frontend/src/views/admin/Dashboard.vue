@@ -70,9 +70,10 @@
           <el-button
             type="primary"
             :icon="MagicStick"
+            :loading="analysisLoading"
             @click="handleAnalysis"
           >
-            ai智能分析
+            {{ analysisLoading ? 'AI 分析中...' : 'AI智能分析' }}
           </el-button>
         </div>
       </el-col>
@@ -116,20 +117,7 @@
 
     <!-- 图表区域第二行 -->
     <el-row :gutter="20" class="chart-row">
-      <el-col :xs="24" :lg="12">
-        <el-card class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <div class="header-left">
-                <el-icon size="18" color="#fa8c16"><Clock /></el-icon>
-                <span class="header-title-text">到店高峰时段分布</span>
-              </div>
-            </div>
-          </template>
-          <div ref="peakHoursChartRef" style="height: 300px"></div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :lg="12">
+      <el-col :xs="24" :lg="24">
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
@@ -236,26 +224,23 @@ import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { useLoadingStore } from '@/stores/loading'
 import {
   User, Calendar, Tickets, Box, Goods, Money, ArrowUp, ArrowDown,
-  Refresh, TrendCharts, PieChart, Clock, Reading, MagicStick,
+  Refresh, TrendCharts, PieChart, Reading, MagicStick,
   UserFilled, Warning, Star, Opportunity, Document
 } from '@element-plus/icons-vue'
 import {
-  getDashboardStats, getPeakHours, getMemberCardStats, getCourseStats,
+  getDashboardStats, getMemberCardStats, getCourseStats,
   generateAnalysis, getRevenueTrend, getUserGrowth, getEquipmentStatus,
   getRepairStats
 } from '@/api/dashboard'
 import { saveAnalysisReport } from '@/api/analysis'
 
 const router = useRouter()
-const loadingStore = useLoadingStore()
 
 // ECharts 实例
 const revenueChartRef = ref(null)
 const memberCardChartRef = ref(null)
-const peakHoursChartRef = ref(null)
 const courseStatsChartRef = ref(null)
 const userGrowthChartRef = ref(null)
 const equipmentStatusChartRef = ref(null)
@@ -263,7 +248,6 @@ const repairStatsChartRef = ref(null)
 
 let revenueChart = null
 let memberCardChart = null
-let peakHoursChart = null
 let courseStatsChart = null
 let userGrowthChart = null
 let equipmentStatusChart = null
@@ -276,10 +260,10 @@ const refreshLoading = ref(false)
 const analysisVisible = ref(false)
 const analysisReport = ref(null)
 const saveLoading = ref(false)
+const analysisLoading = ref(false)
 
 // 数据存储
 const dashboardData = ref({})
-const peakHoursData = ref([])
 const memberCardData = ref({})
 const courseStatsData = ref([])
 const revenueData = ref([])
@@ -485,54 +469,6 @@ const memberCardOption = computed(() => {
       },
       labelLine: { show: false },
       data: chartData
-    }]
-  }
-})
-
-// 到店高峰时段图表配置
-const peakHoursOption = computed(() => {
-  const data = peakHoursData.value || []
-
-  return {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter: params => `${params[0].name}:00<br/>到店人数: ${params[0].value}人`
-    },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: data.map(d => d.hour),
-      axisLine: { lineStyle: { color: '#d9d9d9' } },
-      axisLabel: { color: '#666', formatter: '{value}:00' }
-    },
-    yAxis: {
-      type: 'value',
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#f0f0f0' } },
-      axisLabel: { color: '#666' }
-    },
-    series: [{
-      type: 'bar',
-      data: data.map(d => ({
-        value: d.count,
-        itemStyle: {
-          color: {
-            type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: '#faad14' },
-              { offset: 1, color: '#ffc53d' }
-            ]
-          },
-          borderRadius: [4, 4, 0, 0]
-        }
-      })),
-      barWidth: '60%',
-      emphasis: {
-        itemStyle: { color: '#d48806' }
-      }
     }]
   }
 })
@@ -755,7 +691,6 @@ function formatDateTime(dateTime) {
 async function fetchAllData() {
   await Promise.all([
     fetchStats(),
-    fetchPeakHours(),
     fetchMemberCards(),
     fetchCourseStats(),
     fetchRevenueTrend(),
@@ -774,16 +709,6 @@ async function fetchStats() {
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
-  }
-}
-
-// 获取高峰时间
-async function fetchPeakHours() {
-  try {
-    const res = await getPeakHours()
-    peakHoursData.value = res || []
-  } catch (error) {
-    console.error('获取高峰时间失败:', error)
   }
 }
 
@@ -904,8 +829,7 @@ async function refreshAllData() {
 
 // 生成AI分析报告
 async function handleAnalysis() {
-  // 显示全局加载状态（覆盖整个页面，包括侧边栏）
-  loadingStore.showLoading('AI 正在分析运营数据，请稍候...')
+  analysisLoading.value = true
 
   try {
     const res = await generateAnalysis({ analysisType: 'OVERALL' })
@@ -918,8 +842,7 @@ async function handleAnalysis() {
     console.error('生成分析报告失败:', error)
     ElMessage.error('生成分析报告失败，请稍后重试')
   } finally {
-    // 隐藏全局加载状态
-    loadingStore.hideLoading()
+    analysisLoading.value = false
   }
 }
 
@@ -932,20 +855,64 @@ async function handleSaveReport() {
 
   saveLoading.value = true
   try {
-    console.log('保存报告，suggestions:', analysisReport.value.suggestions)
-    const reportData = {
+    console.log('开始保存报告...')
+    console.log('报告数据:', {
       reportTitle: analysisReport.value.reportTitle,
       analysisType: analysisReport.value.analysisType,
-      reportContent: analysisReport.value.reportContent,
-      suggestions: analysisReport.value.suggestions,
+      hasReportContent: !!analysisReport.value.reportContent,
+      suggestionsLength: analysisReport.value.suggestions?.length || 0,
       generateTime: analysisReport.value.generateTime
+    })
+
+    const reportData = {
+      reportTitle: analysisReport.value.reportTitle || 'AI分析报告',
+      analysisType: analysisReport.value.analysisType || 'OVERALL',
+      reportContent: analysisReport.value.reportContent || '',
+      suggestions: analysisReport.value.suggestions || [],
+      generateTime: analysisReport.value.generateTime || new Date().toISOString()
     }
 
-    await saveAnalysisReport(reportData)
+    console.log('发送保存请求，数据:', reportData)
+
+    const response = await saveAnalysisReport(reportData)
+    console.log('保存成功，响应:', response)
+
     ElMessage.success('报告保存成功，可在数据分析菜单查看')
+
+    // 可选：保存成功后关闭对话框
+    // analysisVisible.value = false
   } catch (error) {
-    console.error('保存报告失败:', error)
-    ElMessage.error('保存报告失败，请稍后重试')
+    console.error('保存报告失败 - 完整错误:', error)
+    console.error('错误详情:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: error.config?.url
+    })
+
+    let errorMsg = '保存报告失败，请稍后重试'
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          errorMsg = '登录已过期，请重新登录'
+          break
+        case 403:
+          errorMsg = '没有权限执行此操作'
+          break
+        case 400:
+          errorMsg = error.response.data?.message || '请求数据格式错误'
+          break
+        case 500:
+          errorMsg = '服务器内部错误，请稍后重试'
+          break
+        default:
+          errorMsg = error.response.data?.message || `保存失败 (${error.response.status})`
+      }
+    } else if (error.message) {
+      errorMsg = `网络错误: ${error.message}`
+    }
+
+    ElMessage.error(errorMsg)
   } finally {
     saveLoading.value = false
   }
@@ -975,10 +942,6 @@ function initCharts() {
     memberCardChart = echarts.init(memberCardChartRef.value)
     memberCardChart.setOption(memberCardOption.value)
   }
-  if (peakHoursChartRef.value) {
-    peakHoursChart = echarts.init(peakHoursChartRef.value)
-    peakHoursChart.setOption(peakHoursOption.value)
-  }
   if (courseStatsChartRef.value) {
     courseStatsChart = echarts.init(courseStatsChartRef.value)
     courseStatsChart.setOption(courseStatsOption.value)
@@ -1001,7 +964,6 @@ function initCharts() {
 function disposeCharts() {
   revenueChart?.dispose()
   memberCardChart?.dispose()
-  peakHoursChart?.dispose()
   courseStatsChart?.dispose()
   userGrowthChart?.dispose()
   equipmentStatusChart?.dispose()
@@ -1012,7 +974,6 @@ function disposeCharts() {
 function updateCharts() {
   revenueChart?.setOption(revenueOption.value)
   memberCardChart?.setOption(memberCardOption.value)
-  peakHoursChart?.setOption(peakHoursOption.value)
   courseStatsChart?.setOption(courseStatsOption.value)
   userGrowthChart?.setOption(userGrowthOption.value)
   equipmentStatusChart?.setOption(equipmentStatusOption.value)
@@ -1022,7 +983,6 @@ function updateCharts() {
 // 监听图表配置变化
 watch(revenueOption, () => revenueChart?.setOption(revenueOption.value), { deep: true })
 watch(memberCardOption, () => memberCardChart?.setOption(memberCardOption.value), { deep: true })
-watch(peakHoursOption, () => peakHoursChart?.setOption(peakHoursOption.value), { deep: true })
 watch(courseStatsOption, () => courseStatsChart?.setOption(courseStatsOption.value), { deep: true })
 watch(userGrowthOption, () => userGrowthChart?.setOption(userGrowthOption.value), { deep: true })
 watch(equipmentStatusOption, () => equipmentStatusChart?.setOption(equipmentStatusOption.value), { deep: true })
@@ -1032,7 +992,6 @@ watch(repairStatsOption, () => repairStatsChart?.setOption(repairStatsOption.val
 function handleResize() {
   revenueChart?.resize()
   memberCardChart?.resize()
-  peakHoursChart?.resize()
   courseStatsChart?.resize()
   userGrowthChart?.resize()
   equipmentStatusChart?.resize()

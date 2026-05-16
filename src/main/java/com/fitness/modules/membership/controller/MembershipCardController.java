@@ -13,6 +13,7 @@ import com.fitness.modules.membership.service.MembershipOrderService;
 import com.fitness.modules.membership.service.UserMembershipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/membership")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class MembershipCardController {
 
     private final MembershipCardService cardService;

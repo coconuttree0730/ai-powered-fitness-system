@@ -159,8 +159,9 @@ setx OLLAMA_EMBEDDING_MODEL "embeddinggemma:300m" >nul 2>&1
 
 echo 设置 JWT 环境变量...
 setx JWT_SECRET "!JWT_SECRET!" >nul 2>&1
-setx JWT_EXPIRATION "86400000" >nul 2>&1
+setx JWT_ACCESS_EXPIRATION "1800000" >nul 2>&1
 setx JWT_REFRESH_EXPIRATION "604800000" >nul 2>&1
+setx JWT_REMEMBER_ME_EXPIRATION "2592000000" >nul 2>&1
 
 echo.
 echo ============================================

@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String DEFAULT_SMS_LOGIN_PASSWORD = "123456";
 
     private final UserMapper userMapper;
@@ -89,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         log.info("用户登录成功: {}", dto.getUsername());
-        return buildAuthResult(user);
+        return buildAuthResult(user, Boolean.TRUE.equals(dto.getRememberMe()));
     }
 
     @Override
@@ -238,7 +239,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> loginBySmsCode(String phone, String smsCode) {
+    public Map<String, Object> loginBySmsCode(String phone, String smsCode, boolean rememberMe) {
         if (!smsCodeService.verifySmsCode(phone, smsCode)) {
             throw new BusinessException(ErrorCode.SMS_CODE_ERROR);
         }
@@ -265,7 +266,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         ensureUserEnabled(user);
         log.info("短信验证码登录成功: phone={}, userId={}", phone, user.getId());
-        return buildAuthResult(user);
+        return buildAuthResult(user, rememberMe);
     }
 
     @Override
@@ -405,18 +406,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .collect(Collectors.toList());
     }
 
-    private Map<String, Object> buildAuthResult(User user) {
+    private Map<String, Object> buildAuthResult(User user, boolean rememberMe) {
         List<String> roleCodes = getRoleCodes(user.getId());
-        String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername(), roleCodes);
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername(), roleCodes);
+        String refreshToken = rememberMe
+                ? jwtTokenProvider.generateRememberMeRefreshToken(user.getId(), user.getUsername(), roleCodes)
+                : jwtTokenProvider.generateRefreshToken(user.getId(), user.getUsername(), roleCodes);
 
         Map<String, Object> result = new HashMap<>();
-        result.put("token", token);
+        result.put("accessToken", accessToken);
+        result.put("refreshToken", refreshToken);
         result.put("tokenType", "Bearer");
-        result.put("expiresIn", jwtTokenProvider.getExpirationTime());
+        result.put("expiresIn", jwtTokenProvider.getAccessExpiration());
 
         UserVO userVO = convertToVO(user);
         userVO.setRoles(roleCodes);
         result.put("userInfo", userVO);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> refreshToken(String refreshToken) {
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+        List<String> roles = jwtTokenProvider.getRolesFromToken(refreshToken);
+
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, username, roles);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", newAccessToken);
+        result.put("tokenType", "Bearer");
+        result.put("expiresIn", jwtTokenProvider.getAccessExpiration());
         return result;
     }
 
@@ -454,8 +482,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private String generateUsernameFromPhone(String phone) {
         String phoneSuffix = phone.substring(phone.length() - 8);
-        Random random = new Random();
-        int randomSuffix = random.nextInt(10000);
+        int randomSuffix = SECURE_RANDOM.nextInt(10000);
         return String.format("user_%s_%04d", phoneSuffix, randomSuffix);
     }
 

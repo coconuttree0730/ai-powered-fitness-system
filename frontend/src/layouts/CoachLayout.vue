@@ -1,6 +1,8 @@
 <template>
-  <!-- 教练端布局 -->
-  <div class="coach-layout">
+  <n-message-provider>
+    <n-dialog-provider>
+      <!-- 教练端布局 -->
+      <div class="coach-layout">
     <n-layout has-sider>
       <n-layout-sider
         bordered
@@ -47,13 +49,15 @@
       </n-layout>
     </n-layout>
   </div>
+    </n-dialog-provider>
+  </n-message-provider>
 </template>
 
 <script setup>
 import { computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon, NAvatar } from 'naive-ui'
-import { useAuthStore } from '@/stores/auth'
+import { NIcon, NAvatar, NMessageProvider, NDialogProvider } from 'naive-ui'
+import { useUserInfo } from '@/composables/useUserInfo'
 import {
   HomeOutline,
   PersonOutline,
@@ -65,15 +69,10 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
+const { userAvatar, username, usernameInitial, goHome, handleLogout } = useUserInfo()
 
 const activeKey = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '教练中心')
-
-// 使用计算属性获取用户头像和用户名，确保响应式
-const userAvatar = computed(() => authStore.userInfo?.avatar || '')
-const username = computed(() => authStore.userInfo?.username || '')
-const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '')
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) })
@@ -99,9 +98,9 @@ function handleMenuSelect(key) {
 
 function handleUserSelect(key) {
   if (key === 'home') {
-    router.push('/')
+    goHome()
   } else if (key === 'logout') {
-    authStore.logout()
+    handleLogout()
   }
 }
 </script>

@@ -5,6 +5,7 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
 import com.fitness.modules.course.model.vo.CourseSessionVO;
 import com.fitness.modules.course.service.CourseSessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +20,8 @@ public class CourseSessionController {
     private final CourseSessionService sessionService;
 
     @GetMapping("/list")
-    public Result<Page<CourseSessionVO>> getSessionList(CourseQueryDTO query) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Page<CourseSessionVO>> getSessionList(@Valid CourseQueryDTO query) {
         log.info("获取课程实例列表: dayOfWeek={}", query.getDayOfWeek());
         Page<CourseSessionVO> page = sessionService.getSessionList(query);
         return Result.success(page);
@@ -33,6 +35,7 @@ public class CourseSessionController {
     }
 
     @GetMapping("/upcoming")
+    @PreAuthorize("isAuthenticated()")
     public Result<java.util.List<CourseSessionVO>> getUpcomingSessions(
             @RequestParam(required = false, defaultValue = "10") Integer limit) {
         java.util.List<CourseSessionVO> sessions = sessionService.getUpcomingSessions(limit);

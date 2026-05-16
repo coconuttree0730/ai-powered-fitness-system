@@ -9,6 +9,7 @@ import com.fitness.modules.product.service.ProductOrderService;
 import com.fitness.integration.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/product-orders")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class ProductOrderController {
     
     private final ProductOrderService productOrderService;

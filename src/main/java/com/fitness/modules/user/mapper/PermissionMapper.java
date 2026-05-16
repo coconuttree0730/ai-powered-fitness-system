@@ -1,6 +1,8 @@
 package com.fitness.modules.user.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fitness.modules.user.model.entity.Permission;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -9,7 +11,8 @@ import java.util.List;
 /**
  * 权限Mapper接口
  */
-public interface PermissionMapper {
+@Mapper
+public interface PermissionMapper extends BaseMapper<Permission> {
 
     /**
      * 根据用户ID查询权限列表

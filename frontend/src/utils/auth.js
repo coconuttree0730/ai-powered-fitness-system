@@ -1,28 +1,25 @@
-/**
- * 认证工具函数
- */
+const ACCESS_TOKEN_KEY = 'accessToken'
+const REFRESH_TOKEN_KEY = 'refreshToken'
 
-const TOKEN_KEY = 'token'
+export function getAccessToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || sessionStorage.getItem(ACCESS_TOKEN_KEY) || ''
+}
 
-/**
- * 获取 Token  gettoken
- * @returns {string} token
- */
+export function getRefreshToken() {
+  return localStorage.getItem(REFRESH_TOKEN_KEY) || sessionStorage.getItem(REFRESH_TOKEN_KEY) || ''
+}
+
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY) || ''
+  return getAccessToken()
 }
 
-/**
- * 设置 Token
- * @param {string} token
- */
 export function setToken(token) {
-  localStorage.setItem(TOKEN_KEY, token)
+  localStorage.setItem(ACCESS_TOKEN_KEY, token)
 }
 
-/**
- * 移除 Token
- */
 export function removeToken() {
-  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(ACCESS_TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY)
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY)
 }

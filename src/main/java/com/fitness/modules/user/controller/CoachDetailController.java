@@ -9,6 +9,7 @@ import com.fitness.modules.user.service.CoachDetailService;
 import com.fitness.modules.product.model.vo.ProductVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ public class CoachDetailController {
      * @return 教练详情
      */
     @GetMapping("/detail")
+    @PreAuthorize("hasRole('COACH')")
     public Result<CoachDetailVO> getCurrentCoachDetail() {
         CoachDetailVO vo = coachDetailService.getCurrentCoachDetail();
         return Result.success(vo);
@@ -55,6 +57,7 @@ public class CoachDetailController {
      * @return 更新后的教练详情
      */
     @PutMapping("/detail")
+    @PreAuthorize("hasRole('COACH')")
     public Result<CoachDetailVO> updateCoachDetail(@Valid @RequestBody CoachDetailDTO dto) {
         CoachDetailVO vo = coachDetailService.updateCoachDetail(dto);
         return Result.success(vo);
@@ -67,6 +70,7 @@ public class CoachDetailController {
      * @return 图片URL
      */
     @PostMapping("/detail/image")
+    @PreAuthorize("hasRole('COACH')")
     public Result<String> uploadPersonalImage(@RequestParam("file") MultipartFile file) {
         String imageUrl = coachDetailService.uploadPersonalImage(file);
         return Result.success(imageUrl);
@@ -78,6 +82,7 @@ public class CoachDetailController {
      * @return 操作结果
      */
     @DeleteMapping("/detail/image")
+    @PreAuthorize("hasRole('COACH')")
     public Result<Void> deletePersonalImage() {
         coachDetailService.deletePersonalImage();
         return Result.success();
@@ -90,6 +95,7 @@ public class CoachDetailController {
      * @return 更新后的教练详情
      */
     @PutMapping("/detail/tags")
+    @PreAuthorize("hasRole('COACH')")
     public Result<CoachDetailVO> updateTags(@RequestBody List<String> tags) {
         CoachDetailVO vo = coachDetailService.updateTags(tags);
         return Result.success(vo);
@@ -114,6 +120,7 @@ public class CoachDetailController {
      * @return 专属教练信息，如果没有则返回null
      */
     @GetMapping("/my-private-coach")
+    @PreAuthorize("isAuthenticated()")
     public Result<MyPrivateCoachVO> getMyPrivateCoach() {
         MyPrivateCoachVO vo = coachDetailService.getMyPrivateCoach();
         return Result.success(vo);
@@ -126,6 +133,7 @@ public class CoachDetailController {
      * @return 套餐商品列表
      */
     @GetMapping("/{id}/packages")
+    @PreAuthorize("isAuthenticated()")
     public Result<List<ProductVO>> getCoachPackages(@PathVariable Long id) {
         List<ProductVO> packages = coachDetailService.getCoachPackages(id);
         return Result.success(packages);

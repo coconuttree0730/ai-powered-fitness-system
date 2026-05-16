@@ -6,11 +6,13 @@ import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
 import com.fitness.modules.knowledge.service.RAGService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/knowledge/rag")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class RAGController {
 
     private final RAGService ragService;

@@ -81,10 +81,11 @@ mybatis-plus:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
-  issuer: ai-fitness-system # 签发者
-  audience: fitness-users # 验证用户
+  access-expiration: ${JWT_ACCESS_EXPIRATION:7200000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  remember-me-expiration: ${JWT_REMEMBER_ME_EXPIRATION:2592000000}
+  issuer: ai-fitness-system
+  audience: fitness-users
 
 minio:
   endpoint: ${MINIO_ENDPOINT}

@@ -373,13 +373,6 @@ const courses = computed(() => {
   }))
 })
 
-// 初始化示例数据
-onMounted(() => {
-  if (scheduleStore.schedules.length === 0) {
-    scheduleStore.initSampleData()
-  }
-})
-
 // 生成日历数据
 const calendarDays = computed(() => {
   const year = currentDate.value.getFullYear()

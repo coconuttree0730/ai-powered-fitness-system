@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fitness.modules.user.model.entity.Role;
 import com.fitness.modules.user.model.entity.User;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -12,6 +13,7 @@ import java.util.List;
 /**
  * 用户Mapper接口
  */
+@Mapper
 public interface UserMapper extends BaseMapper<User> {
 
     /**

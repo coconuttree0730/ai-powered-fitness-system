@@ -28,7 +28,7 @@ public class UserAdminController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Result<IPage<UserVO>> getUserPage(UserQueryDTO query) {
+    public Result<IPage<UserVO>> getUserPage(@Valid UserQueryDTO query) {
         log.info("分页查询用户列表: {}", query);
         IPage<UserVO> page = userService.getUserPage(query);
         return Result.success(page);

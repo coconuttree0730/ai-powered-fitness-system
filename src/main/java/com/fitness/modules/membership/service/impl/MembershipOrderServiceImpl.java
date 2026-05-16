@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,6 +42,7 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
     private final AlipayService alipayService;
     private final UserMembershipService userMembershipService;
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final long ORDER_TIMEOUT_MINUTES = 30;
 
     @Override
@@ -332,7 +333,7 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
 
     private String generateOrderNo() {
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String randomStr = String.format("%06d", new Random().nextInt(1000000));
+        String randomStr = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
         return "MS" + dateStr + randomStr;
     }
 

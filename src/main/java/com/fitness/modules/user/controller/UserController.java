@@ -270,6 +270,7 @@ public class UserController {
      * @return 是否存在
      */
     @GetMapping("/username/check")
+    @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> checkUsernameExists(@RequestParam String username) {
         log.info("检查用户名是否存在: {}", username);
         boolean exists = userService.isUsernameExists(username);

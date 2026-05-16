@@ -7,6 +7,7 @@ import com.fitness.modules.equipment.model.dto.EquipmentQueryDTO;
 import com.fitness.modules.equipment.model.vo.EquipmentVO;
 import com.fitness.modules.equipment.model.vo.RepairVO;
 import com.fitness.modules.equipment.service.EquipmentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +47,7 @@ public class EquipmentController {
      * @return 器材列表
      */
     @GetMapping("/list")
-    public Result<PageResult<EquipmentVO>> getEquipmentList(EquipmentQueryDTO query) {
+    public Result<PageResult<EquipmentVO>> getEquipmentList(@Valid EquipmentQueryDTO query) {
         log.info("获取器材列表请求: keyword={}, status={}", query.getKeyword(), query.getStatus());
         Page<EquipmentVO> page = equipmentService.getEquipmentList(query);
         return Result.success(PageResult.of(page.getRecords(), page.getTotal()));

@@ -10,15 +10,11 @@ import lombok.Data;
 @Data
 public class LoginDTO {
 
-    /**
-     * 登录账号（手机号或用户名）
-     */
     @NotBlank(message = "手机号/用户名不能为空")
     private String username;
 
-    /**
-     * 密码
-     */
     @NotBlank(message = "密码不能为空")
     private String password;
+
+    private Boolean rememberMe = false;
 }

@@ -5,6 +5,7 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.booking.model.dto.BookingQueryDTO;
 import com.fitness.modules.booking.model.vo.BookingListVO;
 import com.fitness.modules.booking.service.BookingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,7 +30,7 @@ public class BookingAdminController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
-    public Result<Page<BookingListVO>> getBookingList(BookingQueryDTO query) {
+    public Result<Page<BookingListVO>> getBookingList(@Valid BookingQueryDTO query) {
         log.info("管理端查询预约列表: userId={}, courseId={}, status={}",
                 query.getUserId(), query.getCourseId(), query.getStatus());
         Page<BookingListVO> page = bookingService.getBookingList(query);

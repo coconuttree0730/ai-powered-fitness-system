@@ -17,7 +17,7 @@ export function sendMessage(data) {
 
 export function sendMessageStream(data, signal) {
   // 同时检查 localStorage 和 sessionStorage
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
   return fetch('/api/v1/chat/messages/stream', {
     method: 'POST',
     headers: {

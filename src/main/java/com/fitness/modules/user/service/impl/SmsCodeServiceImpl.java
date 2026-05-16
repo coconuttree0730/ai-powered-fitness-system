@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -25,6 +25,7 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     private static final String SMS_CODE_DAILY_COUNT_KEY_PREFIX = "sms:daily:count:";
     private static final long CODE_EXPIRE_MINUTES = 5;
     private static final long COOLDOWN_SECONDS = 60;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int CODE_LENGTH = 6;
     private static final int DAILY_LIMIT = 5;
 
@@ -58,7 +59,7 @@ public class SmsCodeServiceImpl implements SmsCodeService {
                 log.info("短信验证码发送成功: phone={}", phone);
                 return true;
             }
-            log.error("短信验证码发送失败: phone={}, code={}, message={}", phone, result.code(), result.message());
+            log.error("短信验证码发送失败: phone={}, message={}", phone, result.message());
         } catch (SmsIntegrationException e) {
             log.error("短信集成调用异常: phone={}, message={}", phone, e.getMessage(), e);
         }
@@ -140,10 +141,9 @@ public class SmsCodeServiceImpl implements SmsCodeService {
     }
 
     private String generateCode() {
-        Random random = new Random();
         StringBuilder code = new StringBuilder();
         for (int i = 0; i < CODE_LENGTH; i++) {
-            code.append(random.nextInt(10));
+            code.append(SECURE_RANDOM.nextInt(10));
         }
         return code.toString();
     }

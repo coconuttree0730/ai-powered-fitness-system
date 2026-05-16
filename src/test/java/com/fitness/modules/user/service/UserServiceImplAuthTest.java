@@ -69,12 +69,14 @@ class UserServiceImplAuthTest {
         when(userMapper.selectByUsername("member001")).thenReturn(user);
         when(passwordEncoder.matches("123456", "encoded")).thenReturn(true);
         when(userMapper.selectRolesByUserId(1L)).thenReturn(List.of(role));
-        when(jwtTokenProvider.generateToken(1L, "member001", List.of("MEMBER"))).thenReturn("jwt-token");
-        when(jwtTokenProvider.getExpirationTime()).thenReturn(3600000L);
+        when(jwtTokenProvider.generateAccessToken(1L, "member001", List.of("MEMBER"))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(1L, "member001", List.of("MEMBER"))).thenReturn("refresh-token");
+        when(jwtTokenProvider.getAccessExpiration()).thenReturn(1800000L);
 
         Map<String, Object> result = service.login(dto);
 
-        assertEquals("jwt-token", result.get("token"));
-        assertEquals(3600000L, result.get("expiresIn"));
+        assertEquals("access-token", result.get("accessToken"));
+        assertEquals("refresh-token", result.get("refreshToken"));
+        assertEquals(1800000L, result.get("expiresIn"));
     }
 }

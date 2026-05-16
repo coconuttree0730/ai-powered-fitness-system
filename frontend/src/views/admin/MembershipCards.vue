@@ -83,10 +83,8 @@
         <el-table-column label="会员卡信息" min-width="200">
           <template #default="{ row }">
             <div class="card-info">
-              <el-avatar :size="40" icon="CreditCard" />
               <div class="card-detail">
                 <div class="card-name">{{ row.name }}</div>
-                <div class="card-id">ID: MC{{ String(row.id).padStart(3, '0') }}</div>
               </div>
             </div>
           </template>
@@ -307,7 +305,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Edit, Delete, CreditCard } from '@element-plus/icons-vue'
+import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import {
   getAdminCardPage,
   getCardTypeList,
@@ -411,10 +409,10 @@ async function loadStats() {
     console.log('统计数据:', data)
     if (data) {
       stats.value = [
-        { title: '会员卡类型', value: data.cardTypeCount || 8, trend: data.cardTypeTrend || 12.5 },
-        { title: '活跃会员', value: data.activeMemberCount ? `${data.activeMemberCount.toLocaleString()}` : '1,286', trend: data.memberTrend || 8.3 },
-        { title: '本月收入', value: data.monthlyRevenue ? `¥${data.monthlyRevenue.toLocaleString()}` : '¥89,520', trend: data.revenueTrend || 15.2 },
-        { title: '续费率', value: data.renewalRate ? `${data.renewalRate}%` : '68%', trend: data.renewalRateTrend || -2.1 }
+        { title: '会员卡类型', value: data.cardTypeCount ?? '-', trend: data.cardTypeTrend ?? 0 },
+        { title: '活跃会员', value: data.activeMemberCount != null ? `${data.activeMemberCount.toLocaleString()}` : '-', trend: data.memberTrend ?? 0 },
+        { title: '本月收入', value: data.monthlyRevenue != null ? `¥${Number(data.monthlyRevenue).toLocaleString()}` : '-', trend: data.revenueTrend ?? 0 },
+        { title: '续费率', value: data.renewalRate != null ? `${data.renewalRate}%` : '-', trend: data.renewalRateTrend ?? 0 }
       ]
     }
   } catch (error) {
@@ -714,7 +712,6 @@ onMounted(() => {
 .card-info {
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 
 .card-detail {
@@ -724,12 +721,6 @@ onMounted(() => {
 .card-name {
   font-weight: 500;
   color: #303133;
-}
-
-.card-id {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
 }
 
 .price {

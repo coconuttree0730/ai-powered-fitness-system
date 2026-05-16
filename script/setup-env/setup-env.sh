@@ -193,8 +193,9 @@ export OLLAMA_EMBEDDING_MODEL="embeddinggemma:300m"
 
 # JWT 配置
 export JWT_SECRET="$JWT_SECRET"
-export JWT_EXPIRATION="86400000"
+export JWT_ACCESS_EXPIRATION="1800000"
 export JWT_REFRESH_EXPIRATION="604800000"
+export JWT_REMEMBER_ME_EXPIRATION="2592000000"
 
 # ============================================
 EOF

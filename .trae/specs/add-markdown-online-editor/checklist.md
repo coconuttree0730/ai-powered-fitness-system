@@ -1,0 +1,12 @@
+- [ ] 后端 GET /{id}/content 接口实现完成并能正确返回文档原始内容
+- [ ] 后端 PUT /{id}/content 接口实现完成并能正确更新 MinIO 文件并触发 reindex
+- [ ] 前端 knowledge.js 包含 getDocumentContent 和 updateDocumentContent 两个 API 函数
+- [ ] KnowledgeBase.vue 操作列显示"在线编辑"按钮（仅 .md/.txt 文件）
+- [ ] 点击"在线编辑"按钮能打开全屏 Markdown 编辑器对话框
+- [ ] 编辑器对话框能正确加载并显示文档原始内容
+- [ ] 编辑器支持左侧 Markdown 编辑 + 右侧实时预览的分屏布局
+- [ ] 编辑器具有基本的工具栏和语法高亮功能
+- [ ] 点击保存按钮能成功将编辑内容发送到后端
+- [ ] 保存成功后显示提示信息并自动刷新文档列表
+- [ ] 保存后端流程验证：MinIO 文件已更新 + RAG 索引已重建（chunk 数量更新）
+- [ ] 权限控制验证：非管理员用户无法访问编辑相关接口

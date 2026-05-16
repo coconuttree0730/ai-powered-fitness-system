@@ -1,6 +1,6 @@
 <template>
-  <el-container class="admin-layout" v-loading="loadingStore.globalLoading" :element-loading-text="loadingStore.loadingText" element-loading-background="rgba(0, 0, 0, 0.7)" element-loading-lock>
-    <el-aside width="220px" class="sidebar" :class="{ 'disabled': loadingStore.globalLoading }">
+  <el-container class="admin-layout">
+    <el-aside width="220px" class="sidebar">
       <div class="logo">
         <h2>智能健身房</h2>
         <span>管理后台</span>
@@ -135,9 +135,8 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { useLoadingStore } from '@/stores/loading'
+import { useRoute } from 'vue-router'
+import { useUserInfo } from '@/composables/useUserInfo'
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
   CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder,
@@ -145,25 +144,10 @@ import {
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const loadingStore = useLoadingStore()
+const { userAvatar, username, usernameInitial, goHome, handleLogout } = useUserInfo()
 
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '仪表盘')
-
-// 使用计算属性获取用户头像和用户名，确保响应式
-const userAvatar = computed(() => authStore.userInfo?.avatar || '')
-const username = computed(() => authStore.userInfo?.username || '')
-const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '')
-
-function goHome() {
-  router.push('/')
-}
-
-function handleLogout() {
-  authStore.logout()
-}
 </script>
 
 <style scoped>
@@ -225,31 +209,5 @@ function handleLogout() {
 .main {
   background: #f0f2f5;
   padding: 20px;
-}
-
-/* 加载时禁用侧边栏交互 */
-.sidebar.disabled {
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-/* 自定义全屏加载样式 */
-:deep(.el-loading-mask) {
-  z-index: 9999 !important;
-}
-
-:deep(.el-loading-spinner) {
-  transform: translateY(-50%);
-  margin-top: 0;
-}
-
-:deep(.el-loading-spinner .el-loading-text) {
-  color: #fff;
-  font-size: 16px;
-  margin-top: 16px;
-}
-
-:deep(.el-loading-spinner .path) {
-  stroke: #409eff;
 }
 </style>

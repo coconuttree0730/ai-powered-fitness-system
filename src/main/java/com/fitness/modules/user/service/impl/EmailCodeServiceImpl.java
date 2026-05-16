@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,6 +28,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
     // 发送冷却时间（60秒）
     private static final long COOLDOWN_SECONDS = 60;
     // 验证码长度
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int CODE_LENGTH = 6;
 
     @Override
@@ -51,7 +52,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
         // 5. 模拟发送邮件（后续接入真实邮件服务）
         // TODO 模拟发送邮件: 后续接入 邮件服务进行邮件发送
-        log.info("邮箱验证码发送成功: email={}, code={}", email, code);
+        log.info("邮箱验证码发送成功: email={}", email);
 
         return true;
     }
@@ -98,10 +99,9 @@ public class EmailCodeServiceImpl implements EmailCodeService {
      * @return 验证码
      */
     private String generateCode() {
-        Random random = new Random();
         StringBuilder code = new StringBuilder();
         for (int i = 0; i < CODE_LENGTH; i++) {
-            code.append(random.nextInt(10));
+            code.append(SECURE_RANDOM.nextInt(10));
         }
         return code.toString();
     }

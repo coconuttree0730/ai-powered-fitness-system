@@ -17,10 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * JWT Token 提供者
- * 负责生成、解析和验证JWT Token
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -31,70 +27,63 @@ public class JwtTokenProvider {
     private static final String CLAIM_USER_ID = "userId";
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_USERNAME = "username";
+    private static final String CLAIM_TOKEN_TYPE = "type";
+    private static final String TOKEN_TYPE_ACCESS = "access";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
 
-    /**
-     * 获取签名密钥
-     */
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * 生成JWT Token
-     *
-     * @param authentication 认证信息
-     * @return JWT Token字符串
-     */
     public String generateToken(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return generateToken(userDetails);
+        return generateAccessToken(userDetails.getId(), userDetails.getUsername(),
+                userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList()));
     }
 
-    /**
-     * 生成JWT Token
-     * @param userDetails 用户详情
-     * @return JWT Token字符串
-     */
     public String generateToken(UserDetailsImpl userDetails) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
+        return generateAccessToken(userDetails.getId(), userDetails.getUsername(),
+                userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList()));
+    }
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(CLAIM_USER_ID, userDetails.getId());
-        claims.put(CLAIM_USERNAME, userDetails.getUsername());
-        claims.put(CLAIM_ROLES, userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList()));
-        //创建token
-        return Jwts.builder()
-                .claims(claims)
-                .subject(userDetails.getUsername())
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .issuer(jwtProperties.getIssuer())
-                .audience()
-                .add(jwtProperties.getAudience())
-                .and()
-                .signWith(getSigningKey())
-                .compact();
+    public String generateToken(Long userId, String username, List<String> roles) {
+        return generateAccessToken(userId, username, roles);
     }
 
     /**
-     * 生成JWT Token（带自定义声明）
-     *
-     * @param userId   用户ID
-     * @param username 用户名
-     * @param roles    角色列表
-     * @return JWT Token字符串
+     * 生成 Access Token（短期，用于API请求认证）
      */
-    public String generateToken(Long userId, String username, List<String> roles) {
+    public String generateAccessToken(Long userId, String username, List<String> roles) {
+        return buildToken(userId, username, roles, TOKEN_TYPE_ACCESS, jwtProperties.getAccessExpiration());
+    }
+
+    /**
+     * 生成 Refresh Token（长期，用于刷新Access Token）
+     */
+    public String generateRefreshToken(Long userId, String username, List<String> roles) {
+        return buildToken(userId, username, roles, TOKEN_TYPE_REFRESH, jwtProperties.getRefreshExpiration());
+    }
+
+    /**
+     * 生成"记住我"的 Refresh Token（超长期）
+     */
+    public String generateRememberMeRefreshToken(Long userId, String username, List<String> roles) {
+        return buildToken(userId, username, roles, TOKEN_TYPE_REFRESH, jwtProperties.getRememberMeExpiration());
+    }
+
+    private String buildToken(Long userId, String username, List<String> roles, String tokenType, Long expirationMs) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
+        Date expiryDate = new Date(now.getTime() + expirationMs);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_USER_ID, userId);
         claims.put(CLAIM_USERNAME, username);
         claims.put(CLAIM_ROLES, roles);
+        claims.put(CLAIM_TOKEN_TYPE, tokenType);
 
         return Jwts.builder()
                 .claims(claims)
@@ -109,22 +98,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * 从Token中获取用户名
-     *
-     * @param token JWT Token
-     * @return 用户名
-     */
     public String getUsernameFromToken(String token) {
         Claims claims = parseToken(token);
         return claims != null ? claims.getSubject() : null;
     }
 
-    /**
-     * 从Token中获取用户ID , 用于securityContext
-     * @param token JWT Token
-     * @return 用户ID
-     */
     public Long getUserIdFromToken(String token) {
         Claims claims = parseToken(token);
         if (claims != null && claims.get(CLAIM_USER_ID) != null) {
@@ -136,12 +114,6 @@ public class JwtTokenProvider {
         return null;
     }
 
-    /**
-     * 从Token中获取角色列表
-     *
-     * @param token JWT Token
-     * @return 角色列表
-     */
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         Claims claims = parseToken(token);
@@ -154,18 +126,56 @@ public class JwtTokenProvider {
         return List.of();
     }
 
+    public String getTokenType(String token) {
+        Claims claims = parseTokenSilently(token);
+        if (claims != null && claims.get(CLAIM_TOKEN_TYPE) != null) {
+            return claims.get(CLAIM_TOKEN_TYPE).toString();
+        }
+        return null;
+    }
+
     /**
-     * 验证Token是否有效
-     *
-     * @param token JWT Token
-     * @return 是否有效
+     * 验证 Access Token（仅接受 type=access 的token）
+     */
+    public boolean validateAccessToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            String type = claims.get(CLAIM_TOKEN_TYPE, String.class);
+            return TOKEN_TYPE_ACCESS.equals(type);
+        } catch (ExpiredJwtException e) {
+            String type = e.getClaims() != null ? e.getClaims().get(CLAIM_TOKEN_TYPE, String.class) : null;
+            if (TOKEN_TYPE_ACCESS.equals(type)) {
+                log.debug("Access Token已过期（可刷新）");
+            }
+        } catch (Exception e) {
+            log.warn("Access Token验证失败: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * 验证 Refresh Token（仅接受 type=refresh 的token，未过期即有效）
+     */
+    public boolean validateRefreshToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            String type = claims.get(CLAIM_TOKEN_TYPE, String.class);
+            return TOKEN_TYPE_REFRESH.equals(type);
+        } catch (Exception e) {
+            log.warn("Refresh Token验证失败: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 通用验证（兼容旧版无type字段的token，用于过渡期）
      */
     public boolean validateToken(String token) {
         try {
             parseToken(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.warn("JWT Token已过期: {}", e.getMessage());
+            log.debug("JWT Token已过期: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
             log.warn("不支持的JWT Token: {}", e.getMessage());
         } catch (MalformedJwtException e) {
@@ -179,11 +189,20 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 检查Token是否过期
-     *
-     * @param token JWT Token
-     * @return 是否过期
+     * 检查 token 是否为过期但格式正确的 Access Token（可刷新）
      */
+    public boolean isExpiredAccessToken(String token) {
+        try {
+            parseToken(token);
+            return false;
+        } catch (ExpiredJwtException e) {
+            String type = e.getClaims() != null ? e.getClaims().get(CLAIM_TOKEN_TYPE, String.class) : null;
+            return TOKEN_TYPE_ACCESS.equals(type);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public boolean isTokenExpired(String token) {
         try {
             Claims claims = parseToken(token);
@@ -193,12 +212,6 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * 解析Token获取Claims
-     *
-     * @param token JWT Token
-     * @return Claims对象
-     */
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -207,12 +220,25 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    /**
-     * 获取Token过期时间
-     *
-     * @return 过期时间（毫秒）
-     */
+    private Claims parseTokenSilently(String token) {
+        try {
+            return parseToken(token);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public long getAccessExpiration() {
+        return jwtProperties.getAccessExpiration();
+    }
+
+    public long getRefreshExpiration() {
+        return jwtProperties.getRefreshExpiration();
+    }
+
     public long getExpirationTime() {
-        return jwtProperties.getExpiration();
+        return jwtProperties.getAccessExpiration();
     }
 }

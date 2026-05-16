@@ -270,7 +270,7 @@ async function handleDelete(row) {
     ElMessage.success('删除成功')
     fetchReportList()
   } catch (error) {
-    if (error !== 'cancel') {
+    if (error !== 'cancel' && error !== 'close') {
       console.error('删除报告失败:', error)
       ElMessage.error('删除失败')
     }

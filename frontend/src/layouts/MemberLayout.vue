@@ -1,5 +1,7 @@
 <template>
-  <div class="member-layout">
+  <n-message-provider>
+    <n-dialog-provider>
+      <div class="member-layout">
     <!-- 移动端顶部导航栏 -->
     <div class="mobile-header" v-if="isMobile">
       <div class="mobile-logo" @click="goToProfile">
@@ -140,15 +142,16 @@
       <router-view />
     </div>
   </div>
+    </n-dialog-provider>
+  </n-message-provider>
 </template>
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted, h } from 'vue'
-import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon, NAvatar } from 'naive-ui'
+import { NIcon, NAvatar, NMessageProvider, NDialogProvider, useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
-import { getCurrentUser } from '@/api/user'
+import { useUserInfo } from '@/composables/useUserInfo'
 import {
   CalendarOutline,
   DocumentTextOutline,
@@ -166,45 +169,24 @@ import {
   GlobeOutline,
   MoonOutline,
   SunnyOutline,
-  StarOutline,
-  IdCardOutline,
   HomeOutline
 } from '@vicons/ionicons5'
 
 const route = useRoute()
 const router = useRouter()
+const { userAvatar, username, usernameInitial, goHome, handleLogout } = useUserInfo()
 const authStore = useAuthStore()
 const message = useMessage()
+const userPoints = computed(() => authStore.userInfo?.points ?? 0)
 const showMobileMenu = ref(false)
 const collapsed = ref(false)
 const isMobile = ref(false)
 const sidebarWidth = ref(220)
 
-// 使用计算属性获取用户头像和用户名，确保响应式
-const userAvatar = computed(() => authStore.userInfo?.avatar || '')
-const username = computed(() => authStore.userInfo?.username || '')
-const usernameInitial = computed(() => username.value ? username.value.charAt(0) : '用')
-
-// 用户积分
-const userPoints = ref(0)
-
-// 获取用户积分
-async function loadUserPoints() {
-  try {
-    const data = await getCurrentUser()
-    if (data && data.points !== undefined) {
-      userPoints.value = data.points
-    }
-  } catch (error) {
-    console.error('获取用户积分失败:', error)
-  }
-}
-
-// 检测屏幕尺寸
 function checkScreenSize() {
   const width = window.innerWidth
   isMobile.value = width < 768
-  
+
   if (width >= 1024) {
     sidebarWidth.value = 220
     collapsed.value = false
@@ -220,7 +202,6 @@ function checkScreenSize() {
 onMounted(() => {
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
-  loadUserPoints()
 })
 
 onUnmounted(() => {
@@ -290,17 +271,13 @@ function handleUserSelect(key) {
   } else if (key === 'changelog') {
     message.info('当前版本: v1.0.0')
   } else if (key === 'website') {
-    router.push('/')
+    goHome()
   } else if (key === 'toggleTheme') {
     isDarkMode.value = !isDarkMode.value
     message.success(isDarkMode.value ? '已切换到深色模式' : '已切换到浅色模式')
   } else if (key === 'logout') {
-    authStore.logout()
+    handleLogout()
   }
-}
-
-function handleLogout() {
-  authStore.logout()
 }
 
 function goToProfile() {

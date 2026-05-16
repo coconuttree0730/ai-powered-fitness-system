@@ -7,6 +7,7 @@ import com.fitness.modules.product.model.vo.ProductVO;
 import com.fitness.modules.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/coach/products")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('COACH')")
 public class CoachProductController {
 
     private final ProductService productService;

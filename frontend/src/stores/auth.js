@@ -4,10 +4,14 @@ import { login as loginApi, getCurrentUser } from '@/api/auth'
 import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
-  // 初始化时从 localStorage 或 sessionStorage 读取 token
-  const token = ref(
-    localStorage.getItem('token') ||
-    sessionStorage.getItem('token') ||
+  const accessToken = ref(
+    localStorage.getItem('accessToken') ||
+    sessionStorage.getItem('accessToken') ||
+    ''
+  )
+  const refreshToken = ref(
+    localStorage.getItem('refreshToken') ||
+    sessionStorage.getItem('refreshToken') ||
     ''
   )
   const userInfo = ref(
@@ -18,44 +22,46 @@ export const useAuthStore = defineStore('auth', () => {
     )
   )
 
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!accessToken.value)
   const userRoles = computed(() => userInfo.value?.roles || [])
   const isAdmin = computed(() => userRoles.value.includes('ADMIN'))
   const isCoach = computed(() => userRoles.value.includes('COACH'))
   const isMember = computed(() => userRoles.value.includes('MEMBER'))
 
+  function _clearStorage() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('userInfo')
+    sessionStorage.removeItem('accessToken')
+    sessionStorage.removeItem('refreshToken')
+    sessionStorage.removeItem('userInfo')
+  }
+
+  function _saveCredentials(data, rememberMe) {
+    _clearStorage()
+    accessToken.value = data.accessToken
+    refreshToken.value = data.refreshToken
+    userInfo.value = data.userInfo || null
+
+    const storage = rememberMe ? localStorage : sessionStorage
+    storage.setItem('accessToken', data.accessToken)
+    storage.setItem('refreshToken', data.refreshToken)
+    if (data.userInfo) {
+      storage.setItem('userInfo', JSON.stringify(data.userInfo))
+    }
+  }
+
+  function _redirectByRoles(roles) {
+    const redirect = router.currentRoute.value.query.redirect || getDashboardPathByRoles(roles)
+    router.push(redirect)
+  }
+
   async function login(credentials, rememberMe = false) {
     try {
-      const res = await loginApi(credentials)
-      if (res && res.token) {
-        // 先清除所有旧数据，避免 localStorage 和 sessionStorage 数据不一致
-        localStorage.removeItem('token')
-        localStorage.removeItem('userInfo')
-        sessionStorage.removeItem('token')
-        sessionStorage.removeItem('userInfo')
-
-        token.value = res.token
-
-        if (rememberMe) {
-          // 长期保存到 localStorage
-          localStorage.setItem('token', res.token)
-        } else {
-          // 会话级保存到 sessionStorage
-          sessionStorage.setItem('token', res.token)
-        }
-
-        if (res.userInfo) {
-          userInfo.value = res.userInfo
-          if (rememberMe) {
-            localStorage.setItem('userInfo', JSON.stringify(res.userInfo))
-          } else {
-            sessionStorage.setItem('userInfo', JSON.stringify(res.userInfo))
-          }
-        }
-
-        const roles = res.userInfo?.roles || []
-        const redirect = router.currentRoute.value.query.redirect || getDashboardPathByRoles(roles)
-        router.push(redirect)
+      const res = await loginApi({ ...credentials, rememberMe })
+      if (res && res.accessToken) {
+        _saveCredentials(res, rememberMe)
+        _redirectByRoles(res.userInfo?.roles || [])
         return { success: true }
       }
       return { success: false, message: '登录失败' }
@@ -76,67 +82,46 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await getCurrentUser()
       if (res) {
         userInfo.value = res
-        // 同时更新两种存储中的用户信息
-        localStorage.setItem('userInfo', JSON.stringify(res))
-        sessionStorage.setItem('userInfo', JSON.stringify(res))
       }
     } catch (error) {
       console.error('获取用户信息失败:', error)
     }
   }
 
+  function updateAccessToken(newAccessToken) {
+    accessToken.value = newAccessToken
+    if (localStorage.getItem('accessToken')) {
+      localStorage.setItem('accessToken', newAccessToken)
+    }
+    if (sessionStorage.getItem('accessToken')) {
+      sessionStorage.setItem('accessToken', newAccessToken)
+    }
+  }
+
+  function getRefreshToken() {
+    return refreshToken.value
+  }
+
   function logout() {
-    token.value = ''
+    accessToken.value = ''
+    refreshToken.value = ''
     userInfo.value = null
-    // 清除 localStorage
-    localStorage.removeItem('token')
-    localStorage.removeItem('userInfo')
-    // 清除 sessionStorage
-    sessionStorage.removeItem('token')
-    sessionStorage.removeItem('userInfo')
+    _clearStorage()
     router.push('/')
   }
 
-  function hasRole(role) {
-    return userRoles.value.includes(role)
-  }
-
-  // 设置登录状态（用于短信登录等直接返回token的场景）
   async function setLoginState(data, rememberMe = false) {
-    if (data && data.token) {
-      // 先清除所有旧数据，避免 localStorage 和 sessionStorage 数据不一致
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
-      sessionStorage.removeItem('token')
-      sessionStorage.removeItem('userInfo')
-
-      token.value = data.token
-
-      if (rememberMe) {
-        localStorage.setItem('token', data.token)
-      } else {
-        sessionStorage.setItem('token', data.token)
-      }
-
-      if (data.userInfo) {
-        userInfo.value = data.userInfo
-        if (rememberMe) {
-          localStorage.setItem('userInfo', JSON.stringify(data.userInfo))
-        } else {
-          sessionStorage.setItem('userInfo', JSON.stringify(data.userInfo))
-        }
-      }
-
-      const roles = data.userInfo?.roles || []
-      const redirect = router.currentRoute.value.query.redirect || getDashboardPathByRoles(roles)
-      router.push(redirect)
+    if (data && data.accessToken) {
+      _saveCredentials(data, rememberMe)
+      _redirectByRoles(data.userInfo?.roles || [])
       return { success: true }
     }
     return { success: false, message: '登录数据无效' }
   }
 
   return {
-    token,
+    accessToken,
+    refreshToken,
     userInfo,
     isLoggedIn,
     userRoles,
@@ -146,7 +131,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     fetchUserInfo,
     logout,
-    hasRole,
-    setLoginState
+    setLoginState,
+    updateAccessToken,
+    getRefreshToken
   }
 })

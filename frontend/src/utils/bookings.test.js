@@ -7,7 +7,7 @@ import {
   filterBookingsByStatus,
   getTodayKey,
   getWeekEndKey
-} from './bookings.utils.js'
+} from './bookings.js'
 
 test('getTodayKey returns current date in YYYY-MM-DD', () => {
   const date = new Date('2026-05-09T12:00:00')

@@ -26,12 +26,14 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, ProductOrder> implements ProductOrderService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final ProductOrderMapper productOrderMapper;
     private final ProductMapper productMapper;
@@ -260,7 +262,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
     private String generateOrderNo() {
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String randomStr = String.format("%04d", new Random().nextInt(10000));
+        String randomStr = String.format("%04d", SECURE_RANDOM.nextInt(10000));
         return "PO" + dateStr + randomStr;
     }
 

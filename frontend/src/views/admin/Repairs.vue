@@ -403,7 +403,7 @@ async function handleDelete(row) {
     ElMessage.success('删除成功')
     fetchRepairs()
   } catch (error) {
-    if (error !== 'cancel') {
+    if (error !== 'cancel' && error !== 'close') {
       console.error('Delete repair error:', error)
       ElMessage.error('删除失败')
     }

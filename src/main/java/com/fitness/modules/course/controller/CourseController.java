@@ -7,6 +7,7 @@ import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.model.vo.CourseCategoryVO;
 import com.fitness.modules.course.model.vo.CourseVO;
 import com.fitness.modules.course.service.CourseService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,7 +45,7 @@ public class CourseController {
      */
     @GetMapping("/list")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
-    public Result<Page<CourseVO>> getCourseList(CourseQueryDTO query) {
+    public Result<Page<CourseVO>> getCourseList(@Valid CourseQueryDTO query) {
         log.info("获取课程列表请求: category={}, keyword={}, courseName={}, coachId={}, dayOfWeek={}",
                 query.getCategory(), query.getKeyword(), query.getCourseName(), query.getCoachId(), query.getDayOfWeek());
         Page<CourseVO> page = courseService.getCourseList(query);
@@ -58,7 +59,7 @@ public class CourseController {
      * @return 课程列表
      */
     @GetMapping("/public/list")
-    public Result<Page<CourseVO>> getPublicCourseList(CourseQueryDTO query) {
+    public Result<Page<CourseVO>> getPublicCourseList(@Valid CourseQueryDTO query) {
         log.info("获取公开课程列表请求: category={}, keyword={}", query.getCategory(), query.getKeyword());
         Page<CourseVO> page = courseService.getPublicCourseList(query);
         return Result.success(page);

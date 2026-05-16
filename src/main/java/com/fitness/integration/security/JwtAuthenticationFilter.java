@@ -21,8 +21,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.catalina.connector.ClientAbortException;
-
 /**
  * JWT 认证过滤器
  * 从请求头中解析JWT Token并设置SecurityContext
@@ -68,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 2. 验证Token : 底层原理： 判断是不是 null
             if (StringUtils.hasText(jwt)) {
-                if (jwtTokenProvider.validateToken(jwt)) {
+                if (jwtTokenProvider.validateAccessToken(jwt)) {
                     // 3. 从Token中获取用户ID
                     Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
                     // 4. 创建用户详情
@@ -142,13 +140,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @return true-客户端断开连接, false-其他异常
      */
     private boolean isClientAbortException(Throwable throwable) {
-        if (throwable instanceof ClientAbortException) {
+        String className = throwable.getClass().getName();
+        if (className.contains("ClientAbortException")) {
             return true;
         }
-        // 检查根本原因
         Throwable cause = throwable.getCause();
         while (cause != null) {
-            if (cause instanceof ClientAbortException) {
+            if (cause.getClass().getName().contains("ClientAbortException")) {
                 return true;
             }
             cause = cause.getCause();
@@ -170,12 +168,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             Result<Void> result = Result.error(401, message);
             objectMapper.writeValue(response.getOutputStream(), result);
-        } catch (ClientAbortException e) {
-            // 客户端主动断开连接,这是正常的网络行为,不需要记录为错误
-            log.debug("客户端在响应完成前断开连接: {}", e.getMessage());
         } catch (IOException e) {
-            // 其他IO异常,记录为警告
-            log.warn("发送认证失败响应时发生IO异常: {}", e.getMessage());
+            if (isClientAbortException(e)) {
+                log.debug("客户端在响应完成前断开连接: {}", e.getMessage());
+            } else {
+                log.warn("发送认证失败响应时发生IO异常: {}", e.getMessage());
+            }
         }
     }
 
@@ -193,6 +191,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/v1/auth/slider-verify",
                 "/api/v1/auth/sms-code",
                 "/api/v1/banners/active",
+                "/api/v1/announcements/published",
                 "/api/v1/coaches/home",
                 "/api/v1/payment/alipay/notify",
                 "/swagger-ui.html",
@@ -204,7 +203,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         List<String> prefixMatchPaths = List.of(
                 "/api/v1/auth/slider-verify/",
                 "/api/v1/courses/public/",
+                "/api/v1/coaches/home",
                 "/api/v1/equipment/",
+                "/static/",
+                "/uploads/",
                 "/swagger-ui/",
                 "/v3/api-docs/",
                 "/swagger-resources/",

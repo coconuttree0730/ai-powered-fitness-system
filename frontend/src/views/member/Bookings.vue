@@ -1,6 +1,7 @@
 <template>
   <div class="bookings-page">
     <n-spin :show="loading">
+      <!-- 可预约课程 -->
       <section class="card-section">
         <div class="section-header">
           <div>
@@ -10,13 +11,13 @@
           <n-button quaternary @click="loadPageData">刷新</n-button>
         </div>
 
-        <div v-if="weekSessions.length === 0" class="empty-state">
+        <div v-if="availableSessions.length === 0" class="empty-state">
           <n-empty description="本周暂无可预约的公开课" />
         </div>
 
         <div v-else class="session-grid" :class="{ mobile: isMobile }">
           <article
-            v-for="session in weekSessions"
+            v-for="session in availableSessions"
             :key="session.id"
             class="session-card"
             :class="{ disabled: session.isBooked }"
@@ -55,6 +56,7 @@
                 <n-button
                   v-if="!session.isBooked"
                   type="primary"
+                  size="small"
                   :loading="actionSessionId === session.id"
                   @click="handleBook(session)"
                 >
@@ -66,46 +68,55 @@
         </div>
       </section>
 
-      <section v-if="activeBookingSession" class="card-section">
+      <!-- 已预约课程 -->
+      <section v-if="bookedSessions.length > 0" class="card-section booked-section">
         <div class="section-header">
-          <h3 class="section-title">预约记录</h3>
+          <div>
+            <h3 class="section-title">已预约课程</h3>
+            <p class="section-subtitle">您已预约的本周课程</p>
+          </div>
         </div>
 
         <div class="session-grid" :class="{ mobile: isMobile }">
-          <article class="session-card booking-record">
+          <article
+            v-for="session in bookedSessions"
+            :key="session.id"
+            class="session-card booking-record"
+          >
             <div
               class="session-cover"
-              :style="activeBookingSession.imageUrl ? { backgroundImage: `url(${activeBookingSession.imageUrl})` } : undefined"
+              :style="session.imageUrl ? { backgroundImage: `url(${session.imageUrl})` } : undefined"
             >
               <div class="session-cover-overlay">
                 <n-tag type="success" size="small" round>已预约</n-tag>
-                <span class="session-date-text">{{ formatMonthDay(activeBookingSession.sessionDate) }}</span>
+                <span class="session-date-text">{{ formatMonthDay(session.sessionDate) }}</span>
               </div>
             </div>
 
             <div class="session-content">
-              <h4 class="session-title">{{ activeBookingSession.courseName }}</h4>
+              <h4 class="session-title">{{ session.courseName }}</h4>
 
               <div class="session-meta">
                 <div class="meta-row">
                   <span class="meta-label">上课时间</span>
-                  <span>{{ formatTimeRange(activeBookingSession.startTime, activeBookingSession.endTime) }}</span>
+                  <span>{{ formatTimeRange(session.startTime, session.endTime) }}</span>
                 </div>
                 <div class="meta-row">
                   <span class="meta-label">已预约人数</span>
-                  <span>{{ activeBookingSession.bookedCount ?? 0 }} 人</span>
+                  <span>{{ session.bookedCount ?? 0 }} 人</span>
                 </div>
                 <div class="meta-row">
                   <span class="meta-label">授课教练</span>
-                  <span>{{ activeBookingSession.coachName || '待分配' }}</span>
+                  <span>{{ session.coachName || '待分配' }}</span>
                 </div>
               </div>
 
               <div class="session-actions">
                 <n-button
                   type="error"
-                  :loading="cancelLoading"
-                  @click="handleCancel(activeBookingSession.bookingId)"
+                  size="small"
+                  :loading="cancelLoading && cancelBookingId === session.bookingId"
+                  @click="handleCancel(session.bookingId)"
                 >
                   取消预约
                 </n-button>
@@ -136,7 +147,7 @@ import {
   getTodayKey,
   getWeekEndKey,
   toDateKey
-} from './bookings.utils.js'
+} from '@/utils/bookings.js'
 
 const message = useMessage()
 
@@ -157,8 +168,12 @@ const weekDisplay = computed(() => {
   return `${start} - ${end}`
 })
 
-const activeBookingSession = computed(() => {
-  return weekSessions.value.find((s) => s.isBooked) || null
+const availableSessions = computed(() => {
+  return weekSessions.value.filter((s) => !s.isBooked)
+})
+
+const bookedSessions = computed(() => {
+  return weekSessions.value.filter((s) => s.isBooked)
 })
 
 function handleResize() {
@@ -287,6 +302,11 @@ onUnmounted(() => {
   margin-bottom: 24px;
 }
 
+.booked-section {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+  border: 1px solid #bbf7d0;
+}
+
 .section-header {
   display: flex;
   align-items: flex-start;
@@ -340,7 +360,7 @@ onUnmounted(() => {
 }
 
 .session-cover {
-  height: 160px;
+  height: 130px;
   background: linear-gradient(135deg, #1a1a2e 0%, #ff6b35 100%);
   background-size: cover;
   background-position: center;
@@ -419,7 +439,7 @@ onUnmounted(() => {
   }
 
   .session-cover {
-    height: 140px;
+    height: 110px;
   }
 
   .session-title {

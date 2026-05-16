@@ -298,6 +298,52 @@ class CoachDetailServiceTest {
     }
 
     @Test
+    void getCoachDetail_WithLegacyPlainTextListFields_ReturnsFallbackList() {
+        existingDetail.setTags("增肌塑形");
+        existingDetail.setSpecialties("力量训练");
+        existingDetail.setLanguages("中文");
+        existingDetail.setHonors("年度明星教练");
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(CURRENT_USER_ID);
+
+            when(coachDetailMapper.selectByUserId(CURRENT_USER_ID)).thenReturn(existingDetail);
+            when(userMapper.selectById(CURRENT_USER_ID)).thenReturn(currentUser);
+
+            CoachDetailVO result = coachDetailService.getCurrentCoachDetail();
+
+            assertNotNull(result);
+            assertIterableEquals(java.util.List.of("增肌塑形"), result.getTags());
+            assertIterableEquals(java.util.List.of("力量训练"), result.getSpecialties());
+            assertIterableEquals(java.util.List.of("中文"), result.getLanguages());
+            assertIterableEquals(java.util.List.of("年度明星教练"), result.getHonors());
+        }
+    }
+
+    @Test
+    void getCoachDetail_WithJsonbListFields_ReturnsListValues() {
+        existingDetail.setTags(java.util.List.of("增肌塑形"));
+        existingDetail.setSpecialties(java.util.List.of("力量训练"));
+        existingDetail.setLanguages(java.util.List.of("中文"));
+        existingDetail.setHonors(java.util.List.of("年度明星教练"));
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(CURRENT_USER_ID);
+
+            when(coachDetailMapper.selectByUserId(CURRENT_USER_ID)).thenReturn(existingDetail);
+            when(userMapper.selectById(CURRENT_USER_ID)).thenReturn(currentUser);
+
+            CoachDetailVO result = coachDetailService.getCurrentCoachDetail();
+
+            assertNotNull(result);
+            assertIterableEquals(java.util.List.of("增肌塑形"), result.getTags());
+            assertIterableEquals(java.util.List.of("力量训练"), result.getSpecialties());
+            assertIterableEquals(java.util.List.of("中文"), result.getLanguages());
+            assertIterableEquals(java.util.List.of("年度明星教练"), result.getHonors());
+        }
+    }
+
+    @Test
     void uploadPersonalImageShouldDeleteOldImageBeforeSavingNewOne() {
         MockMultipartFile file = new MockMultipartFile("file", "coach.png", "image/png", "png".getBytes());
         existingDetail.setPersonalImageUrl("http://minio/coach-old.png");

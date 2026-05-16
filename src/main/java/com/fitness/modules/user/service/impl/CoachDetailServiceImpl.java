@@ -203,8 +203,8 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         vo.setRating(coachDetail.getRating());
         vo.setBio(coachDetail.getBio());
         vo.setTeachingStyle(coachDetail.getTeachingStyle());
-        vo.setTags(parseJsonList(coachDetail.getTagsJson()));
-        vo.setSpecialties(parseJsonList(coachDetail.getSpecialtiesJson()));
+        vo.setTags(parseJsonList(coachDetail.getTags()));
+        vo.setSpecialties(parseJsonList(coachDetail.getSpecialties()));
         return vo;
     }
 
@@ -369,10 +369,10 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         vo.setExperience(detail.getExperience());
         vo.setStudentCount(detail.getStudentCount());
         vo.setRating(detail.getRating());
-        vo.setTags(parseJsonList(detail.getTagsJson()));
-        vo.setSpecialties(parseJsonList(detail.getSpecialtiesJson()));
-        vo.setLanguages(parseJsonList(detail.getLanguagesJson()));
-        vo.setHonors(parseJsonList(detail.getHonorsJson()));
+        vo.setTags(parseJsonList(detail.getTags()));
+        vo.setSpecialties(parseJsonList(detail.getSpecialties()));
+        vo.setLanguages(parseJsonList(detail.getLanguages()));
+        vo.setHonors(parseJsonList(detail.getHonors()));
         return vo;
     }
 
@@ -388,7 +388,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         vo.setRatingScore(convertRatingToScore(detail.getRating()));
         vo.setBio(detail.getBio() != null ? detail.getBio() : "专业健身教练，拥有丰富的教学经验，致力于帮助学员达成健身目标。");
 
-        List<String> tags = parseJsonList(detail.getTagsJson());
+        List<String> tags = parseJsonList(detail.getTags());
         if (tags == null || tags.isEmpty()) {
             vo.setTags(List.of("专业教练"));
         } else {
@@ -397,11 +397,30 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         return vo;
     }
 
-    private List<String> parseJsonList(String json) {
-        if (json == null) {
-            return null;
+    private List<String> parseJsonList(Object value) {
+        if (value == null) {
+            return new ArrayList<>();
         }
-        return JSONUtil.parseArray(json).toList(String.class);
+        if (value instanceof List<?> list) {
+            return list.stream()
+                    .filter(item -> item != null && StringUtils.hasText(item.toString()))
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+        }
+        String json = toJsonString(value);
+        if (!StringUtils.hasText(json)) {
+            return new ArrayList<>();
+        }
+        String trimmedJson = json.trim();
+        if (!trimmedJson.startsWith("[") && !trimmedJson.startsWith("{")) {
+            return List.of(trimmedJson);
+        }
+        try {
+            return JSONUtil.parseArray(trimmedJson).toList(String.class);
+        } catch (Exception e) {
+            log.warn("Failed to parse coach detail list field, fallback to empty list: {}", trimmedJson, e);
+            return new ArrayList<>();
+        }
     }
 
     private void deleteImageQuietly(String imageUrl) {
@@ -435,7 +454,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     }
 
     private String generateCoachTitle(CoachHomePageVO detail) {
-        List<String> specialties = parseJsonList(detail.getSpecialtiesJson());
+        List<String> specialties = parseJsonList(detail.getSpecialties());
         if (specialties != null && !specialties.isEmpty()) {
             String mainSpecialty = specialties.get(0);
             return switch (mainSpecialty) {
@@ -470,5 +489,15 @@ public class CoachDetailServiceImpl implements CoachDetailService {
             return "资深健身教练";
         }
         return "专业教练";
+    }
+
+    private String toJsonString(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof String) {
+            return (String) obj;
+        }
+        return obj.toString();
     }
 }

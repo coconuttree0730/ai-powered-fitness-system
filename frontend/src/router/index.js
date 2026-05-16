@@ -287,23 +287,8 @@ router.beforeEach(async (to, from) => {
 
     // 检查角色权限
     if (to.meta.roles && to.meta.roles.length > 0) {
-      const userRoles = authStore.userRoles
-      // 如果用户角色为空，尝试从存储中重新读取
-      if (!userRoles || userRoles.length === 0) {
-        // 尝试重新读取 userInfo
-        const storedUserInfo = JSON.parse(
-          localStorage.getItem('userInfo') ||
-          sessionStorage.getItem('userInfo') ||
-          'null'
-        )
-        if (storedUserInfo && storedUserInfo.roles) {
-          authStore.userInfo = storedUserInfo
-        }
-      }
-
       const hasRole = to.meta.roles.some(role => authStore.userRoles.includes(role))
       if (!hasRole) {
-        // 角色不匹配，跳转到首页
         return { name: 'Home' }
       }
     }

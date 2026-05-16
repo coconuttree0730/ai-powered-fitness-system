@@ -154,7 +154,9 @@ public class SecurityUtils {
      * @throws IllegalStateException 如果未登录
      */
     public static Long requireCurrentUserId() {
-        return getCurrentUserId();
+        return getCurrentUser()
+                .map(UserDetailsImpl::getId)
+                .orElseThrow(() -> new IllegalStateException("当前用户未登录"));
     }
 
     /**

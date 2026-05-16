@@ -1,8 +1,8 @@
 package com.fitness.modules.user.controller;
 
-import com.fitness.common.exception.BusinessException;
 import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.LoginDTO;
+import com.fitness.modules.user.model.dto.RefreshTokenDTO;
 import com.fitness.modules.user.model.dto.SliderVerifyDTO;
 import com.fitness.modules.user.model.dto.SmsCodeDTO;
 import com.fitness.modules.user.model.dto.SmsCodeLoginDTO;
@@ -104,7 +104,6 @@ public class AuthController {
      */
     @PostMapping("/sms-code")
     public Result<Map<String, Object>> sendSmsCode(@Valid @RequestBody SmsCodeDTO dto) {
-        try {
         log.info("发送短信验证码请求: phone={}", dto.getPhone());
 
         // 1. 检查滑块验证是否通过
@@ -131,10 +130,6 @@ public class AuthController {
         result.put("message", "验证码已发送");
 
         return Result.success(result);
-        } catch (BusinessException e) {
-        log.warn("发送短信验证码业务异常: phone={}, message={}", dto.getPhone(), e.getMessage());
-        return Result.error(400, e.getMessage());
-        }
     }
 
     /**
@@ -147,7 +142,19 @@ public class AuthController {
     @PostMapping("/login/sms")
     public Result<Map<String, Object>> loginBySmsCode(@Valid @RequestBody SmsCodeLoginDTO dto) {
         log.info("短信验证码登录请求: phone={}", dto.getPhone());
-        Map<String, Object> tokenInfo = userService.loginBySmsCode(dto.getPhone(), dto.getSmsCode());
+        Map<String, Object> tokenInfo = userService.loginBySmsCode(
+                dto.getPhone(), dto.getSmsCode(), Boolean.TRUE.equals(dto.getRememberMe()));
+        return Result.success(tokenInfo);
+    }
+
+    /**
+     * 刷新Access Token
+     * 使用Refresh Token换取新的Access Token
+     */
+    @PostMapping("/refresh")
+    public Result<Map<String, Object>> refreshToken(@Valid @RequestBody RefreshTokenDTO dto) {
+        log.info("刷新Token请求");
+        Map<String, Object> tokenInfo = userService.refreshToken(dto.getRefreshToken());
         return Result.success(tokenInfo);
     }
 }

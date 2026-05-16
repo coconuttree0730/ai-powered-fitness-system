@@ -4,37 +4,29 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-/**
- * JWT 配置属性
- * 从 application.yml 读取 jwt 前缀的配置
- */
 @Data
 @Component
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
 
-    /**
-     * JWT 密钥
-     */
     private String secret;
 
     /**
-     * Token 过期时间（毫秒）
+     * Access Token 过期时间（毫秒），默认 2 小时
      */
-    private Long expiration;
+    private Long accessExpiration = 7200000L;
 
     /**
-     * 刷新 Token 过期时间（毫秒）
+     * Refresh Token 过期时间（毫秒），默认 7 天
      */
-    private Long refreshExpiration;
+    private Long refreshExpiration = 604800000L;
 
     /**
-     * 签发者
+     * 勾选"记住我"后 Refresh Token 过期时间（毫秒），默认 30 天
      */
+    private Long rememberMeExpiration = 2592000000L;
+
     private String issuer;
 
-    /**
-     * 受众
-     */
     private String audience;
 }

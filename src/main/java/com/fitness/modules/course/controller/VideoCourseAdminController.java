@@ -52,7 +52,7 @@ public class VideoCourseAdminController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
-    public Result<Page<VideoCourseVO>> list(VideoCourseQueryDTO query) {
+    public Result<Page<VideoCourseVO>> list(@Valid VideoCourseQueryDTO query) {
         return Result.success(videoCourseService.getVideoCourseList(query));
     }
 

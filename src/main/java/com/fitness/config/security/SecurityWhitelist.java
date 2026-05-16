@@ -18,6 +18,8 @@ public final class SecurityWhitelist {
             "/api/v1/coaches/home",
             "/api/v1/coaches/*/detail",
             "/api/v1/equipment/**",
+            "/static/**",
+            "/uploads/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",

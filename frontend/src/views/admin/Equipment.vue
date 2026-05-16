@@ -65,11 +65,7 @@
             <el-space>
               <el-button size="small" @click="handleView(row)">查看</el-button>
               <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
-              <el-popconfirm title="确定删除该器材吗？" @confirm="handleDelete(row)">
-                <template #reference>
-                  <el-button size="small" type="danger">删除</el-button>
-                </template>
-              </el-popconfirm>
+              <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
             </el-space>
           </template>
         </el-table-column>
@@ -219,7 +215,7 @@
 </template>
 
 <script setup>
-import { ref, h, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment, getEquipmentTypes, getEquipmentRepairs, getEquipmentDetail } from '@/api/equipment'
@@ -456,6 +452,15 @@ async function handleSubmit() {
 
 async function handleDelete(row) {
   try {
+    await ElMessageBox.confirm(
+      `确定要删除器材 "${row.equipmentName}" 吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
     await deleteEquipment(row.id)
     message.success('删除成功')
     fetchEquipment()

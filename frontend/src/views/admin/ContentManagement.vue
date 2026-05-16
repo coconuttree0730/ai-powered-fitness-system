@@ -165,127 +165,7 @@
           </div>
         </el-tab-pane>
 
-        <!-- 会员卡展示管理 -->
-        <el-tab-pane name="membership-display">
-          <template #label>
-            <span class="tab-label">
-              <el-icon><CreditCard /></el-icon>会员卡展示
-            </span>
-          </template>
-          <div class="tab-content">
-            <el-row :gutter="20" align="middle" class="tab-toolbar">
-              <el-col :span="18">
-                <el-space>
-                  <el-input
-                    v-model="membershipDisplaySearch.name"
-                    placeholder="搜索会员卡名称"
-                    clearable
-                    style="width: 200px"
-                  />
-                  <el-select v-model="membershipDisplaySearch.type" placeholder="全部类型" clearable style="width: 120px">
-                    <el-option label="月卡" value="MONTH" />
-                    <el-option label="季卡" value="QUARTER" />
-                    <el-option label="年卡" value="YEAR" />
-                  </el-select>
-                  <el-button type="primary" @click="fetchMembershipDisplayData">
-                    <el-icon><Search /></el-icon>搜索
-                  </el-button>
-                </el-space>
-              </el-col>
-              <el-col :span="6" style="text-align: right">
-                <el-button type="primary" @click="handleAddMembershipDisplay">
-                  <el-icon><Plus /></el-icon>配置展示
-                </el-button>
-              </el-col>
-            </el-row>
 
-            <el-row :gutter="20" class="card-display-grid">
-              <el-col :span="8" v-for="item in membershipDisplayData" :key="item.id">
-                <el-card class="membership-display-card" :body-style="{ padding: '0' }">
-                  <div class="card-preview" :style="{ background: item.backgroundColor }">
-                    <div class="card-icon">
-                      <el-icon :size="40"><component :is="item.icon || 'CreditCard'" /></el-icon>
-                    </div>
-                    <div class="card-info">
-                      <div class="card-name">{{ item.name }}</div>
-                      <div class="card-price">¥{{ item.price }}</div>
-                      <div class="card-validity">有效期 {{ item.validityDays }} 天</div>
-                    </div>
-                  </div>
-                  <div class="card-actions">
-                    <el-button type="primary" link @click="handleEditMembershipDisplay(item)">
-                      <el-icon><Edit /></el-icon>编辑
-                    </el-button>
-                    <el-button type="danger" link @click="handleDeleteMembershipDisplay(item)">
-                      <el-icon><Delete /></el-icon>删除
-                    </el-button>
-                  </div>
-                </el-card>
-              </el-col>
-            </el-row>
-          </div>
-        </el-tab-pane>
-
-        <!-- 购物中心展示管理 -->
-        <el-tab-pane name="store-display">
-          <template #label>
-            <span class="tab-label">
-              <el-icon><ShoppingCart /></el-icon>购物中心展示
-            </span>
-          </template>
-          <div class="tab-content">
-            <el-row :gutter="20" align="middle" class="tab-toolbar">
-              <el-col :span="18">
-                <el-space>
-                  <el-input
-                    v-model="storeDisplaySearch.name"
-                    placeholder="搜索商品名称"
-                    clearable
-                    style="width: 200px"
-                  />
-                  <el-select v-model="storeDisplaySearch.category" placeholder="全部分类" clearable style="width: 120px">
-                    <el-option label="运动补剂" value="SUPPLEMENT" />
-                    <el-option label="运动装备" value="EQUIPMENT" />
-                    <el-option label="运动服饰" value="CLOTHING" />
-                    <el-option label="服务类" value="SERVICE" />
-                  </el-select>
-                  <el-button type="primary" @click="fetchStoreDisplayData">
-                    <el-icon><Search /></el-icon>搜索
-                  </el-button>
-                </el-space>
-              </el-col>
-              <el-col :span="6" style="text-align: right">
-                <el-button type="primary" @click="handleAddStoreDisplay">
-                  <el-icon><Plus /></el-icon>配置展示
-                </el-button>
-              </el-col>
-            </el-row>
-
-            <el-row :gutter="20" class="product-display-grid">
-              <el-col :span="6" v-for="item in storeDisplayData" :key="item.id">
-                <el-card class="product-display-card" :body-style="{ padding: '0' }">
-                  <el-image :src="item.image" fit="cover" class="product-image" />
-                  <div class="product-info">
-                    <div class="product-name">{{ item.name }}</div>
-                    <div class="product-points">
-                      <el-icon><Coin /></el-icon>
-                      <span>{{ item.points }} 积分</span>
-                    </div>
-                    <div class="product-stock">库存: {{ item.stock }}</div>
-                  </div>
-                  <div class="product-actions">
-                    <el-button type="primary" link @click="handleEditStoreDisplay(item)">
-                      <el-icon><Edit /></el-icon>编辑
-                    </el-button>
-                    <el-button type="danger" link @click="handleDeleteStoreDisplay(item)">
-                      <el-icon><Delete /></el-icon>删除
-                    </el-button>
-                  </div>
-                </el-card>
-              </el-col>
-            </el-row>
-          </div>
-        </el-tab-pane>
       </el-tabs>
     </el-card>
 
@@ -394,8 +274,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Picture, Bell, CreditCard, ShoppingCart, Search, Plus, Edit, Delete,
-  Promotion, Coin
+  Picture, Bell, Search, Plus, Edit, Delete,
+  Promotion
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -418,15 +298,13 @@ import {
 // 获取认证信息
 const authStore = useAuthStore()
 const uploadHeaders = computed(() => ({
-  Authorization: authStore.token ? `Bearer ${authStore.token}` : ''
+  Authorization: authStore.accessToken ? `Bearer ${authStore.accessToken}` : ''
 }))
 
 // 统计数据
 const stats = ref([
   { title: '轮播图数量', value: 0 },
-  { title: '公告数量', value: 12 },
-  { title: '会员卡展示', value: 4 },
-  { title: '商城商品展示', value: 8 }
+  { title: '公告数量', value: 12 }
 ])
 
 // 当前标签页
@@ -517,7 +395,7 @@ async function handleDeleteBanner(row) {
     ElMessage.success('删除成功')
     fetchBannerData()
   } catch (error) {
-    if (error !== 'cancel') {
+    if (error !== 'cancel' && error !== 'close') {
       ElMessage.error('删除失败')
       console.error(error)
     }
@@ -537,7 +415,7 @@ async function handleBatchDelete() {
     ElMessage.success('批量删除成功')
     fetchBannerData()
   } catch (error) {
-    if (error !== 'cancel') {
+    if (error !== 'cancel' && error !== 'close') {
       ElMessage.error('批量删除失败')
       console.error(error)
     }
@@ -747,114 +625,6 @@ async function handleSubmitNotice() {
   })
 }
 
-// ========== 会员卡展示管理 ==========
-const membershipDisplaySearch = reactive({ name: '', type: '' })
-const membershipDisplayData = ref([])
-
-function fetchMembershipDisplayData() {
-  loading.value = true
-  setTimeout(() => {
-    membershipDisplayData.value = [
-      {
-        id: 1,
-        name: '至尊年卡',
-        price: 3999,
-        validityDays: 365,
-        icon: 'Trophy',
-        backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      },
-      {
-        id: 2,
-        name: '金卡季卡',
-        price: 1299,
-        validityDays: 90,
-        icon: 'Medal',
-        backgroundColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-      },
-      {
-        id: 3,
-        name: '银卡月卡',
-        price: 499,
-        validityDays: 30,
-        icon: 'Star',
-        backgroundColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-      }
-    ]
-    loading.value = false
-  }, 300)
-}
-
-function handleAddMembershipDisplay() {
-  ElMessage.info('配置会员卡展示功能')
-}
-
-function handleEditMembershipDisplay(item) {
-  ElMessage.info(`编辑会员卡: ${item.name}`)
-}
-
-function handleDeleteMembershipDisplay(item) {
-  ElMessageBox.confirm(`确定要删除展示 "${item.name}" 吗？`, '提示', { type: 'warning' }).then(() => {
-    ElMessage.success('删除成功')
-    fetchMembershipDisplayData()
-  })
-}
-
-// ========== 购物中心展示管理 ==========
-const storeDisplaySearch = reactive({ name: '', category: '' })
-const storeDisplayData = ref([])
-
-function fetchStoreDisplayData() {
-  loading.value = true
-  setTimeout(() => {
-    storeDisplayData.value = [
-      {
-        id: 1,
-        name: '乳清蛋白粉',
-        points: 3500,
-        stock: 89,
-        image: 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?w=400&h=300&fit=crop'
-      },
-      {
-        id: 2,
-        name: '可调节哑铃',
-        points: 8800,
-        stock: 23,
-        image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=300&fit=crop'
-      },
-      {
-        id: 3,
-        name: '专业运动鞋',
-        points: 5200,
-        stock: 56,
-        image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&h=300&fit=crop'
-      },
-      {
-        id: 4,
-        name: 'TPE瑜伽垫',
-        points: 1800,
-        stock: 12,
-        image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=300&fit=crop'
-      }
-    ]
-    loading.value = false
-  }, 300)
-}
-
-function handleAddStoreDisplay() {
-  ElMessage.info('配置积分商城展示功能')
-}
-
-function handleEditStoreDisplay(item) {
-  ElMessage.info(`编辑商品: ${item.name}`)
-}
-
-function handleDeleteStoreDisplay(item) {
-  ElMessageBox.confirm(`确定要删除展示 "${item.name}" 吗？`, '提示', { type: 'warning' }).then(() => {
-    ElMessage.success('删除成功')
-    fetchStoreDisplayData()
-  })
-}
-
 // 通用
 const isEdit = ref(false)
 const submitting = ref(false)
@@ -866,12 +636,6 @@ function handleTabChange() {
       break
     case 'notice':
       fetchNoticeData()
-      break
-    case 'membership-display':
-      fetchMembershipDisplayData()
-      break
-    case 'store-display':
-      fetchStoreDisplayData()
       break
   }
 }
@@ -991,115 +755,5 @@ onMounted(() => {
   margin-left: 10px;
 }
 
-/* 会员卡展示卡片 */
-.card-display-grid {
-  margin-top: 20px;
-}
 
-.membership-display-card {
-  margin-bottom: 20px;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s;
-}
-
-.membership-display-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.card-preview {
-  padding: 30px 20px;
-  color: #fff;
-  text-align: center;
-}
-
-.card-icon {
-  margin-bottom: 15px;
-}
-
-.card-name {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.card-price {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.card-validity {
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-.card-actions {
-  padding: 15px;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  background: #f5f7fa;
-}
-
-/* 积分商城展示卡片 */
-.product-display-grid {
-  margin-top: 20px;
-}
-
-.product-display-card {
-  margin-bottom: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.3s;
-}
-
-.product-display-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.product-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.product-info {
-  padding: 15px;
-}
-
-.product-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #303133;
-  margin-bottom: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.product-points {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #faad14;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.product-stock {
-  font-size: 13px;
-  color: #909399;
-}
-
-.product-actions {
-  padding: 10px 15px;
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  border-top: 1px solid #ebeef5;
-}
 </style>

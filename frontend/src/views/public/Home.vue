@@ -1281,7 +1281,7 @@ async function fetchHomePageCourses() {
   try {
     const data = await getHomePageCourses()
     // 响应拦截器已提取res.data，直接判断返回数据是否为数组
-    if (Array.isArray(data)) {
+    if (Array.isArray(data) && data.length > 0) {
       coursesData.value = data
       // 更新标签（根据返回的数据动态调整）
       const dynamicTabs = data.map(item => ({
@@ -1292,13 +1292,12 @@ async function fetchHomePageCourses() {
         courseTabs.value = dynamicTabs
       }
     } else {
-      coursesData.value = []
+      coursesData.value = getDefaultCoursesData()
     }
   } catch (error) {
-    console.error('获取课程体系数据失败:', error)
-    coursesError.value = error.message || '获取课程数据失败，请稍后重试'
-    // 使用默认数据作为降级方案
+    console.warn('获取课程体系数据失败，使用默认课程数据降级展示:', error)
     coursesData.value = getDefaultCoursesData()
+    coursesError.value = null
   } finally {
     coursesLoading.value = false
   }
@@ -5068,6 +5067,17 @@ const vIntersect = {
   .navbar.scrolled { padding: 10px 0; }
   .navbar.has-announcement { top: 44px; }
   .navbar.has-announcement.scrolled { top: 0; }
+  .nav-actions {
+    gap: 12px;
+  }
+  .nav-actions > .nav-link {
+    display: none;
+  }
+  .nav-actions > .btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    border-radius: 14px;
+  }
   .user-menu .nav-link {
     padding: 8px 14px;
     font-size: 13px;
@@ -5125,6 +5135,10 @@ const vIntersect = {
   .navbar-container {
     padding: 0 16px;
   }
+
+  .logo {
+    gap: 10px;
+  }
   
   .logo-icon {
     width: 40px;
@@ -5137,6 +5151,16 @@ const vIntersect = {
   
   .logo-text span {
     display: none;
+  }
+
+  .nav-actions {
+    gap: 10px;
+  }
+
+  .nav-actions > .btn {
+    min-width: 0;
+    padding: 10px 16px;
+    font-size: 13px;
   }
   
   /* 用户菜单简化 */
