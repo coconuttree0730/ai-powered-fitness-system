@@ -5,32 +5,32 @@ spring:
 
   ai:
     ollama:
-      base-url: ${OLLAMA_BASE_URL}
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       embedding:
-        model: ${OLLAMA_EMBEDDING_MODEL}
+        model: ${OLLAMA_EMBEDDING_MODEL:embeddinggemma:300m}
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-      database: ${REDIS_DATABASE}
-      timeout: 5000ms
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:myRedisPass123}
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:5000ms}
       lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-          max-wait: -1ms
+          max-active: ${REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:0}
+          max-wait: ${REDIS_POOL_MAX_WAIT:-1ms}
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:fitness_ai_db}
+    username: ${DB_USERNAME:fitness_user}
+    password: ${DB_PASSWORD:myPostgresPass123}
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
 
   flyway:
     enabled: true
@@ -41,12 +41,26 @@ spring:
 
 logging:
   level:
-    com.fitness: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    com.baomidou.mybatisplus: DEBUG
-    org.springframework.ai: DEBUG
-    com.alibaba.cloud.ai: DEBUG
-    org.springframework.ai.chat: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}:%line - %msg%n"
+    root: INFO
+    com.fitness: INFO
+    com.fitness.common.cache: DEBUG
+    com.fitness.modules.banner.service.impl.BannerServiceImpl: DEBUG
+    com.fitness.modules.announcement.service.impl.AnnouncementServiceImpl: DEBUG
+    com.fitness.modules.system.service.impl.SysDictServiceImpl: DEBUG
+    com.fitness.modules.course.service.impl.CourseServiceImpl: DEBUG
+    com.fitness.modules.course.service.impl.CourseSessionServiceImpl: DEBUG
+    com.fitness.modules.user.service.impl.CoachDetailServiceImpl: DEBUG
+    com.fitness.modules.product.service.impl.ProductServiceImpl: DEBUG
+    com.fitness.modules.membership.service.impl.MembershipCardServiceImpl: DEBUG
+    com.fitness.modules.booking.service.impl.RedisBookingReservationService: DEBUG
+    com.fitness.modules.ranking.service.impl.RedisRankingServiceImpl: DEBUG
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.springframework.cache: WARN
+    org.springframework.data.redis: WARN
+    com.baomidou.mybatisplus: WARN
+    org.mybatis: WARN
+    org.springframework.ai: INFO
+    com.alibaba.cloud.ai: INFO
+    org.springframework.ai.chat: INFO
+  

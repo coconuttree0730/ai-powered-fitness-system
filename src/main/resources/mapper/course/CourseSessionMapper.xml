@@ -166,5 +166,13 @@
             update_time = CURRENT_TIMESTAMP
         WHERE id = #{sessionId}
           AND deleted = false
+        <choose>
+            <when test="delta &gt; 0">
+                AND booked_count &lt; capacity
+            </when>
+            <when test="delta &lt; 0">
+                AND booked_count &gt; 0
+            </when>
+        </choose>
     </update>
 </mapper>
