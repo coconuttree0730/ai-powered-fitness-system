@@ -7,7 +7,9 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -113,4 +115,16 @@ public interface UserMapper extends BaseMapper<User> {
                                   @Param("phone") String phone,
                                   @Param("status") Integer status,
                                   @Param("roleCode") String roleCode);
+
+    @Update("UPDATE sys_user SET balance = balance - #{amount}, update_time = NOW() " +
+            "WHERE id = #{userId} AND balance >= #{amount}")
+    int deductBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
+
+    @Update("UPDATE sys_user SET points = points - #{points}, update_time = NOW() " +
+            "WHERE id = #{userId} AND points >= #{points}")
+    int deductPoints(@Param("userId") Long userId, @Param("points") Integer points);
+
+    @Update("UPDATE sys_user SET points = points + #{points}, update_time = NOW() " +
+            "WHERE id = #{userId}")
+    int addPoints(@Param("userId") Long userId, @Param("points") Integer points);
 }

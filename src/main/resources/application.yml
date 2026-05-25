@@ -21,6 +21,8 @@ spring:
       connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:30000}
       idle-timeout: ${DB_POOL_IDLE_TIMEOUT:600000}
       max-lifetime: ${DB_POOL_MAX_LIFETIME:1800000}
+      pool-name: FitnessHikariPool
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION:60000}
 
   flyway:
     enabled: true
@@ -80,11 +82,12 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: true
-    lazy-loading-enabled: true
+    lazy-loading-enabled: false
+    aggressive-lazy-loading: false
     multiple-result-sets-enabled: true
     use-column-label: true
     use-generated-keys: true
-    default-executor-type: simple
+    default-executor-type: reuse
     default-statement-timeout: ${MYBATIS_STATEMENT_TIMEOUT:25000}
   global-config:
     db-config:
