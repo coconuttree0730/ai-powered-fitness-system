@@ -6,6 +6,7 @@ target/
 *.ear
 *.logs
 *.log
+logs/
 
 # IDE
 .idea/
@@ -14,6 +15,10 @@ target/
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
+*.sublime-*
 
 # OS
 .DS_Store
@@ -30,9 +35,29 @@ src/main/resources/application-prod.yml
 # Environment variables
 .env
 
-# Docker volumes
+# Docker
 docker/volumes/
+docker/web-nginx-dist/
+
+# Trae IDE
+.trae/
+
+# Claude IDE local settings
+.claude/settings.local.json
+
+# Personal documents and notes
+docs/my-file/
+Java多线程并发优化方案.md
 
 # Project specific
 bug-log/
-doc/
+
+
+# Archives
+*.zip
+*.tar.gz
+
+# Temporary files
+*.tmp
+
+项目完善路线图.md
