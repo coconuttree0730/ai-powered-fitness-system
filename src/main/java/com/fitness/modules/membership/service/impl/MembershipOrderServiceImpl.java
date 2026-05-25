@@ -205,16 +205,11 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
                 order.setExpireTime(LocalDateTime.now().plusDays(card.getDurationDays()));
                 log.debug("设置会员到期时间: orderNo={}, expireTime={}", orderNo, order.getExpireTime());
 
-                // 赠送积分
-                User user = userMapper.selectById(order.getUserId());
-                log.debug("查询用户信息: userId={}, user={}", order.getUserId(), user);
-                
-                if (user != null && card.getPointsReward() != null && card.getPointsReward() > 0) {
-                    int newPoints = user.getPoints() + card.getPointsReward();
-                    user.setPoints(newPoints);
-                    userMapper.updateById(user);
-                    log.info("用户购买会员卡获得积分: userId={}, pointsReward={}, newTotalPoints={}", 
-                            order.getUserId(), card.getPointsReward(), newPoints);
+                // 赠送积分（原子操作，防止并发丢失更新）
+                if (card.getPointsReward() != null && card.getPointsReward() > 0) {
+                    userMapper.addPoints(order.getUserId(), card.getPointsReward());
+                    log.info("用户购买会员卡获得积分: userId={}, pointsReward={}",
+                            order.getUserId(), card.getPointsReward());
                 }
             }
 
@@ -287,20 +282,11 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
     }
 
     private void handleBalancePay(MembershipOrder order) {
-        User user = userMapper.selectById(order.getUserId());
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "用户不存在");
-        }
-
-        // 检查余额
-        BigDecimal balance = user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO;
-        if (balance.compareTo(order.getPayAmount()) < 0) {
+        // 原子CAS扣减余额，防止并发超扣
+        int affected = userMapper.deductBalance(order.getUserId(), order.getPayAmount());
+        if (affected == 0) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE, "余额不足");
         }
-
-        // 扣除余额
-        user.setBalance(balance.subtract(order.getPayAmount()));
-        userMapper.updateById(user);
 
         // 更新订单状态
         order.setStatus("PAID");
@@ -312,10 +298,9 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
         if (card != null) {
             order.setExpireTime(LocalDateTime.now().plusDays(card.getDurationDays()));
 
-            // 赠送积分
+            // 赠送积分（原子操作）
             if (card.getPointsReward() != null && card.getPointsReward() > 0) {
-                user.setPoints(user.getPoints() + card.getPointsReward());
-                userMapper.updateById(user);
+                userMapper.addPoints(order.getUserId(), card.getPointsReward());
             }
         }
 

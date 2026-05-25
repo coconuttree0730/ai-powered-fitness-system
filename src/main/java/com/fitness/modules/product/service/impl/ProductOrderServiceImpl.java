@@ -139,9 +139,13 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
 
-        User user = userMapper.selectById(userId);
-        user.setPoints(user.getPoints() - priceCalc.getUsePoints());
-        userMapper.updateById(user);
+        // 原子CAS扣减积分，防止并发超扣
+        if (priceCalc.getUsePoints() > 0) {
+            int pointAffected = userMapper.deductPoints(userId, priceCalc.getUsePoints());
+            if (pointAffected == 0) {
+                throw new BusinessException(ErrorCode.POINTS_INSUFFICIENT);
+            }
+        }
 
         ProductOrder order = new ProductOrder();
         order.setOrderNo(generateOrderNo());
@@ -236,9 +240,10 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
         productMapper.increaseStock(order.getProductId(), order.getQuantity());
 
-        User user = userMapper.selectById(order.getUserId());
-        user.setPoints(user.getPoints() + order.getPointsUsed());
-        userMapper.updateById(user);
+        // 原子操作退还积分
+        if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
+            userMapper.addPoints(order.getUserId(), order.getPointsUsed());
+        }
 
         order.setStatus("CANCELLED");
         updateById(order);
