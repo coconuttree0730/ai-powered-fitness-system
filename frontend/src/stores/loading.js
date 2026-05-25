@@ -8,7 +8,7 @@ export const useLoadingStore = defineStore('loading', () => {
 
   // 显示全局加载
   function showLoading(text = '加载中...') {
-    loadingText.value = text
+    loadingText.value = text // "加载中..."
     globalLoading.value = true
   }
 

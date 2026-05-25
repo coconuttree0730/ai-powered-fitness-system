@@ -4,16 +4,19 @@ import { login as loginApi, getCurrentUser } from '@/api/auth'
 import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
+  //获取登录信息：用于登录携带token
   const accessToken = ref(
     localStorage.getItem('accessToken') ||
     sessionStorage.getItem('accessToken') ||
     ''
   )
+  //获取登录信息：用于刷新token
   const refreshToken = ref(
     localStorage.getItem('refreshToken') ||
     sessionStorage.getItem('refreshToken') ||
     ''
   )
+
   const userInfo = ref(
     JSON.parse(
       localStorage.getItem('userInfo') ||
@@ -27,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => userRoles.value.includes('ADMIN'))
   const isCoach = computed(() => userRoles.value.includes('COACH'))
   const isMember = computed(() => userRoles.value.includes('MEMBER'))
-
+// 清除存储，登出时执行
   function _clearStorage() {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')

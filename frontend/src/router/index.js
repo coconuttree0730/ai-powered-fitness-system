@@ -269,7 +269,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from) => {
-  document.title = to.meta.title ? `${to.meta.title} - 智能健身房` : '智能健身房'
+  document.title = to.meta.title ? `wzp·APFS |  ${to.meta.title} ` : '智能健身房'
 
   const authStore = useAuthStore()
 

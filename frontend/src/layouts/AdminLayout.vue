@@ -94,6 +94,8 @@
         </el-sub-menu>
       </el-menu>
     </el-aside>
+
+
     <el-container>
       <el-header class="header">
         <div class="header-left">
@@ -131,12 +133,14 @@
       </el-main>
     </el-container>
   </el-container>
+
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserInfo } from '@/composables/useUserInfo'
+
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
   CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder,
