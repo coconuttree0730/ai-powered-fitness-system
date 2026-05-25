@@ -24,7 +24,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAuthorizationDeniedHandler authorizationDeniedHandler;
-    private final CorsConfigurationSource corsConfigurationSource;
+    //private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

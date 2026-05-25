@@ -23,7 +23,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/membership")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 @Tag(name = "会员卡", description = "会员卡用户端接口")
 public class MembershipCardController {
 
@@ -51,6 +50,7 @@ public class MembershipCardController {
 
     @Operation(summary = "创建订单")
     @PostMapping("/orders")
+    @PreAuthorize("isAuthenticated()")
     public Result<MembershipOrderVO> createOrder(@Valid @RequestBody MembershipOrderDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
         return Result.success(orderService.createOrder(dto, userId));
@@ -58,12 +58,14 @@ public class MembershipCardController {
 
     @Operation(summary = "支付订单")
     @PostMapping("/orders/pay")
+    @PreAuthorize("isAuthenticated()")
     public Result<AlipayPayVO> payOrder(@Valid @RequestBody PayOrderDTO dto) {
         return Result.success(orderService.payOrder(dto));
     }
 
     @Operation(summary = "获取订单详情")
     @GetMapping("/orders/{orderNo}")
+    @PreAuthorize("isAuthenticated()")
     public Result<MembershipOrderVO> getOrderDetail(@PathVariable String orderNo) {
         return Result.success(orderService.getOrderDetail(orderNo));
     }
@@ -72,6 +74,7 @@ public class MembershipCardController {
      * 获取我的订单列表
      */
     @GetMapping("/orders/my")
+    @PreAuthorize("isAuthenticated()")
     public Result<List<MembershipOrderVO>> getMyOrders() {
         Long userId = SecurityUtils.getCurrentUserId();
         return Result.success(orderService.getUserOrders(userId));
@@ -79,6 +82,7 @@ public class MembershipCardController {
 
     @Operation(summary = "取消订单")
     @PostMapping("/orders/{orderNo}/cancel")
+    @PreAuthorize("isAuthenticated()")
     public Result<Void> cancelOrder(@PathVariable String orderNo) {
         Long userId = SecurityUtils.getCurrentUserId();
         orderService.cancelOrder(orderNo, userId);
@@ -89,6 +93,7 @@ public class MembershipCardController {
      * 获取我的会员信息
      */
     @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
     public Result<UserMembershipVO> getMyMembership() {
         Long userId = SecurityUtils.getCurrentUserId();
         return Result.success(userMembershipService.getUserMembership(userId));
@@ -96,6 +101,7 @@ public class MembershipCardController {
 
     @Operation(summary = "检查会员是否有效")
     @GetMapping("/check")
+    @PreAuthorize("isAuthenticated()")
     public Result<Boolean> checkMembershipValid() {
         Long userId = SecurityUtils.getCurrentUserId();
         return Result.success(userMembershipService.checkMembershipValid(userId));

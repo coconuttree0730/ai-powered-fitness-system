@@ -27,4 +27,18 @@ public class AsyncConfig implements AsyncConfigurer {
 
         return new DelegatingSecurityContextAsyncTaskExecutor(executor);
     }
+
+    @Bean(name = "ioTaskExecutor")
+    public Executor ioTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(8);
+        executor.setMaxPoolSize(16);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("io-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+
+        return new DelegatingSecurityContextAsyncTaskExecutor(executor);
+    }
 }
