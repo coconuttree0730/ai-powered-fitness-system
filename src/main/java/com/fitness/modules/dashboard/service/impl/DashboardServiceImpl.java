@@ -19,6 +19,7 @@ import com.fitness.modules.dashboard.model.vo.UserGrowthVO;
 import com.fitness.modules.dashboard.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,22 +46,41 @@ public class DashboardServiceImpl implements DashboardService {
     private final DashboardMapper dashboardMapper;
     private final AIService aiService;
     private final DashboardPromptTemplates dashboardPromptTemplates;
+    @Qualifier("ioTaskExecutor")
+    private final Executor ioTaskExecutor;
     private final Random random = new Random();
 
     @Override
     public DashboardStatsVO getDashboardStats() {
-        log.info("获取仪表盘统计数据");
+        log.info("获取仪表盘统计数据（并行查询）");
+
+        CompletableFuture<Integer> totalMembersF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalMembers, ioTaskExecutor);
+        CompletableFuture<Integer> activeMembersF = CompletableFuture.supplyAsync(
+            dashboardMapper::countActiveMembers, ioTaskExecutor);
+        CompletableFuture<Integer> totalCoursesF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalCourses, ioTaskExecutor);
+        CompletableFuture<Integer> totalBookingsF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalBookings, ioTaskExecutor);
+        CompletableFuture<Integer> totalEquipmentF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalEquipment, ioTaskExecutor);
+        CompletableFuture<Integer> todayOrdersF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTodayOrders, ioTaskExecutor);
+        CompletableFuture<BigDecimal> todayRevenueF = CompletableFuture.supplyAsync(
+            dashboardMapper::sumTodayRevenue, ioTaskExecutor);
+
+        CompletableFuture.allOf(totalMembersF, activeMembersF, totalCoursesF,
+            totalBookingsF, totalEquipmentF, todayOrdersF, todayRevenueF).join();
 
         DashboardStatsVO stats = new DashboardStatsVO();
-        stats.setTotalMembers(dashboardMapper.countTotalMembers());
-        stats.setActiveMembers(dashboardMapper.countActiveMembers());
-        stats.setTotalCourses(dashboardMapper.countTotalCourses());
-        stats.setTotalBookings(dashboardMapper.countTotalBookings());
-        stats.setTotalEquipment(dashboardMapper.countTotalEquipment());
-        stats.setTodayOrders(dashboardMapper.countTodayOrders());
-
-        BigDecimal todayRevenue = dashboardMapper.sumTodayRevenue();
-        stats.setTodayRevenue(todayRevenue != null ? todayRevenue : BigDecimal.ZERO);
+        stats.setTotalMembers(totalMembersF.join());
+        stats.setActiveMembers(activeMembersF.join());
+        stats.setTotalCourses(totalCoursesF.join());
+        stats.setTotalBookings(totalBookingsF.join());
+        stats.setTotalEquipment(totalEquipmentF.join());
+        stats.setTodayOrders(todayOrdersF.join());
+        BigDecimal revenue = todayRevenueF.join();
+        stats.setTodayRevenue(revenue != null ? revenue : BigDecimal.ZERO);
 
         return stats;
     }
@@ -268,78 +290,96 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /**
-     * 收集分析数据
+     * 收集分析数据（并行查询）
      */
     private Map<String, Object> collectAnalysisData(AnalysisType type) {
         Map<String, Object> variables = new HashMap<>();
 
-        // 会员数据
-        Integer totalMembers = dashboardMapper.countTotalMembers();
-        Integer activeMembers = dashboardMapper.countActiveMembers();
+        // 14个独立查询全部并行发起
+        CompletableFuture<Integer> totalMembersF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalMembers, ioTaskExecutor);
+        CompletableFuture<Integer> activeMembersF = CompletableFuture.supplyAsync(
+            dashboardMapper::countActiveMembers, ioTaskExecutor);
+        CompletableFuture<Integer> totalCoursesF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalCourses, ioTaskExecutor);
+        CompletableFuture<Integer> totalBookingsF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalBookings, ioTaskExecutor);
+        CompletableFuture<Integer> totalEquipmentF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTotalEquipment, ioTaskExecutor);
+        CompletableFuture<Integer> normalEquipmentF = CompletableFuture.supplyAsync(
+            dashboardMapper::countNormalEquipment, ioTaskExecutor);
+        CompletableFuture<Integer> maintenanceEquipmentF = CompletableFuture.supplyAsync(
+            dashboardMapper::countMaintenanceEquipment, ioTaskExecutor);
+        CompletableFuture<Integer> repairEquipmentF = CompletableFuture.supplyAsync(
+            dashboardMapper::countRepairEquipment, ioTaskExecutor);
+        CompletableFuture<Integer> offlineEquipmentF = CompletableFuture.supplyAsync(
+            dashboardMapper::countOfflineEquipment, ioTaskExecutor);
+        CompletableFuture<List<PeakHoursVO>> peakHoursF = CompletableFuture.supplyAsync(
+            dashboardMapper::selectPeakHours, ioTaskExecutor);
+        CompletableFuture<List<CourseStatsVO>> courseStatsF = CompletableFuture.supplyAsync(
+            dashboardMapper::selectCourseStats, ioTaskExecutor);
+        CompletableFuture<List<RepairStatsVO>> repairStatsF = CompletableFuture.supplyAsync(
+            dashboardMapper::selectRepairStats, ioTaskExecutor);
+        CompletableFuture<Integer> todayOrdersF = CompletableFuture.supplyAsync(
+            dashboardMapper::countTodayOrders, ioTaskExecutor);
+        CompletableFuture<BigDecimal> todayRevenueF = CompletableFuture.supplyAsync(
+            dashboardMapper::sumTodayRevenue, ioTaskExecutor);
+
+        // 营收趋势和用户增长需要参数，单独处理
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(6);
+        String startStr = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String endStr = endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        CompletableFuture<List<RevenueTrendVO>> revenueTrendF = CompletableFuture.supplyAsync(
+            () -> dashboardMapper.selectRevenueTrend(startStr, endStr, "day"), ioTaskExecutor);
+        CompletableFuture<List<UserGrowthVO>> userGrowthF = CompletableFuture.supplyAsync(
+            () -> dashboardMapper.selectUserGrowth(startStr, endStr), ioTaskExecutor);
+
+        // 等待全部完成
+        CompletableFuture.allOf(
+            totalMembersF, activeMembersF, totalCoursesF, totalBookingsF,
+            totalEquipmentF, normalEquipmentF, maintenanceEquipmentF,
+            repairEquipmentF, offlineEquipmentF, peakHoursF, courseStatsF,
+            repairStatsF, todayOrdersF, todayRevenueF, revenueTrendF, userGrowthF
+        ).join();
+
+        // 聚合结果
+        Integer totalMembers = totalMembersF.join();
+        Integer activeMembers = activeMembersF.join();
         double activeRate = totalMembers > 0 ? (activeMembers * 100.0 / totalMembers) : 0;
         variables.put("totalMembers", totalMembers);
         variables.put("activeMembers", activeMembers);
         variables.put("activeRate", String.format("%.1f", activeRate));
 
-        // 课程数据
-        Integer totalCourses = dashboardMapper.countTotalCourses();
-        Integer totalBookings = dashboardMapper.countTotalBookings();
+        Integer totalCourses = totalCoursesF.join();
+        Integer totalBookings = totalBookingsF.join();
         double avgBookingPerCourse = totalCourses > 0 ? (totalBookings * 1.0 / totalCourses) : 0;
         variables.put("totalCourses", totalCourses);
         variables.put("totalBookings", totalBookings);
         variables.put("avgBookingPerCourse", String.format("%.1f", avgBookingPerCourse));
 
-        // 器材数据
-        Integer totalEquipment = dashboardMapper.countTotalEquipment();
-        Integer normalEquipment = dashboardMapper.countNormalEquipment();
-        Integer maintenanceEquipment = dashboardMapper.countMaintenanceEquipment();
-        Integer repairEquipment = dashboardMapper.countRepairEquipment();
-        Integer offlineEquipment = dashboardMapper.countOfflineEquipment();
+        Integer totalEquipment = totalEquipmentF.join();
+        Integer normalEquipment = normalEquipmentF.join();
         double equipmentGoodRate = totalEquipment > 0 ? (normalEquipment * 100.0 / totalEquipment) : 0;
         variables.put("totalEquipment", totalEquipment);
         variables.put("normalEquipment", normalEquipment);
-        variables.put("maintenanceEquipment", maintenanceEquipment);
-        variables.put("repairEquipment", repairEquipment);
-        variables.put("offlineEquipment", offlineEquipment);
+        variables.put("maintenanceEquipment", maintenanceEquipmentF.join());
+        variables.put("repairEquipment", repairEquipmentF.join());
+        variables.put("offlineEquipment", offlineEquipmentF.join());
         variables.put("equipmentGoodRate", String.format("%.1f", equipmentGoodRate));
 
-        // 到店高峰时间
-        List<PeakHoursVO> peakHours = dashboardMapper.selectPeakHours();
-        variables.put("peakHoursData", formatPeakHours(peakHours));
+        variables.put("peakHoursData", formatPeakHours(peakHoursF.join()));
+        variables.put("courseStatsData", formatCourseStats(courseStatsF.join()));
+        variables.put("revenueTrendData", formatRevenueTrend(revenueTrendF.join()));
+        variables.put("userGrowthData", formatUserGrowth(userGrowthF.join()));
+        variables.put("repairStatsData", formatRepairStats(repairStatsF.join()));
 
-        // 课程分类统计
-        List<CourseStatsVO> courseStats = dashboardMapper.selectCourseStats();
-        variables.put("courseStatsData", formatCourseStats(courseStats));
-
-        // 营收趋势数据（本周）
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(6);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        List<RevenueTrendVO> revenueTrend = dashboardMapper.selectRevenueTrend(
-            startDate.format(formatter),
-            endDate.format(formatter),
-            "day"
-        );
-        variables.put("revenueTrendData", formatRevenueTrend(revenueTrend));
-
-        // 用户增长趋势（本周）
-        List<UserGrowthVO> userGrowth = dashboardMapper.selectUserGrowth(
-            startDate.format(formatter),
-            endDate.format(formatter)
-        );
-        variables.put("userGrowthData", formatUserGrowth(userGrowth));
-
-        // 报修处理统计
-        List<RepairStatsVO> repairStats = dashboardMapper.selectRepairStats();
-        variables.put("repairStatsData", formatRepairStats(repairStats));
-
-        // 会员卡销售统计（模拟数据）
+        // 会员卡销售统计（模拟数据，CPU计算，无需并行）
         MemberCardStatsVO memberCardStats = getMemberCardStats();
         variables.put("memberCardStatsData", formatMemberCardStats(memberCardStats));
 
-        // 今日数据
-        Integer todayOrders = dashboardMapper.countTodayOrders();
-        BigDecimal todayRevenue = dashboardMapper.sumTodayRevenue();
+        Integer todayOrders = todayOrdersF.join();
+        BigDecimal todayRevenue = todayRevenueF.join();
         variables.put("todayOrders", todayOrders);
         variables.put("todayRevenue", todayRevenue != null ? todayRevenue : BigDecimal.ZERO);
 
