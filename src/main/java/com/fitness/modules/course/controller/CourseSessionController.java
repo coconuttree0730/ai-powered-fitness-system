@@ -5,12 +5,15 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
 import com.fitness.modules.course.model.vo.CourseSessionVO;
 import com.fitness.modules.course.service.CourseSessionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "课程节次", description = "课程节次相关接口")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/course-sessions")
@@ -19,6 +22,7 @@ public class CourseSessionController {
 
     private final CourseSessionService sessionService;
 
+    @Operation(summary = "获取课程节次列表")
     @GetMapping("/list")
     @PreAuthorize("isAuthenticated()")
     public Result<Page<CourseSessionVO>> getSessionList(@Valid CourseQueryDTO query) {
@@ -27,6 +31,7 @@ public class CourseSessionController {
         return Result.success(page);
     }
 
+    @Operation(summary = "获取课程节次详情")
     @GetMapping("/{sessionId}")
     public Result<CourseSessionVO> getSessionDetail(@PathVariable Long sessionId) {
         log.info("获取课程实例详情: sessionId={}", sessionId);
@@ -34,6 +39,7 @@ public class CourseSessionController {
         return Result.success(vo);
     }
 
+    @Operation(summary = "获取即将开始的课程节次")
     @GetMapping("/upcoming")
     @PreAuthorize("isAuthenticated()")
     public Result<java.util.List<CourseSessionVO>> getUpcomingSessions(
@@ -42,6 +48,7 @@ public class CourseSessionController {
         return Result.success(sessions);
     }
 
+    @Operation(summary = "手动触发未来课程实例生成")
     @PostMapping("/generate")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> generateFutureSessions(@RequestParam(defaultValue = "4") Integer weeksAhead) {

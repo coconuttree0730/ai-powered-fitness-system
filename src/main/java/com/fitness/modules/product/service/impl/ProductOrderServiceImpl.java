@@ -2,6 +2,8 @@ package com.fitness.modules.product.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.product.mapper.ProductMapper;
@@ -13,11 +15,13 @@ import com.fitness.modules.product.model.entity.ProductOrder;
 import com.fitness.modules.product.model.vo.PriceCalculationVO;
 import com.fitness.modules.product.model.vo.ProductOrderVO;
 import com.fitness.modules.product.service.ProductOrderService;
+import com.fitness.modules.ranking.service.RedisRankingService;
 import com.fitness.modules.user.mapper.UserMapper;
 import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import com.fitness.modules.user.model.entity.User;
 import com.fitness.modules.user.model.entity.UserFitnessProfile;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +43,8 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
     private final UserFitnessProfileMapper userFitnessProfileMapper;
+    private final RedisRankingService redisRankingService;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     private static final BigDecimal POINTS_TO_MONEY_RATE = new BigDecimal("0.01");
 
@@ -95,6 +101,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.PRODUCT_PUBLIC_LIST, allEntries = true)
     public ProductOrderVO createOrder(ProductOrderDTO dto, Long userId) {
         Product product = productMapper.selectById(dto.getProductId());
         if (product == null) {
@@ -153,6 +160,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         order.setCoachId(product.getCoachId());
 
         save(order);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
 
         return convertToVO(order);
     }
@@ -177,6 +185,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         if (order.getCoachId() != null) {
             bindCoachToMember(order.getUserId(), order.getCoachId());
         }
+        redisRankingService.incrementProductSalesScore(order.getProductId(), order.getQuantity().doubleValue());
 
         return convertToVO(order);
     }
@@ -214,6 +223,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.PRODUCT_PUBLIC_LIST, allEntries = true)
     public void cancelOrder(String orderNo) {
         ProductOrder order = productOrderMapper.selectByOrderNo(orderNo);
         if (order == null) {
@@ -232,6 +242,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
         order.setStatus("CANCELLED");
         updateById(order);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
     }
 
     @Override

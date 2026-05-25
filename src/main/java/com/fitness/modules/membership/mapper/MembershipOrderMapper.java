@@ -19,4 +19,7 @@ public interface MembershipOrderMapper extends BaseMapper<MembershipOrder> {
 
     @Select("SELECT * FROM membership_order WHERE status = 'PENDING' AND create_time < #{time}")
     List<MembershipOrder> selectTimeoutOrders(@Param("time") java.time.LocalDateTime time);
+
+    @Select("SELECT COUNT(1) FROM membership_order WHERE card_id = #{cardId}")
+    long countByCardId(@Param("cardId") Long cardId);
 }

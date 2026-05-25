@@ -5,6 +5,8 @@ import com.fitness.modules.product.model.dto.ProductDTO;
 import com.fitness.modules.product.model.dto.StockUpdateDTO;
 import com.fitness.modules.product.model.vo.ProductVO;
 import com.fitness.modules.product.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "商品管理（后台）", description = "后台商品管理接口")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/products")
@@ -21,6 +24,7 @@ public class ProductAdminController {
 
     private final ProductService productService;
 
+    @Operation(summary = "获取商品管理列表")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<ProductVO>> list(
@@ -31,6 +35,7 @@ public class ProductAdminController {
         return Result.success(productService.getAllProducts(category, status, keyword));
     }
 
+    @Operation(summary = "创建商品")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<ProductVO> create(@Valid @RequestBody ProductDTO dto) {
@@ -38,6 +43,7 @@ public class ProductAdminController {
         return Result.success(productService.createProduct(dto));
     }
 
+    @Operation(summary = "更新商品")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<ProductVO> update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
@@ -46,6 +52,7 @@ public class ProductAdminController {
         return Result.success(productService.updateProduct(dto));
     }
 
+    @Operation(summary = "删除商品")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> delete(@PathVariable Long id) {
@@ -54,6 +61,7 @@ public class ProductAdminController {
         return Result.success();
     }
 
+    @Operation(summary = "更新商品状态")
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam String status) {
@@ -62,6 +70,7 @@ public class ProductAdminController {
         return Result.success();
     }
 
+    @Operation(summary = "更新商品库存")
     @PutMapping("/{id}/stock")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<ProductVO> updateStock(@PathVariable Long id, @Valid @RequestBody StockUpdateDTO dto) {

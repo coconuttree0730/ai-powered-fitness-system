@@ -78,6 +78,10 @@ public interface BookingMapper extends BaseMapper<Booking> {
             "AND status IN (0, 1) AND deleted = false")
     int countByUserIdAndSessionId(@Param("userId") Long userId, @Param("sessionId") Long sessionId);
 
+    @Select("SELECT user_id FROM fitness_booking " +
+            "WHERE session_id = #{sessionId} AND status IN (0, 1) AND deleted = false")
+    List<Long> selectActiveUserIdsBySessionId(@Param("sessionId") Long sessionId);
+
     /**
      * 检查用户是否已预约课程（兼容旧数据）
      *

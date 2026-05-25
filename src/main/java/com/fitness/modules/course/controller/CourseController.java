@@ -7,15 +7,15 @@ import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.model.vo.CourseCategoryVO;
 import com.fitness.modules.course.model.vo.CourseVO;
 import com.fitness.modules.course.service.CourseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 课程查询控制器（公开接口）：首页展示接口
- */
+@Tag(name = "课程浏览", description = "会员端课程浏览接口")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/courses")
@@ -24,12 +24,7 @@ public class CourseController {
 
     private final CourseService courseService;
 
-    /**
-     * 获取课程详情
-     *
-     * @param courseId 课程ID
-     * @return 课程详情
-     */
+    @Operation(summary = "获取课程详情")
     @GetMapping("/{courseId}")
     public Result<CourseVO> getCourseById(@PathVariable Long courseId) {
         log.info("获取课程详情请求: courseId={}", courseId);
@@ -37,12 +32,7 @@ public class CourseController {
         return Result.success(courseVO);
     }
 
-    /**
-     * 获取课程列表（管理员）
-     *
-     * @param query 查询条件
-     * @return 课程列表
-     */
+    @Operation(summary = "获取课程管理列表")
     @GetMapping("/list")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
     public Result<Page<CourseVO>> getCourseList(@Valid CourseQueryDTO query) {
@@ -52,12 +42,7 @@ public class CourseController {
         return Result.success(page);
     }
 
-    /**
-     * 获取公开课程列表（游客可看）
-     *
-     * @param query 查询条件
-     * @return 课程列表
-     */
+    @Operation(summary = "获取公开课程列表")
     @GetMapping("/public/list")
     public Result<Page<CourseVO>> getPublicCourseList(@Valid CourseQueryDTO query) {
         log.info("获取公开课程列表请求: category={}, keyword={}", query.getCategory(), query.getKeyword());
@@ -65,11 +50,7 @@ public class CourseController {
         return Result.success(page);
     }
 
-    /**
-     * 获取所有课程分类列表
-     *
-     * @return 分类列表
-     */
+    @Operation(summary = "获取课程分类列表")
     @GetMapping("/categories")
     public Result<java.util.List<String>> getCourseCategories() {
         log.info("获取课程分类列表请求");
@@ -77,11 +58,7 @@ public class CourseController {
         return Result.success(categories);
     }
 
-    /**
-     * 获取首页课程体系数据（按分类分组）
-     *
-     * @return 课程体系分类列表
-     */
+    @Operation(summary = "获取首页课程体系数据")
     @GetMapping("/homepage/categories")
     public Result<java.util.List<CourseCategoryVO>> getHomePageCourses() {
         log.info("获取首页课程体系数据请求");
@@ -89,12 +66,7 @@ public class CourseController {
         return Result.success(categories);
     }
 
-    /**
-     * 获取首页课程卡片列表
-     *
-     * @param limit 限制数量（默认6）
-     * @return 课程卡片列表
-     */
+    @Operation(summary = "获取首页课程卡片列表")
     @GetMapping("/homepage/cards")
     public Result<java.util.List<CourseCardVO>> getHomePageCourseCards(
             @RequestParam(required = false, defaultValue = "6") Integer limit) {

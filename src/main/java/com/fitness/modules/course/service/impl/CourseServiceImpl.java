@@ -3,6 +3,9 @@ package com.fitness.modules.course.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fitness.common.cache.CacheKeyBuilder;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.minio.service.FileService;
@@ -14,6 +17,7 @@ import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.model.vo.CourseCategoryVO;
 import com.fitness.modules.course.model.vo.CourseVO;
 import com.fitness.modules.course.service.CourseService;
+import com.fitness.modules.ranking.service.RedisRankingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,11 +34,12 @@ import java.util.List;
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements CourseService {
 
     private final FileService fileService;
+    private final RedisRankingService redisRankingService;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createCourse(CourseDTO dto) {
-        // 校验时间合法性
         validateCourseTime(dto.getStartTime(), dto.getEndTime());
 
         Course course = new Course();
@@ -43,8 +48,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         course.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
 
         this.save(course);
+        clearPublicCaches();
         log.info("课程创建成功: courseId={}, courseName={}", course.getId(), course.getCourseName());
-
         return course.getId();
     }
 
@@ -56,18 +61,17 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
         }
 
-        // 校验时间合法性
         validateCourseTime(dto.getStartTime(), dto.getEndTime());
 
-        // 如果更换了图片，删除旧图片
-        if (StringUtils.hasText(dto.getImageUrl()) 
+        if (StringUtils.hasText(dto.getImageUrl())
                 && !dto.getImageUrl().equals(existingCourse.getImageUrl())
                 && StringUtils.hasText(existingCourse.getImageUrl())) {
             try {
                 fileService.deleteFile(existingCourse.getImageUrl());
                 log.info("课程旧图片删除成功: courseId={}, oldImageUrl={}", courseId, existingCourse.getImageUrl());
             } catch (Exception e) {
-                log.warn("课程旧图片删除失败: courseId={}, oldImageUrl={}, error={}", courseId, existingCourse.getImageUrl(), e.getMessage());
+                log.warn("课程旧图片删除失败: courseId={}, oldImageUrl={}, error={}",
+                        courseId, existingCourse.getImageUrl(), e.getMessage());
             }
         }
 
@@ -78,6 +82,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
 
         this.updateById(existingCourse);
+        clearPublicCaches();
         log.info("课程更新成功: courseId={}", courseId);
     }
 
@@ -94,11 +99,13 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 fileService.deleteFile(existingCourse.getImageUrl());
                 log.info("课程图片删除成功: courseId={}, imageUrl={}", courseId, existingCourse.getImageUrl());
             } catch (Exception e) {
-                log.warn("课程图片删除失败: courseId={}, imageUrl={}, error={}", courseId, existingCourse.getImageUrl(), e.getMessage());
+                log.warn("课程图片删除失败: courseId={}, imageUrl={}, error={}",
+                        courseId, existingCourse.getImageUrl(), e.getMessage());
             }
         }
 
         this.removeById(courseId);
+        clearPublicCaches();
         log.info("课程删除成功: courseId={}", courseId);
     }
 
@@ -114,82 +121,112 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Override
     public Page<CourseVO> getCourseList(CourseQueryDTO query) {
         Page<Course> page = new Page<>(query.getPageNum(), query.getPageSize());
-        return baseMapper.selectCourseList(page, query);
-    }
-
-    @Override
-    public Page<CourseVO> getPublicCourseList(CourseQueryDTO query) {
-        Page<Course> page = new Page<>(query.getPageNum(), query.getPageSize());
-        return baseMapper.selectCourseList(page, query);
-    }
-
-    @Override
-    public List<String> getCourseCategories() {
-        return baseMapper.selectDistinctCategories();
-    }
-
-    @Override
-    public List<CourseCategoryVO> getHomePageCourses() {
-        // 定义固定的分类映射（与前端保持一致）- 使用数据库中的中文分类名称
-        List<CourseCategoryVO> result = new ArrayList<>();
-
-        // 全部课程
-        CourseCategoryVO allCategory = new CourseCategoryVO();
-        allCategory.setKey("all");
-        allCategory.setLabel("全部课程");
-        allCategory.setCourses(baseMapper.selectHomePageCourses(6));
-        result.add(allCategory);
-
-        // 力量训练
-        CourseCategoryVO strengthCategory = new CourseCategoryVO();
-        strengthCategory.setKey("strength");
-        strengthCategory.setLabel("力量训练");
-        strengthCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("力量训练", 6));
-        result.add(strengthCategory);
-
-        // 有氧燃脂
-        CourseCategoryVO cardioCategory = new CourseCategoryVO();
-        cardioCategory.setKey("cardio");
-        cardioCategory.setLabel("有氧燃脂");
-        cardioCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("有氧燃脂", 6));
-        result.add(cardioCategory);
-
-        // 瑜伽普拉提
-        CourseCategoryVO yogaCategory = new CourseCategoryVO();
-        yogaCategory.setKey("yoga");
-        yogaCategory.setLabel("瑜伽普拉提");
-        List<CourseCardVO> yogaCourses = new ArrayList<>();
-        yogaCourses.addAll(baseMapper.selectHomePageCoursesByCategory("瑜伽普拉提", 6));
-        yogaCategory.setCourses(yogaCourses);
-        result.add(yogaCategory);
-
-        // 拳击格斗
-        CourseCategoryVO boxingCategory = new CourseCategoryVO();
-        boxingCategory.setKey("boxing");
-        boxingCategory.setLabel("拳击格斗");
-        boxingCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("拳击格斗", 6));
-        result.add(boxingCategory);
-
-        log.info("获取首页课程体系数据成功，共{}个分类", result.size());
+        Page<CourseVO> result = baseMapper.selectCourseList(page, query);
+        log.debug("[DB QUERY] admin course list, page={}, size={}, total={}, category={}, keyword={}, coachId={}, dayOfWeek={}",
+                query.getPageNum(),
+                query.getPageSize(),
+                result.getTotal(),
+                query.getCategory(),
+                query.getKeyword(),
+                query.getCoachId(),
+                query.getDayOfWeek());
         return result;
     }
 
     @Override
-    public List<CourseCardVO> getHomePageCourseCards(Integer limit) {
-        if (limit == null || limit <= 0) {
-            limit = 6;
+    public Page<CourseVO> getPublicCourseList(CourseQueryDTO query) {
+        if (StringUtils.hasText(query.getKeyword())) {
+            redisRankingService.recordSearchKeyword("course", query.getKeyword());
         }
-        List<CourseCardVO> courses = baseMapper.selectHomePageCourses(limit);
-        log.info("获取首页课程卡片数据成功，共{}条", courses.size());
-        return courses;
+        return redisTemplateCacheSupport.getOrLoad(
+                RedisCacheNames.COURSE_PUBLIC_LIST,
+                CacheKeyBuilder.join(query),
+                () -> {
+                    Page<Course> page = new Page<>(query.getPageNum(), query.getPageSize());
+                    Page<CourseVO> result = baseMapper.selectCourseList(page, query);
+                    log.debug("[DB LOAD] public course list, page={}, size={}, total={}, category={}, keyword={}, coachId={}, dayOfWeek={}",
+                            query.getPageNum(),
+                            query.getPageSize(),
+                            result.getTotal(),
+                            query.getCategory(),
+                            query.getKeyword(),
+                            query.getCoachId(),
+                            query.getDayOfWeek());
+                    return result;
+                }
+        );
     }
 
-    /**
-     * 校验课程时间合法性
-     *
-     * @param startTime 开始时间
-     * @param endTime   结束时间
-     */
+    @Override
+    public List<String> getCourseCategories() {
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.COURSE_CATEGORIES, "all", () -> {
+            List<String> categories = baseMapper.selectDistinctCategories();
+            log.debug("[DB LOAD] course categories, count={}", categories.size());
+            return categories;
+        });
+    }
+
+    @Override
+    public List<CourseCategoryVO> getHomePageCourses() {
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.COURSE_HOME_CATEGORIES, "all", () -> {
+            List<CourseCategoryVO> result = new ArrayList<>();
+
+            CourseCategoryVO allCategory = new CourseCategoryVO();
+            allCategory.setKey("all");
+            allCategory.setLabel("全部课程");
+            allCategory.setCourses(baseMapper.selectHomePageCourses(6));
+            result.add(allCategory);
+
+            CourseCategoryVO strengthCategory = new CourseCategoryVO();
+            strengthCategory.setKey("strength");
+            strengthCategory.setLabel("力量训练");
+            strengthCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("力量训练", 6));
+            result.add(strengthCategory);
+
+            CourseCategoryVO cardioCategory = new CourseCategoryVO();
+            cardioCategory.setKey("cardio");
+            cardioCategory.setLabel("有氧燃脂");
+            cardioCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("有氧燃脂", 6));
+            result.add(cardioCategory);
+
+            CourseCategoryVO yogaCategory = new CourseCategoryVO();
+            yogaCategory.setKey("yoga");
+            yogaCategory.setLabel("瑜伽普拉提");
+            yogaCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("瑜伽普拉提", 6));
+            result.add(yogaCategory);
+
+            CourseCategoryVO boxingCategory = new CourseCategoryVO();
+            boxingCategory.setKey("boxing");
+            boxingCategory.setLabel("拳击格斗");
+            boxingCategory.setCourses(baseMapper.selectHomePageCoursesByCategory("拳击格斗", 6));
+            result.add(boxingCategory);
+
+            log.debug("[DB LOAD] homepage course categories, count={}", result.size());
+            return result;
+        });
+    }
+
+    @Override
+    public List<CourseCardVO> getHomePageCourseCards(Integer limit) {
+        Integer safeLimit = (limit == null || limit <= 0) ? 6 : limit;
+        return redisTemplateCacheSupport.getOrLoad(
+                RedisCacheNames.COURSE_HOME_CARDS,
+                CacheKeyBuilder.join(safeLimit),
+                () -> {
+                    List<CourseCardVO> courses = baseMapper.selectHomePageCourses(safeLimit);
+                    log.debug("[DB LOAD] homepage course cards, limit={}, count={}", safeLimit, courses.size());
+                    return courses;
+                }
+        );
+    }
+
+    private void clearPublicCaches() {
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_PUBLIC_LIST);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_CATEGORIES);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_HOME_CATEGORIES);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_HOME_CARDS);
+    }
+
     private void validateCourseTime(LocalTime startTime, LocalTime endTime) {
         if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "结束时间必须晚于开始时间");

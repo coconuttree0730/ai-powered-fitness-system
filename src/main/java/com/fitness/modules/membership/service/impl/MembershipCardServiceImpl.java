@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.membership.mapper.MembershipCardContentMapper;
 import com.fitness.modules.membership.mapper.MembershipCardMapper;
 import com.fitness.modules.membership.mapper.MembershipCardTypeMapper;
+import com.fitness.modules.membership.mapper.MembershipOrderMapper;
 import com.fitness.modules.membership.model.dto.MembershipCardContentDTO;
 import com.fitness.modules.membership.model.dto.MembershipCardDTO;
 import com.fitness.modules.membership.model.dto.MembershipCardQueryDTO;
@@ -21,6 +24,7 @@ import com.fitness.modules.membership.model.vo.MembershipCardVO;
 import com.fitness.modules.membership.service.MembershipCardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -38,9 +42,18 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
 
     private final MembershipCardContentMapper contentMapper;
     private final MembershipCardTypeMapper typeMapper;
+    private final MembershipOrderMapper orderMapper;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(
+            value = {
+                    RedisCacheNames.MEMBERSHIP_ACTIVE_CARDS,
+                    RedisCacheNames.MEMBERSHIP_RECOMMEND_CARDS
+            },
+            allEntries = true
+    )
     public MembershipCardVO createCard(MembershipCardDTO dto) {
         log.debug("开始创建会员卡: name={}, typeCode={}", dto.getName(), dto.getTypeCode());
 
@@ -76,11 +89,19 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
         }
 
         log.info("创建会员卡成功: cardId={}, name={}", card.getId(), card.getName());
+        clearMembershipCaches();
         return getCardDetail(card.getId());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(
+            value = {
+                    RedisCacheNames.MEMBERSHIP_ACTIVE_CARDS,
+                    RedisCacheNames.MEMBERSHIP_RECOMMEND_CARDS
+            },
+            allEntries = true
+    )
     public MembershipCardVO updateCard(Long id, MembershipCardDTO dto) {
         MembershipCard card = getById(id);
         if (card == null) {
@@ -110,15 +131,27 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
             saveContents(id, dto.getContents());
         }
 
+        clearMembershipCaches();
         return getCardDetail(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(
+            value = {
+                    RedisCacheNames.MEMBERSHIP_ACTIVE_CARDS,
+                    RedisCacheNames.MEMBERSHIP_RECOMMEND_CARDS
+            },
+            allEntries = true
+    )
     public void deleteCard(Long id) {
         MembershipCard card = getById(id);
         if (card == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "会员卡不存在");
+        }
+
+        if (orderMapper.countByCardId(id) > 0) {
+            throw new BusinessException(409, "会员卡已有订单记录，无法删除，请先下架该会员卡");
         }
 
         // 删除内容项
@@ -126,6 +159,7 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
 
         // 删除会员卡
         removeById(id);
+        clearMembershipCaches();
     }
 
     @Override
@@ -176,14 +210,23 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
 
     @Override
     public List<MembershipCardVO> listActiveCards() {
-        List<MembershipCard> list = baseMapper.selectActiveCards();
-        return convertToVOListWithContents(list);
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.MEMBERSHIP_ACTIVE_CARDS, "all", () -> {
+            List<MembershipCard> list = baseMapper.selectActiveCards();
+            List<MembershipCardVO> cards = convertToVOListWithContents(list);
+            log.debug("[DB LOAD] active membership cards, count={}", cards.size());
+            return cards;
+        });
     }
 
     @Override
     public List<MembershipCardVO> listRecommendCards(Integer limit) {
-        List<MembershipCard> list = baseMapper.selectRecommendCards(limit);
-        return convertToVOListWithContents(list);
+        Integer safeLimit = limit == null ? 4 : limit;
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.MEMBERSHIP_RECOMMEND_CARDS, String.valueOf(safeLimit), () -> {
+            List<MembershipCard> list = baseMapper.selectRecommendCards(safeLimit);
+            List<MembershipCardVO> cards = convertToVOListWithContents(list);
+            log.debug("[DB LOAD] recommend membership cards, limit={}, count={}", safeLimit, cards.size());
+            return cards;
+        });
     }
 
     @Override
@@ -305,5 +348,10 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
             case "OTHER" -> "其他";
             default -> contentType;
         };
+    }
+
+    private void clearMembershipCaches() {
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.MEMBERSHIP_ACTIVE_CARDS);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.MEMBERSHIP_RECOMMEND_CARDS);
     }
 }

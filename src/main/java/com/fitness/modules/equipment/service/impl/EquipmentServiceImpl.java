@@ -103,10 +103,10 @@ public class EquipmentServiceImpl implements EquipmentService {
         }
 
         // 检查是否有待处理的报修记录
-        List<RepairVO> repairs = equipmentRepairMapper.selectAllRepairs();
+        List<RepairVO> repairs = equipmentRepairMapper.selectRepairsByEquipmentId(id);
         boolean hasPendingRepair = repairs.stream()
-                .anyMatch(r -> r.getStatus().equals(RepairStatus.PENDING.getCode())
-                        || r.getStatus().equals(RepairStatus.PROCESSING.getCode()));
+                .anyMatch(r -> RepairStatus.PENDING.getCode().equals(r.getStatus())
+                        || RepairStatus.PROCESSING.getCode().equals(r.getStatus()));
 
         if (hasPendingRepair) {
             throw new BusinessException(ErrorCode.EQUIPMENT_IN_USE);

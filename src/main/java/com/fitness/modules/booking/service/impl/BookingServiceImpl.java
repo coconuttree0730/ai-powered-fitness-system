@@ -1,6 +1,8 @@
 package com.fitness.modules.booking.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.modules.booking.mapper.BookingMapper;
@@ -11,10 +13,16 @@ import com.fitness.modules.booking.model.entity.Booking;
 import com.fitness.modules.booking.model.vo.BookingListVO;
 import com.fitness.modules.booking.model.vo.BookingVO;
 import com.fitness.modules.booking.service.BookingService;
+import com.fitness.modules.course.mapper.CourseMapper;
 import com.fitness.modules.course.mapper.CourseSessionMapper;
 import com.fitness.modules.course.model.vo.CourseSessionVO;
+import com.fitness.modules.ranking.service.RedisRankingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,56 +38,72 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingMapper bookingMapper;
     private final CourseSessionMapper sessionMapper;
+    private final CourseMapper courseMapper;
+    private final BookingReservationService bookingReservationService;
+    private final RedisRankingService redisRankingService;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheNames.COURSE_PUBLIC_LIST, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CATEGORIES, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CARDS, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.UPCOMING_SESSIONS, allEntries = true)
+    })
     public Long createBooking(Long userId, BookingDTO dto) {
         log.info("创建预约: userId={}, sessionId={}", userId, dto.getSessionId());
 
-        // 1. 检查课程实例是否存在且可预约
         CourseSessionVO session = sessionMapper.selectSessionDetail(dto.getSessionId());
         if (session == null) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程不存在");
         }
-
-        // 2. 检查课程实例是否已开始或已结束
         if (isSessionStarted(session)) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程已开始，无法预约");
         }
 
-        // 3. 检查是否已满员
-        if (session.getBookedCount() >= session.getCapacity()) {
-            throw new BusinessException(ErrorCode.COURSE_FULL);
+        boolean reservedInRedis = false;
+        try {
+            BookingReservationResult reservationResult =
+                    bookingReservationService.tryReserve(dto.getSessionId(), userId, session);
+            if (reservationResult.status() == BookingReservationResult.Status.ALREADY_BOOKED) {
+                throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS, "您已预约这节课");
+            }
+            if (reservationResult.status() == BookingReservationResult.Status.FULL) {
+                throw new BusinessException(ErrorCode.COURSE_FULL, "名额已满，请选择其他时间");
+            }
+            reservedInRedis = reservationResult.successResult();
+        } catch (BusinessException exception) {
+            throw exception;
+        } catch (DataAccessException exception) {
+            log.warn("Redis预约预占失败，降级走数据库流程: sessionId={}, userId={}", dto.getSessionId(), userId, exception);
         }
 
-        // 4. 检查用户是否已预约该实例（同一个session不能重复预约）
-        int existing = bookingMapper.countByUserIdAndSessionId(userId, dto.getSessionId());
-        if (existing > 0) {
-            throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS, "您已预约了这节课");
+        try {
+            Long bookingId = persistBooking(userId, dto, session, reservedInRedis);
+            clearCourseCaches();
+            return bookingId;
+        } catch (DataIntegrityViolationException exception) {
+            if (reservedInRedis) {
+                bookingReservationService.releaseReservation(dto.getSessionId(), userId, session);
+            }
+            throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS, "您已预约这节课");
+        } catch (RuntimeException exception) {
+            if (reservedInRedis) {
+                bookingReservationService.releaseReservation(dto.getSessionId(), userId, session);
+            }
+            throw exception;
         }
-
-        // 5. 原子性增加实例预约人数
-        int updated = sessionMapper.updateBookedCount(dto.getSessionId(), 1);
-        if (updated == 0) {
-            throw new BusinessException(ErrorCode.COURSE_FULL, "名额已满，请选择其他时间");
-        }
-
-        // 6. 创建预约记录（绑定具体实例）
-        Booking booking = new Booking();
-        booking.setUserId(userId);
-        booking.setCourseId(session.getCourseId());
-        booking.setSessionId(dto.getSessionId());
-        booking.setBookingTime(LocalDateTime.now());
-        booking.setStatus(0);
-
-        bookingMapper.insert(booking);
-
-        log.info("预约创建成功: bookingId={}, sessionId={}", booking.getId(), dto.getSessionId());
-        return booking.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheNames.COURSE_PUBLIC_LIST, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CATEGORIES, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CARDS, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.UPCOMING_SESSIONS, allEntries = true)
+    })
     public void cancelBooking(Long userId, Long bookingId, BookingCancelDTO dto) {
         log.info("取消预约: userId={}, bookingId={}", userId, bookingId);
 
@@ -94,9 +118,9 @@ public class BookingServiceImpl implements BookingService {
             throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "预约已取消");
         }
 
-        // 基于实例判断是否可取消
+        CourseSessionVO session = null;
         if (booking.getSessionId() != null) {
-            CourseSessionVO session = sessionMapper.selectSessionDetail(booking.getSessionId());
+            session = sessionMapper.selectSessionDetail(booking.getSessionId());
             if (session != null && isSessionStarted(session)) {
                 throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "课程已开始，无法取消");
             }
@@ -107,11 +131,17 @@ public class BookingServiceImpl implements BookingService {
             throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL);
         }
 
-        // 减少实例预约人数
         if (booking.getSessionId() != null) {
-            sessionMapper.updateBookedCount(booking.getSessionId(), -1);
+            int stockUpdated = sessionMapper.updateBookedCount(booking.getSessionId(), -1);
+            if (stockUpdated == 0) {
+                throw new BusinessException(ErrorCode.BOOKING_CANNOT_CANCEL, "预约名额回滚失败");
+            }
+            if (session != null) {
+                releaseReservationQuietly(booking.getSessionId(), userId, session);
+            }
         }
 
+        clearCourseCaches();
         log.info("预约取消成功: bookingId={}", bookingId);
     }
 
@@ -175,6 +205,12 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheNames.COURSE_PUBLIC_LIST, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CATEGORIES, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CARDS, allEntries = true),
+            @CacheEvict(value = RedisCacheNames.UPCOMING_SESSIONS, allEntries = true)
+    })
     public void rejectBooking(Long bookingId) {
         log.info("拒绝预约: bookingId={}", bookingId);
 
@@ -192,9 +228,17 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (booking.getSessionId() != null) {
-            sessionMapper.updateBookedCount(booking.getSessionId(), -1);
+            CourseSessionVO session = sessionMapper.selectSessionDetail(booking.getSessionId());
+            int stockUpdated = sessionMapper.updateBookedCount(booking.getSessionId(), -1);
+            if (stockUpdated == 0) {
+                throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "预约名额回滚失败");
+            }
+            if (session != null) {
+                releaseReservationQuietly(booking.getSessionId(), booking.getUserId(), session);
+            }
         }
 
+        clearCourseCaches();
         log.info("预约拒绝成功: bookingId={}", bookingId);
     }
 
@@ -219,8 +263,47 @@ public class BookingServiceImpl implements BookingService {
         log.info("预约完成: bookingId={}", bookingId);
     }
 
+    private Long persistBooking(Long userId, BookingDTO dto, CourseSessionVO session, boolean reservedInRedis) {
+        if (!reservedInRedis) {
+            int existing = bookingMapper.countByUserIdAndSessionId(userId, dto.getSessionId());
+            if (existing > 0) {
+                throw new BusinessException(ErrorCode.BOOKING_ALREADY_EXISTS, "您已预约这节课");
+            }
+        }
+
+        int updated = sessionMapper.updateBookedCount(dto.getSessionId(), 1);
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.COURSE_FULL, "名额已满，请选择其他时间");
+        }
+
+        Booking booking = new Booking();
+        booking.setUserId(userId);
+        booking.setCourseId(session.getCourseId());
+        booking.setSessionId(dto.getSessionId());
+        booking.setBookingTime(LocalDateTime.now());
+        booking.setStatus(0);
+        bookingMapper.insert(booking);
+
+        courseMapper.incrementTotalBookingCount(session.getCourseId());
+        redisRankingService.incrementCourseBookingScore(session.getCourseId(), 1D);
+        redisRankingService.incrementCoachBookingScore(session.getCoachId(), 1D);
+
+        log.info("预约创建成功: bookingId={}, sessionId={}", booking.getId(), dto.getSessionId());
+        return booking.getId();
+    }
+
+    private void releaseReservationQuietly(Long sessionId, Long userId, CourseSessionVO session) {
+        try {
+            bookingReservationService.releaseReservation(sessionId, userId, session);
+        } catch (DataAccessException exception) {
+            log.warn("Redis预约回滚失败，等待后续缓存重建: sessionId={}, userId={}", sessionId, userId, exception);
+        }
+    }
+
     private void setStatusDesc(BookingListVO vo) {
-        if (vo.getStatus() == null) return;
+        if (vo.getStatus() == null) {
+            return;
+        }
         switch (vo.getStatus()) {
             case 0 -> vo.setStatusDesc("待确认");
             case 1 -> vo.setStatusDesc("已确认");
@@ -231,7 +314,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void setStatusDesc(BookingVO vo) {
-        if (vo.getStatus() == null) return;
+        if (vo.getStatus() == null) {
+            return;
+        }
         switch (vo.getStatus()) {
             case 0 -> vo.setStatusDesc("待确认");
             case 1 -> vo.setStatusDesc("已确认");
@@ -241,10 +326,6 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    /**
-     * 判断课程实例是否已开始
-     * 基于具体的 session_date + start_time 判断
-     */
     private boolean isSessionStarted(CourseSessionVO session) {
         if (session.getSessionDate() == null || session.getStartTime() == null) {
             return false;
@@ -253,15 +334,19 @@ public class BookingServiceImpl implements BookingService {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
-        // 实例日期在今天之前 → 已结束
         if (session.getSessionDate().isBefore(today)) {
             return true;
         }
-        // 实例日期在今天之后 → 未开始
         if (session.getSessionDate().isAfter(today)) {
             return false;
         }
-        // 今天就是上课日 → 比较时间
         return !now.isBefore(session.getStartTime());
+    }
+
+    private void clearCourseCaches() {
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_PUBLIC_LIST);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_HOME_CATEGORIES);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_HOME_CARDS);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.UPCOMING_SESSIONS);
     }
 }

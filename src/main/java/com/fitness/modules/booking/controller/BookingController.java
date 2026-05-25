@@ -7,6 +7,8 @@ import com.fitness.modules.booking.model.dto.BookingDTO;
 import com.fitness.modules.booking.model.vo.BookingListVO;
 import com.fitness.modules.booking.model.vo.BookingVO;
 import com.fitness.modules.booking.service.BookingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,23 +17,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 预约控制器（用户端）
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/bookings")
 @RequiredArgsConstructor
+@Tag(name = "课程预约", description = "课程预约用户端接口")
 public class BookingController {
 
     private final BookingService bookingService;
 
-    /**
-     * 创建预约
-     *
-     * @param dto 预约信息
-     * @return 预约ID
-     */
+    @Operation(summary = "创建预约")
     @PostMapping
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Long> createBooking(@Valid @RequestBody BookingDTO dto) {
@@ -41,13 +36,7 @@ public class BookingController {
         return Result.success(bookingId);
     }
 
-    /**
-     * 取消预约
-     *
-     * @param bookingId 预约ID
-     * @param dto       取消信息
-     * @return 操作结果
-     */
+    @Operation(summary = "取消预约")
     @PutMapping("/{bookingId}/cancel")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> cancelBooking(@PathVariable Long bookingId,
@@ -58,11 +47,7 @@ public class BookingController {
         return Result.success();
     }
 
-    /**
-     * 获取我的预约列表
-     *
-     * @return 预约列表
-     */
+    @Operation(summary = "获取我的预约列表")
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public Result<List<BookingListVO>> getMyBookings() {
@@ -72,12 +57,7 @@ public class BookingController {
         return Result.success(list);
     }
 
-    /**
-     * 获取预约详情
-     *
-     * @param bookingId 预约ID
-     * @return 预约详情
-     */
+    @Operation(summary = "获取预约详情")
     @GetMapping("/{bookingId}")
     @PreAuthorize("isAuthenticated()")
     public Result<BookingVO> getBookingDetail(@PathVariable Long bookingId) {

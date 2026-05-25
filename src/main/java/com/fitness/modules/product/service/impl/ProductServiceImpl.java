@@ -2,6 +2,8 @@ package com.fitness.modules.product.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.product.mapper.ProductMapper;
@@ -11,32 +13,41 @@ import com.fitness.modules.product.model.entity.Product;
 import com.fitness.modules.product.model.vo.ProductVO;
 import com.fitness.modules.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
 
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
+
     @Override
     public List<ProductVO> getProductList(String category) {
-        List<Product> products;
-        if (category == null || "all".equals(category)) {
-            products = lambdaQuery()
-                .eq(Product::getStatus, "ACTIVE")
-                .orderByDesc(Product::getSortOrder)
-                .list();
-        } else {
-            products = lambdaQuery()
-                .eq(Product::getStatus, "ACTIVE")
-                .eq(Product::getCategory, category)
-                .orderByDesc(Product::getSortOrder)
-                .list();
-        }
-        return products.stream().map(this::convertToVO).collect(Collectors.toList());
+        String normalizedCategory = category == null ? "all" : category;
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.PRODUCT_PUBLIC_LIST, normalizedCategory, () -> {
+            List<Product> products;
+            if ("all".equals(normalizedCategory)) {
+                products = lambdaQuery()
+                        .eq(Product::getStatus, "ACTIVE")
+                        .orderByDesc(Product::getSortOrder)
+                        .list();
+            } else {
+                products = lambdaQuery()
+                        .eq(Product::getStatus, "ACTIVE")
+                        .eq(Product::getCategory, normalizedCategory)
+                        .orderByDesc(Product::getSortOrder)
+                        .list();
+            }
+            List<ProductVO> productVOs = products.stream().map(this::convertToVO).collect(Collectors.toList());
+            log.debug("[DB LOAD] public product list, category={}, count={}", normalizedCategory, productVOs.size());
+            return productVOs;
+        });
     }
 
     @Override
@@ -52,12 +63,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         if (keyword != null && !keyword.isEmpty()) {
             query.and(q -> q.like(Product::getName, keyword)
-                           .or()
-                           .like(Product::getCode, keyword));
+                    .or()
+                    .like(Product::getCode, keyword));
         }
 
         products = query.orderByDesc(Product::getSortOrder).list();
-        return products.stream().map(this::convertToVO).collect(Collectors.toList());
+        List<ProductVO> productVOs = products.stream().map(this::convertToVO).collect(Collectors.toList());
+        log.debug("[DB QUERY] admin product list, category={}, status={}, keyword={}, count={}",
+                category, status, keyword, productVOs.size());
+        return productVOs;
     }
 
     @Override
@@ -75,16 +89,17 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         Product product = new Product();
         BeanUtil.copyProperties(dto, product);
         save(product);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
         return convertToVO(product);
     }
 
     @Override
     public List<ProductVO> getProductsByCoachId(Long coachId) {
         List<Product> products = lambdaQuery()
-            .eq(Product::getCoachId, coachId)
-            .eq(Product::getCategory, "COURSE")
-            .orderByAsc(Product::getSortOrder)
-            .list();
+                .eq(Product::getCoachId, coachId)
+                .eq(Product::getCategory, "COURSE")
+                .orderByAsc(Product::getSortOrder)
+                .list();
         return products.stream().map(this::convertToVO).collect(Collectors.toList());
     }
 
@@ -96,6 +111,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
         removeById(productId);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
     }
 
     @Override
@@ -107,6 +123,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         product.setStatus(status);
         updateById(product);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
     }
 
     @Override
@@ -118,6 +135,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         BeanUtil.copyProperties(dto, product);
         updateById(product);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
         return convertToVO(product);
     }
 
@@ -125,6 +143,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Transactional(rollbackFor = Exception.class)
     public void deleteProduct(Long id) {
         removeById(id);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
     }
 
     @Override
@@ -136,6 +155,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         product.setStatus(status);
         updateById(product);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
     }
 
     @Override
@@ -147,12 +167,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
 
         int currentStock = product.getStock() != null ? product.getStock() : 0;
-
         if ("IN".equals(dto.getType())) {
-            // 入库
             product.setStock(currentStock + dto.getQuantity());
         } else if ("OUT".equals(dto.getType())) {
-            // 出库
             if (currentStock < dto.getQuantity()) {
                 throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
             }
@@ -162,6 +179,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
 
         updateById(product);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
         return convertToVO(product);
     }
 

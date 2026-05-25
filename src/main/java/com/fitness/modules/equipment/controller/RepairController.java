@@ -7,6 +7,8 @@ import com.fitness.modules.equipment.model.dto.RepairDTO;
 import com.fitness.modules.equipment.model.vo.MyRepairVO;
 import com.fitness.modules.equipment.model.vo.RepairVO;
 import com.fitness.modules.equipment.service.EquipmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,15 +18,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 器材报修控制器（会员端）
- * 需要用户登录才能访问
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/repairs")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@Tag(name = "器材维修", description = "器材报修用户端接口")
 public class RepairController {
 
     private final EquipmentService equipmentService;
@@ -45,12 +44,7 @@ public class RepairController {
         return Result.success(repairId);
     }
 
-    /**
-     * 获取我的报修记录
-     *
-     * @param userDetails 当前登录用户
-     * @return 报修记录列表
-     */
+    @Operation(summary = "获取我的报修记录")
     @GetMapping("/my")
     public Result<List<MyRepairVO>> getMyRepairs(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = userDetails.getId();
@@ -59,13 +53,7 @@ public class RepairController {
         return Result.success(repairs);
     }
 
-    /**
-     * 获取报修详情
-     *
-     * @param userDetails 当前登录用户
-     * @param repairId    报修ID
-     * @return 报修详情
-     */
+    @Operation(summary = "获取报修详情")
     @GetMapping("/{repairId}")
     public Result<RepairVO> getRepairDetail(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                             @PathVariable Long repairId) {
@@ -75,13 +63,7 @@ public class RepairController {
         return Result.success(repair);
     }
 
-    /**
-     * 取消报修
-     *
-     * @param userDetails 当前登录用户
-     * @param repairId    报修ID
-     * @return 成功响应
-     */
+    @Operation(summary = "取消报修")
     @PutMapping("/{repairId}/cancel")
     public Result<Void> cancelRepair(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                      @PathVariable Long repairId) {

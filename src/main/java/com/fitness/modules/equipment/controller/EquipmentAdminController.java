@@ -3,6 +3,8 @@ package com.fitness.modules.equipment.controller;
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.UserDetailsImpl;
 import com.fitness.modules.equipment.model.dto.EquipmentDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.fitness.modules.equipment.model.dto.RepairHandleDTO;
 import com.fitness.modules.equipment.model.entity.EquipmentType;
 import com.fitness.modules.equipment.model.vo.RepairRecordVO;
@@ -17,23 +19,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 器材管理控制器（管理员）
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/equipment")
 @RequiredArgsConstructor
+@Tag(name = "器材管理", description = "器材管理后台接口")
 public class EquipmentAdminController {
 
     private final EquipmentService equipmentService;
 
-    /**
-     * 创建器材
-     *
-     * @param dto 器材信息
-     * @return 创建的器材ID
-     */
+    @Operation(summary = "创建器材")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Long> createEquipment(@Valid @RequestBody EquipmentDTO dto) {
@@ -42,13 +37,7 @@ public class EquipmentAdminController {
         return Result.success(equipmentId);
     }
 
-    /**
-     * 更新器材
-     *
-     * @param id  器材ID
-     * @param dto 器材信息
-     * @return 操作结果
-     */
+    @Operation(summary = "更新器材")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> updateEquipment(@PathVariable Long id, @Valid @RequestBody EquipmentDTO dto) {
@@ -57,12 +46,7 @@ public class EquipmentAdminController {
         return Result.success();
     }
 
-    /**
-     * 删除器材
-     *
-     * @param id 器材ID
-     * @return 操作结果
-     */
+    @Operation(summary = "删除器材")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> deleteEquipment(@PathVariable Long id) {
@@ -71,11 +55,7 @@ public class EquipmentAdminController {
         return Result.success();
     }
 
-    /**
-     * 获取所有报修记录
-     *
-     * @return 报修记录列表
-     */
+    @Operation(summary = "获取所有报修记录")
     @GetMapping("/repairs")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<RepairVO>> getAllRepairs() {
@@ -84,12 +64,7 @@ public class EquipmentAdminController {
         return Result.success(repairs);
     }
 
-    /**
-     * 获取报修详情
-     *
-     * @param repairId 报修ID
-     * @return 报修详情
-     */
+    @Operation(summary = "获取报修详情")
     @GetMapping("/repairs/{repairId}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<RepairVO> getRepairDetail(@PathVariable Long repairId) {
@@ -98,14 +73,7 @@ public class EquipmentAdminController {
         return Result.success(repair);
     }
 
-    /**
-     * 处理报修
-     *
-     * @param userDetails 当前登录管理员
-     * @param repairId    报修ID
-     * @param dto         处理信息
-     * @return 操作结果
-     */
+    @Operation(summary = "处理报修")
     @PutMapping("/repairs/{repairId}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> handleRepair(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -117,14 +85,7 @@ public class EquipmentAdminController {
         return Result.success();
     }
 
-    /**
-     * 添加处理记录
-     *
-     * @param userDetails 当前登录管理员
-     * @param repairId    报修ID
-     * @param content     处理内容
-     * @return 操作结果
-     */
+    @Operation(summary = "添加处理记录")
     @PostMapping("/repairs/{repairId}/records")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> addRepairRecord(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -136,12 +97,7 @@ public class EquipmentAdminController {
         return Result.success();
     }
 
-    /**
-     * 获取报修处理记录
-     *
-     * @param repairId 报修ID
-     * @return 处理记录列表
-     */
+    @Operation(summary = "获取报修处理记录")
     @GetMapping("/repairs/{repairId}/records")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<RepairRecordVO>> getRepairRecords(@PathVariable Long repairId) {
@@ -164,11 +120,7 @@ public class EquipmentAdminController {
         return Result.success();
     }
 
-    /**
-     * 获取所有器材类型
-     *
-     * @return 器材类型列表
-     */
+    @Operation(summary = "获取所有器材类型")
     @GetMapping("/types")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<EquipmentType>> getAllEquipmentTypes() {

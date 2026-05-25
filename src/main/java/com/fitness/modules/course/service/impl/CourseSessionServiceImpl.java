@@ -2,6 +2,9 @@ package com.fitness.modules.course.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fitness.common.cache.CacheKeyBuilder;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.modules.course.mapper.CourseMapper;
 import com.fitness.modules.course.mapper.CourseSessionMapper;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
@@ -17,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,6 +32,7 @@ public class CourseSessionServiceImpl implements CourseSessionService {
 
     private final CourseSessionMapper sessionMapper;
     private final CourseMapper courseMapper;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     public Page<CourseSessionVO> getSessionList(CourseQueryDTO query) {
@@ -45,10 +51,16 @@ public class CourseSessionServiceImpl implements CourseSessionService {
 
     @Override
     public List<CourseSessionVO> getUpcomingSessions(Integer limit) {
-        if (limit == null || limit <= 0) {
-            limit = 10;
-        }
-        return sessionMapper.selectUpcomingSessions(limit);
+        Integer safeLimit = (limit == null || limit <= 0) ? 10 : limit;
+        return redisTemplateCacheSupport.getOrLoad(
+                RedisCacheNames.UPCOMING_SESSIONS,
+                CacheKeyBuilder.join(safeLimit),
+                () -> {
+                    List<CourseSessionVO> sessions = sessionMapper.selectUpcomingSessions(safeLimit);
+                    log.debug("[DB LOAD] upcoming sessions, limit={}, count={}", safeLimit, sessions.size());
+                    return sessions;
+                }
+        );
     }
 
     @Override
@@ -58,9 +70,9 @@ public class CourseSessionServiceImpl implements CourseSessionService {
 
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Course::getDeleted, false)
-               .eq(Course::getStatus, 1)
-               .isNotNull(Course::getDayOfWeek)
-               .isNotNull(Course::getStartTime);
+                .eq(Course::getStatus, 1)
+                .isNotNull(Course::getDayOfWeek)
+                .isNotNull(Course::getStartTime);
 
         List<Course> activeCourses = courseMapper.selectList(wrapper);
         log.info("找到{}个活跃的周期性课程模板", activeCourses.size());
@@ -73,6 +85,7 @@ public class CourseSessionServiceImpl implements CourseSessionService {
             }
         }
 
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.UPCOMING_SESSIONS);
         log.info("课程实例生成完成");
     }
 
@@ -96,14 +109,10 @@ public class CourseSessionServiceImpl implements CourseSessionService {
                 .collect(Collectors.toList());
         Set<LocalDate> existingSet = new HashSet<>(existingDates);
 
-        int targetDayOfWeek = course.getDayOfWeek();
-        DayOfWeek targetDow = DayOfWeek.of(targetDayOfWeek);
-
+        DayOfWeek targetDow = DayOfWeek.of(course.getDayOfWeek());
         int generated = 0;
         for (int week = 0; week <= weeksAhead; week++) {
-            LocalDate targetDate = today.plusWeeks(week)
-                    .with(TemporalAdjusters.nextOrSame(targetDow));
-
+            LocalDate targetDate = today.plusWeeks(week).with(TemporalAdjusters.nextOrSame(targetDow));
             if (targetDate.isBefore(today)) {
                 continue;
             }
@@ -123,12 +132,12 @@ public class CourseSessionServiceImpl implements CourseSessionService {
             session.setStatus(0);
             session.setCapacity(course.getCapacity() != null ? course.getCapacity() : 20);
             session.setBookedCount(0);
-
             sessionMapper.insert(session);
             generated++;
         }
 
         if (generated > 0) {
+            redisTemplateCacheSupport.evictAll(RedisCacheNames.UPCOMING_SESSIONS);
             log.info("课程[{}]生成了{}个新实例, 范围至{}", courseId, generated, maxDate);
         }
     }

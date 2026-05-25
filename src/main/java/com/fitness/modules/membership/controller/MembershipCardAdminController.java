@@ -16,6 +16,8 @@ import com.fitness.modules.membership.service.MembershipCardService;
 import com.fitness.modules.membership.service.MembershipCardTypeService;
 import com.fitness.modules.membership.service.MembershipOrderService;
 import com.fitness.modules.membership.service.UserMembershipService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +33,7 @@ import java.util.Objects;
 @RequestMapping("/api/v1/admin/membership")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "会员卡管理", description = "会员卡管理后台接口")
 public class MembershipCardAdminController {
 
     private final MembershipCardTypeService cardTypeService;
@@ -40,27 +43,32 @@ public class MembershipCardAdminController {
 
     // ==================== 会员卡类型管理 ====================
 
+    @Operation(summary = "创建会员卡类型")
     @PostMapping("/types")
     public Result<MembershipCardTypeVO> createType(@Valid @RequestBody MembershipCardTypeDTO dto) {
         return Result.success(cardTypeService.createType(dto));
     }
 
+    @Operation(summary = "更新会员卡类型")
     @PutMapping("/types/{id}")
     public Result<MembershipCardTypeVO> updateType(@PathVariable Long id, @Valid @RequestBody MembershipCardTypeDTO dto) {
         return Result.success(cardTypeService.updateType(id, dto));
     }
 
+    @Operation(summary = "删除会员卡类型")
     @DeleteMapping("/types/{id}")
     public Result<Void> deleteType(@PathVariable Long id) {
         cardTypeService.deleteType(id);
         return Result.success();
     }
 
+    @Operation(summary = "根据ID获取会员卡类型")
     @GetMapping("/types/{id}")
     public Result<MembershipCardTypeVO> getTypeById(@PathVariable Long id) {
         return Result.success(cardTypeService.getTypeById(id));
     }
 
+    @Operation(summary = "获取所有会员卡类型")
     @GetMapping("/types")
     public Result<List<MembershipCardTypeVO>> listAllTypes() {
         return Result.success(cardTypeService.listAllTypes());
@@ -89,6 +97,7 @@ public class MembershipCardAdminController {
         return Result.success(cardService.getCardDetail(id));
     }
 
+    @Operation(summary = "获取所有会员卡")
     @GetMapping("/cards")
     public Result<List<MembershipCardVO>> listAllCards() {
         return Result.success(cardService.listAllCards());
@@ -105,6 +114,7 @@ public class MembershipCardAdminController {
         return Result.success(PageResult.of(page));
     }
 
+    @Operation(summary = "获取会员统计信息")
     @GetMapping("/stats")
     public Result<MembershipStatsVO> getStats() {
         MembershipStatsVO stats = new MembershipStatsVO();
