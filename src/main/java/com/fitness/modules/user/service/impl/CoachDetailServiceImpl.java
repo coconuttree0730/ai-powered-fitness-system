@@ -1,6 +1,8 @@
 package com.fitness.modules.user.service.impl;
 
 import cn.hutool.json.JSONUtil;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.minio.model.vo.FileUploadVO;
@@ -23,6 +25,7 @@ import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -45,6 +48,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     private final UserFitnessProfileMapper userFitnessProfileMapper;
     private final FileService fileService;
     private final ProductMapper productMapper;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     public CoachDetailVO getCoachDetail(Long userId) {
@@ -60,6 +64,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.COACH_HOME, allEntries = true)
     public CoachDetailVO updateCoachDetail(CoachDetailDTO dto) {
         Long userId = requireCurrentUserId();
 
@@ -77,11 +82,13 @@ public class CoachDetailServiceImpl implements CoachDetailService {
 
         applyDetailUpdates(detail, dto);
         saveCoachDetail(detail, isNew);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COACH_HOME);
         return convertToVO(detail, userMapper.selectById(userId));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.COACH_HOME, allEntries = true)
     public String uploadPersonalImage(MultipartFile file) {
         Long userId = requireCurrentUserId();
         validateImageFile(file);
@@ -102,12 +109,14 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         detail.setPersonalImageUrl(imageUrl);
         saveCoachDetail(detail, isNew);
 
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COACH_HOME);
         log.info("教练个人图片上传成功: userId={}, url={}", userId, imageUrl);
         return imageUrl;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.COACH_HOME, allEntries = true)
     public void deletePersonalImage() {
         Long userId = requireCurrentUserId();
         CoachDetail detail = coachDetailMapper.selectByUserId(userId);
@@ -119,11 +128,13 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         detail.setPersonalImageUrl(null);
         coachDetailMapper.updateById(detail);
 
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COACH_HOME);
         log.info("教练个人图片删除成功: userId={}", userId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.COACH_HOME, allEntries = true)
     public CoachDetailVO updateTags(List<String> tags) {
         Long userId = requireCurrentUserId();
         validateTags(tags);
@@ -137,19 +148,25 @@ public class CoachDetailServiceImpl implements CoachDetailService {
 
         detail.setTags(JSONUtil.toJsonStr(tags != null ? tags : new ArrayList<>()));
         saveCoachDetail(detail, isNew);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COACH_HOME);
         return convertToVO(detail, userMapper.selectById(userId));
     }
 
     @Override
     public List<HomePageCoachVO> getHomePageCoaches(int limit) {
         int safeLimit = limit <= 0 ? 4 : limit;
-        return coachDetailMapper.selectHomePageCoaches(safeLimit).stream()
-                .map(this::convertToHomePageVO)
-                .collect(Collectors.toList());
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.COACH_HOME, String.valueOf(safeLimit), () -> {
+            List<HomePageCoachVO> coaches = coachDetailMapper.selectHomePageCoaches(safeLimit).stream()
+                    .map(this::convertToHomePageVO)
+                    .collect(Collectors.toList());
+            log.debug("[DB LOAD] homepage coaches, limit={}, count={}", safeLimit, coaches.size());
+            return coaches;
+        });
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisCacheNames.COACH_HOME, allEntries = true)
     public void initCoachDetail(Long userId) {
         if (coachDetailMapper.selectByUserId(userId) != null) {
             return;
@@ -169,6 +186,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
         detail.setRating("99%");
         coachDetailMapper.insert(detail);
 
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COACH_HOME);
         log.info("初始化教练详情成功: userId={}", userId);
     }
 

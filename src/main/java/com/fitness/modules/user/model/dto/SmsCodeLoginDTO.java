@@ -1,5 +1,6 @@
 package com.fitness.modules.user.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Data;
  * 短信验证码登录DTO
  */
 @Data
+@Schema(description = "短信验证码登录请求")
 public class SmsCodeLoginDTO {
 
     /**

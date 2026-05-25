@@ -5,8 +5,6 @@ import com.fitness.common.model.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
-
 /**
  * 用户实体类
  * 对应 sys_user 表

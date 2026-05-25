@@ -1,5 +1,6 @@
 package com.fitness.modules.user.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Data;
  * 发送邮箱验证码DTO
  */
 @Data
+@Schema(description = "发送邮箱验证码请求")
 public class SendEmailCodeDTO {
 
     /**

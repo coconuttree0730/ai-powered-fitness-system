@@ -15,28 +15,37 @@ import com.fitness.modules.user.model.vo.UserVO;
 import com.fitness.modules.user.service.EmailCodeService;
 import com.fitness.modules.user.service.SmsCodeService;
 import com.fitness.modules.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 用户控制器 （会员端：个人信息）
- * 处理用户信息相关接口
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "用户个人信息", description = "当前登录用户的资料查询与资料维护接口")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
@@ -44,12 +53,7 @@ public class UserController {
     private final EmailCodeService emailCodeService;
     private final FileService fileService;
 
-    /**
-     * 获取当前登录用户信息
-     * 需要用户已登录
-     *
-     * @return 用户信息
-     */
+    @Operation(summary = "获取当前用户信息", description = "返回当前登录用户的基础资料、角色和账户信息")
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> getCurrentUserInfo() {
@@ -59,13 +63,7 @@ public class UserController {
         return Result.success(userVO);
     }
 
-    /**
-     * 修改密码
-     * 需要用户已登录
-     *
-     * @param request 包含旧密码和新密码的请求体
-     * @return 操作结果
-     */
+    @Operation(summary = "修改登录密码", description = "校验旧密码后更新当前登录用户的登录密码")
     @PutMapping("/password")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updatePassword(@Valid @RequestBody UpdatePasswordDTO dto) {
@@ -78,12 +76,8 @@ public class UserController {
             return Result.error("修改密码失败");
         }
     }
-    /**
-     * 更新用户名
-     *
-     * @param dto 更新用户名DTO
-     * @return 更新后的用户信息
-     */
+
+    @Operation(summary = "修改用户名", description = "更新当前登录用户的登录用户名")
     @PutMapping("/username")
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updateUsername(@Valid @RequestBody UpdateUsernameDTO dto) {
@@ -93,12 +87,7 @@ public class UserController {
         return Result.success(userVO);
     }
 
-    /**
-     * 发送短信验证码到当前用户绑定的手机号
-     * 用于更换手机号时的身份验证
-     *
-     * @return 操作结果
-     */
+    @Operation(summary = "发送原手机号验证码", description = "向当前账号已绑定的手机号发送验证码，用于更换手机号前的身份校验")
     @PostMapping("/phone/code/old")
     @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> sendOldPhoneCode() {
@@ -113,25 +102,16 @@ public class UserController {
         return sendSmsCodeAndBuildResponse(phone);
     }
 
-    /**
-     * 发送短信验证码到新手机号
-     * 用于更换手机号时验证新手机号
-     *
-     * @param phone 新手机号
-     * @return 操作结果
-     */
+    @Operation(summary = "发送新手机号验证码", description = "向待绑定的新手机号发送验证码，用于更换手机号")
     @PostMapping("/phone/code/new")
     @PreAuthorize("isAuthenticated()")
-    public Result<Map<String, Object>> sendNewPhoneCode(@RequestParam String phone) {
+    public Result<Map<String, Object>> sendNewPhoneCode(
+            @Parameter(description = "待绑定的新手机号", example = "13800138000")
+            @RequestParam String phone) {
         return sendSmsCodeAndBuildResponse(phone);
     }
 
-    /**
-     * 更新手机号
-     *
-     * @param dto 更新手机号DTO
-     * @return 更新后的用户信息
-     */
+    @Operation(summary = "修改手机号", description = "校验新旧手机号验证码后更新当前用户绑定手机号")
     @PutMapping("/phone")
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updatePhone(@Valid @RequestBody UpdatePhoneDTO dto) {
@@ -141,12 +121,7 @@ public class UserController {
         return Result.success(userVO);
     }
 
-    /**
-     * 发送————邮箱验证码————
-     *
-     * @param dto 发送邮箱验证码DTO
-     * @return 操作结果
-     */
+    @Operation(summary = "发送邮箱验证码", description = "向指定新邮箱发送验证码，用于后续绑定或更换邮箱")
     @PostMapping("/email/code")
     @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> sendEmailCode(@Valid @RequestBody SendEmailCodeDTO dto) {
@@ -167,12 +142,7 @@ public class UserController {
         }
     }
 
-    /**
-     * 更新邮箱
-     *
-     * @param dto 更新邮箱DTO
-     * @return 更新后的用户信息
-     */
+    @Operation(summary = "修改邮箱", description = "校验邮箱验证码后更新当前用户绑定邮箱")
     @PutMapping("/email")
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updateEmail(@Valid @RequestBody UpdateEmailDTO dto) {
@@ -182,11 +152,7 @@ public class UserController {
         return Result.success(userVO);
     }
 
-    /**
-     * 发送短信验证码到当前用户绑定的手机号（用于修改密码）
-     *
-     * @return 操作结果
-     */
+    @Operation(summary = "发送改密短信验证码", description = "向当前绑定手机号发送短信验证码，用于短信方式修改密码")
     @PostMapping("/password/code")
     @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> sendPasswordChangeCode() {
@@ -198,7 +164,6 @@ public class UserController {
             return Result.error("当前用户未绑定手机号，无法使用此方式修改密码");
         }
 
-        // 检查每日发送限制
         if (smsCodeService.isDailyLimitExceeded(phone)) {
             throw new BusinessException(ErrorCode.SMS_CODE_DAILY_LIMIT_EXCEEDED);
         }
@@ -221,12 +186,7 @@ public class UserController {
         }
     }
 
-    /**
-     * 通过短信验证码修改密码
-     *
-     * @param dto 修改密码DTO
-     * @return 操作结果
-     */
+    @Operation(summary = "短信验证码修改密码", description = "使用短信验证码校验身份后修改当前用户密码")
     @PutMapping("/password/by-sms")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updatePasswordBySms(@Valid @RequestBody UpdatePasswordBySmsDTO dto) {
@@ -240,38 +200,27 @@ public class UserController {
         }
     }
 
-    /**
-     * 上传用户头像
-     * 上传图片到MinIO并更新用户头像URL
-     *
-     * @param file 头像文件
-     * @return 更新后的用户信息
-     */
-    @PostMapping("/avatar")
+    @Operation(summary = "上传用户头像", description = "上传头像图片并更新当前登录用户的头像地址")
+    @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
-    public Result<UserVO> uploadAvatar(@RequestParam("file") MultipartFile file) {
+    public Result<UserVO> uploadAvatar(
+            @Parameter(description = "头像图片文件")
+            @RequestParam("file") MultipartFile file) {
         Long userId = getCurrentUserId();
         log.info("上传头像请求, userId: {}", userId);
 
-        // 1. 上传图片到MinIO
         com.fitness.integration.minio.model.vo.FileUploadVO uploadResult = fileService.uploadImage(file);
-
-        // 2. 更新用户头像URL到数据库
         UserVO userVO = userService.uploadAvatar(userId, uploadResult.getFileUrl());
 
         return Result.success(userVO);
     }
 
-    /**
-     * 检查用户名是否已存在
-     * 用于修改用户名时的实时校验
-     *
-     * @param username 用户名
-     * @return 是否存在
-     */
+    @Operation(summary = "检查用户名是否可用", description = "用于修改用户名时校验目标用户名是否已被占用")
     @GetMapping("/username/check")
     @PreAuthorize("isAuthenticated()")
-    public Result<Map<String, Object>> checkUsernameExists(@RequestParam String username) {
+    public Result<Map<String, Object>> checkUsernameExists(
+            @Parameter(description = "待校验的用户名", example = "fitness_user")
+            @RequestParam String username) {
         log.info("检查用户名是否存在: {}", username);
         boolean exists = userService.isUsernameExists(username);
         Map<String, Object> result = new HashMap<>();
@@ -280,27 +229,16 @@ public class UserController {
         return Result.success(result);
     }
 
-    /**
-     * 更新用户昵称
-     *
-     * @param request 包含昵称的请求体
-     * @return 更新后的用户信息
-     */
+    @Operation(summary = "修改昵称", description = "更新当前登录用户的展示昵称")
     @PutMapping("/nickname")
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updateNickname(@Valid @RequestBody UpdateNicknameDTO dto) {
         Long userId = getCurrentUserId();
-
         log.info("更新昵称请求, userId: {}, nickname: {}", userId, dto.getNickname());
         UserVO userVO = userService.updateNickname(userId, dto.getNickname().trim());
         return Result.success(userVO);
     }
 
-    /**
-     * 从SecurityContext获取当前用户ID
-     *
-     * @return 用户ID
-     */
     private Result<Map<String, Object>> sendSmsCodeAndBuildResponse(String phone) {
         if (!smsCodeService.canSend(phone)) {
             long remaining = smsCodeService.getRemainingCooldown(phone);
@@ -323,7 +261,6 @@ public class UserController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        // 从Principal中获取用户ID
         Object principal = authentication.getPrincipal();
         if (principal instanceof com.fitness.integration.security.UserDetailsImpl) {
             return ((com.fitness.integration.security.UserDetailsImpl) principal).getId();

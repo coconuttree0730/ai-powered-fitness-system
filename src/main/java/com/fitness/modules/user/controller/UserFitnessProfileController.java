@@ -4,6 +4,8 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.UserFitnessProfileDTO;
 import com.fitness.modules.user.model.vo.UserFitnessProfileVO;
 import com.fitness.modules.user.service.UserFitnessProfileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,14 +15,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 用户健身档案控制器
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/profile")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "用户健身档案", description = "会员健身档案的查询、创建与完善度检测接口")
 public class UserFitnessProfileController {
 
     private final UserFitnessProfileService userFitnessProfileService;
@@ -55,11 +55,7 @@ public class UserFitnessProfileController {
         return Result.success(profile);
     }
 
-    /**
-     * 检查当前用户的健身档案是否已完善
-     *
-     * @return true-已完善，false-未完善
-     */
+    @Operation(summary = "检查健身档案是否完善")
     @GetMapping("/complete")
     @PreAuthorize("isAuthenticated()")
     public Result<Boolean> isProfileComplete() {

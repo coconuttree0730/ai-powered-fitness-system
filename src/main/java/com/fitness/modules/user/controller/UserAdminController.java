@@ -8,24 +8,24 @@ import com.fitness.modules.user.model.dto.UserQueryDTO;
 import com.fitness.modules.user.model.dto.UserUpdateDTO;
 import com.fitness.modules.user.model.vo.UserVO;
 import com.fitness.modules.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-
-/**
- * 用户管理
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
+@Tag(name = "用户管理（后台）", description = "管理员对用户的增删改查及状态管理接口")
 public class UserAdminController {
 
     private final UserService userService;
 
+    @Operation(summary = "分页查询用户列表")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<IPage<UserVO>> getUserPage(@Valid UserQueryDTO query) {
@@ -34,6 +34,7 @@ public class UserAdminController {
         return Result.success(page);
     }
 
+    @Operation(summary = "创建用户")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Long> createUser(@Valid @RequestBody UserDTO dto) {
@@ -42,6 +43,7 @@ public class UserAdminController {
         return Result.success(userId);
     }
 
+    @Operation(summary = "更新用户信息")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
@@ -50,6 +52,7 @@ public class UserAdminController {
         return Result.success();
     }
 
+    @Operation(summary = "重置用户密码")
     @PutMapping("/{id}/password")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordDTO dto) {
@@ -58,6 +61,7 @@ public class UserAdminController {
         return Result.success();
     }
 
+    @Operation(summary = "删除用户")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> deleteUser(@PathVariable Long id) {
@@ -66,6 +70,7 @@ public class UserAdminController {
         return Result.success();
     }
 
+    @Operation(summary = "更新用户状态")
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> updateUserStatus(@PathVariable Long id, @RequestParam Integer status) {

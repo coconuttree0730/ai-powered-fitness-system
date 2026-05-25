@@ -1,5 +1,6 @@
 package com.fitness.modules.user.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Data;
  * 通过短信验证码修改密码DTO
  */
 @Data
+@Schema(description = "短信验证码修改密码请求")
 public class UpdatePasswordBySmsDTO {
 
     /**

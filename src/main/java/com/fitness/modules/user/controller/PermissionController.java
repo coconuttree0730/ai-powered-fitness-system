@@ -4,6 +4,8 @@ import com.fitness.common.constants.RoleConstants;
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.user.service.PermissionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,14 +18,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 权限控制器
- * 提供权限查询相关接口
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Tag(name = "权限管理", description = "当前用户权限与系统角色查询接口")
 public class PermissionController {
 
     private final PermissionService permissionService;
@@ -54,12 +53,7 @@ public class PermissionController {
         return Result.success(result);
     }
 
-    /**
-     * 获取所有角色列表
-     * 仅管理员可访问
-     *
-     * @return 角色列表
-     */
+    @Operation(summary = "获取所有系统角色列表")
     @GetMapping("/roles")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<Map<String, String>>> getAllRoles() {
@@ -76,12 +70,7 @@ public class PermissionController {
         return Result.success(roles);
     }
 
-    /**
-     * 获取当前用户的角色信息
-     * 需要用户已登录
-     *
-     * @return 角色信息
-     */
+    @Operation(summary = "获取当前用户的角色信息")
     @GetMapping("/roles/me")
     @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> getCurrentUserRoles() {
