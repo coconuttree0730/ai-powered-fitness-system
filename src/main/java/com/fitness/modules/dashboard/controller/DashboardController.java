@@ -12,6 +12,8 @@ import com.fitness.modules.dashboard.model.vo.RepairStatsVO;
 import com.fitness.modules.dashboard.model.vo.RevenueTrendVO;
 import com.fitness.modules.dashboard.model.vo.UserGrowthVO;
 import com.fitness.modules.dashboard.service.DashboardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import java.util.List;
  * 提供运营数据统计接口
  */
 @Slf4j
+@Tag(name = "数据仪表盘", description = "运营数据统计与AI分析报告接口")
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @RequiredArgsConstructor
@@ -42,6 +45,7 @@ public class DashboardController {
      *
      * @return 统计数据
      */
+    @Operation(summary = "获取仪表盘统计数据")
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<DashboardStatsVO> getDashboardStats() {
@@ -55,6 +59,7 @@ public class DashboardController {
      *
      * @return 会员卡销量统计
      */
+    @Operation(summary = "获取会员卡销量统计")
     @GetMapping("/member-cards")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<MemberCardStatsVO> getMemberCardStats() {
@@ -68,6 +73,7 @@ public class DashboardController {
      *
      * @return 高峰时间列表
      */
+    @Operation(summary = "获取到店高峰时间")
     @GetMapping("/peak-hours")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<PeakHoursVO>> getPeakHours() {
@@ -81,6 +87,7 @@ public class DashboardController {
      *
      * @return 课程统计列表
      */
+    @Operation(summary = "获取课程统计")
     @GetMapping("/course-stats")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<CourseStatsVO>> getCourseStats() {
@@ -95,6 +102,7 @@ public class DashboardController {
      * @param range 时间范围：today/week/month/year
      * @return 营收趋势数据
      */
+    @Operation(summary = "获取营收趋势数据")
     @GetMapping("/revenue-trend")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<RevenueTrendVO>> getRevenueTrend(
@@ -110,6 +118,7 @@ public class DashboardController {
      * @param range 时间范围：today/week/month/year
      * @return 用户增长数据
      */
+    @Operation(summary = "获取用户增长趋势")
     @GetMapping("/user-growth")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<UserGrowthVO>> getUserGrowth(
@@ -124,6 +133,7 @@ public class DashboardController {
      *
      * @return 器材状态数据
      */
+    @Operation(summary = "获取器材使用状态统计")
     @GetMapping("/equipment-status")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<EquipmentStatusVO> getEquipmentStatus() {
@@ -137,6 +147,7 @@ public class DashboardController {
      *
      * @return 报修统计数据
      */
+    @Operation(summary = "获取报修处理统计")
     @GetMapping("/repair-stats")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<RepairStatsVO>> getRepairStats() {

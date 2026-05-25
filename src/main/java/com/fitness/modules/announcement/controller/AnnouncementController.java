@@ -4,6 +4,8 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.announcement.model.dto.AnnouncementDTO;
 import com.fitness.modules.announcement.model.vo.AnnouncementVO;
 import com.fitness.modules.announcement.service.AnnouncementService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import java.util.List;
  * 公告管理 Controller
  * 基础路径：/api/v1/announcements
  */
+@Tag(name = "公告管理", description = "系统公告的发布、编辑与管理接口")
 @RestController
 @RequestMapping("/api/v1/announcements")
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class AnnouncementController {
      *
      * @return 公告列表
      */
+    @Operation(summary = "获取已发布的公告")
     @GetMapping("/published")
     public Result<List<AnnouncementVO>> getPublishedAnnouncements() {
         List<AnnouncementVO> announcements = announcementService.getPublishedAnnouncements();
@@ -39,6 +43,7 @@ public class AnnouncementController {
      *
      * @return 公告列表
      */
+    @Operation(summary = "获取所有公告")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<AnnouncementVO>> getAllAnnouncements() {
@@ -52,6 +57,7 @@ public class AnnouncementController {
      * @param id 公告ID
      * @return 公告详情
      */
+    @Operation(summary = "根据ID获取公告详情")
     @GetMapping("/{id}")
     public Result<AnnouncementVO> getAnnouncementById(@PathVariable Long id) {
         AnnouncementVO announcement = announcementService.getAnnouncementById(id);
@@ -64,6 +70,7 @@ public class AnnouncementController {
      * @param announcementDTO 公告信息
      * @return 创建后的公告
      */
+    @Operation(summary = "创建公告")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<AnnouncementVO> createAnnouncement(@Valid @RequestBody AnnouncementDTO announcementDTO) {
@@ -78,6 +85,7 @@ public class AnnouncementController {
      * @param announcementDTO 公告信息
      * @return 更新后的公告
      */
+    @Operation(summary = "更新公告")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<AnnouncementVO> updateAnnouncement(@PathVariable Long id, @Valid @RequestBody AnnouncementDTO announcementDTO) {
@@ -91,6 +99,7 @@ public class AnnouncementController {
      * @param id 公告ID
      * @return 成功响应
      */
+    @Operation(summary = "删除公告")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> deleteAnnouncement(@PathVariable Long id) {
@@ -104,6 +113,7 @@ public class AnnouncementController {
      * @param ids 公告ID列表
      * @return 成功响应
      */
+    @Operation(summary = "批量删除公告")
     @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> deleteAnnouncements(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Long> ids) {
@@ -117,6 +127,7 @@ public class AnnouncementController {
      * @param id 公告ID
      * @return 成功响应
      */
+    @Operation(summary = "发布公告")
     @PatchMapping("/{id}/publish")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> publishAnnouncement(@PathVariable Long id) {
@@ -143,6 +154,7 @@ public class AnnouncementController {
      * @param id 公告ID
      * @return 成功响应
      */
+    @Operation(summary = "增加浏览量")
     @PatchMapping("/{id}/view")
     public Result<Void> incrementViewCount(@PathVariable Long id) {
         announcementService.incrementViewCount(id);

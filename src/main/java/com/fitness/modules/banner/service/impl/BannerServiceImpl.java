@@ -3,8 +3,10 @@ package com.fitness.modules.banner.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fitness.common.exception.BusinessException;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.constants.ErrorCode;
+import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.banner.mapper.BannerMapper;
 import com.fitness.modules.banner.model.dto.BannerDTO;
@@ -20,29 +22,31 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 轮播图Service实现类
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> implements BannerService {
 
     private final FileService fileService;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     public List<BannerVO> getActiveBanners() {
-        List<Banner> banners = baseMapper.selectActiveBanners();
-        return banners.stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        return redisTemplateCacheSupport.getOrLoad(RedisCacheNames.ACTIVE_BANNERS, "all", () -> {
+            List<Banner> banners = baseMapper.selectActiveBanners();
+            List<BannerVO> bannerVOs = banners.stream()
+                    .map(this::convertToVO)
+                    .collect(Collectors.toList());
+            log.debug("[DB LOAD] active banners, count={}", bannerVOs.size());
+            return bannerVOs;
+        });
     }
 
     @Override
     public List<BannerVO> getAllBanners() {
         LambdaQueryWrapper<Banner> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByAsc(Banner::getSortOrder)
-               .orderByDesc(Banner::getId);
+                .orderByDesc(Banner::getId);
         List<Banner> banners = list(wrapper);
         return banners.stream()
                 .map(this::convertToVO)
@@ -66,8 +70,8 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
         banner.setId(null);
 
         save(banner);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.ACTIVE_BANNERS);
         log.info("创建轮播图成功: id={}, title={}", banner.getId(), banner.getTitle());
-
         return convertToVO(banner);
     }
 
@@ -87,7 +91,6 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
 
         updateById(existingBanner);
 
-        // 如果图片发生变化，删除旧图片
         if (StringUtils.hasText(oldImageUrl) && !oldImageUrl.equals(newImageUrl)) {
             try {
                 fileService.deleteFile(oldImageUrl);
@@ -97,6 +100,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
             }
         }
 
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.ACTIVE_BANNERS);
         log.info("更新轮播图成功: id={}, title={}", id, existingBanner.getTitle());
         return convertToVO(existingBanner);
     }
@@ -109,7 +113,6 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
             throw new BusinessException(ErrorCode.NOT_FOUND, "轮播图不存在");
         }
 
-        // 删除图片文件
         if (StringUtils.hasText(banner.getImageUrl())) {
             try {
                 fileService.deleteFile(banner.getImageUrl());
@@ -120,6 +123,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
         }
 
         removeById(id);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.ACTIVE_BANNERS);
         log.info("删除轮播图成功: id={}", id);
     }
 
@@ -130,10 +134,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
             return;
         }
 
-        // 查询所有要删除的轮播图
         List<Banner> banners = listByIds(ids);
-
-        // 删除图片文件
         for (Banner banner : banners) {
             if (StringUtils.hasText(banner.getImageUrl())) {
                 try {
@@ -146,6 +147,7 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
         }
 
         removeByIds(ids);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.ACTIVE_BANNERS);
         log.info("批量删除轮播图成功: ids={}", ids);
     }
 
@@ -159,15 +161,10 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
 
         banner.setStatus(status);
         updateById(banner);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.ACTIVE_BANNERS);
         log.info("更新轮播图状态成功: id={}, status={}", id, status);
     }
 
-    /**
-     * 转换为VO
-     *
-     * @param banner 轮播图实体
-     * @return 轮播图VO
-     */
     private BannerVO convertToVO(Banner banner) {
         BannerVO vo = new BannerVO();
         BeanUtil.copyProperties(banner, vo);

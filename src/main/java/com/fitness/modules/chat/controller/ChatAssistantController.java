@@ -10,6 +10,8 @@ import com.fitness.modules.chat.model.vo.ChatSessionVO;
 import com.fitness.modules.chat.model.vo.ChatStreamEventVO;
 import com.fitness.modules.chat.model.vo.FitnessPlanCardVO;
 import com.fitness.modules.chat.service.ChatAssistantService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 
 @Slf4j
+@Tag(name = "AI健身助手", description = "AI健身助手对话、计划生成与管理接口")
 @RestController
 @RequestMapping("/api/v1/chat")
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class ChatAssistantController {
     private final ChatAssistantService chatAssistantService;
     private final ObjectMapper objectMapper;
 
+    @Operation(summary = "创建聊天会话")
     @PostMapping("/sessions")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<ChatSessionVO> createSession() {
@@ -38,6 +42,7 @@ public class ChatAssistantController {
         return Result.success(session);
     }
 
+    @Operation(summary = "发送聊天消息")
     @PostMapping("/messages")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<ChatMessageVO> sendMessage(@Valid @RequestBody ChatMessageDTO dto) {
@@ -46,6 +51,7 @@ public class ChatAssistantController {
         return Result.success(message);
     }
 
+    @Operation(summary = "流式发送聊天消息")
     @PostMapping(value = "/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -75,6 +81,7 @@ public class ChatAssistantController {
                 });
     }
 
+    @Operation(summary = "获取用户会话列表")
     @GetMapping("/sessions")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<List<ChatSessionVO>> getUserSessions() {
@@ -83,6 +90,7 @@ public class ChatAssistantController {
         return Result.success(sessions);
     }
 
+    @Operation(summary = "获取会话详情")
     @GetMapping("/sessions/{sessionId}")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<ChatSessionVO> getSessionDetail(@PathVariable Long sessionId) {
@@ -91,6 +99,7 @@ public class ChatAssistantController {
         return Result.success(session);
     }
 
+    @Operation(summary = "删除会话")
     @DeleteMapping("/sessions/{sessionId}")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Void> deleteSession(@PathVariable Long sessionId) {
@@ -99,6 +108,7 @@ public class ChatAssistantController {
         return Result.success(null);
     }
 
+    @Operation(summary = "获取会话消息列表")
     @GetMapping("/sessions/{sessionId}/messages")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<List<ChatMessageVO>> getSessionMessages(
@@ -110,6 +120,7 @@ public class ChatAssistantController {
         return Result.success(messages);
     }
 
+    @Operation(summary = "生成健身计划")
     @PostMapping("/fitness-plan/generate")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<FitnessPlanCardVO> generateFitnessPlan(
@@ -132,6 +143,7 @@ public class ChatAssistantController {
         return Result.success(planId);
     }
 
+    @Operation(summary = "获取我的健身计划")
     @GetMapping("/fitness-plan/my")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<List<FitnessPlanCardVO>> getMyFitnessPlans() {

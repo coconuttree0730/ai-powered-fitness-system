@@ -8,6 +8,8 @@ import com.fitness.modules.plan.model.dto.SaveFitnessPlanDTO;
 import com.fitness.modules.plan.model.vo.PlanVO;
 import com.fitness.modules.plan.service.FitnessPlanService;
 import com.fitness.modules.plan.service.PlanGenerationTaskManager;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import java.util.Map;
  * 健身计划控制器
  */
 @Slf4j
+@Tag(name = "健身计划", description = "健身计划生成、查询、删除与管理接口")
 @RestController
 @RequestMapping("/api/v1/plans")
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ public class FitnessPlanController {
      *
      * @return 结构化的健身计划JSON数据
      */
+    @Operation(summary = "从个人档案生成健身计划")
     @PostMapping("/generate-from-profile")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Map<String, Object>> generatePlanFromProfile() {
@@ -94,6 +98,7 @@ public class FitnessPlanController {
      * @param planId 计划ID
      * @return 操作结果
      */
+    @Operation(summary = "删除计划")
     @DeleteMapping("/{planId}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> deletePlan(@PathVariable Long planId) {
@@ -107,6 +112,7 @@ public class FitnessPlanController {
      * 异步生成健身计划（从个人档案）
      * 立即返回任务ID，前端轮询获取结果
      */
+    @Operation(summary = "异步从个人档案生成健身计划")
     @PostMapping("/generate-from-profile/async")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Map<String, String>> generatePlanFromProfileAsync() {
@@ -123,6 +129,7 @@ public class FitnessPlanController {
     /**
      * 查询异步生成任务状态
      */
+    @Operation(summary = "查询异步生成任务状态")
     @GetMapping("/generate-from-profile/async/{taskId}")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<PlanGenerationTask> getGenerationTaskStatus(@PathVariable String taskId) {
@@ -133,6 +140,7 @@ public class FitnessPlanController {
         return Result.success(task);
     }
 
+    @Operation(summary = "保存健身计划")
     @PostMapping("/save")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Long> savePlan(@Valid @RequestBody SaveFitnessPlanDTO dto) {
