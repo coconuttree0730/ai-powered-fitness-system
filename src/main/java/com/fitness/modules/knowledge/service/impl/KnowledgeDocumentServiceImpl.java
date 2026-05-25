@@ -190,16 +190,15 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
             );
         }
 
-        log.info("【文档索引】开始向量化处理，共 {} 个切片", chunks.size());
+        log.info("【文档索引】开始批量向量化处理，共 {} 个切片", chunks.size());
+        List<String> contents = chunks.stream()
+            .map(KnowledgeChunk::getContent)
+            .collect(java.util.stream.Collectors.toList());
+        float[][] embeddings = embeddingService.embedBatch(contents);
         for (int i = 0; i < chunks.size(); i++) {
-            KnowledgeChunk chunk = chunks.get(i);
-            log.info("【文档索引】正在处理切片 #{}/{} 的向量化", i + 1, chunks.size());
-
-            float[] embedding = embeddingService.embed(chunk.getContent());
-            chunk.setEmbedding(embedding);
-
-            log.info("【文档索引】切片 #{} 向量化完成，向量维度: {}", i, embedding.length);
+            chunks.get(i).setEmbedding(embeddings[i]);
         }
+        log.info("【文档索引】批量向量化完成，共 {} 个切片", chunks.size());
 
         chunkService.saveChunks(chunks);
         log.info("【文档索引】所有切片已保存到数据库");

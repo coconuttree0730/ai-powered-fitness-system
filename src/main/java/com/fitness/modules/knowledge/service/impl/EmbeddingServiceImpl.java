@@ -9,15 +9,25 @@ import cn.hutool.json.JSONUtil;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.knowledge.service.EmbeddingService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmbeddingServiceImpl implements EmbeddingService {
+
+    @Qualifier("ioTaskExecutor")
+    private final Executor ioTaskExecutor;
 
     @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
     private String ollamaBaseUrl;
@@ -71,9 +81,29 @@ public class EmbeddingServiceImpl implements EmbeddingService {
             return new float[0][];
         }
 
+        // Semaphore限制并发数，防止Ollama过载
+        Semaphore semaphore = new Semaphore(5);
+        List<CompletableFuture<float[]>> futures = new ArrayList<>();
+
+        for (String text : texts) {
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                try {
+                    semaphore.acquire();
+                    try {
+                        return embed(text);
+                    } finally {
+                        semaphore.release();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            }, ioTaskExecutor));
+        }
+
         float[][] embeddings = new float[texts.size()][];
-        for (int i = 0; i < texts.size(); i++) {
-            embeddings[i] = embed(texts.get(i));
+        for (int i = 0; i < futures.size(); i++) {
+            embeddings[i] = futures.get(i).join();
         }
         return embeddings;
     }

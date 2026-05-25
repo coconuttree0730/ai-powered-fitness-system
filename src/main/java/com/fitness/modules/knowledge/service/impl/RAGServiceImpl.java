@@ -14,6 +14,7 @@ import com.fitness.modules.knowledge.service.KnowledgeChunkService;
 import com.fitness.modules.knowledge.service.RAGService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -21,6 +22,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -37,6 +40,8 @@ public class RAGServiceImpl implements RAGService {
     private final KnowledgeCategoryService categoryService;
     private final AIService aiService;
     private final ChatPromptTemplates chatPromptTemplates;
+    @Qualifier("ioTaskExecutor")
+    private final Executor ioTaskExecutor;
 
     @Override
     public RAGSearchResultVO search(RAGQueryDTO queryDTO) {
@@ -102,8 +107,11 @@ public class RAGServiceImpl implements RAGService {
             String query, Integer topK, Long categoryId, Double similarityThreshold) {
         log.info("Hybrid retrieval started, query='{}', topK={}", query, topK);
 
+        // 关键词搜索与embedding+向量搜索并行
+        CompletableFuture<List<KnowledgeChunkVO>> keywordFuture = CompletableFuture.supplyAsync(
+            () -> chunkService.keywordSearch(query, topK * 2, categoryId), ioTaskExecutor);
+
         List<KnowledgeChunkVO> vectorResults = Collections.emptyList();
-        List<KnowledgeChunkVO> keywordResults = Collections.emptyList();
 
         long vectorStart = System.currentTimeMillis();
         float[] queryEmbedding = embeddingService.embed(query);
@@ -125,10 +133,9 @@ public class RAGServiceImpl implements RAGService {
             log.warn("Query embedding failed");
         }
 
-        long keywordStart = System.currentTimeMillis();
-        keywordResults = chunkService.keywordSearch(query, topK * 2, categoryId);
-        log.info("Keyword retrieval completed, results={}, elapsed={} ms",
-                keywordResults.size(), System.currentTimeMillis() - keywordStart);
+        // 等待关键词搜索完成
+        List<KnowledgeChunkVO> keywordResults = keywordFuture.join();
+        log.info("Keyword retrieval completed, results={}", keywordResults.size());
 
         for (int i = 0; i < Math.min(keywordResults.size(), topK); i++) {
             KnowledgeChunkVO chunk = keywordResults.get(i);
