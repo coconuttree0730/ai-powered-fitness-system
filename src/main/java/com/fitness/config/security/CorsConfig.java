@@ -10,10 +10,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+//使用vite 端口转发 或者 nginx 就不需要cors了
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins:http://localhost:3000}")
+    @Value("${cors.allowed-origins:http://localhost:9080}")
     private String allowedOrigins;
 
     @Bean

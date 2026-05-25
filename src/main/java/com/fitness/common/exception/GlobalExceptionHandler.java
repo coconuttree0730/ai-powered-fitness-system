@@ -6,6 +6,7 @@ import com.fitness.integration.ai.exception.AiIntegrationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -135,6 +137,13 @@ public class GlobalExceptionHandler {
      * 处理客户端连接断开异常（AsyncRequestNotUsableException）
      * 这种情况通常是因为客户端超时或刷新页面导致的，不需要记录为错误
      */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Result<Void>> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.warn("静态资源不存在: {}", e.getResourcePath());
+        return ResponseEntity.status(404)
+                .body(Result.error(404, "资源不存在: " + e.getResourcePath()));
+    }
+
     @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
     public void handleAsyncRequestNotUsableException(org.springframework.web.context.request.async.AsyncRequestNotUsableException e) {
         // 客户端断开连接，不需要返回任何内容，只记录调试日志
