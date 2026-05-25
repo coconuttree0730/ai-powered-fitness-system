@@ -8,8 +8,6 @@ import com.fitness.modules.chat.mapper.ChatSessionMapper;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
 import com.fitness.modules.chat.model.entity.ChatMessage;
 import com.fitness.modules.chat.model.entity.ChatSession;
-import com.fitness.modules.chat.model.vo.ChatMessageVO;
-import com.fitness.modules.chat.model.vo.ChatSessionVO;
 import com.fitness.modules.chat.model.vo.ChatStreamEventVO;
 import com.fitness.modules.chat.model.vo.DayPlanVO;
 import com.fitness.modules.chat.model.vo.FitnessPlanCardVO;

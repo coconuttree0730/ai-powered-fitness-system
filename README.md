@@ -454,6 +454,8 @@ http://localhost:8088/swagger-ui.html
 | `/api/v1/admin/banners` | GET/POST | 轮播图管理 | ADMIN |
 | `/api/v1/admin/dict` | GET/POST | 字典管理 | ADMIN |
 | `/api/v1/admin/video-courses` | GET/POST | 视频课程管理 | ADMIN |
+| `/api/v1/admin/ai/checkpoints/{threadId}` | GET | 查看指定会话的 graph checkpoint 解码结果 | ADMIN |
+| `/api/v1/admin/ai/checkpoints/decode` | POST | 解码从 Redis GUI 复制的 graph checkpoint 原始内容 | ADMIN |
 
 ---
 
@@ -624,46 +626,7 @@ docker build -t fitness-system:latest .
 docker run -d \
   -p 8088:8088 \
   --name fitness-system \
-  --env-file .env \
   fitness-system:latest
-```
-
-### 环境变量文件 `.env` 示例
-
-```bash
-# Database
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=fitness_ai_db
-DB_USERNAME=fitness_user
-DB_PASSWORD=your_secure_password
-
-# Redis
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_PASSWORD=your_redis_password
-
-# AI
-AI_DASHSCOPE_API_KEY=your_api_key
-
-# MinIO
-MINIO_ENDPOINT=http://minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=your_secure_password
-
-# JWT
-JWT_SECRET=your-256-bit-secret-key
-JWT_EXPIRATION=86400000
-JWT_REFRESH_EXPIRATION=604800000
-
-# Alipay
-ALIPAY_APP_ID=your_app_id
-ALIPAY_PRIVATE_KEY=your_private_key
-ALIPAY_PUBLIC_KEY=your_public_key
-
-# Aliyun SMS
-ALIYUN_SMS_ACCESS_KEY_ID=your_access_key
-ALIYUN_SMS_ACCESS_KEY_SECRET=your_secret
 ```
 
 ---
@@ -732,6 +695,96 @@ A:
 - **作者**: wu.zhongpeng
 - **邮箱**: [your-email@example.com]
 - **项目主页**: https://gitee.com/wuzhongpengcode/ai-powered-fitness-system
+
+---
+
+## Graph Checkpoint 解码查看
+
+这两个接口用于查看 Spring AI Alibaba Graph 写入 Redis 的 checkpoint 内容。它们是只读调试接口，不会修改 Redis 中的任何数据。
+
+### 适用场景
+
+- 想按会话 ID 直接查看当前 active checkpoint
+- 想把 Redis GUI 中 `graph:checkpoint:content:*` 的原始值复制出来后解码
+- 想确认 `thread/meta/reverse/content` 之间的映射关系
+
+### 接口 1：按会话查看
+
+```http
+GET /api/v1/admin/ai/checkpoints/{threadId}
+```
+
+说明：
+
+- 这里的 `threadId` 传业务会话 ID，也就是 graph 运行时使用的 `RunnableConfig.threadId(...)`
+- 在当前项目中，对应聊天会话 `sessionId`
+- 需要管理员权限
+
+示例：
+
+```bash
+curl -X GET "http://localhost:8088/api/v1/admin/ai/checkpoints/9183da29-31c3-4ef3" \
+  -H "Authorization: Bearer <admin-jwt>"
+```
+
+返回结果中会包含：
+
+- `threadName`
+- `activeThreadId`
+- `metaKey`
+- `reverseKey`
+- `contentKey`
+- `meta`
+- `reverse`
+- `checkpointCount`
+- `checkpoints`
+
+其中 `checkpoints[].state` 就是解码后的结构化状态内容。
+
+### 接口 2：解码 Redis GUI 复制出来的原始内容
+
+```http
+POST /api/v1/admin/ai/checkpoints/decode
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "content": "rO0ABXcEAAAA..."
+}
+```
+
+说明：
+
+- `content` 填 Redis GUI 中 `graph:checkpoint:content:*` 对应 value 的完整原始字符串
+- 适合已经在 Redis GUI 里定位到 key，但值肉眼无法直接读懂的场景
+- 需要管理员权限
+
+示例：
+
+```bash
+curl -X POST "http://localhost:8088/api/v1/admin/ai/checkpoints/decode" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-jwt>" \
+  -d "{\"content\":\"rO0ABXcEAAAA...\"}"
+```
+
+### 推荐使用方式
+
+1. 先打开 Swagger：`http://localhost:8088/swagger-ui.html`
+2. 用管理员账号登录，拿到 JWT
+3. 直接调 `GET /api/v1/admin/ai/checkpoints/{threadId}` 查看某个会话
+4. 如果你已经在 Redis GUI 中拿到了 `graph:checkpoint:content:*` 的 value，就调 `POST /decode`
+
+### Redis GUI 中怎么配合看
+
+建议按下面顺序看：
+
+1. 先看 `graph:thread:meta:{threadId}`，确认当前 active `thread_id`
+2. 再看 `graph:thread:reverse:{thread_id}`，确认反向映射是否一致
+3. 最后看 `graph:checkpoint:content:{thread_id}`，复制 value 到 `/decode` 接口
 
 ---
 

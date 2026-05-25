@@ -1,0 +1,59 @@
+
+
+# [1] Server
+setx SERVER_PORT "8088"
+
+
+# [2] PostgreSQL
+setx DB_HOST "localhost"
+setx DB_PORT "5432"
+setx DB_NAME "fitness_ai_db"
+setx DB_USERNAME "fitness_user"
+setx DB_PASSWORD "myPostgresPass123"
+
+
+
+# [3] Redis 
+setx REDIS_HOST "localhost"
+setx REDIS_PORT "6379"
+setx REDIS_PASSWORD "myRedisPass123"
+setx REDIS_DATABASE "0"
+
+
+
+# [4] MinIO File Storage
+setx MINIO_ENDPOINT "http://localhost:9000"
+setx MINIO_ACCESS_KEY "minioadmin"
+setx MINIO_SECRET_KEY "minioPass123"
+setx MINIO_BUCKET "fitness-bucket"
+setx MINIO_SECURE "false"
+
+
+
+# [5] AI Service
+setx AI_DASHSCOPE_API_KEY "sk-7e9cad7dd0c240f19556d7bbf7b2acab"
+setx AI_DASHSCOPE_MODEL "glm-5.1"
+setx OLLAMA_BASE_URL "http://localhost:11434"
+setx OLLAMA_EMBEDDING_MODEL "embeddinggemma:300m"
+
+
+
+# [6] JWT
+setx JWT_SECRET "your-jwt-secret-change-this"
+setx JWT_ACCESS_EXPIRATION "1800000"
+setx JWT_REFRESH_EXPIRATION "604800000"
+setx JWT_REMEMBER_ME_EXPIRATION "2592000000"
+
+
+
+# [7] CORS
+setx CORS_ALLOWED_ORIGINS "http://localhost:3000"
+
+
+
+# [8] Aliyun SMS (可选)
+setx ALIYUN_SMS_SIGN_NAME "SutongHulian-Verify"
+setx ALIYUN_SMS_TEMPLATE_CODE "100001"
+setx ALIYUN_SMS_ENDPOINT "dypnsapi.aliyuncs.com"
+
+
