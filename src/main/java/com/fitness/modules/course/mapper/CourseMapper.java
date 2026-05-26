@@ -35,16 +35,6 @@ public interface CourseMapper extends BaseMapper<Course> {
     CourseVO selectCourseDetail(@Param("courseId") Long courseId);
 
     /**
-     * 更新预约人数
-     *
-     * @param courseId 课程ID
-     * @param delta    变化量（正数为增加，负数为减少）
-     * @return 影响行数
-     */
-    @Update("UPDATE fitness_course SET booked_count = booked_count + #{delta} WHERE id = #{courseId}")
-    int updateBookedCount(@Param("courseId") Long courseId, @Param("delta") Integer delta);
-
-    /**
      * 原子性增加总预约人数
      * 用于统计所有预约过该课程的独立会员数量
      *

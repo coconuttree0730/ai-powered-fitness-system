@@ -56,4 +56,13 @@ public class CourseSessionController {
         sessionService.generateFutureSessions(weeksAhead);
         return Result.success();
     }
+
+    @Operation(summary = "取消课程实例")
+    @PutMapping("/{sessionId}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> cancelSession(@PathVariable Long sessionId) {
+        log.info("管理员取消课程实例: sessionId={}", sessionId);
+        sessionService.cancelSession(sessionId);
+        return Result.success();
+    }
 }

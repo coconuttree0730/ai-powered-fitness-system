@@ -296,10 +296,10 @@ onUnmounted(() => {
 
 .card-section {
   background: #fff;
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 18px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .booked-section {
@@ -311,13 +311,13 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .section-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: #1a1a2e;
 }
@@ -334,8 +334,8 @@ onUnmounted(() => {
 
 .session-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .session-grid.mobile {
@@ -344,7 +344,7 @@ onUnmounted(() => {
 
 .session-card {
   overflow: hidden;
-  border-radius: 18px;
+  border-radius: 12px;
   border: 1px solid #eef2f7;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   transition: opacity 0.2s ease;
@@ -360,7 +360,7 @@ onUnmounted(() => {
 }
 
 .session-cover {
-  height: 130px;
+  height: 80px;
   background: linear-gradient(135deg, #1a1a2e 0%, #ff6b35 100%);
   background-size: cover;
   background-position: center;
@@ -370,7 +370,7 @@ onUnmounted(() => {
 .session-cover-overlay {
   position: absolute;
   inset: 0;
-  padding: 16px;
+  padding: 10px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -379,17 +379,17 @@ onUnmounted(() => {
 
 .session-date-text {
   color: #fff;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .session-content {
-  padding: 18px;
+  padding: 12px;
 }
 
 .session-title {
-  margin: 0 0 14px;
-  font-size: 20px;
+  margin: 0 0 8px;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
 }
@@ -397,14 +397,14 @@ onUnmounted(() => {
 .session-meta {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .meta-row {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  font-size: 14px;
+  font-size: 13px;
   color: #374151;
 }
 
@@ -415,12 +415,12 @@ onUnmounted(() => {
 .session-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .session-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -439,11 +439,11 @@ onUnmounted(() => {
   }
 
   .session-cover {
-    height: 110px;
+    height: 70px;
   }
 
   .session-title {
-    font-size: 18px;
+    font-size: 14px;
   }
 
   .meta-row {

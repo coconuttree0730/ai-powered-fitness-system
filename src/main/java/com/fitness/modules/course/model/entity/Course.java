@@ -72,12 +72,6 @@ public class Course extends BaseEntity {
     private Integer capacity;
 
     /**
-     * 已预约数
-     */
-    @TableField("booked_count")
-    private Integer bookedCount;
-
-    /**
      * 状态：0-未开始, 1-进行中, 2-已结束, 3-已取消
      */
     @TableField("status")

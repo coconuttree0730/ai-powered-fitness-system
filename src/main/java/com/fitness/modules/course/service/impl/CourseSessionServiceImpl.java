@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.common.cache.CacheKeyBuilder;
 import com.fitness.common.cache.RedisCacheNames;
 import com.fitness.common.cache.RedisTemplateCacheSupport;
+import com.fitness.common.constants.ErrorCode;
+import com.fitness.common.exception.BusinessException;
+import com.fitness.modules.booking.mapper.BookingMapper;
 import com.fitness.modules.course.mapper.CourseMapper;
 import com.fitness.modules.course.mapper.CourseSessionMapper;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
@@ -32,6 +35,7 @@ public class CourseSessionServiceImpl implements CourseSessionService {
 
     private final CourseSessionMapper sessionMapper;
     private final CourseMapper courseMapper;
+    private final BookingMapper bookingMapper;
     private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
@@ -140,5 +144,50 @@ public class CourseSessionServiceImpl implements CourseSessionService {
             redisTemplateCacheSupport.evictAll(RedisCacheNames.UPCOMING_SESSIONS);
             log.info("课程[{}]生成了{}个新实例, 范围至{}", courseId, generated, maxDate);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void closeExpiredSessions() {
+        LocalDate today = LocalDate.now();
+        List<Long> expiredIds = sessionMapper.selectExpiredSessionIds(today);
+        if (expiredIds.isEmpty()) {
+            return;
+        }
+
+        int closedSessions = sessionMapper.closeExpiredSessions(today);
+        int completedBookings = bookingMapper.batchCompleteBySessionIds(expiredIds);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.UPCOMING_SESSIONS);
+
+        log.info("关闭过期session: {}个session已结束, {}条预约已完成", closedSessions, completedBookings);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelSession(Long sessionId) {
+        CourseSessionVO session = sessionMapper.selectSessionDetail(sessionId);
+        if (session == null) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND, "课程实例不存在");
+        }
+        if (session.getStatus() != null && session.getStatus() != 0) {
+            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能取消未开始的课程");
+        }
+
+        CourseSession update = new CourseSession();
+        update.setId(sessionId);
+        update.setStatus(3);
+        update.setBookedCount(0);
+        update.setDeleted(true);
+        sessionMapper.updateById(update);
+
+        int cancelledBookings = bookingMapper.batchCancelBySessionIds(
+                java.util.List.of(sessionId), "管理员取消该场次");
+
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.UPCOMING_SESSIONS);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_PUBLIC_LIST);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_HOME_CATEGORIES);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.COURSE_HOME_CARDS);
+
+        log.info("管理员取消session: sessionId={}, 取消预约{}条", sessionId, cancelledBookings);
     }
 }

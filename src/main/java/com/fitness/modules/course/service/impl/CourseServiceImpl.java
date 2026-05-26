@@ -44,7 +44,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         Course course = new Course();
         BeanUtil.copyProperties(dto, course);
-        course.setBookedCount(0);
         course.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
 
         this.save(course);

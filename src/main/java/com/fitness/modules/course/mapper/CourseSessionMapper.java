@@ -23,4 +23,8 @@ public interface CourseSessionMapper extends BaseMapper<CourseSession> {
     List<CourseSessionVO> selectSessionsByCourseId(@Param("courseId") Long courseId, @Param("maxDate") LocalDate maxDate);
 
     int updateBookedCount(@Param("sessionId") Long sessionId, @Param("delta") int delta);
+
+    List<Long> selectExpiredSessionIds(@Param("beforeDate") LocalDate beforeDate);
+
+    int closeExpiredSessions(@Param("beforeDate") LocalDate beforeDate);
 }

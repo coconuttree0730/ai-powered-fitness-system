@@ -29,6 +29,10 @@
             <el-icon><Reading /></el-icon>
             <span>公开课管理</span>
           </el-menu-item>
+          <el-menu-item index="/admin/sessions">
+            <el-icon><Clock /></el-icon>
+            <span>排期管理</span>
+          </el-menu-item>
           <el-menu-item index="/admin/video-courses">
             <el-icon><VideoCamera /></el-icon>
             <span>视频课程管理</span>
@@ -144,7 +148,7 @@ import { useUserInfo } from '@/composables/useUserInfo'
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
   CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder,
-  Setting, CollectionTag, VideoCamera, Reading
+  Setting, CollectionTag, VideoCamera, Clock, Reading
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

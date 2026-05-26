@@ -188,6 +188,12 @@ const routes = [
         meta: { title: '公开课管理' }
       },
       {
+        path: 'sessions',
+        name: 'SessionManagement',
+        component: () => import('@/views/admin/Sessions.vue'),
+        meta: { title: '排期管理' }
+      },
+      {
         path: 'video-courses',
         name: 'VideoCourseManagement',
         component: () => import('@/views/admin/VideoCourses.vue'),

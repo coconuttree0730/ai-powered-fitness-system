@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.booking.mapper.BookingMapper">
+
+    <select id="selectBookingPage" resultType="com.fitness.modules.booking.model.vo.BookingListVO">
+        SELECT b.id, b.course_id, c.course_name, u.username AS coach_name,
+               b.session_id, s.session_date, s.day_of_week, s.start_time, s.end_time,
+               b.booking_time, b.status
+        FROM fitness_booking b
+        LEFT JOIN fitness_course_session s ON b.session_id = s.id
+        LEFT JOIN fitness_course c ON b.course_id = c.id
+        LEFT JOIN sys_user u ON c.coach_id = u.id
+        WHERE b.deleted = false
+        <if test="userId != null">
+            AND b.user_id = #{userId}
+        </if>
+        <if test="courseId != null">
+            AND b.course_id = #{courseId}
+        </if>
+        <if test="status != null">
+            AND b.status = #{status}
+        </if>
+        ORDER BY s.session_date DESC, s.start_time DESC
+    </select>
+
+    <!-- 批量完成预约（关联已结束的 session） -->
+    <update id="batchCompleteBySessionIds">
+        UPDATE fitness_booking
+        SET status = 3, update_time = CURRENT_TIMESTAMP
+        WHERE session_id IN
+        <foreach collection="sessionIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND status = 1
+        AND deleted = false
+    </update>
+
+    <!-- 批量取消预约（管理员取消 session 时） -->
+    <update id="batchCancelBySessionIds">
+        UPDATE fitness_booking
+        SET status = 2, cancel_reason = #{cancelReason}, update_time = CURRENT_TIMESTAMP
+        WHERE session_id IN
+        <foreach collection="sessionIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND status = 1
+        AND deleted = false
+    </update>
+
+</mapper>

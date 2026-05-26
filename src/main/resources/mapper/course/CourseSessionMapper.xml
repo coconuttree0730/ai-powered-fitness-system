@@ -175,4 +175,21 @@
             </when>
         </choose>
     </update>
+
+    <!-- 查询过期的待开始 session IDs -->
+    <select id="selectExpiredSessionIds" resultType="java.lang.Long">
+        SELECT id FROM fitness_course_session
+        WHERE session_date &lt; #{beforeDate}
+          AND status = 0
+          AND deleted = false
+    </select>
+
+    <!-- 关闭过期 session -->
+    <update id="closeExpiredSessions">
+        UPDATE fitness_course_session
+        SET status = 2, update_time = CURRENT_TIMESTAMP
+        WHERE session_date &lt; #{beforeDate}
+          AND status = 0
+          AND deleted = false
+    </update>
 </mapper>

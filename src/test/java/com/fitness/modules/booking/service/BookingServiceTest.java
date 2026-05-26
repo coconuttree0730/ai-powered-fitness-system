@@ -148,7 +148,6 @@ class BookingServiceTest {
         when(sessionMapper.selectSessionDetail(11L)).thenReturn(validSession);
         when(bookingReservationService.tryReserve(eq(11L), eq(1L), any(CourseSessionVO.class)))
                 .thenReturn(BookingReservationResult.success());
-        when(sessionMapper.updateBookedCount(11L, 1)).thenReturn(1);
         when(bookingMapper.insert(any(Booking.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate"));
 

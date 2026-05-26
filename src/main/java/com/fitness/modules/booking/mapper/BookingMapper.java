@@ -24,7 +24,7 @@ public interface BookingMapper extends BaseMapper<Booking> {
      * @param userId 用户ID
      * @return 预约列表
      */
-    @Select("SELECT b.id, b.course_id, c.course_name, u.username as coach_name, " +
+    @Select("SELECT b.id, b.session_id, b.course_id, c.course_name, u.username as coach_name, " +
             "s.session_date, s.day_of_week, s.start_time, s.end_time, b.booking_time, b.status " +
             "FROM fitness_booking b " +
             "LEFT JOIN fitness_course_session s ON b.session_id = s.id " +
@@ -125,4 +125,8 @@ public interface BookingMapper extends BaseMapper<Booking> {
     @Select("SELECT COUNT(*) FROM fitness_booking " +
             "WHERE course_id = #{courseId} AND status IN (0, 1) AND deleted = false")
     int countByCourseId(@Param("courseId") Long courseId);
+
+    int batchCompleteBySessionIds(@Param("sessionIds") List<Long> sessionIds);
+
+    int batchCancelBySessionIds(@Param("sessionIds") List<Long> sessionIds, @Param("cancelReason") String cancelReason);
 }

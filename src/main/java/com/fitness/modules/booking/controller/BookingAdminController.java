@@ -32,24 +32,6 @@ public class BookingAdminController {
         return Result.success(page);
     }
 
-    @Operation(summary = "确认预约")
-    @PutMapping("/{bookingId}/confirm")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
-    public Result<Void> confirmBooking(@PathVariable Long bookingId) {
-        log.info("确认预约请求: bookingId={}", bookingId);
-        bookingService.confirmBooking(bookingId);
-        return Result.success();
-    }
-
-    @Operation(summary = "拒绝预约")
-    @PutMapping("/{bookingId}/reject")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
-    public Result<Void> rejectBooking(@PathVariable Long bookingId) {
-        log.info("拒绝预约请求: bookingId={}", bookingId);
-        bookingService.rejectBooking(bookingId);
-        return Result.success();
-    }
-
     @Operation(summary = "完成预约")
     @PutMapping("/{bookingId}/complete")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")

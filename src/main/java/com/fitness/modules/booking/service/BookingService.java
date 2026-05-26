@@ -58,20 +58,6 @@ public interface BookingService {
     Page<BookingListVO> getBookingList(BookingQueryDTO query);
 
     /**
-     * 确认预约
-     *
-     * @param bookingId 预约ID
-     */
-    void confirmBooking(Long bookingId);
-
-    /**
-     * 拒绝预约
-     *
-     * @param bookingId 预约ID
-     */
-    void rejectBooking(Long bookingId);
-
-    /**
      * 完成预约
      *
      * @param bookingId 预约ID

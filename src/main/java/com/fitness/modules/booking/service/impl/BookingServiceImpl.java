@@ -184,66 +184,6 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void confirmBooking(Long bookingId) {
-        log.info("确认预约: bookingId={}", bookingId);
-
-        Booking booking = bookingMapper.selectById(bookingId);
-        if (booking == null || Boolean.TRUE.equals(booking.getDeleted())) {
-            throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
-        }
-        if (booking.getStatus() != 0) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能确认待确认的预约");
-        }
-
-        int updated = bookingMapper.updateStatus(bookingId, 1);
-        if (updated == 0) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR);
-        }
-
-        log.info("预约确认成功: bookingId={}", bookingId);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    @Caching(evict = {
-            @CacheEvict(value = RedisCacheNames.COURSE_PUBLIC_LIST, allEntries = true),
-            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CATEGORIES, allEntries = true),
-            @CacheEvict(value = RedisCacheNames.COURSE_HOME_CARDS, allEntries = true),
-            @CacheEvict(value = RedisCacheNames.UPCOMING_SESSIONS, allEntries = true)
-    })
-    public void rejectBooking(Long bookingId) {
-        log.info("拒绝预约: bookingId={}", bookingId);
-
-        Booking booking = bookingMapper.selectById(bookingId);
-        if (booking == null || Boolean.TRUE.equals(booking.getDeleted())) {
-            throw new BusinessException(ErrorCode.BOOKING_NOT_FOUND);
-        }
-        if (booking.getStatus() != 0) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只能拒绝待确认的预约");
-        }
-
-        int updated = bookingMapper.updateStatus(bookingId, 2);
-        if (updated == 0) {
-            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR);
-        }
-
-        if (booking.getSessionId() != null) {
-            CourseSessionVO session = sessionMapper.selectSessionDetail(booking.getSessionId());
-            int stockUpdated = sessionMapper.updateBookedCount(booking.getSessionId(), -1);
-            if (stockUpdated == 0) {
-                throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "预约名额回滚失败");
-            }
-            if (session != null) {
-                releaseReservationQuietly(booking.getSessionId(), booking.getUserId(), session);
-            }
-        }
-
-        clearCourseCaches();
-        log.info("预约拒绝成功: bookingId={}", bookingId);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
     public void completeBooking(Long bookingId) {
         log.info("完成预约: bookingId={}", bookingId);
 
@@ -271,18 +211,18 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
-        int updated = sessionMapper.updateBookedCount(dto.getSessionId(), 1);
-        if (updated == 0) {
-            throw new BusinessException(ErrorCode.COURSE_FULL, "名额已满，请选择其他时间");
-        }
-
         Booking booking = new Booking();
         booking.setUserId(userId);
         booking.setCourseId(session.getCourseId());
         booking.setSessionId(dto.getSessionId());
         booking.setBookingTime(LocalDateTime.now());
-        booking.setStatus(0);
+        booking.setStatus(1);
         bookingMapper.insert(booking);
+
+        int updated = sessionMapper.updateBookedCount(dto.getSessionId(), 1);
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.COURSE_FULL, "名额已满，请选择其他时间");
+        }
 
         courseMapper.incrementTotalBookingCount(session.getCourseId());
         redisRankingService.incrementCourseBookingScore(session.getCourseId(), 1D);
