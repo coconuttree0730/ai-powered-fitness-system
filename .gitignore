@@ -35,6 +35,8 @@ src/main/resources/application-prod.yml
 
 # Environment variables
 .env
+set-env-vars.sh
+set-env-vars.txt
 
 # Docker
 docker/volumes/
@@ -43,11 +45,13 @@ docker/web-nginx-dist/
 # Trae IDE
 .trae/
 
-# Claude IDE local settings
-.claude/settings.local.json
+# Claude Code
+.claude/
+.traces/
 
 # Personal documents and notes
 docs/my-file/
+docs/面试/
 Java多线程并发优化方案.md
 
 # Project specific
