@@ -1,0 +1,9 @@
+.git
+.github
+.mvn
+node_modules
+frontend
+docker
+docs
+*.md
+!pom.xml
