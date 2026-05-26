@@ -1,5 +1,7 @@
 package com.fitness.common.cache;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -35,6 +37,8 @@ public class RedisTemplateCacheSupport {
     private static final Duration LOCK_TTL = Duration.ofSeconds(10);
     private static final int MAX_RETRY_TIMES = 3;
     private static final long RETRY_SLEEP_MILLIS = 50L;
+    private static final long L1_TTL_SECONDS = 180; // L1 Caffeine TTL: 3 minutes
+    private static final long L1_MAX_SIZE = 2000;
     private static final Map<String, Duration> CACHE_TTLS = buildCacheTtls();
     private static final DefaultRedisScript<Long> UNLOCK_SCRIPT = new DefaultRedisScript<>(
             """
@@ -48,19 +52,38 @@ public class RedisTemplateCacheSupport {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
+    private final Cache<String, Object> l1Cache;
 
     public RedisTemplateCacheSupport(RedisTemplate<String, Object> redisTemplate,
                                      StringRedisTemplate stringRedisTemplate) {
         this.redisTemplate = redisTemplate;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.l1Cache = Caffeine.newBuilder()
+                .maximumSize(L1_MAX_SIZE)
+                .expireAfterWrite(Duration.ofSeconds(L1_TTL_SECONDS))
+                .recordStats()
+                .build();
     }
 
     public <T> T getOrLoad(String cacheName, String businessKey, Supplier<T> loader) {
         String cacheKey = buildCacheKey(cacheName, businessKey);
+
+        // L1: Caffeine local cache
+        Object l1Value = l1Cache.getIfPresent(cacheKey);
+        if (l1Value != null) {
+            CacheLookupResult<T> l1Result = resolveCachedValue(l1Value);
+            if (l1Result.hit()) {
+                log.debug("[L1 HIT] cache={}, key={}", cacheName, businessKey);
+                return l1Result.value();
+            }
+        }
+
+        // L2: Redis distributed cache
         Object cachedValue = redisTemplate.opsForValue().get(cacheKey);
         CacheLookupResult<T> lookupResult = resolveCachedValue(cachedValue);
         if (lookupResult.hit()) {
-            log.debug("[CACHE HIT] cache={}, key={}", cacheName, businessKey);
+            log.debug("[L2 HIT] cache={}, key={}", cacheName, businessKey);
+            l1Cache.put(cacheKey, lookupResult.value() != null ? lookupResult.value() : NULL_MARKER);
             return lookupResult.value();
         }
 
@@ -74,6 +97,7 @@ public class RedisTemplateCacheSupport {
                 CacheLookupResult<T> doubleCheckResult = resolveCachedValue(doubleChecked);
                 if (doubleCheckResult.hit()) {
                     log.debug("[CACHE HIT] cache={}, key={}, source=double-check", cacheName, businessKey);
+                    l1Cache.put(cacheKey, doubleCheckResult.value() != null ? doubleCheckResult.value() : NULL_MARKER);
                     return doubleCheckResult.value();
                 }
                 return loadAndCache(cacheName, businessKey, cacheKey, loader);
@@ -88,6 +112,7 @@ public class RedisTemplateCacheSupport {
             CacheLookupResult<T> retryResult = resolveCachedValue(retriedValue);
             if (retryResult.hit()) {
                 log.debug("[CACHE HIT] cache={}, key={}, source=retry{}", cacheName, businessKey, i + 1);
+                l1Cache.put(cacheKey, retryResult.value() != null ? retryResult.value() : NULL_MARKER);
                 return retryResult.value();
             }
         }
@@ -99,30 +124,43 @@ public class RedisTemplateCacheSupport {
     public void evict(String cacheName, String businessKey) {
         String cacheKey = buildCacheKey(cacheName, businessKey);
         redisTemplate.delete(cacheKey);
+        l1Cache.invalidate(cacheKey);
         log.debug("[CACHE EVICT] cache={}, key={}", cacheName, businessKey);
     }
 
     public void evictAll(String cacheName) {
         String prefix = CACHE_KEY_PREFIX + cacheName + ":";
         Set<String> keys = scanKeys(prefix + "*");
-        if (keys.isEmpty()) {
-            return;
+        if (!keys.isEmpty()) {
+            redisTemplate.delete(keys);
         }
-        redisTemplate.delete(keys);
-        log.debug("[CACHE CLEAR] cache={}, count={}", cacheName, keys.size());
+        // Invalidate all L1 entries (Caffeine doesn't support prefix-based invalidation,
+        // so we invalidate all — safe because L1 TTL is short and data is warm-reloaded)
+        l1Cache.invalidateAll();
+        log.debug("[CACHE CLEAR] cache={}, redis-count={}, l1-invalidated=all", cacheName, keys.size());
+    }
+
+    public com.github.benmanes.caffeine.cache.stats.CacheStats getL1Stats() {
+        return l1Cache.stats();
+    }
+
+    public long getL1Size() {
+        return l1Cache.estimatedSize();
     }
 
     private <T> T loadAndCache(String cacheName, String businessKey, String cacheKey, Supplier<T> loader) {
         T loadedValue = loader.get();
         if (loadedValue == null) {
             redisTemplate.opsForValue().set(cacheKey, NULL_MARKER, NULL_TTL);
+            l1Cache.put(cacheKey, NULL_MARKER);
             log.debug("[CACHE NULL] cache={}, key={}, ttl={}s", cacheName, businessKey, NULL_TTL.toSeconds());
             return null;
         }
 
         Duration ttl = resolveTtlWithJitter(cacheName);
         redisTemplate.opsForValue().set(cacheKey, loadedValue, ttl);
-        log.debug("[CACHE LOAD] cache={}, key={}, ttl={}s", cacheName, businessKey, ttl.toSeconds());
+        l1Cache.put(cacheKey, loadedValue);
+        log.debug("[CACHE LOAD] cache={}, key={}, ttl={}s, l1-ttl={}s", cacheName, businessKey, ttl.toSeconds(), L1_TTL_SECONDS);
         return loadedValue;
     }
 

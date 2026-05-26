@@ -67,7 +67,8 @@ public enum ErrorCode {
     SIGNATURE_ERROR(8002, "签名验证失败"),
 
     DATA_NOT_FOUND(9001, "数据不存在"),
-    DATA_ALREADY_EXISTS(9002, "数据已存在");
+    DATA_ALREADY_EXISTS(9002, "数据已存在"),
+    TOO_MANY_REQUESTS(9003, "请求过于频繁");
 
     private final Integer code;
     private final String message;

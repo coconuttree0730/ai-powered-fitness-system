@@ -2,6 +2,8 @@ package com.fitness.modules.chat.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fitness.common.ratelimit.RateLimit;
+import com.fitness.common.ratelimit.RateLimitDimension;
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.chat.model.dto.ChatMessageDTO;
@@ -43,6 +45,7 @@ public class ChatAssistantController {
     }
 
     @Operation(summary = "发送聊天消息")
+    @RateLimit(key = "chat:message", limit = 20, window = 60, dimension = RateLimitDimension.USER)
     @PostMapping("/messages")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<ChatMessageVO> sendMessage(@Valid @RequestBody ChatMessageDTO dto) {
@@ -52,6 +55,7 @@ public class ChatAssistantController {
     }
 
     @Operation(summary = "流式发送聊天消息")
+    @RateLimit(key = "chat:stream", limit = 10, window = 60, dimension = RateLimitDimension.USER)
     @PostMapping(value = "/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> sendMessageStream(@Valid @RequestBody ChatMessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -121,6 +125,7 @@ public class ChatAssistantController {
     }
 
     @Operation(summary = "生成健身计划")
+    @RateLimit(key = "chat:plan", limit = 5, window = 60, dimension = RateLimitDimension.USER)
     @PostMapping("/fitness-plan/generate")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<FitnessPlanCardVO> generateFitnessPlan(

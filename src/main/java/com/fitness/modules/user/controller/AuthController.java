@@ -1,5 +1,6 @@
 package com.fitness.modules.user.controller;
 
+import com.fitness.common.ratelimit.RateLimit;
 import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.LoginDTO;
 import com.fitness.modules.user.model.dto.RefreshTokenDTO;
@@ -39,6 +40,7 @@ public class AuthController {
     private final SmsCodeService smsCodeService;
 
     @Operation(summary = "用户注册", description = "创建新的普通用户账号并返回注册后的用户信息")
+    @RateLimit(key = "auth:register", limit = 5, window = 60)
     @PostMapping("/register")
     public Result<UserVO> register(@Valid @RequestBody UserDTO dto) {
         log.info("用户注册请求: {}", dto.getUsername());
@@ -47,6 +49,7 @@ public class AuthController {
     }
 
     @Operation(summary = "用户名密码登录", description = "校验用户名和密码并返回访问令牌与刷新令牌")
+    @RateLimit(key = "auth:login", limit = 10, window = 60)
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
         log.info("用户登录请求: {}", dto.getUsername());
@@ -80,6 +83,7 @@ public class AuthController {
     }
 
     @Operation(summary = "发送登录短信验证码", description = "在滑块验证通过后向指定手机号发送短信验证码")
+    @RateLimit(key = "auth:sms", limit = 10, window = 60)
     @PostMapping("/sms-code")
     public Result<Map<String, Object>> sendSmsCode(@Valid @RequestBody SmsCodeDTO dto) {
         log.info("发送短信验证码请求: phone={}", dto.getPhone());
