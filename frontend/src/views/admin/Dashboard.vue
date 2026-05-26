@@ -879,8 +879,9 @@ async function handleSaveReport() {
 
     ElMessage.success('报告保存成功，可在数据分析菜单查看')
 
-    // 可选：保存成功后关闭对话框
-    // analysisVisible.value = false
+    // 保存成功后关闭弹窗并清空报告，防止重复提交
+    analysisVisible.value = false
+    analysisReport.value = null
   } catch (error) {
     console.error('保存报告失败 - 完整错误:', error)
     console.error('错误详情:', {
