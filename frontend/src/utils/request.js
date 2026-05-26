@@ -117,7 +117,13 @@ request.interceptors.response.use(
         if (newAccessToken) {
           resolvePendingRequests(newAccessToken)
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-          return request(originalRequest)
+          return request(originalRequest).catch(retryError => {
+            // 刷新后重试仍然 401（如被踢人、token在刷新后被删除），清理本地 token
+            if (retryError.response && retryError.response.status === 401) {
+              clearAllTokens()
+            }
+            return Promise.reject(retryError)
+          })
         } else {
           rejectPendingRequests()
           clearAllTokens()

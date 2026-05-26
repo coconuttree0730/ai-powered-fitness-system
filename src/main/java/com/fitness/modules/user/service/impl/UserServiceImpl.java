@@ -446,6 +446,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
+        // 检查用户级黑名单（管理员踢人后禁止刷新 token）
+        long issuedAt = jwtTokenProvider.getIssuedAtFromToken(refreshToken);
+        if (tokenBlacklistService.isUserBlacklisted(userId, issuedAt)) {
+            log.warn("用户已被踢出，禁止刷新 token, userId={}", userId);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
         String newAccessToken = jwtTokenProvider.generateAccessToken(userId, username, roles);
 
         Map<String, Object> result = new HashMap<>();
