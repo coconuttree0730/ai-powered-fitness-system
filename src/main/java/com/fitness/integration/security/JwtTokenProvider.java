@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -78,6 +79,7 @@ public class JwtTokenProvider {
     private String buildToken(Long userId, String username, List<String> roles, String tokenType, Long expirationMs) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
+        String jti = UUID.randomUUID().toString();
 
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_USER_ID, userId);
@@ -87,6 +89,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .claims(claims)
+                .id(jti)
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -240,5 +243,30 @@ public class JwtTokenProvider {
 
     public long getExpirationTime() {
         return jwtProperties.getAccessExpiration();
+    }
+
+    public String getJtiFromToken(String token) {
+        Claims claims = parseTokenSilently(token);
+        if (claims != null && claims.getId() != null) {
+            return claims.getId();
+        }
+        return null;
+    }
+
+    public long getIssuedAtFromToken(String token) {
+        Claims claims = parseTokenSilently(token);
+        if (claims != null && claims.getIssuedAt() != null) {
+            return claims.getIssuedAt().getTime();
+        }
+        return 0L;
+    }
+
+    public long getRemainingTtl(String token) {
+        Claims claims = parseTokenSilently(token);
+        if (claims != null && claims.getExpiration() != null) {
+            long remaining = claims.getExpiration().getTime() - System.currentTimeMillis();
+            return Math.max(remaining, 0);
+        }
+        return 0L;
     }
 }
