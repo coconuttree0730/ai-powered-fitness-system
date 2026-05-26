@@ -12,6 +12,7 @@ import com.fitness.modules.booking.service.impl.BookingServiceImpl;
 import com.fitness.modules.course.mapper.CourseMapper;
 import com.fitness.modules.course.mapper.CourseSessionMapper;
 import com.fitness.modules.course.model.vo.CourseSessionVO;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.modules.ranking.service.RedisRankingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,9 @@ class BookingServiceTest {
 
     @Mock
     private RedisRankingService redisRankingService;
+
+    @Mock
+    private RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @InjectMocks
     private BookingServiceImpl bookingService;

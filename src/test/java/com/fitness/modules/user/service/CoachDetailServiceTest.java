@@ -1,11 +1,14 @@
 package com.fitness.modules.user.service;
 
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.minio.model.vo.FileUploadVO;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.integration.security.SecurityUtils;
+import com.fitness.modules.product.mapper.ProductMapper;
 import com.fitness.modules.user.mapper.CoachDetailMapper;
+import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import com.fitness.modules.user.mapper.UserMapper;
 import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.entity.CoachDetail;
@@ -42,7 +45,16 @@ class CoachDetailServiceTest {
     private UserMapper userMapper;
 
     @Mock
+    private UserFitnessProfileMapper userFitnessProfileMapper;
+
+    @Mock
     private FileService fileService;
+
+    @Mock
+    private ProductMapper productMapper;
+
+    @Mock
+    private RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @InjectMocks
     private CoachDetailServiceImpl coachDetailService;
