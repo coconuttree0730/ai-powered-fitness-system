@@ -122,6 +122,21 @@ public interface UserService {
     Map<String, Object> refreshToken(String refreshToken);
 
     /**
+     * 用户登出，注销当前Access Token和可选的Refresh Token
+     *
+     * @param accessToken 当前Access Token
+     * @param refreshToken Refresh Token（可选）
+     */
+    void logout(String accessToken, String refreshToken);
+
+    /**
+     * 强制注销指定用户的所有Token（管理员踢人）
+     *
+     * @param userId 用户ID
+     */
+    void kickUser(Long userId);
+
+    /**
      * 更新用户名
      *
      * @param userId   用户ID

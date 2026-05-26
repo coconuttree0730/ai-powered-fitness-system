@@ -22,6 +22,7 @@ import com.fitness.modules.user.model.vo.UserVO;
 import com.fitness.modules.user.service.CoachDetailService;
 import com.fitness.modules.user.service.EmailCodeService;
 import com.fitness.modules.user.service.SmsCodeService;
+import com.fitness.modules.user.service.TokenBlacklistService;
 import com.fitness.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final SmsCodeService smsCodeService;
     private final EmailCodeService emailCodeService;
     private final CoachDetailService coachDetailService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -431,6 +433,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
+        String refreshJti = jwtTokenProvider.getJtiFromToken(refreshToken);
+        if (refreshJti != null && tokenBlacklistService.isTokenBlacklisted(refreshJti)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
         List<String> roles = jwtTokenProvider.getRolesFromToken(refreshToken);
@@ -446,6 +453,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         result.put("tokenType", "Bearer");
         result.put("expiresIn", jwtTokenProvider.getAccessExpiration());
         return result;
+    }
+
+    @Override
+    public void logout(String accessToken, String refreshToken) {
+        String accessJti = jwtTokenProvider.getJtiFromToken(accessToken);
+        if (accessJti != null) {
+            long accessRemainingTtl = jwtTokenProvider.getRemainingTtl(accessToken);
+            if (accessRemainingTtl > 0) {
+                tokenBlacklistService.blacklistToken(accessJti, accessRemainingTtl);
+            }
+        }
+
+        if (StringUtils.hasText(refreshToken)) {
+            String refreshJti = jwtTokenProvider.getJtiFromToken(refreshToken);
+            if (refreshJti != null) {
+                long refreshRemainingTtl = jwtTokenProvider.getRemainingTtl(refreshToken);
+                if (refreshRemainingTtl > 0) {
+                    tokenBlacklistService.blacklistToken(refreshJti, refreshRemainingTtl);
+                }
+            }
+        }
+
+        log.info("用户登出成功, accessJti={}", accessJti);
+    }
+
+    @Override
+    public void kickUser(Long userId) {
+        getRequiredUser(userId);
+        tokenBlacklistService.blacklistAllUserTokens(userId);
+        log.info("管理员踢出用户成功, userId={}", userId);
     }
 
     private User buildUser(String username, String encodedPassword, String phone, String email, String avatar) {

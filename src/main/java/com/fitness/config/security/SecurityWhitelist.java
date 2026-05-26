@@ -10,6 +10,7 @@ public final class SecurityWhitelist {
             "/api/v1/auth/login/sms",
             "/api/v1/auth/register",
             "/api/v1/auth/refresh",
+            "/api/v1/auth/logout",
             "/api/v1/auth/slider-verify/**",
             "/api/v1/auth/sms-code",
             "/api/v1/courses/public/**",

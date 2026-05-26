@@ -78,4 +78,13 @@ public class UserAdminController {
         userService.updateUserStatus(id, status);
         return Result.success();
     }
+
+    @Operation(summary = "强制下线用户", description = "注销指定用户的所有Token，使其在所有设备上被迫重新登录")
+    @PutMapping("/{id}/kick")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> kickUser(@PathVariable Long id) {
+        log.info("管理员强制下线用户: userId={}", id);
+        userService.kickUser(id);
+        return Result.success();
+    }
 }

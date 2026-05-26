@@ -2,6 +2,7 @@ package com.fitness.integration.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitness.common.result.Result;
+import com.fitness.modules.user.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     // 用户详情服务实现
     private final UserDetailsServiceImpl userDetailsService;
+    // Token黑名单服务
+    private final TokenBlacklistService tokenBlacklistService;
     // JSON工具
     private final ObjectMapper objectMapper;
 
@@ -69,6 +72,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtTokenProvider.validateAccessToken(jwt)) {
                     // 3. 从Token中获取用户ID
                     Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
+                    String jti = jwtTokenProvider.getJtiFromToken(jwt);
+                    long issuedAt = jwtTokenProvider.getIssuedAtFromToken(jwt);
+
+                    if (tokenBlacklistService.isUserBlacklisted(userId, issuedAt)) {
+                        log.warn("Token已被用户级黑名单拦截, userId={}, URI={}", userId, request.getRequestURI());
+                        sendUnauthorizedResponse(response, "Token已被注销，请重新登录");
+                        return;
+                    }
+
+                    if (jti != null && tokenBlacklistService.isTokenBlacklisted(jti)) {
+                        log.warn("Token已被黑名单拦截, jti={}, URI={}", jti, request.getRequestURI());
+                        sendUnauthorizedResponse(response, "Token已被注销，请重新登录");
+                        return;
+                    }
                     // 4. 创建用户详情
                     if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         // 4. 加载用户详情
@@ -188,6 +205,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/v1/auth/login/sms",
                 "/api/v1/auth/register",
                 "/api/v1/auth/refresh",
+                "/api/v1/auth/logout",
                 "/api/v1/auth/slider-verify",
                 "/api/v1/auth/sms-code",
                 "/api/v1/banners/active",

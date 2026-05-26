@@ -3,6 +3,7 @@ package com.fitness.modules.user.controller;
 import com.fitness.common.ratelimit.RateLimit;
 import com.fitness.common.result.Result;
 import com.fitness.modules.user.model.dto.LoginDTO;
+import com.fitness.modules.user.model.dto.LogoutDTO;
 import com.fitness.modules.user.model.dto.RefreshTokenDTO;
 import com.fitness.modules.user.model.dto.SliderVerifyDTO;
 import com.fitness.modules.user.model.dto.SmsCodeDTO;
@@ -19,9 +20,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -124,5 +127,26 @@ public class AuthController {
         log.info("刷新Token请求");
         Map<String, Object> tokenInfo = userService.refreshToken(dto.getRefreshToken());
         return Result.success(tokenInfo);
+    }
+
+    @Operation(summary = "用户登出", description = "注销当前Access Token和Refresh Token，使其无法继续使用")
+    @PostMapping("/logout")
+    public Result<Void> logout(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestBody(required = false) LogoutDTO dto) {
+        log.info("用户登出请求");
+
+        String accessToken = null;
+        if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer ")) {
+            accessToken = authorization.substring(7);
+        }
+
+        String refreshToken = (dto != null) ? dto.getRefreshToken() : null;
+
+        if (StringUtils.hasText(accessToken)) {
+            userService.logout(accessToken, refreshToken);
+        }
+
+        return Result.success();
     }
 }
