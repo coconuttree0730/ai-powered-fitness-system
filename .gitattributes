@@ -1,0 +1,49 @@
+##############################################################################
+# 1. 后端：Java 及配置文件 → 统计为 Java
+##############################################################################
+*.java   linguist-language=Java
+*.xml    linguist-language=Java
+*.yml    linguist-language=Java
+*.yaml   linguist-language=Java
+*.properties linguist-language=Java
+*.groovy linguist-language=Java
+
+##############################################################################
+# 2. 前端相关文件 → 不参与语言统计
+##############################################################################
+*.vue    linguist-detectable=false
+*.js     linguist-detectable=false
+*.jsx    linguist-detectable=false
+*.ts     linguist-detectable=false
+*.tsx    linguist-detectable=false
+*.html   linguist-detectable=false
+*.htm    linguist-detectable=false
+*.css    linguist-detectable=false
+*.scss   linguist-detectable=false
+*.less   linguist-detectable=false
+*.json   linguist-detectable=false
+
+##############################################################################
+# 3. 目录级：前端静态资源/依赖/打包产物 → 标记为第三方/生成代码，完全排除
+##############################################################################
+# Spring 内置静态资源（最关键）
+src/main/resources/static/** linguist-vendored=true
+src/main/resources/public/** linguist-vendored=true
+
+# 前端常见目录
+frontend/**       linguist-vendored=true
+web/**            linguist-vendored=true
+dist/**           linguist-vendored=true
+build/**          linguist-vendored=true
+node_modules/**   linguist-vendored=true
+
+# 构建输出、日志、临时文件（不要提交到仓库也没关系）
+target/**         linguist-vendored=true
+logs/**           linguist-vendored=true
+tmp/**            linguist-vendored=true
+
+##############################################################################
+# 4. 可选：文档、说明 → 不计入代码统计
+##############################################################################
+docs/**           linguist-documentation=true
+*.md              linguist-documentation=true
