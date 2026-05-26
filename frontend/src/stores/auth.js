@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { login as loginApi, getCurrentUser } from '@/api/auth'
+import { login as loginApi, getCurrentUser, logout as logoutApi } from '@/api/auth'
 import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -105,7 +105,15 @@ export const useAuthStore = defineStore('auth', () => {
     return refreshToken.value
   }
 
-  function logout() {
+  async function logout() {
+    const currentRefreshToken = refreshToken.value
+
+    try {
+      await logoutApi(currentRefreshToken)
+    } catch (e) {
+      console.warn('后端登出失败，继续清理本地状态:', e)
+    }
+
     accessToken.value = ''
     refreshToken.value = ''
     userInfo.value = null

@@ -47,6 +47,13 @@ export function resetUserPassword(id, password) {
   })
 }
 
+export function kickUser(id) {
+  return request({
+    url: `/admin/users/${id}/kick`,
+    method: 'put'
+  })
+}
+
 // ==================== 会员端用户相关接口 ====================
 
 /**

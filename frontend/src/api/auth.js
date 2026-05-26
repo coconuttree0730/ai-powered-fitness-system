@@ -69,3 +69,11 @@ export function refreshAccessToken(refreshToken) {
     data: { refreshToken }
   })
 }
+
+export function logout(refreshToken) {
+  return request({
+    url: '/auth/logout',
+    method: 'post',
+    data: refreshToken ? { refreshToken } : {}
+  })
+}

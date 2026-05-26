@@ -93,6 +93,7 @@
           <template #default="{ row }">
             <el-space>
               <el-button size="small" @click="handleEdit(row)">编辑</el-button>
+              <el-button size="small" type="danger" plain @click="handleKick(row)">强制下线</el-button>
               <el-button
                 size="small"
                 :type="row.status === 1 ? 'warning' : 'success'"
@@ -198,7 +199,7 @@
 import { ref, h, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
-import { getUserList, createUser, updateUser, deleteUser, updateUserStatus, resetUserPassword } from '@/api/user'
+import { getUserList, createUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, kickUser } from '@/api/user'
 import { getToken } from '@/utils/auth'
 
 const message = ElMessage
@@ -484,6 +485,25 @@ async function handleToggleStatus(row) {
   } catch (error) {
     message.error('状态更新失败')
   }
+}
+
+function handleKick(row) {
+  ElMessageBox.confirm(
+    `确定要强制用户 "${row.username}" 下线吗？该用户的所有设备将被要求重新登录。`,
+    '确认强制下线',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      await kickUser(row.id)
+      message.success('操作成功，该用户已被强制下线')
+    } catch (error) {
+      message.error(error.message || '操作失败')
+    }
+  }).catch(() => {})
 }
 </script>
 
