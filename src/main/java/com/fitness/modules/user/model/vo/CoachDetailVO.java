@@ -1,5 +1,7 @@
 package com.fitness.modules.user.model.vo;
 
+import com.fitness.common.sensitive.Sensitive;
+import com.fitness.common.sensitive.SensitiveType;
 import lombok.Data;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class CoachDetailVO {
     /**
      * 真实姓名
      */
+    @Sensitive(SensitiveType.NAME)
     private String realName;
 
     /**
@@ -44,11 +47,13 @@ public class CoachDetailVO {
     /**
      * 手机号
      */
+    @Sensitive(SensitiveType.PHONE)
     private String phone;
 
     /**
      * 邮箱
      */
+    @Sensitive(SensitiveType.EMAIL)
     private String email;
 
     /**

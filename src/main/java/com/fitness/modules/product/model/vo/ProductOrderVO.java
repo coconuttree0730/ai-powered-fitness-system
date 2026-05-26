@@ -1,5 +1,7 @@
 package com.fitness.modules.product.model.vo;
 
+import com.fitness.common.sensitive.Sensitive;
+import com.fitness.common.sensitive.SensitiveType;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -24,6 +26,7 @@ public class ProductOrderVO {
     private String statusLabel;
     private String trackingNo;
     private String carrier;
+    @Sensitive(SensitiveType.ADDRESS)
     private String address;
     private String remark;
     private Long coachId;

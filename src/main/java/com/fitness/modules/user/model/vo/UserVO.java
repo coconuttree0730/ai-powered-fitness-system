@@ -1,5 +1,7 @@
 package com.fitness.modules.user.model.vo;
 
+import com.fitness.common.sensitive.Sensitive;
+import com.fitness.common.sensitive.SensitiveType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -35,12 +37,14 @@ public class UserVO {
     /**
      * 手机号
      */
+    @Sensitive(SensitiveType.PHONE)
     @Schema(description = "手机号", example = "13800138000")
     private String phone;
 
     /**
      * 邮箱
      */
+    @Sensitive(SensitiveType.EMAIL)
     @Schema(description = "邮箱地址", example = "user@example.com")
     private String email;
 
