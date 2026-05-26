@@ -49,14 +49,17 @@ docker/web-nginx-dist/
 .claude/
 .traces/
 
-# Personal documents and notes
-docs/my-file/
-docs/面试/
-Java多线程并发优化方案.md
+# Markdown docs (only README.md allowed)
+*.md
+!README.md
+
+# Private directories
+docs/
+temp/
+knowledge_data/
 
 # Project specific
 bug-log/
-
 
 # Archives
 *.zip
@@ -64,5 +67,3 @@ bug-log/
 
 # Temporary files
 *.tmp
-
-项目完善路线图.md
