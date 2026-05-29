@@ -5,11 +5,12 @@ import cn.hutool.core.util.StrUtil;
 import com.fitness.integration.ai.prompt.AiPromptSpec;
 import com.fitness.integration.ai.service.AIService;
 import com.fitness.modules.chat.prompt.ChatPromptTemplates;
+import com.fitness.modules.knowledge.mapper.KnowledgeCategoryMapper;
 import com.fitness.modules.knowledge.model.dto.RAGQueryDTO;
+import com.fitness.modules.knowledge.model.entity.KnowledgeCategory;
 import com.fitness.modules.knowledge.model.vo.KnowledgeChunkVO;
 import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
 import com.fitness.modules.knowledge.service.EmbeddingService;
-import com.fitness.modules.knowledge.service.KnowledgeCategoryService;
 import com.fitness.modules.knowledge.service.KnowledgeChunkService;
 import com.fitness.modules.knowledge.service.RAGService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class RAGServiceImpl implements RAGService {
 
     private final EmbeddingService embeddingService;
     private final KnowledgeChunkService chunkService;
-    private final KnowledgeCategoryService categoryService;
+    private final KnowledgeCategoryMapper categoryMapper;
     private final AIService aiService;
     private final ChatPromptTemplates chatPromptTemplates;
     @Qualifier("ioTaskExecutor")
@@ -206,7 +207,7 @@ public class RAGServiceImpl implements RAGService {
             if (categoryIdObj != null) {
                 try {
                     Long catId = Long.valueOf(categoryIdObj.toString());
-                    var category = categoryService.getById(catId);
+                    KnowledgeCategory category = categoryMapper.selectById(catId);
                     if (category != null) {
                         retrievedChunk.setCategoryName(category.getName());
                     }

@@ -40,7 +40,7 @@
               <el-option label="草稿" :value="0" />
             </el-select>
             <el-select
-              v-model="searchForm.categoryId"
+              v-model="searchForm.categoryCode"
               placeholder="全部分类"
               clearable
               style="width: 180px"
@@ -48,8 +48,8 @@
               <el-option
                 v-for="cat in categoryList"
                 :key="cat.id"
-                :label="cat.name"
-                :value="cat.id"
+                :value="cat.value"
+                :label="cat.label"
               />
             </el-select>
             <el-button type="primary" @click="handleSearch">
@@ -185,9 +185,9 @@
           />
         </el-form-item>
 
-        <el-form-item label="所属分类" prop="categoryId">
+        <el-form-item label="所属分类" prop="categoryCode">
           <el-select
-            v-model="form.categoryId"
+            v-model="form.categoryCode"
             placeholder="请选择分类"
             clearable
             style="width: 100%"
@@ -195,8 +195,8 @@
             <el-option
               v-for="cat in categoryList"
               :key="cat.id"
-              :label="cat.name"
-              :value="cat.id"
+              :value="cat.value"
+              :label="cat.label"
             />
           </el-select>
         </el-form-item>
@@ -251,9 +251,9 @@ import {
   publishKnowledgeDocument,
   archiveKnowledgeDocument,
   reindexKnowledgeDocument,
-  uploadKnowledgeDocument,
-  getKnowledgeCategories
+  uploadKnowledgeDocument
 } from '@/api/knowledge'
+import { getDictOptions } from '@/api/dict'
 
 // 统计数据
 const stats = ref([
@@ -267,7 +267,7 @@ const stats = ref([
 const searchForm = reactive({
   keyword: '',
   status: null,
-  categoryId: null,
+  categoryCode: null,
   pageNum: 1,
   pageSize: 10
 })
@@ -298,7 +298,8 @@ const form = reactive({
   id: null,
   title: '',
   status: 0,
-  categoryId: null
+  categoryId: null,
+    categoryCode: null
 })
 
 // 当前选中的文件
@@ -312,7 +313,7 @@ const rules = {
 // 获取分类列表
 async function fetchCategories() {
   try {
-    const data = await getKnowledgeCategories()
+    const data = await getDictOptions('knowledge_category')
     categoryList.value = data || []
   } catch (error) {
     console.error('获取分类列表失败:', error)
@@ -365,7 +366,7 @@ function handleSearch() {
 function handleReset() {
   searchForm.keyword = ''
   searchForm.status = null
-  searchForm.categoryId = null
+  searchForm.categoryCode = null
   handleSearch()
 }
 
@@ -391,7 +392,8 @@ async function handleEdit(row) {
       id: data.id,
       title: data.title,
       status: data.status,
-      categoryId: data.categoryId
+      categoryId: data.categoryId,
+      categoryCode: data.categoryCode
     })
     dialogVisible.value = true
   } catch (error) {
@@ -475,7 +477,7 @@ async function handleSubmit() {
         await updateKnowledgeDocument(form.id, {
           title: form.title,
           status: form.status,
-          categoryId: form.categoryId
+          categoryCode: form.categoryCode
         })
         ElMessage.success('编辑成功')
       } else {
@@ -490,8 +492,8 @@ async function handleSubmit() {
         if (form.title) {
           formData.append('title', form.title)
         }
-        if (form.categoryId) {
-          formData.append('categoryId', form.categoryId)
+        if (form.categoryCode) {
+          formData.append('categoryCode', form.categoryCode)
         }
         const docId = await uploadKnowledgeDocument(formData)
 

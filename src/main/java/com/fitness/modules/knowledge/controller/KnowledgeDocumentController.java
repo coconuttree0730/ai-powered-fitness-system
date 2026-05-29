@@ -63,8 +63,8 @@ public class KnowledgeDocumentController {
     public Result<Long> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "title", required = false) String title,
-            @RequestParam(value = "categoryId", required = false) Long categoryId) {
-        return Result.success(documentService.uploadDocument(file, title, categoryId));
+            @RequestParam(value = "categoryCode", required = false) String categoryCode) {
+        return Result.success(documentService.uploadDocument(file, title, categoryCode));
     }
 
     @Operation(summary = "更新知识文档")

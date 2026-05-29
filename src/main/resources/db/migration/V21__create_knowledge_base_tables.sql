@@ -109,7 +109,7 @@ CREATE INDEX idx_knowledge_chunk_content_hash ON knowledge_chunk(content_hash);
 CREATE INDEX idx_knowledge_chunk_embedding ON knowledge_chunk 
 USING hnsw (embedding vector_cosine_ops);
 
--- 全文搜索索引（用于关键词检索）
+-- 全文搜索索引（用于__关键词__检索）
 CREATE INDEX idx_knowledge_chunk_content_fts ON knowledge_chunk 
 USING gin(to_tsvector('simple', content));
 

@@ -8,9 +8,11 @@ import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.integration.security.SecurityUtils;
+import com.fitness.modules.knowledge.mapper.KnowledgeCategoryMapper;
 import com.fitness.modules.knowledge.mapper.KnowledgeDocumentMapper;
 import com.fitness.modules.knowledge.model.dto.KnowledgeDocumentDTO;
 import com.fitness.modules.knowledge.model.dto.KnowledgeDocumentQueryDTO;
+import com.fitness.modules.knowledge.model.entity.KnowledgeCategory;
 import com.fitness.modules.knowledge.model.entity.KnowledgeChunk;
 import com.fitness.modules.knowledge.model.entity.KnowledgeDocument;
 import com.fitness.modules.knowledge.model.enums.DocumentStatus;
@@ -36,7 +38,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     private final DocumentProcessorService documentProcessorService;
     private final EmbeddingService embeddingService;
     private final FileService fileService;
-    private final KnowledgeCategoryService categoryService;
+    private final KnowledgeCategoryMapper categoryMapper;
 
     private static final List<String> ALLOWED_FILE_TYPES = Arrays.asList("md", "txt");
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024L;
@@ -76,8 +78,8 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long uploadDocument(MultipartFile file, String title, Long categoryId) {
-        log.info("【文档上传】开始上传文档，文件名: {}, 标题: {}, 分类ID: {}", file.getOriginalFilename(), title, categoryId);
+    public Long uploadDocument(MultipartFile file, String title, String categoryCode) {
+        log.info("【文档上传】开始上传文档，文件名: {}, 标题: {}, 分类代码: {}", file.getOriginalFilename(), title, categoryCode);
 
         validateFile(file);
 
@@ -89,13 +91,15 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         var fileUploadVO = fileService.uploadFile(file, "knowledge");
         log.info("【文档上传】文件上传至MinIO成功，URL: {}", fileUploadVO.getFileUrl());
 
+        Long categoryId = resolveCategoryId(categoryCode);
+
         KnowledgeDocument document = new KnowledgeDocument();
         document.setTitle(StrUtil.isBlank(title) ? documentProcessorService.extractTitle(null, originalFilename) : title);
         document.setFileUrl(fileUploadVO.getFileUrl());
         document.setFileName(originalFilename);
         document.setFileType(fileType);
         document.setFileSize(file.getSize());
-        document.setCategoryId(categoryId);  // 设置分类ID
+        document.setCategoryId(categoryId);
         document.setStatus(DocumentStatus.DRAFT.getCode());
         document.setCreateBy(SecurityUtils.getCurrentUserId());
 
@@ -110,7 +114,9 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     public void update(KnowledgeDocumentDTO dto) {
         KnowledgeDocument document = getEntityById(dto.getId());
         document.setTitle(dto.getTitle());
-        document.setCategoryId(dto.getCategoryId());
+        if (StrUtil.isNotBlank(dto.getCategoryCode())) {
+            document.setCategoryId(resolveCategoryId(dto.getCategoryCode()));
+        }
         documentMapper.updateById(document);
     }
 
@@ -258,7 +264,10 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
 
         // 设置分类名称
         if (document.getCategoryId() != null) {
-            var category = categoryService.getById(document.getCategoryId());
+            KnowledgeCategory category = categoryMapper.selectOne(
+                new LambdaQueryWrapper<KnowledgeCategory>()
+                    .eq(KnowledgeCategory::getId, document.getCategoryId())
+            );
             if (category != null) {
                 vo.setCategoryName(category.getName());
             }
@@ -277,5 +286,20 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         }
 
         return vo;
+    }
+
+    private Long resolveCategoryId(String categoryCode) {
+        if (StrUtil.isBlank(categoryCode)) {
+            return null;
+        }
+        KnowledgeCategory category = categoryMapper.selectOne(
+            new LambdaQueryWrapper<KnowledgeCategory>()
+                .eq(KnowledgeCategory::getCode, categoryCode)
+                .eq(KnowledgeCategory::getDeleted, false)
+        );
+        if (category == null) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "分类代码不存在: " + categoryCode);
+        }
+        return category.getId();
     }
 }

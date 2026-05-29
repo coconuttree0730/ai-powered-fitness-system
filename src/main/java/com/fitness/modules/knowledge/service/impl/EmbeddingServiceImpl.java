@@ -81,7 +81,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
             return new float[0][];
         }
 
-        // Semaphore限制并发数，防止Ollama过载
+        // Semaphore限制并发数，防止Ollama（部署向量模型）过载
         Semaphore semaphore = new Semaphore(5);
         List<CompletableFuture<float[]>> futures = new ArrayList<>();
 

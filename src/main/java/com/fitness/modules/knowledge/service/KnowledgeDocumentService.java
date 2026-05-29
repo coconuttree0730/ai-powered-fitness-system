@@ -16,7 +16,7 @@ public interface KnowledgeDocumentService {
 
     Long create(KnowledgeDocumentDTO dto);
 
-    Long uploadDocument(MultipartFile file, String title, Long categoryId);
+    Long uploadDocument(MultipartFile file, String title, String categoryCode);
 
     void update(KnowledgeDocumentDTO dto);
 
