@@ -271,7 +271,14 @@
 <script setup>
 import { ref, computed, h, watch, onMounted, onUnmounted } from 'vue'
 import { useMessage, NTag, NButton } from 'naive-ui'
-import { getProducts, calculatePrice, createOrder, getOrders } from '@/api/product'
+import { getProducts, calculatePrice, createOrder, getOrders, payOrder } from '@/api/product'
+import { submitAlipayForm } from '@/api/membership'
+import {
+  clearPaymentMarker,
+  isPaymentFinished,
+  markPaymentStarted,
+  readPaymentMarker
+} from '@/utils/paymentMarker'
 
 const message = useMessage()
 
@@ -302,13 +309,13 @@ onUnmounted(() => {
 })
 
 const activeTab = ref('all')
-const userPoints = ref(580)
+const userPoints = ref(0)
 const showOrderModal = ref(false)
 const submitting = ref(false)
 const selectedProduct = ref(null)
 const orderQuantity = ref(1)
 const usePoints = ref(0)
-const payMethod = ref('WECHAT')
+const payMethod = ref('ALIPAY')
 const products = ref([])
 const orderRecords = ref([])
 const loading = ref(false)
@@ -344,7 +351,7 @@ watch([() => selectedProduct.value, orderQuantity, usePoints], async () => {
 
 async function recalculatePrice() {
   if (!selectedProduct.value) return
-  
+
   try {
     const res = await calculatePrice({
       productId: selectedProduct.value.id,
@@ -352,6 +359,7 @@ async function recalculatePrice() {
       usePoints: usePoints.value
     })
     calculatedPrice.value = res
+    userPoints.value = res.userAvailablePoints ?? userPoints.value
   } catch (error) {
     // 如果API失败，本地计算
     const originalTotal = (selectedProduct.value.originalPrice || 0) * orderQuantity.value
@@ -430,6 +438,7 @@ const orderColumns = [
       const statusMap = {
         'PENDING': { type: 'warning', text: '待支付' },
         'PAID': { type: 'processing', text: '已支付' },
+        'NOT_PICKED': { type: 'warning', text: '待取货' },
         'SHIPPED': { type: 'success', text: '已发货' },
         'COMPLETED': { type: 'default', text: '已完成' },
         'CANCELLED': { type: 'error', text: '已取消' }
@@ -479,6 +488,7 @@ function getOrderStatusType(status) {
   const statusMap = {
     'PENDING': 'warning',
     'PAID': 'processing',
+    'NOT_PICKED': 'warning',
     'SHIPPED': 'success',
     'COMPLETED': 'default',
     'CANCELLED': 'error'
@@ -491,6 +501,7 @@ function getOrderStatusText(status) {
   const statusMap = {
     'PENDING': '待支付',
     'PAID': '已支付',
+    'NOT_PICKED': '待取货',
     'SHIPPED': '已发货',
     'COMPLETED': '已完成',
     'CANCELLED': '已取消'
@@ -564,13 +575,14 @@ async function confirmOrder() {
       productId: selectedProduct.value.id,
       quantity: orderQuantity.value,
       usePoints: usePoints.value,
-      address: ''
+      address: '',
+      pickupType: 'IN_STORE'
     })
-    
-    await payOrder(res.orderNo)
-    
-    message.success('订单创建成功')
+
     showOrderModal.value = false
+    message.success('订单创建成功，正在跳转支付...')
+
+    await handlePayOrder(res.orderNo)
     await loadData()
   } catch (error) {
     message.error(error.message || '订单创建失败')
@@ -579,12 +591,36 @@ async function confirmOrder() {
   }
 }
 
-async function payOrder(orderNo) {
-  message.success('支付成功')
+async function handlePayOrder(orderNo) {
+  try {
+    message.info('开始支付，请在支付宝完成付款')
+    const res = await payOrder(orderNo, payMethod.value)
+
+    if (res.payForm) {
+      markPaymentStarted({ orderNo, orderType: 'PRODUCT' })
+      submitAlipayForm(res.payForm)
+    }
+  } catch (error) {
+    message.error(error.message || '支付请求失败，请重试')
+  }
 }
 
 async function handlePay(row) {
-  message.info('支付功能开发中')
+  await handlePayOrder(row.orderNo)
+  await loadData()
+}
+
+function notifyPaymentCompletion(orders) {
+  const marker = readPaymentMarker()
+  if (!marker?.orderNo) return
+
+  const paidOrder = orders.find(order =>
+    order.orderNo === marker.orderNo && isPaymentFinished(order)
+  )
+  if (!paidOrder) return
+
+  clearPaymentMarker()
+  message.success('支付完成，订单状态已更新')
 }
 
 async function loadData() {
@@ -603,6 +639,7 @@ async function loadData() {
     // 获取订单数据
     const orderData = await getOrders()
     orderRecords.value = orderData || []
+    notifyPaymentCompletion(orderRecords.value)
   } catch (error) {
     console.error('数据加载失败:', error)
     message.error('数据加载失败，请检查网络连接')

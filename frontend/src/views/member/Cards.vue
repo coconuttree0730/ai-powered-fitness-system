@@ -1,48 +1,76 @@
 <template>
   <div class="cards-page">
-    <!-- 我的会员卡区域 -->
-    <div class="my-card-section" v-if="myMembership">
+    <!-- 我的会员卡区域 - 始终显示，按状态渲染 -->
+    <div class="my-card-section">
       <div class="section-header">
         <h3 class="section-title">
           <n-icon :component="CardOutline" size="20" />
           我的会员卡
         </h3>
-        <n-button type="primary" size="small" class="renew-btn" @click="handleRenew">
-          <template #icon>
-            <n-icon :component="RefreshOutline" />
-          </template>
+        <n-button v-if="cardWallet.walletStatus === 'ACTIVATED'"
+          type="primary" size="small" class="renew-btn" @click="handleRenew">
+          <template #icon><n-icon :component="RefreshOutline" /></template>
           续费
         </n-button>
       </div>
-      <div class="my-card">
+
+      <!-- State D: ACTIVATED - 橙色渐变 -->
+      <div v-if="cardWallet.walletStatus === 'ACTIVATED'" class="my-card">
         <div class="my-card-info">
-          <div class="card-badge">{{ myMembership.membershipType || '会员' }}</div>
+          <div class="card-badge">{{ cardWallet.membership.membershipType || '会员' }}</div>
           <h3>VIP 会员卡</h3>
-          <p v-if="myMembership.expireTime">有效期至: {{ formatDate(myMembership.expireTime) }} | 剩余: {{ calcDaysLeft(myMembership.expireTime) }}天</p>
-          <p v-else>暂无会员信息</p>
-        </div>
-        <div class="my-card-status">
-          <n-tag :type="myMembership.isActive ? 'success' : 'default'" size="large" round class="status-badge">{{ myMembership.isActive ? '有效' : '已过期' }}</n-tag>
-          <p class="auto-renew" v-if="myMembership.isActive">
-            <n-icon :component="SyncCircleOutline" size="14" />
-            自动续费已开启
+          <p v-if="cardWallet.membership.expireTime">
+            有效期至: {{ formatDate(cardWallet.membership.expireTime) }} |
+            剩余: {{ cardWallet.membership.remainingDays }}天
           </p>
         </div>
+        <div class="my-card-status">
+          <n-tag type="success" size="large" round class="status-badge">有效</n-tag>
+          <n-button type="primary" size="small" class="qr-btn" @click="showQRCode">
+            会员二维码
+          </n-button>
+        </div>
       </div>
-    </div>
 
-    <!-- 未登录或无会员时显示提示 -->
-    <div class="my-card-section" v-else>
-      <div class="section-header">
-        <h3 class="section-title">
-          <n-icon :component="CardOutline" size="20" />
-          我的会员卡
-        </h3>
-      </div>
-      <div class="my-card empty-state">
+      <!-- State C: PAID_UNACTIVATED - 浅橙待激活 -->
+      <div v-else-if="cardWallet.walletStatus === 'PAID_UNACTIVATED'" class="my-card pending-activation">
         <div class="my-card-info">
-          <h3>暂无会员卡</h3>
-          <p>购买会员卡享受更多权益</p>
+          <div class="card-badge pending">待激活</div>
+          <h3>{{ cardWallet.paidOrder.cardName }}</h3>
+          <p>已支付 ¥{{ cardWallet.paidOrder.price }} | 有效期 {{ cardWallet.paidOrder.durationDays }} 天</p>
+          <p class="hint">激活后开始计算有效期，请尽快开卡使用</p>
+        </div>
+        <div class="my-card-status">
+          <n-button type="primary" size="large" :loading="activating" class="activate-btn" @click="handleActivate">
+            立即开卡
+          </n-button>
+        </div>
+      </div>
+
+      <!-- State B: PENDING_ORDER - 灰色待支付兜底 -->
+      <div v-else-if="cardWallet.walletStatus === 'PENDING_ORDER'" class="my-card pending-order">
+        <div class="my-card-info">
+          <div class="card-badge pending-order-badge">待支付</div>
+          <h3>{{ cardWallet.pendingOrder.cardName }}</h3>
+          <p>您有一笔未支付订单 ¥{{ cardWallet.pendingOrder.price }}</p>
+        </div>
+        <div class="my-card-status">
+          <n-space>
+            <n-button type="primary" size="small" @click="continuePay(cardWallet.pendingOrder.orderNo)">
+              继续支付
+            </n-button>
+            <n-button size="small" @click="cancelPendingOrder(cardWallet.pendingOrder.orderNo)">
+              取消订单
+            </n-button>
+          </n-space>
+        </div>
+      </div>
+
+      <!-- State A: NONE - 灰色空状态 -->
+      <div v-else class="my-card empty-state">
+        <div class="my-card-info">
+          <h3>暂未开通会员卡</h3>
+          <p>选择适合的方案，开启健身体验</p>
         </div>
       </div>
     </div>
@@ -167,76 +195,6 @@
           </div>
         </div>
       </n-spin>
-    </div>
-
-    <!-- 购买记录 -->
-    <div class="card-section">
-      <div class="section-header">
-        <h3 class="section-title">
-          <n-icon :component="ReceiptOutline" size="20" />
-          购买记录
-        </h3>
-      </div>
-
-      <!-- 桌面端表格 -->
-      <div v-if="!isMobile" class="table-wrapper">
-        <n-data-table
-          :columns="columns"
-          :data="orderData"
-          :pagination="pagination"
-          :bordered="false"
-          class="order-table"
-          :loading="loadingOrders"
-        />
-      </div>
-
-      <!-- 移动端卡片列表 -->
-      <div v-else class="mobile-order-list">
-        <n-spin :show="loadingOrders">
-          <n-empty v-if="orderData.length === 0" description="暂无购买记录" />
-          <div v-else class="order-timeline">
-            <div
-              v-for="(order, index) in orderData"
-              :key="order.orderNo"
-              class="timeline-item"
-              :style="{ animationDelay: `${index * 80}ms` }"
-            >
-              <div class="timeline-dot" :class="order.status"></div>
-              <div class="timeline-card" @click="showOrderDetail(order)">
-                <div class="timeline-header">
-                  <div class="order-info">
-                    <span class="order-type">{{ order.cardType }}</span>
-                    <span class="order-no">{{ order.orderNo.slice(-8) }}</span>
-                  </div>
-                  <n-tag :type="getStatusType(order.status)" size="small" round class="status-tag">
-                    {{ getStatusText(order.status) }}
-                  </n-tag>
-                </div>
-                <div class="timeline-body">
-                  <div class="amount-section">
-                    <span class="amount">¥{{ order.amount }}</span>
-                    <span class="time">{{ formatDateTime(order.createTime) }}</span>
-                  </div>
-                </div>
-                <div class="timeline-footer" v-if="order.status === 'pending'">
-                  <n-button type="primary" size="small" @click.stop="handlePay(order)">
-                    立即支付
-                  </n-button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- 移动端分页 -->
-          <div class="mobile-pagination" v-if="orderData.length > pagination.pageSize">
-            <n-pagination
-              v-model:page="currentPage"
-              :page-count="Math.ceil(orderData.length / pagination.pageSize)"
-              :page-slot="5"
-              size="small"
-            />
-          </div>
-        </n-spin>
-      </div>
     </div>
 
     <!-- 购买弹窗 -->
@@ -377,7 +335,7 @@
           <div class="success-ring"></div>
         </div>
         <h3>支付成功！</h3>
-        <p>您已成功购买 {{ successCardName }}</p>
+        <p>您已成功购买 {{ successCardName }}，请在"我的会员卡"中开卡激活</p>
         <div class="success-details">
           <div class="success-row">
             <span>订单编号</span>
@@ -393,12 +351,29 @@
         </n-button>
       </div>
     </n-modal>
+
+    <!-- 会员二维码弹窗 -->
+    <n-modal v-model:show="showQRModal" preset="card"
+      style="width: 90%; max-width: 380px" :show-header="false"
+      class="qr-modal" :mask-closable="true">
+      <div class="qr-content">
+        <h3>会员二维码</h3>
+        <p class="qr-hint">出示此二维码给前台工作人员扫描验证</p>
+        <div class="qr-wrapper">
+          <canvas ref="qrCanvasRef" width="220" height="220"></canvas>
+        </div>
+        <div class="qr-info">
+          <p>{{ cardWallet.membership?.membershipType || 'VIP' }} 会员</p>
+          <p v-if="cardWallet.membership?.expireTime">有效期至: {{ formatDate(cardWallet.membership.expireTime) }}</p>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, h, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useMessage, NTag, NIcon, NPagination } from 'naive-ui'
+import { useMessage, useDialog, NTag, NIcon, NPagination } from 'naive-ui'
 import {
   CardOutline,
   CartOutline,
@@ -412,20 +387,27 @@ import {
   StarOutline,
   FlashOutline,
   GiftOutline,
-  ReceiptOutline,
-  ShieldCheckmarkOutline,
+  QrCodeOutline,
   LockClosedOutline
 } from '@vicons/ionicons5'
 import {
   getMembershipCardList,
-  getMyMembership,
+  getCardWallet,
   getMyMembershipOrders,
   createMembershipOrder,
   payMembershipOrder,
-  submitAlipayForm
+  submitAlipayForm,
+  activateMembership,
+  cancelMembershipOrder
 } from '@/api/membership'
+import {
+  clearPaymentMarker,
+  markPaymentStarted,
+  readPaymentMarker
+} from '@/utils/paymentMarker'
 
 const message = useMessage()
+const dialog = useDialog()
 
 // 响应式状态
 const windowWidth = ref(window.innerWidth)
@@ -553,10 +535,11 @@ const paymentMethods = [
 
 // 数据状态
 const loadingCards = ref(false)
-const loadingOrders = ref(false)
 const membershipCards = ref([])
-const myMembership = ref(null)
-const orderData = ref([])
+const cardWallet = ref({ walletStatus: 'NONE' })
+const activating = ref(false)
+const showQRModal = ref(false)
+const qrCanvasRef = ref(null)
 
 // 加载会员卡列表
 async function loadCardsFromAPI() {
@@ -584,109 +567,91 @@ async function loadCardsFromAPI() {
   }
 }
 
-// 加载我的会员信息
-async function loadMyMembership() {
+// 加载会员卡钱包信息
+async function loadCardWallet() {
   try {
-    const data = await getMyMembership()
-    if (data) {
-      myMembership.value = data
-    }
+    const data = await getCardWallet()
+    cardWallet.value = data
+    notifyMembershipPaymentCompletion(data)
   } catch (error) {
-    console.error('加载会员信息失败:', error)
+    console.error('加载会员卡信息失败:', error)
   }
 }
 
-// 加载我的订单
-async function loadMyOrders() {
-  loadingOrders.value = true
+function notifyMembershipPaymentCompletion(wallet) {
+  const marker = readPaymentMarker()
+  if (!marker?.orderNo || marker.orderType !== 'MEMBERSHIP') return
+
+  const paidOrder = wallet?.paidOrder
+  if (wallet?.walletStatus !== 'PAID_UNACTIVATED' || paidOrder?.orderNo !== marker.orderNo) return
+
+  clearPaymentMarker()
+  message.success('支付完成，会员卡待激活')
+}
+
+// 激活会员卡
+async function handleActivate() {
+  if (!cardWallet.value.paidOrder?.orderNo) return
+  activating.value = true
   try {
-    const data = await getMyMembershipOrders()
-    if (data) {
-      const records = data.records || data
-      orderData.value = records.map(item => ({
-        orderNo: item.orderNo,
-        cardType: item.cardName,
-        amount: parseFloat(item.payAmount),
-        createTime: item.createTime,
-        status: mapOrderStatus(item.status)
-      }))
-    }
+    await activateMembership(cardWallet.value.paidOrder.orderNo)
+    message.success('开卡成功！会员权益已生效')
+    await loadCardWallet()
   } catch (error) {
-    console.error('加载订单失败:', error)
+    message.error(error.response?.data?.message || '开卡失败，请重试')
   } finally {
-    loadingOrders.value = false
+    activating.value = false
   }
 }
 
-function mapOrderStatus(status) {
-  const statusMap = {
-    'PAID': 'completed',
-    'PENDING': 'pending',
-    'CANCELLED': 'cancelled',
-    'TIMEOUT': 'expired',
-    'REFUNDED': 'refunded'
+// 继续支付
+async function continuePay(orderNo) {
+  try {
+    message.info('开始支付，请在支付宝完成付款')
+    const payData = await payMembershipOrder({
+      orderNo,
+      payMethod: 'ALIPAY'
+    })
+    if (payData?.payForm) {
+      markPaymentStarted({ orderNo, orderType: 'MEMBERSHIP' })
+      submitAlipayForm(payData.payForm)
+    } else {
+      message.error('获取支付信息失败')
+    }
+  } catch (error) {
+    message.error(error.response?.data?.message || '支付失败')
   }
-  return statusMap[status] || status.toLowerCase()
+}
+
+// 取消待支付订单
+async function cancelPendingOrder(orderNo) {
+  try {
+    await cancelMembershipOrder(orderNo)
+    message.success('订单已取消')
+    await loadCardWallet()
+  } catch (error) {
+    message.error(error.response?.data?.message || '取消失败')
+  }
+}
+
+// 显示会员二维码
+async function showQRCode() {
+  showQRModal.value = true
+  await nextTick()
+  if (qrCanvasRef.value) {
+    const QRCode = await import('qrcode')
+    const data = JSON.stringify({
+      type: 'MEMBERSHIP',
+      membershipId: cardWallet.value.membership?.id
+    })
+    QRCode.toCanvas(qrCanvasRef.value, data, { width: 220 })
+  }
 }
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
-}
-
-function formatDateTime(dateStr) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now - date
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) {
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    if (hours === 0) {
-      const minutes = Math.floor(diff / (1000 * 60))
-      return minutes <= 0 ? '刚刚' : `${minutes}分钟前`
-    }
-    return `${hours}小时前`
-  } else if (days === 1) {
-    return '昨天'
-  } else if (days < 7) {
-    return `${days}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-  }
-}
-
-function getStatusType(status) {
-  const statusMap = {
-    'completed': 'success',
-    'pending': 'warning',
-    'cancelled': 'default',
-    'expired': 'default',
-    'refunded': 'info'
-  }
-  return statusMap[status] || 'default'
-}
-
-function getStatusText(status) {
-  const statusMap = {
-    'completed': '已完成',
-    'pending': '待支付',
-    'cancelled': '已取消',
-    'expired': '已过期',
-    'refunded': '已退款'
-  }
-  return statusMap[status] || status
-}
-
-function showOrderDetail(order) {
-  // 可以展开显示订单详情
-  message.info(`订单号: ${order.orderNo}`)
-}
-
-function handlePay(order) {
-  message.info('跳转支付页面...')
 }
 
 function calcDaysLeft(expireTime) {
@@ -699,8 +664,7 @@ function calcDaysLeft(expireTime) {
 
 onMounted(() => {
   loadCardsFromAPI()
-  loadMyMembership()
-  loadMyOrders()
+  loadCardWallet()
 })
 
 const showBuyModal = ref(false)
@@ -708,43 +672,23 @@ const payLoading = ref(false)
 const paymentMethod = ref('ALIPAY')
 const selectedCard = ref(null)
 
-const columns = [
-  { title: '订单号', key: 'orderNo', width: 140 },
-  { title: '卡类型', key: 'cardType' },
-  {
-    title: '金额',
-    key: 'amount',
-    width: 100,
-    render(row) {
-      return h('span', { style: { color: '#FF6B35', fontWeight: 600 } }, `¥${row.amount}`)
-    }
-  },
-  { title: '购买时间', key: 'createTime', width: 120 },
-  {
-    title: '状态',
-    key: 'status',
-    width: 100,
-    render(row) {
-      const statusMap = {
-        'completed': { type: 'success', text: '已完成' },
-        'pending': { type: 'warning', text: '待支付' },
-        'cancelled': { type: 'default', text: '已取消' },
-        'expired': { type: 'default', text: '已过期' },
-        'refunded': { type: 'info', text: '已退款' }
-      }
-      const status = statusMap[row.status] || { type: 'default', text: row.status }
-      return h(NTag, { type: status.type, size: 'small', round: true }, { default: () => status.text })
-    }
-  }
-]
-
-const pagination = {
-  pageSize: 5,
-  showSizePicker: true,
-  pageSizes: [5, 10, 20]
-}
-
 function handleBuy(card) {
+  if (cardWallet.value.walletStatus === 'ACTIVATED' && cardWallet.value.membership) {
+    const membership = cardWallet.value.membership
+    dialog.warning({
+      title: '温馨提示',
+      content: `您当前已有${membership.membershipType || '会员'}（剩余${membership.remainingDays}天），购买新卡后将自动续期延长有效期`,
+      positiveText: '继续购买',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        selectedCard.value = card
+        paymentMethod.value = 'ALIPAY'
+        payStep.value = 2
+        showBuyModal.value = true
+      }
+    })
+    return
+  }
   selectedCard.value = card
   paymentMethod.value = 'ALIPAY'
   payStep.value = 2
@@ -753,23 +697,55 @@ function handleBuy(card) {
 
 function handleRenew() {
   const recommendCard = membershipCards.value.find(c => c.isRecommend)
-  if (recommendCard) {
-    selectedCard.value = recommendCard
-    paymentMethod.value = 'ALIPAY'
-    payStep.value = 2
-    showBuyModal.value = true
-  } else {
+  if (!recommendCard) {
     message.warning('暂无可购买的会员卡')
+    return
   }
+  if (cardWallet.value.walletStatus === 'ACTIVATED' && cardWallet.value.membership) {
+    const membership = cardWallet.value.membership
+    dialog.warning({
+      title: '温馨提示',
+      content: `您当前已有${membership.membershipType || '会员'}（剩余${membership.remainingDays}天），续费后将自动延长有效期`,
+      positiveText: '继续续费',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        selectedCard.value = recommendCard
+        paymentMethod.value = 'ALIPAY'
+        payStep.value = 2
+        showBuyModal.value = true
+      }
+    })
+    return
+  }
+  selectedCard.value = recommendCard
+  paymentMethod.value = 'ALIPAY'
+  payStep.value = 2
+  showBuyModal.value = true
 }
 
 function closeSuccessModal() {
   showSuccessModal.value = false
-  loadMyMembership()
-  loadMyOrders()
+  loadCardWallet()
 }
 
 async function confirmPay() {
+  if (cardWallet.value.walletStatus === 'ACTIVATED' && cardWallet.value.membership) {
+    const membership = cardWallet.value.membership
+    dialog.warning({
+      title: '温馨提示',
+      content: `您当前已有${membership.membershipType || '会员'}（剩余${membership.remainingDays}天），购买新卡后将自动续期延长有效期`,
+      positiveText: '继续支付',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        executePay()
+      }
+    })
+    return
+  }
+  await executePay()
+}
+
+async function executePay() {
   payLoading.value = true
   payStep.value = 3
   try {
@@ -785,6 +761,7 @@ async function confirmPay() {
       return
     }
 
+    message.info('开始支付，请在支付宝完成付款')
     // 支付订单
     const payData = await payMembershipOrder({
       orderNo: orderData.orderNo,
@@ -799,6 +776,7 @@ async function confirmPay() {
 
     // 支付宝支付，提交表单
     if (paymentMethod.value === 'ALIPAY' && payData.payForm) {
+      markPaymentStarted({ orderNo: orderData.orderNo, orderType: 'MEMBERSHIP' })
       submitAlipayForm(payData.payForm)
     } else if (paymentMethod.value === 'BALANCE') {
       // 显示成功弹窗
@@ -875,10 +853,19 @@ async function confirmPay() {
   gap: 20px;
   position: relative;
   z-index: 1;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px 24px;
 }
 
 .my-card.empty-state {
   opacity: 0.7;
+}
+
+.my-card:not(.empty-state):not(.pending-activation):not(.pending-order) {
+  border-left: 4px solid #06D6A0;
 }
 
 .my-card-info {
@@ -886,17 +873,14 @@ async function confirmPay() {
 }
 
 .card-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: linear-gradient(135deg, #FF6B35, #FF8C61);
-  color: white;
-  padding: 6px 14px;
+  display: inline-block;
+  padding: 4px 14px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, rgba(6, 214, 160, 0.25), rgba(46, 196, 182, 0.25));
+  color: #06D6A0;
 }
 
 .my-card-info h3 {
@@ -950,6 +934,78 @@ async function confirmPay() {
 .renew-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+}
+
+/* ==================== 待激活卡片 ==================== */
+.my-card.pending-activation {
+  border-left: 4px solid #FF6B35;
+  background: rgba(255, 107, 53, 0.08) !important;
+  border-color: rgba(255, 107, 53, 0.25) !important;
+}
+.pending-activation .my-card-info { color: #F0F0F0; }
+.pending-activation .my-card-info h3 { color: white; font-size: 24px; background: none; -webkit-text-fill-color: white; }
+.pending-activation .my-card-info p { color: rgba(255, 255, 255, 0.65); }
+.pending-activation .hint { font-size: 12px; color: #FFB088; margin-top: 6px; }
+.pending-activation .card-badge.pending { background: linear-gradient(135deg, #FFB088, #FF8C61); }
+
+.activate-btn {
+  background: linear-gradient(135deg, #FF6B35, #E55A2B) !important;
+  border: none !important;
+  padding: 12px 28px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+/* ==================== 待支付订单卡片 ==================== */
+.my-card.pending-order {
+  border-left: 4px solid #9CA3AF;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.pending-order .my-card-info { color: #F0F0F0; }
+.pending-order .my-card-info h3 { color: white; font-size: 24px; background: none; -webkit-text-fill-color: white; }
+.pending-order .my-card-info p { color: rgba(255, 255, 255, 0.6); }
+.card-badge.pending-order-badge { background: rgba(156, 163, 175, 0.3); color: #D1D5DB; }
+
+/* ==================== QR按钮 ==================== */
+.qr-btn {
+  margin-top: 12px;
+}
+
+/* ==================== QR弹窗 ==================== */
+.qr-content {
+  text-align: center;
+  padding: 16px;
+}
+
+.qr-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 8px;
+}
+
+.qr-hint {
+  font-size: 14px;
+  color: #6B7280;
+  margin-bottom: 24px;
+}
+
+.qr-wrapper {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.qr-info p {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 4px 0;
 }
 
 /* ==================== 购买会员卡区域 - 横向滑动布局 ==================== */
@@ -1878,8 +1934,7 @@ async function confirmPay() {
 
 /* ==================== 响应式适配 ==================== */
 @media (max-width: 1024px) {
-  .my-card-section,
-  .card-section {
+  .my-card-section {
     padding: 22px;
     border-radius: 20px;
   }
@@ -1959,8 +2014,7 @@ async function confirmPay() {
 }
 
 @media (max-width: 480px) {
-  .my-card-section,
-  .card-section {
+  .my-card-section {
     padding: 18px;
     border-radius: 16px;
   }

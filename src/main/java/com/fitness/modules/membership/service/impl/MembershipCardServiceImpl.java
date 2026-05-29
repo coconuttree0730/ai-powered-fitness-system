@@ -12,7 +12,6 @@ import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.membership.mapper.MembershipCardContentMapper;
 import com.fitness.modules.membership.mapper.MembershipCardMapper;
 import com.fitness.modules.membership.mapper.MembershipCardTypeMapper;
-import com.fitness.modules.membership.mapper.MembershipOrderMapper;
 import com.fitness.modules.membership.model.dto.MembershipCardContentDTO;
 import com.fitness.modules.membership.model.dto.MembershipCardDTO;
 import com.fitness.modules.membership.model.dto.MembershipCardQueryDTO;
@@ -22,6 +21,7 @@ import com.fitness.modules.membership.model.entity.MembershipCardType;
 import com.fitness.modules.membership.model.vo.MembershipCardContentVO;
 import com.fitness.modules.membership.model.vo.MembershipCardVO;
 import com.fitness.modules.membership.service.MembershipCardService;
+import com.fitness.modules.order.mapper.MembershipOrderExtMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -42,7 +42,7 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
 
     private final MembershipCardContentMapper contentMapper;
     private final MembershipCardTypeMapper typeMapper;
-    private final MembershipOrderMapper orderMapper;
+    private final MembershipOrderExtMapper membershipOrderExtMapper;
     private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
@@ -150,7 +150,7 @@ public class MembershipCardServiceImpl extends ServiceImpl<MembershipCardMapper,
             throw new BusinessException(ErrorCode.NOT_FOUND, "会员卡不存在");
         }
 
-        if (orderMapper.countByCardId(id) > 0) {
+        if (membershipOrderExtMapper.countByCardId(id) > 0) {
             throw new BusinessException(409, "会员卡已有订单记录，无法删除，请先下架该会员卡");
         }
 

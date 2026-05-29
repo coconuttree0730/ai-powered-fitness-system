@@ -22,4 +22,10 @@ public interface MembershipOrderMapper extends BaseMapper<MembershipOrder> {
 
     @Select("SELECT COUNT(1) FROM membership_order WHERE card_id = #{cardId}")
     long countByCardId(@Param("cardId") Long cardId);
+
+    @Select("SELECT * FROM membership_order WHERE user_id = #{userId} AND status = 'PAID' ORDER BY pay_time DESC LIMIT 1")
+    MembershipOrder selectLatestPaidOrder(@Param("userId") Long userId);
+
+    @Select("SELECT * FROM membership_order WHERE user_id = #{userId} AND status = 'PENDING' ORDER BY create_time DESC LIMIT 1")
+    MembershipOrder selectLatestPendingOrder(@Param("userId") Long userId);
 }

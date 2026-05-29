@@ -9,6 +9,7 @@ import com.fitness.modules.membership.model.entity.MembershipCard;
 import com.fitness.modules.membership.model.entity.MembershipCardType;
 import com.fitness.modules.membership.model.entity.MembershipOrder;
 import com.fitness.modules.membership.model.entity.UserMembership;
+import com.fitness.modules.membership.model.vo.PurchaseCheckVO;
 import com.fitness.modules.membership.model.vo.UserMembershipVO;
 import com.fitness.modules.membership.service.UserMembershipService;
 import lombok.RequiredArgsConstructor;
@@ -175,6 +176,46 @@ public class UserMembershipServiceImpl extends ServiceImpl<UserMembershipMapper,
         }
 
         return true;
+    }
+
+    @Override
+    public PurchaseCheckVO checkPurchaseEligibility(Long userId, Long cardId) {
+        log.debug("购卡前校验: userId={}, cardId={}", userId, cardId);
+
+        PurchaseCheckVO vo = new PurchaseCheckVO();
+        vo.setHasExistingMembership(false);
+
+        UserMembership membership = userMembershipMapper.selectByUserId(userId);
+        if (membership == null) {
+            log.debug("用户无会员记录: userId={}", userId);
+            return vo;
+        }
+
+        if (!Boolean.TRUE.equals(membership.getIsActive())) {
+            log.debug("会员未激活: userId={}", userId);
+            return vo;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (membership.getExpireTime() == null || membership.getExpireTime().isBefore(now)) {
+            log.info("会员已过期，更新状态: userId={}, expireTime={}", userId, membership.getExpireTime());
+            membership.setIsActive(false);
+            updateById(membership);
+            return vo;
+        }
+
+        long remainingDays = ChronoUnit.DAYS.between(now, membership.getExpireTime());
+        int days = (int) Math.max(0, remainingDays);
+
+        vo.setHasExistingMembership(true);
+        vo.setMembershipType(membership.getMembershipType());
+        vo.setRemainingDays(days);
+        vo.setWarningMessage(String.format("您当前已有%s会员（剩余%d天），购买新卡后将自动续期延长有效期",
+                membership.getMembershipType() != null ? membership.getMembershipType() : "会员", days));
+
+        log.debug("购卡校验结果: userId={}, hasExistingMembership=true, membershipType={}, remainingDays={}",
+                userId, vo.getMembershipType(), vo.getRemainingDays());
+        return vo;
     }
 
     private UserMembershipVO convertToVO(UserMembership membership) {

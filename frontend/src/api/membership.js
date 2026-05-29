@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { getDictOptions } from '@/api/dict'
 
 /**
  * ==================== 会员卡管理 API ====================
@@ -83,6 +84,32 @@ export function getMembershipOrderDetail(orderNo) {
 }
 
 /**
+ * 获取我的全部订单列表（统一接口，含会员卡/商品/私教课）
+ * @returns {Promise} 订单列表
+ */
+export function getMyAllOrders() {
+  return request({
+    url: '/orders',
+    method: 'get'
+  })
+}
+
+export function payUnifiedOrder(orderNo, payMethod = 'ALIPAY') {
+  return request({
+    url: `/orders/${orderNo}/pay`,
+    method: 'post',
+    params: { payMethod }
+  })
+}
+
+export function getUnifiedOrderDetail(orderNo) {
+  return request({
+    url: `/orders/${orderNo}`,
+    method: 'get'
+  })
+}
+
+/**
  * 获取我的订单列表
  * @returns {Promise} 订单列表
  */
@@ -132,6 +159,18 @@ export function checkMembershipValid() {
 }
 
 /**
+ * 购卡前校验
+ * @param {number} cardId 会员卡ID
+ * @returns {Promise} { hasExistingMembership, membershipType, remainingDays, warningMessage }
+ */
+export function checkPurchaseEligibility(cardId) {
+  return request({
+    url: `/membership/cards/${cardId}/purchase-check`,
+    method: 'get'
+  })
+}
+
+/**
  * ==================== 支付宝支付工具函数 ====================
  */
 
@@ -140,17 +179,24 @@ export function checkMembershipValid() {
  * @param {string} payForm 支付宝返回的HTML表单
  */
 export function submitAlipayForm(payForm) {
-  // 创建临时div并插入表单
-  const div = document.createElement('div')
-  div.innerHTML = payForm
-  document.body.appendChild(div)
+  if (!payForm) {
+    console.error('支付宝支付表单为空')
+    return
+  }
 
-  // 提交表单
-  const form = div.querySelector('form')
-  if (form) {
-    form.submit()
-  } else {
-    console.error('支付宝支付表单不存在')
+  try {
+    const div = document.createElement('div')
+    div.innerHTML = payForm
+    document.body.appendChild(div)
+
+    const form = div.querySelector('form')
+    if (form) {
+      form.submit()
+    } else {
+      document.write(payForm)
+    }
+  } catch (error) {
+    console.error('支付宝支付表单提交失败:', error)
   }
 }
 
@@ -252,10 +298,7 @@ export function updateCardStatus(id, status) {
  * @returns {Promise} 类型列表
  */
 export function getCardTypeList() {
-  return request({
-    url: '/admin/dict/options/membership_card_type',
-    method: 'get'
-  })
+  return getDictOptions('membership_card_type')
 }
 
 /**
@@ -268,6 +311,30 @@ export function createCardType(data) {
     url: '/admin/membership/card-types',
     method: 'post',
     data
+  })
+}
+
+/**
+ * 获取会员卡钱包信息
+ * @returns {Promise} { walletStatus, membership, pendingOrder, paidOrder }
+ */
+export function getCardWallet() {
+  return request({
+    url: '/membership/card-wallet',
+    method: 'get'
+  })
+}
+
+/**
+ * 激活会员卡
+ * @param {string} orderNo 订单号
+ * @returns {Promise}
+ */
+export function activateMembership(orderNo) {
+  return request({
+    url: '/membership/activate',
+    method: 'post',
+    data: { orderNo }
   })
 }
 

@@ -7,15 +7,14 @@ import com.fitness.common.result.Result;
 import com.fitness.modules.membership.model.dto.MembershipCardDTO;
 import com.fitness.modules.membership.model.dto.MembershipCardQueryDTO;
 import com.fitness.modules.membership.model.dto.MembershipCardTypeDTO;
-import com.fitness.modules.membership.model.entity.MembershipOrder;
 import com.fitness.modules.membership.model.entity.UserMembership;
 import com.fitness.modules.membership.model.vo.MembershipCardTypeVO;
 import com.fitness.modules.membership.model.vo.MembershipCardVO;
 import com.fitness.modules.membership.model.vo.MembershipStatsVO;
 import com.fitness.modules.membership.service.MembershipCardService;
 import com.fitness.modules.membership.service.MembershipCardTypeService;
-import com.fitness.modules.membership.service.MembershipOrderService;
 import com.fitness.modules.membership.service.UserMembershipService;
+import com.fitness.modules.order.mapper.OrderMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin/membership")
@@ -39,7 +37,7 @@ public class MembershipCardAdminController {
     private final MembershipCardTypeService cardTypeService;
     private final MembershipCardService cardService;
     private final UserMembershipService userMembershipService;
-    private final MembershipOrderService orderService;
+    private final OrderMapper orderMapper;
 
     // ==================== 会员卡类型管理 ====================
 
@@ -130,21 +128,11 @@ public class MembershipCardAdminController {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime monthStart = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        BigDecimal monthlyRevenue = orderService.getBaseMapper().selectList(
-                new LambdaQueryWrapper<MembershipOrder>()
-                        .eq(MembershipOrder::getStatus, "PAID")
-                        .ge(MembershipOrder::getPayTime, monthStart)
-        ).stream()
-                .map(MembershipOrder::getPayAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal monthlyRevenue = orderMapper.sumMembershipRevenueSince(monthStart);
         stats.setMonthlyRevenue(monthlyRevenue);
 
-        long totalPaidOrders = orderService.count(
-                new LambdaQueryWrapper<MembershipOrder>()
-                        .eq(MembershipOrder::getStatus, "PAID")
-        );
-        long totalOrders = orderService.count();
+        long totalPaidOrders = orderMapper.countPaidMembershipOrders();
+        long totalOrders = orderMapper.countMembershipOrders();
         BigDecimal renewalRate = totalOrders > 0
                 ? BigDecimal.valueOf(totalPaidOrders).multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
