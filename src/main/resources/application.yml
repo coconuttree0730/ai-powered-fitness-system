@@ -123,9 +123,9 @@ alipay:
   app-id: ${ALIPAY_APP_ID}
   private-key: ${ALIPAY_PRIVATE_KEY}
   alipay-public-key: ${ALIPAY_PUBLIC_KEY}
-  server-url: ${ALIPAY_SERVER_URL}
-  notify-url: ${ALIPAY_NOTIFY_URL}
-  return-url: ${ALIPAY_RETURN_URL}
+  server-url: ${ALIPAY_SERVER_URL:https://openapi-sandbox.dl.alipaydev.com/gateway.do}
+  notify-url: ${ALIPAY_NOTIFY_URL:http://localhost:8080/api/v1/payment/alipay/notify}
+  return-url: ${ALIPAY_RETURN_URL:http://localhost:3000/member/coach}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}

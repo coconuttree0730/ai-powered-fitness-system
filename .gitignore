@@ -29,6 +29,11 @@ Thumbs.db
 frontend/node_modules/
 frontend/dist/
 
+# Root accidental npm artifacts
+/node_modules/
+/package.json
+/package-lock.json
+
 # Application configs with secrets
 src/main/resources/application-local.yml
 src/main/resources/application-prod.yml
@@ -54,8 +59,7 @@ docker/web-nginx-dist/
 !README.md
 
 # Private directories
-docs/
-temp/
+
 knowledge_data/
 
 # Project specific

@@ -1,0 +1,98 @@
+# ============================================
+# AI健身系统 - 环境变量配置（适用于 ~/.zshrc 或 ~/.bashrc）
+# ============================================
+# 说明：
+# 1. 以下变量与 docker-compose.yml 中引用的环境变量完全一致。
+# 2. 推荐使用项目根目录下的 .env 文件管理敏感配置（密码、密钥等），
+#    并提交 .env.example 作为模板，不要将 .env 提交到版本控制。
+# 3. 如果选择在 shell 配置文件中直接 export，请务必确保文件权限安全（chmod 600），
+#    并注意不要将本文件公开。
+# 4. 修改后请执行 source ~/.zshrc 或 source ~/.bashrc 使其生效。
+# ============================================
+
+# ---------- 服务基础配置 ----------
+export SERVER_PORT="8088"
+export SPRING_PROFILES_ACTIVE="dev"
+
+# ---------- PostgreSQL 数据库配置 ----------
+# 提示：生产环境请修改下方密码，并通过 .env 文件或密钥管理服务注入
+export DB_HOST="172.19.55.232"
+export DB_PORT="5432"
+export DB_NAME="fitness_ai_db"
+export DB_USERNAME="fitness_user"
+export DB_PASSWORD="myPostgresPass123"          
+export DB_POOL_MAX_SIZE="20"
+export DB_POOL_MIN_IDLE="5"
+export DB_POOL_CONNECTION_TIMEOUT="30000"
+export DB_POOL_IDLE_TIMEOUT="600000"
+export DB_POOL_MAX_LIFETIME="1800000"
+
+# ---------- Redis 配置 ----------
+export REDIS_HOST="172.19.55.232"
+export REDIS_PORT="6379"
+export REDIS_PASSWORD="myRedisPass123"          
+export REDIS_DATABASE="0"
+export REDIS_TIMEOUT="5000ms"
+export REDIS_POOL_MAX_ACTIVE="16"
+export REDIS_POOL_MAX_IDLE="8"
+export REDIS_POOL_MIN_IDLE="2"
+export REDIS_POOL_MAX_WAIT="-1ms"
+
+# ---------- 阿里云通义千问（DashScope）配置 ----------
+export AI_DASHSCOPE_API_KEY=""                  # 请填写真实API Key
+export AI_DASHSCOPE_MODEL="deepseek-v4-flash"
+export AI_DASHSCOPE_CHAT_ENABLED="true"
+export AI_DASHSCOPE_TEMPERATURE="0.7"
+export AI_DASHSCOPE_TOP_P="0.8"
+export AI_DASHSCOPE_MAX_TOKENS="5000"
+export AI_DASHSCOPE_TIMEOUT="120000"
+export AI_DASHSCOPE_CONNECT_TIMEOUT="30000"
+export AI_DASHSCOPE_READ_TIMEOUT="90000"
+
+# ---------- Ollama（本地模型服务）配置 ----------
+export OLLAMA_BASE_URL="http://172.19.55.232:11434"
+export OLLAMA_EMBEDDING_MODEL="embeddinggemma:300m"
+
+# ---------- JWT 令牌配置 ----------
+export JWT_SECRET=""                            # 【请填写】复杂随机字符串，至少32位
+export JWT_ACCESS_EXPIRATION="1800000"
+export JWT_REFRESH_EXPIRATION="604800000"
+export JWT_REMEMBER_ME_EXPIRATION="2592000000"
+export JWT_ISSUER="ai-fitness-system"
+export JWT_AUDIENCE="fitness-users"
+
+# ---------- MinIO 对象存储配置 ----------
+export MINIO_ENDPOINT="http://172.19.55.232:9000"
+export MINIO_ACCESS_KEY="minioadmin"            
+export MINIO_SECRET_KEY="minioPass123"          
+export MINIO_BUCKET="fitness-bucket"
+export MINIO_SECURE="false"
+
+# ---------- 阿里云短信服务配置 ----------
+export ALIYUN_SMS_ACCESS_KEY_ID=""              # 请填写
+export ALIYUN_SMS_ACCESS_KEY_SECRET=""          # 请填写
+export ALIYUN_SMS_SIGN_NAME=""                  # 短信签名名称
+export ALIYUN_SMS_TEMPLATE_CODE=""              # 短信模板CODE
+export ALIYUN_SMS_ENDPOINT="dypnsapi.aliyuncs.com"
+
+# ---------- 知识库检索配置 ----------
+export KNOWLEDGE_CHUNK_SIZE="500"
+export KNOWLEDGE_CHUNK_OVERLAP="50"
+
+# ---------- 文件上传配置 ----------
+export MULTIPART_MAX_FILE_SIZE="50MB"
+export MULTIPART_MAX_REQUEST_SIZE="100MB"
+
+# ---------- MyBatis 配置 ----------
+export MYBATIS_STATEMENT_TIMEOUT="25000"
+
+# ---------- 跨域配置 ----------
+export CORS_ALLOWED_ORIGINS="http://localhost:5173,http://localhost:9080"
+
+# ---------- 支付宝支付配置 ----------
+export ALIPAY_APP_ID=""                         # 请填写支付宝应用ID
+export ALIPAY_SERVER_URL="https://openapi-sandbox.dl.alipaydev.com/gateway.do"
+export ALIPAY_NOTIFY_URL="https://[xxxxxxxxxx}/api/v1/payment/alipay/notify"   # 请替换为真实回调地址
+export ALIPAY_RETURN_URL="http://localhost:3000/member/cards"
+export ALIPAY_PRIVATE_KEY=""                    # 应用私钥
+export ALIPAY_PUBLIC_KEY=""                     # 支付宝公钥
