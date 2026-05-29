@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fitness.modules.booking.mapper.PrivateCoachBookingMapper">
+
+    <resultMap id="BaseResultMap" type="com.fitness.modules.booking.model.vo.PrivateCoachBookingVO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="coach_id" property="coachId"/>
+        <result column="coach_name" property="coachName"/>
+        <result column="booking_date" property="bookingDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="note" property="note"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectDetailById" resultMap="BaseResultMap">
+        SELECT
+            b.id,
+            b.user_id,
+            COALESCE(mu.nickname, mu.username) AS user_name,
+            b.coach_id,
+            COALESCE(cd.real_name, cu.nickname, cu.username) AS coach_name,
+            b.booking_date,
+            b.start_time,
+            b.end_time,
+            b.note,
+            b.status
+        FROM fitness_private_coach_booking b
+        LEFT JOIN sys_user mu ON mu.id = b.user_id
+        LEFT JOIN sys_user cu ON cu.id = b.coach_id
+        LEFT JOIN coach_detail cd ON cd.user_id = cu.id
+        WHERE b.id = #{id} AND b.deleted = false
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+            b.id,
+            b.user_id,
+            COALESCE(mu.nickname, mu.username) AS user_name,
+            b.coach_id,
+            COALESCE(cd.real_name, cu.nickname, cu.username) AS coach_name,
+            b.booking_date,
+            b.start_time,
+            b.end_time,
+            b.note,
+            b.status
+        FROM fitness_private_coach_booking b
+        LEFT JOIN sys_user mu ON mu.id = b.user_id
+        LEFT JOIN sys_user cu ON cu.id = b.coach_id
+        LEFT JOIN coach_detail cd ON cd.user_id = cu.id
+        WHERE b.user_id = #{userId} AND b.deleted = false
+        ORDER BY b.booking_date DESC, b.start_time ASC
+    </select>
+
+    <select id="selectByCoachIdAndDate" resultMap="BaseResultMap">
+        SELECT
+            b.id,
+            b.user_id,
+            COALESCE(mu.nickname, mu.username) AS user_name,
+            b.coach_id,
+            COALESCE(cd.real_name, cu.nickname, cu.username) AS coach_name,
+            b.booking_date,
+            b.start_time,
+            b.end_time,
+            b.note,
+            b.status
+        FROM fitness_private_coach_booking b
+        LEFT JOIN sys_user mu ON mu.id = b.user_id
+        LEFT JOIN sys_user cu ON cu.id = b.coach_id
+        LEFT JOIN coach_detail cd ON cd.user_id = cu.id
+        WHERE b.coach_id = #{coachId} AND b.booking_date = #{date} AND b.deleted = false
+        ORDER BY b.start_time ASC
+    </select>
+
+    <select id="selectByCoachIdAndDateRange" resultMap="BaseResultMap">
+        SELECT
+            b.id,
+            b.user_id,
+            COALESCE(mu.nickname, mu.username) AS user_name,
+            b.coach_id,
+            COALESCE(cd.real_name, cu.nickname, cu.username) AS coach_name,
+            b.booking_date,
+            b.start_time,
+            b.end_time,
+            b.note,
+            b.status
+        FROM fitness_private_coach_booking b
+        LEFT JOIN sys_user mu ON mu.id = b.user_id
+        LEFT JOIN sys_user cu ON cu.id = b.coach_id
+        LEFT JOIN coach_detail cd ON cd.user_id = cu.id
+        WHERE b.coach_id = #{coachId}
+          AND b.booking_date BETWEEN #{startDate} AND #{endDate}
+          AND b.deleted = false
+        ORDER BY b.booking_date ASC, b.start_time ASC
+    </select>
+
+    <update id="cancelBooking">
+        UPDATE fitness_private_coach_booking
+        SET status = 2, cancel_reason = #{reason}, update_time = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = false
+    </update>
+
+    <update id="updateStatus">
+        UPDATE fitness_private_coach_booking
+        SET status = #{status}, update_time = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = false
+    </update>
+
+</mapper>
