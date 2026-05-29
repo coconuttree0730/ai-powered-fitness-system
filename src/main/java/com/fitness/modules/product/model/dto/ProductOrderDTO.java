@@ -15,4 +15,5 @@ public class ProductOrderDTO {
     private Integer usePoints;
     private String address;
     private String remark;
+    private String pickupType;
 }

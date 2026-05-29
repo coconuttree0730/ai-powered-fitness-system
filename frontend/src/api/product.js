@@ -52,7 +52,7 @@ export function getOrderDetail(orderNo) {
 }
 
 // 支付订单
-export function payOrder(orderNo, payMethod) {
+export function payOrder(orderNo, payMethod = 'ALIPAY') {
   return request({
     url: `/product-orders/${orderNo}/pay`,
     method: 'post',

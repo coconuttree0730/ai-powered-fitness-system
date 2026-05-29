@@ -27,7 +27,11 @@ public class ProductVO {
     private Integer sortOrder;
     private Long coachId;
     private LocalDateTime createdAt;
-    
+
+    private String packageCode;
+    private Integer totalSessions;
+    private Integer validityDays;
+
     private BigDecimal calculatedDiscount;
     private BigDecimal finalPrice;
     private Integer requiredPoints;

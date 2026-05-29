@@ -10,10 +10,13 @@ import java.util.List;
 
 @Mapper
 public interface ProductOrderMapper extends BaseMapper<ProductOrder> {
-    
-    @Select("SELECT * FROM product_order WHERE user_id = #{userId} ORDER BY created_at DESC")
+
+    @Select("SELECT * FROM product_order WHERE user_id = #{userId} ORDER BY create_time DESC")
     List<ProductOrder> selectByUserId(@Param("userId") Long userId);
-    
+
     @Select("SELECT * FROM product_order WHERE order_no = #{orderNo}")
     ProductOrder selectByOrderNo(@Param("orderNo") String orderNo);
+
+    @Select("SELECT * FROM product_order WHERE pickup_code = #{pickupCode}")
+    ProductOrder selectByPickupCode(@Param("pickupCode") String pickupCode);
 }

@@ -2,9 +2,9 @@ package com.fitness.modules.product.controller;
 
 import com.fitness.common.result.Result;
 import com.fitness.integration.security.SecurityUtils;
-import com.fitness.modules.product.model.dto.ProductDTO;
-import com.fitness.modules.product.model.vo.ProductVO;
-import com.fitness.modules.product.service.ProductService;
+import com.fitness.modules.coach.model.dto.CoachPackageDTO;
+import com.fitness.modules.coach.model.vo.CoachPackageVO;
+import com.fitness.modules.coach.service.CoachPackageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -14,53 +14,49 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "教练商品", description = "教练商品管理接口")
+@Tag(name = "教练套餐", description = "教练套餐管理接口（已迁移至 CoachPackage，保留兼容路径）")
 @RestController
 @RequestMapping("/api/v1/coach/products")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('COACH')")
 public class CoachProductController {
 
-    private final ProductService productService;
+    private final CoachPackageService coachPackageService;
 
-    @Operation(summary = "获取我的商品列表")
+    @Operation(summary = "获取我的套餐列表")
     @GetMapping
-    public Result<List<ProductVO>> listMyProducts() {
+    public Result<List<CoachPackageVO>> listMyProducts() {
         Long coachId = SecurityUtils.getCurrentUserId();
-        return Result.success(productService.getProductsByCoachId(coachId));
+        return Result.success(coachPackageService.getCoachPackages(coachId));
     }
 
-    @Operation(summary = "创建商品")
+    @Operation(summary = "创建套餐")
     @PostMapping
-    public Result<ProductVO> create(@Valid @RequestBody ProductDTO dto) {
+    public Result<CoachPackageVO> create(@Valid @RequestBody CoachPackageDTO dto) {
         Long coachId = SecurityUtils.getCurrentUserId();
-        dto.setCoachId(coachId);
-        dto.setCategory("COURSE");
-        return Result.success(productService.createProduct(dto));
+        return Result.success(coachPackageService.createPackage(dto, coachId));
     }
 
-    @Operation(summary = "更新商品")
+    @Operation(summary = "更新套餐")
     @PutMapping("/{id}")
-    public Result<ProductVO> update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
+    public Result<CoachPackageVO> update(@PathVariable Long id, @Valid @RequestBody CoachPackageDTO dto) {
         Long coachId = SecurityUtils.getCurrentUserId();
-        dto.setId(id);
-        dto.setCoachId(coachId);
-        return Result.success(productService.updateProduct(dto));
+        return Result.success(coachPackageService.updatePackage(id, dto, coachId));
     }
 
-    @Operation(summary = "删除商品")
+    @Operation(summary = "删除套餐")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         Long coachId = SecurityUtils.getCurrentUserId();
-        productService.deleteCoachProduct(id, coachId);
+        coachPackageService.deletePackage(id, coachId);
         return Result.success();
     }
 
-    @Operation(summary = "更新商品状态")
+    @Operation(summary = "更新套餐状态")
     @PutMapping("/{id}/status")
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam String status) {
         Long coachId = SecurityUtils.getCurrentUserId();
-        productService.updateCoachProductStatus(id, coachId, status);
+        coachPackageService.updateStatus(id, status, coachId);
         return Result.success();
     }
 }

@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 @Data
 @TableName("product")
 public class Product {
-    
+
     @TableId(type = IdType.AUTO)
     private Long id;
-    
+
     private String name;
     private String code;
     private String category;
@@ -29,11 +29,10 @@ public class Product {
     private Boolean isNew;
     private Boolean isRecommend;
     private Integer sortOrder;
-    private Long coachId;
-    
+
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-    
+    private LocalDateTime createTime;
+
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 }

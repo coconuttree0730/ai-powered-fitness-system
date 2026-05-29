@@ -13,29 +13,25 @@ public class ProductOrder {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 关联统一订单表 orders.id */
+    private Long orderId;
+
     private String orderNo;
     private Long userId;
     private Long productId;
-    private String productName;
-    private Integer quantity;
+    private String productImage;
     private BigDecimal originalPrice;
-    private Integer pointsUsed;
-    private BigDecimal pointsDiscount;
-    private BigDecimal finalPrice;
     private BigDecimal payAmount;
     private String payMethod;
     private LocalDateTime payTime;
     private String status;
-    private String trackingNo;
-    private String carrier;
-    private String address;
     private String remark;
-    private Long coachId;
+    private LocalDateTime expireTime;
+    private String alipayTradeNo;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
-    //mybatis plus 配置填充
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 }

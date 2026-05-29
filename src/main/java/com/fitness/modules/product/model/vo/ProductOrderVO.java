@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Data
 public class ProductOrderVO {
     private Long id;
+    private Long orderId;
     private String orderNo;
     private Long productId;
     private String productName;
@@ -21,6 +22,7 @@ public class ProductOrderVO {
     private BigDecimal finalPrice;
     private BigDecimal payAmount;
     private String payMethod;
+    private String payMethodLabel;
     private LocalDateTime payTime;
     private String status;
     private String statusLabel;
@@ -30,5 +32,13 @@ public class ProductOrderVO {
     private String address;
     private String remark;
     private Long coachId;
+    private String pickupType;
+    private String pickupCode;
+    private String pickupStatus;
+    private String pickupStatusLabel;
+    private LocalDateTime pickupTime;
+    private LocalDateTime expireTime;
+    private String alipayTradeNo;
+    private Long remainingSeconds;
     private LocalDateTime createdAt;
 }
