@@ -71,7 +71,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
             throw new BusinessException(ErrorCode.NOT_FOUND, "字典不存在");
         }
 
-        BeanUtil.copyProperties(dto, existing, "id", "createdAt");
+        BeanUtil.copyProperties(dto, existing, "id", "createTime");
         updateById(existing);
 
         if (dto.getItems() != null) {
@@ -102,7 +102,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
     public SysDictVO getDictById(Long id) {
         SysDict dict = getById(id);
         if (dict == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NOT_FOUND, "字典不存在");
         }
         return convertToVO(dict);
     }

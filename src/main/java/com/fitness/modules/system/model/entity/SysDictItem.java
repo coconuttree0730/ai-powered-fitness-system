@@ -30,8 +30,11 @@ public class SysDictItem {
     private Map<String, Object> extra;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
+
+    @TableLogic
+    private Boolean deleted;
 }

@@ -16,15 +16,6 @@ public class SysDictItemVO {
     private String status;
     private Integer sortOrder;
     private Map<String, Object> extra;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-}
-
-/**
- * 字典选项（用于下拉选择）
- */
-@Data
-class DictOptionVO {
-    private String label;
-    private String value;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 }

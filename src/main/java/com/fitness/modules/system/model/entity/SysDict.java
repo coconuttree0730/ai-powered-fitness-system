@@ -24,10 +24,13 @@ public class SysDict {
     private Integer sortOrder;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
+
+    @TableLogic
+    private Boolean deleted;
 
     @TableField(exist = false)
     private List<SysDictItem> items;

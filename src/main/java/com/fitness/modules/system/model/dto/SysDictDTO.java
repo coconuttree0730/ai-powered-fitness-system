@@ -1,6 +1,7 @@
 package com.fitness.modules.system.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class SysDictDTO {
 
     private String description;
 
+    @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "状态值无效")
     private String status;
 
     private Integer sortOrder;
