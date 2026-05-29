@@ -30,6 +30,7 @@ public final class SecurityWhitelist {
             "/webjars/**",
             "/error",
             "/favicon.ico",
-            "/api/v1/payment/alipay/notify"
+            "/api/v1/payment/alipay/notify",
+            "/api/v1/payment/product-order/alipay/notify"
     };
 }

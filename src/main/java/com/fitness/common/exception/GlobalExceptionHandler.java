@@ -3,6 +3,7 @@ package com.fitness.common.exception;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.result.Result;
 import com.fitness.integration.ai.exception.AiIntegrationException;
+import com.fitness.integration.payment.exception.PaymentIntegrationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,6 +45,12 @@ public class GlobalExceptionHandler {
     public Result<Void> handleAiIntegrationException(AiIntegrationException e) {
         log.error("AI 服务调用异常: {}", e.getMessage(), e);
         return Result.error(ErrorCode.AI_GENERATE_ERROR);
+    }
+
+    @ExceptionHandler(PaymentIntegrationException.class)
+    public Result<Void> handlePaymentIntegrationException(PaymentIntegrationException e) {
+        log.error("支付服务调用异常: {}", e.getMessage(), e);
+        return Result.error(ErrorCode.PAYMENT_ERROR);
     }
 
     /**

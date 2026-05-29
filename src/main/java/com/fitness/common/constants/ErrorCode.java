@@ -34,6 +34,10 @@ public enum ErrorCode {
     BOOKING_CANNOT_CANCEL(2103, "预约无法取消"),
     BOOKING_STATUS_ERROR(2104, "预约状态错误"),
 
+    PRIVATE_BOOKING_NOT_FOUND(2105, "私教预约不存在"),
+    PRIVATE_BOOKING_ALREADY_EXISTS(2106, "当天已有私教预约"),
+    PRIVATE_BOOKING_TIME_CONFLICT(2107, "该时间段已被其他学员预约"),
+
     EQUIPMENT_NOT_FOUND(3001, "器材不存在"),
     EQUIPMENT_IN_USE(3002, "器材正在使用中，无法删除"),
     REPAIR_NOT_FOUND(3003, "报修记录不存在"),
@@ -62,6 +66,12 @@ public enum ErrorCode {
     COACH_ALREADY_BOUND(7009, "您已有专属教练，当前版本暂不支持直接切换"),
     COACH_PRODUCT_MISMATCH(7010, "该商品不属于当前教练"),
     COACH_PACKAGE_NOT_FOUND(7011, "该教练暂未配置可购买套餐"),
+
+    ORDER_NOT_PAID(7012, "订单未支付，无法取货"),
+    ORDER_ALREADY_PICKED(7013, "订单已取货"),
+    PICKUP_CODE_ERROR(7014, "取货码错误"),
+    UNSUPPORTED_PAY_METHOD(7015, "暂不支持该支付方式"),
+    PAYMENT_ERROR(7016, "支付服务调用失败，请稍后重试"),
 
     CODE_ALREADY_EXISTS(8001, "编码已存在"),
     SIGNATURE_ERROR(8002, "签名验证失败"),

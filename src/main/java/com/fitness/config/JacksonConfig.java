@@ -7,14 +7,17 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fitness.common.sensitive.SensitiveModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -25,26 +28,25 @@ import java.time.format.DateTimeFormatter;
 public class JacksonConfig {
 
     private static final String DATE_PATTERN = "yyyy-MM-dd";
-    private static final String DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final String DATETIME_PATTERN = "yyyy-MM-dd HH:mm";
+    private static final String TIME_PATTERN = "HH:mm";
 
     @Bean
     @Primary
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        // 注册 JavaTimeModule 以支持 JDK 8 日期时间类型
         JavaTimeModule javaTimeModule = new JavaTimeModule();
 
-        // 配置 LocalDate 序列化器和反序列化器
         javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_PATTERN)));
         javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_PATTERN)));
 
-        // 配置 LocalDateTime 序列化器和反序列化器
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATETIME_PATTERN)));
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATETIME_PATTERN)));
 
+        javaTimeModule.addSerializer(LocalTime.class, new LocalTimeSerializer(DateTimeFormatter.ofPattern(TIME_PATTERN)));
+        javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(DateTimeFormatter.ofPattern(TIME_PATTERN)));
 
-        //注册配置的序列化器
         objectMapper.registerModule(javaTimeModule);
         objectMapper.registerModule(new SensitiveModule());
 
