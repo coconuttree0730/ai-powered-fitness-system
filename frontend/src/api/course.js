@@ -63,6 +63,14 @@ export function getMyBookings() {
   })
 }
 
+export function getCoachMySessions(params) {
+  return request({
+    url: '/course-sessions/coach/my',
+    method: 'get',
+    params
+  })
+}
+
 export function getCourseCategories() {
   return request({
     url: '/courses/categories',

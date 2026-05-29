@@ -2,6 +2,7 @@ package com.fitness.modules.course.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.common.result.Result;
+import com.fitness.integration.security.SecurityUtils;
 import com.fitness.modules.course.model.dto.CourseQueryDTO;
 import com.fitness.modules.course.model.vo.CourseSessionVO;
 import com.fitness.modules.course.service.CourseSessionService;
@@ -64,5 +65,17 @@ public class CourseSessionController {
         log.info("管理员取消课程实例: sessionId={}", sessionId);
         sessionService.cancelSession(sessionId);
         return Result.success();
+    }
+
+    @Operation(summary = "获取教练我的排期课程列表")
+    @GetMapping("/coach/my")
+    @PreAuthorize("hasRole('COACH')")
+    public Result<Page<CourseSessionVO>> getCoachMySessions(@Valid CourseQueryDTO query) {
+        Long coachId = SecurityUtils.requireCurrentUserId();
+        query.setCoachId(coachId);
+        log.info("教练我的排期课程列表请求: coachId={}, courseName={}, category={}, dayOfWeek={}",
+                coachId, query.getCourseName(), query.getCategory(), query.getDayOfWeek());
+        Page<CourseSessionVO> page = sessionService.getSessionList(query);
+        return Result.success(page);
     }
 }

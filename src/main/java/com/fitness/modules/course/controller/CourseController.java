@@ -37,7 +37,8 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
     public Result<Page<CourseVO>> getCourseList(@Valid CourseQueryDTO query) {
         log.info("获取课程列表请求: category={}, keyword={}, courseName={}, coachId={}, dayOfWeek={}",
-                query.getCategory(), query.getKeyword(), query.getCourseName(), query.getCoachId(), query.getDayOfWeek());
+                query.getCategory(), query.getKeyword(), query.getCourseName(), query.getCoachId(),
+                query.getDayOfWeek());
         Page<CourseVO> page = courseService.getCourseList(query);
         return Result.success(page);
     }
