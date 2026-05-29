@@ -25,7 +25,7 @@ class AlipayServiceImplTest {
 
     @Test
     void createPayOrderShouldReturnGatewayBody() {
-        when(alipayGateway.createPageOrder("P20260513001", new BigDecimal("99.00"), "会员卡", "年卡"))
+        when(alipayGateway.createWapOrder("P20260513001", new BigDecimal("99.00"), "会员卡", "年卡"))
                 .thenReturn(new AlipayCreateOrderResult(true, "<form>pay</form>", null, null));
 
         String html = service.createPayOrder("P20260513001", new BigDecimal("99.00"), "会员卡", "年卡");

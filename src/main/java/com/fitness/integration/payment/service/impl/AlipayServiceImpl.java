@@ -23,7 +23,7 @@ public class AlipayServiceImpl implements AlipayService {
     @Override
     public String createPayOrder(String orderNo, BigDecimal amount, String subject, String body) {
         log.debug("开始创建支付宝订单: orderNo={}, amount={}, subject={}", orderNo, amount, subject);
-        AlipayCreateOrderResult result = alipayGateway.createPageOrder(orderNo, amount, subject, body);
+        AlipayCreateOrderResult result = alipayGateway.createWapOrder(orderNo, amount, subject, body);
         if (!result.success()) {
             log.error("支付宝订单创建失败: orderNo={}, code={}, msg={}", orderNo, result.code(), result.message());
             throw new PaymentIntegrationException("支付宝订单创建失败: " + result.message());
