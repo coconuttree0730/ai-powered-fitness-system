@@ -94,47 +94,6 @@
           </div>
         </div>
 
-        <!-- 个人展示图片 -->
-        <div class="profile-card personal-image-card">
-          <div class="card-header">
-            <n-icon :component="ImageOutline" size="20" />
-            <span>个人展示图片</span>
-            <n-tag v-if="profileForm.personalImageUrl" type="success" size="small">已上传</n-tag>
-            <n-tag v-else type="warning" size="small">未上传</n-tag>
-          </div>
-          <div class="personal-image-section">
-            <div v-if="profileForm.personalImageUrl" class="personal-image-preview">
-              <img :src="profileForm.personalImageUrl" alt="个人展示图片" />
-              <div v-if="isEditing" class="image-actions">
-                <n-button type="primary" size="small" @click="triggerPersonalImageUpload">
-                  <template #icon>
-                    <n-icon :component="RefreshOutline" />
-                  </template>
-                  更换图片
-                </n-button>
-                <n-button type="error" size="small" @click="handleDeletePersonalImage">
-                  <template #icon>
-                    <n-icon :component="TrashOutline" />
-                  </template>
-                  删除
-                </n-button>
-              </div>
-            </div>
-            <div v-else class="personal-image-upload" @click="triggerPersonalImageUpload">
-              <n-icon :component="CloudUploadOutline" size="48" />
-              <span>点击上传个人展示图片</span>
-              <span class="upload-hint">支持 JPG、PNG、GIF 格式，最大 10MB</span>
-            </div>
-            <input 
-              type="file" 
-              ref="personalImageInput" 
-              style="display: none" 
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-              @change="handlePersonalImageUpload"
-            />
-          </div>
-        </div>
-
       </n-grid-item>
 
       <!-- 中间：专业信息 -->
@@ -319,6 +278,47 @@
               </span>
               <n-dynamic-input v-else v-model:value="profileForm.honors" placeholder="请输入获得荣誉/奖项" />
             </div>
+          </div>
+        </div>
+
+        <!-- 个人展示图片 -->
+        <div class="profile-card personal-image-card">
+          <div class="card-header">
+            <n-icon :component="ImageOutline" size="20" />
+            <span>个人展示图片</span>
+            <n-tag v-if="profileForm.personalImageUrl" type="success" size="small">已上传</n-tag>
+            <n-tag v-else type="warning" size="small">未上传</n-tag>
+          </div>
+          <div class="personal-image-section">
+            <div v-if="profileForm.personalImageUrl" class="personal-image-preview">
+              <img :src="profileForm.personalImageUrl" alt="个人展示图片" />
+              <div v-if="isEditing" class="image-actions">
+                <n-button type="primary" size="small" @click="triggerPersonalImageUpload">
+                  <template #icon>
+                    <n-icon :component="RefreshOutline" />
+                  </template>
+                  更换图片
+                </n-button>
+                <n-button type="error" size="small" @click="handleDeletePersonalImage">
+                  <template #icon>
+                    <n-icon :component="TrashOutline" />
+                  </template>
+                  删除
+                </n-button>
+              </div>
+            </div>
+            <div v-else class="personal-image-upload" @click="triggerPersonalImageUpload">
+              <n-icon :component="CloudUploadOutline" size="48" />
+              <span>点击上传个人展示图片</span>
+              <span class="upload-hint">支持 JPG、PNG、GIF 格式，最大 10MB</span>
+            </div>
+            <input 
+              type="file" 
+              ref="personalImageInput" 
+              style="display: none" 
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              @change="handlePersonalImageUpload"
+            />
           </div>
         </div>
 
@@ -884,8 +884,9 @@ onMounted(() => {
 
 .personal-image-preview img {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: auto;
+  max-height: 400px;
+  object-fit: contain;
   border-radius: 8px;
 }
 

@@ -4,7 +4,7 @@ import com.fitness.modules.user.model.dto.CoachDetailDTO;
 import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
-import com.fitness.modules.product.model.vo.ProductVO;
+import com.fitness.modules.coach.model.vo.CoachPackageVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -86,5 +86,5 @@ public interface CoachDetailService {
      * @param coachId 教练用户ID
      * @return 套餐商品列表
      */
-    List<ProductVO> getCoachPackages(Long coachId);
+    List<CoachPackageVO> getCoachPackages(Long coachId);
 }

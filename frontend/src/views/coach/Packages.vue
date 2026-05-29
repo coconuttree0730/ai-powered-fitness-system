@@ -63,6 +63,8 @@
         <div class="package-body">
           <div class="package-meta">
             <span class="meta-item">编码: {{ pkg.code || '-' }}</span>
+            <span class="meta-item">{{ pkg.totalSessions || 0 }} 课时</span>
+            <span class="meta-item">{{ pkg.validityDays || 0 }} 天</span>
             <span class="meta-item price">¥{{ pkg.originalPrice }}</span>
             <span class="meta-item">库存: {{ pkg.stock }}</span>
           </div>
@@ -86,8 +88,18 @@
         <n-form-item label="套餐名称" path="name">
           <n-input v-model:value="form.name" placeholder="例如：单次体验课" />
         </n-form-item>
-        <n-form-item label="套餐编码" path="code">
-          <n-input v-model:value="form.code" placeholder="例如：COACH_TRIAL" />
+        <n-form-item label="套餐编码" path="packageCode">
+          <n-select v-model:value="form.packageCode" :options="dictOptions" placeholder="请选择套餐编码" clearable />
+        </n-form-item>
+        <n-form-item label="课时数" path="totalSessions">
+          <n-input-number v-model:value="form.totalSessions" :min="1" :precision="0" style="width: 100%">
+            <template #suffix>课时</template>
+          </n-input-number>
+        </n-form-item>
+        <n-form-item label="有效期" path="validityDays">
+          <n-input-number v-model:value="form.validityDays" :min="1" :precision="0" style="width: 100%">
+            <template #suffix>天</template>
+          </n-input-number>
         </n-form-item>
         <n-form-item label="价格" path="originalPrice">
           <n-input-number v-model:value="form.originalPrice" :min="0" :precision="2" style="width: 100%">
@@ -129,6 +141,7 @@ import {
   CheckmarkCircleOutline,
   CloseCircleOutline
 } from '@vicons/ionicons5'
+import { getDictOptions } from '@/api/dict'
 import {
   getMyPackages,
   createPackage,
@@ -147,10 +160,13 @@ const submitting = ref(false)
 const isEdit = ref(false)
 const editId = ref(null)
 const formRef = ref(null)
+const dictOptions = ref([])
 
 const form = ref({
   name: '',
-  code: '',
+  packageCode: null,
+  totalSessions: 1,
+  validityDays: 30,
   category: 'COURSE',
   originalPrice: 0,
   stock: 999,
@@ -161,7 +177,9 @@ const form = ref({
 
 const rules = {
   name: [{ required: true, message: '请输入套餐名称', trigger: 'blur' }],
-  code: [{ required: true, message: '请输入套餐编码', trigger: 'blur' }],
+  packageCode: [{ required: true, message: '请选择套餐编码', trigger: 'change' }],
+  totalSessions: [{ required: true, type: 'number', message: '请输入课时数', trigger: 'blur' }],
+  validityDays: [{ required: true, type: 'number', message: '请输入有效期天数', trigger: 'blur' }],
   originalPrice: [{ required: true, type: 'number', message: '请输入价格', trigger: 'blur' }],
   stock: [{ required: true, type: 'number', message: '请输入库存', trigger: 'blur' }]
 }
@@ -187,7 +205,9 @@ async function fetchPackages() {
 function resetForm() {
   form.value = {
     name: '',
-    code: '',
+    packageCode: null,
+    totalSessions: 1,
+    validityDays: 30,
     category: 'COURSE',
     originalPrice: 0,
     stock: 999,
@@ -199,17 +219,29 @@ function resetForm() {
   editId.value = null
 }
 
-function openAddModal() {
+async function openAddModal() {
   resetForm()
+  try {
+    dictOptions.value = await getDictOptions('coach_package_code')
+  } catch {
+    dictOptions.value = []
+  }
   showModal.value = true
 }
 
-function openEditModal(pkg) {
+async function openEditModal(pkg) {
   isEdit.value = true
   editId.value = pkg.id
+  try {
+    dictOptions.value = await getDictOptions('coach_package_code')
+  } catch {
+    dictOptions.value = []
+  }
   form.value = {
     name: pkg.name,
-    code: pkg.code,
+    packageCode: pkg.code,
+    totalSessions: pkg.totalSessions || 1,
+    validityDays: pkg.validityDays || 30,
     category: 'COURSE',
     originalPrice: pkg.originalPrice,
     stock: pkg.stock,

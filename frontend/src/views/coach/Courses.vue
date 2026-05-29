@@ -1,50 +1,31 @@
 <template>
   <div class="coach-courses">
-    <!-- 操作栏 -->
     <div class="action-bar">
-      <div class="action-left">
-        <n-button type="primary" size="large" @click="showPublishModal = true">
-          <template #icon>
-            <n-icon :component="AddOutline" />
-          </template>
-          发布课程
-        </n-button>
-        <n-button 
-          type="error" 
-          size="large" 
-          :disabled="selectedRows.length === 0"
-          @click="handleBatchDelete"
-        >
-          <template #icon>
-            <n-icon :component="TrashOutline" />
-          </template>
-          批量删除 ({{ selectedRows.length }})
-        </n-button>
-      </div>
       <div class="action-right">
         <n-input-group>
-          <n-input 
-            v-model:value="searchKeyword" 
+          <n-input
+            v-model:value="searchForm.courseName"
             placeholder="搜索课程名称..."
             clearable
-            style="width: 240px"
+            style="width: 220px"
+            @keyup.enter="handleSearch"
           >
             <template #prefix>
               <n-icon :component="SearchOutline" />
             </template>
           </n-input>
-          <n-select 
-            v-model:value="filterType" 
-            :options="typeOptions" 
-            placeholder="课程类型"
-            style="width: 140px"
+          <n-select
+            v-model:value="searchForm.dayOfWeek"
+            :options="weekOptions"
+            placeholder="星期"
+            style="width: 110px"
             clearable
+            @update:value="handleSearch"
           />
         </n-input-group>
       </div>
     </div>
 
-    <!-- 课程统计卡片 -->
     <n-grid :cols="4" :x-gap="16" class="stats-grid" style="margin-bottom: 24px;">
       <n-grid-item>
         <div class="mini-stat-card">
@@ -52,8 +33,8 @@
             <n-icon :component="CalendarOutline" size="24" />
           </div>
           <div class="mini-stat-info">
-            <div class="mini-stat-value">{{ courseStats.total }}</div>
-            <div class="mini-stat-label">总课程数</div>
+            <div class="mini-stat-value">{{ totalCount }}</div>
+            <div class="mini-stat-label">总排课数</div>
           </div>
         </div>
       </n-grid-item>
@@ -63,8 +44,8 @@
             <n-icon :component="FitnessOutline" size="24" />
           </div>
           <div class="mini-stat-info">
-            <div class="mini-stat-value">{{ courseStats.private }}</div>
-            <div class="mini-stat-label">私教课</div>
+            <div class="mini-stat-value">{{ upcomingCount }}</div>
+            <div class="mini-stat-label">待开始</div>
           </div>
         </div>
       </n-grid-item>
@@ -74,8 +55,8 @@
             <n-icon :component="PeopleOutline" size="24" />
           </div>
           <div class="mini-stat-info">
-            <div class="mini-stat-value">{{ courseStats.public }}</div>
-            <div class="mini-stat-label">公开课</div>
+            <div class="mini-stat-value">{{ totalBookings }}</div>
+            <div class="mini-stat-label">总预约数</div>
           </div>
         </div>
       </n-grid-item>
@@ -85,476 +66,305 @@
             <n-icon :component="TrendingUpOutline" size="24" />
           </div>
           <div class="mini-stat-info">
-            <div class="mini-stat-value">{{ courseStats.totalBookings }}</div>
-            <div class="mini-stat-label">总预约数</div>
+            <div class="mini-stat-value">{{ todayCount }}</div>
+            <div class="mini-stat-label">今日课程</div>
           </div>
         </div>
       </n-grid-item>
     </n-grid>
 
-    <!-- 课程列表 -->
     <div class="table-card">
       <n-data-table
         :columns="columns"
-        :data="filteredCourses"
+        :data="sessions"
         :loading="loading"
         :pagination="pagination"
         :row-key="row => row.id"
-        @update:checked-row-keys="handleCheck"
       />
     </div>
 
-    <!-- 发布课程弹窗 -->
-    <n-modal 
-      v-model:show="showPublishModal" 
-      preset="card" 
-      title="发布新课程" 
-      style="width: 600px"
-      :mask-closable="false"
+    <n-modal
+      v-model:show="showDetailModal"
+      preset="card"
+      title="课程详情"
+      style="width: 640px"
+      :mask-closable="true"
     >
-      <n-form 
-        ref="formRef" 
-        :model="publishForm" 
-        :rules="publishRules"
-        label-placement="left"
-        label-width="100"
-      >
-        <n-form-item label="课程名称" path="courseName">
-          <n-input v-model:value="publishForm.courseName" placeholder="请输入课程名称" />
-        </n-form-item>
-        
-        <n-form-item label="课程类型" path="courseType">
-          <n-radio-group v-model:value="publishForm.courseType">
-            <n-radio-button value="private">私教课</n-radio-button>
-            <n-radio-button value="public">公开课</n-radio-button>
-          </n-radio-group>
-        </n-form-item>
-        
-        <n-form-item label="课程分类" path="category">
-          <n-select 
-            v-model:value="publishForm.category" 
-            :options="categoryOptions" 
-            placeholder="请选择课程分类"
+      <div class="course-detail" v-if="currentSession">
+        <div class="detail-cover" v-if="currentSession.imageUrl">
+          <n-image
+            :src="currentSession.imageUrl"
+            style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"
+            :preview-src-list="[currentSession.imageUrl]"
           />
-        </n-form-item>
-        
-        <n-form-item label="课程日期" path="courseDate">
-          <n-date-picker 
-            v-model:value="publishForm.courseDate" 
-            type="date" 
-            style="width: 100%"
-            :is-date-disabled="disablePreviousDate"
-          />
-        </n-form-item>
-        
-        <n-grid :cols="2" :x-gap="16">
-          <n-grid-item>
-            <n-form-item label="开始时间" path="startTime">
-              <n-time-picker 
-                v-model:value="publishForm.startTime" 
-                style="width: 100%"
-                format="HH:mm"
-              />
-            </n-form-item>
-          </n-grid-item>
-          <n-grid-item>
-            <n-form-item label="结束时间" path="endTime">
-              <n-time-picker 
-                v-model:value="publishForm.endTime" 
-                style="width: 100%"
-                format="HH:mm"
-              />
-            </n-form-item>
-          </n-grid-item>
-        </n-grid>
-        
-        <n-form-item label="课程容量" path="capacity">
-          <n-input-number 
-            v-model:value="publishForm.capacity" 
-            :min="1" 
-            :max="publishForm.courseType === 'private' ? 1 : 50"
-            style="width: 100%"
-          >
-            <template #suffix>人</template>
-          </n-input-number>
-        </n-form-item>
-        
-        <n-form-item label="课程价格" path="price">
-          <n-input-number 
-            v-model:value="publishForm.price" 
-            :min="0" 
-            :precision="2"
-            style="width: 100%"
-          >
-            <template #prefix>¥</template>
-          </n-input-number>
-        </n-form-item>
-        
-        <n-form-item label="课程描述" path="description">
-          <n-input 
-            v-model:value="publishForm.description" 
-            type="textarea" 
-            :rows="3"
-            placeholder="请输入课程描述..."
-          />
-        </n-form-item>
-      </n-form>
-      
-      <template #footer>
-        <n-space justify="end">
-          <n-button @click="showPublishModal = false">取消</n-button>
-          <n-button type="primary" :loading="publishLoading" @click="handlePublish">
-            确认发布
-          </n-button>
-        </n-space>
-      </template>
-    </n-modal>
+        </div>
+        <div class="detail-no-cover" v-else>
+          <n-icon :component="ImageOutline" size="48" />
+          <span>暂无课程图片</span>
+        </div>
 
-    <!-- 删除确认弹窗 -->
-    <n-modal 
-      v-model:show="showDeleteModal" 
-      preset="dialog" 
-      title="确认删除" 
-      type="warning"
-    >
-      <p v-if="deleteMode === 'single'">
-        确定要删除课程 <strong>"{{ deleteTarget?.courseName }}"</strong> 吗？<br/>
-        <span style="color: #EF476F; font-size: 13px;">删除后将无法恢复，已预约的学员将收到取消通知。</span>
-      </p>
-      <p v-else>
-        确定要删除选中的 <strong>{{ selectedRows.length }}</strong> 门课程吗？<br/>
-        <span style="color: #EF476F; font-size: 13px;">删除后将无法恢复，已预约的学员将收到取消通知。</span>
-      </p>
-      <template #action>
-        <n-button @click="showDeleteModal = false">取消</n-button>
-        <n-button type="error" :loading="deleteLoading" @click="confirmDelete">
-          确认删除
-        </n-button>
-      </template>
+        <div class="detail-header">
+          <h2 class="detail-title">{{ currentSession.courseName }}</h2>
+          <n-tag :type="getCategoryType(currentSession.category)" size="medium">
+            {{ currentSession.category || '未知' }}
+          </n-tag>
+        </div>
+
+        <div class="detail-meta">
+          <div class="meta-item">
+            <n-icon :component="CalendarOutline" size="18" />
+            <span>{{ currentSession.sessionDate }} {{ formatWeek(currentSession.dayOfWeek) }}</span>
+          </div>
+          <div class="meta-item">
+            <n-icon :component="TimeOutline" size="18" />
+            <span>{{ currentSession.startTime || '' }} - {{ currentSession.endTime || '' }}</span>
+          </div>
+          <div class="meta-item">
+            <n-icon :component="PeopleOutline" size="18" />
+            <span>预约 {{ currentSession.bookedCount || 0 }} / 容量 {{ currentSession.capacity || 0 }}</span>
+          </div>
+          <div class="meta-item">
+            <n-icon :component="PersonOutline" size="18" />
+            <span>教练：{{ currentSession.coachName || '-' }}</span>
+          </div>
+          <div class="meta-item" v-if="currentSession.durationMinutes">
+            <n-icon :component="TimerOutline" size="18" />
+            <span>{{ currentSession.durationMinutes }} 分钟</span>
+          </div>
+          <div class="meta-item" v-if="currentSession.caloriesMin && currentSession.caloriesMax">
+            <n-icon :component="FlameOutline" size="18" />
+            <span>{{ currentSession.caloriesMin }}-{{ currentSession.caloriesMax }} 千卡</span>
+          </div>
+        </div>
+
+        <div class="detail-tags">
+          <n-tag v-if="currentSession.difficultyLevel" type="info" size="small">
+            难度：{{ currentSession.difficultyLevel }}
+          </n-tag>
+          <n-tag :type="getStatusType(currentSession.status)" size="small">
+            {{ getStatusLabel(currentSession.status) }}
+          </n-tag>
+        </div>
+
+        <n-divider />
+
+        <div class="detail-description">
+          <h3 class="section-label">课程描述</h3>
+          <p>{{ currentSession.description || '暂无课程描述' }}</p>
+        </div>
+      </div>
     </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, h, watch } from 'vue'
+import { ref, reactive, computed, h, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
-  AddOutline,
-  TrashOutline,
   SearchOutline,
   CalendarOutline,
   FitnessOutline,
   PeopleOutline,
   TrendingUpOutline,
-  CreateOutline,
-  WarningOutline
+  ImageOutline,
+  TimeOutline,
+  TimerOutline,
+  FlameOutline,
+  PersonOutline
 } from '@vicons/ionicons5'
+import { getCoachMySessions } from '@/api/course'
 
 const message = useMessage()
 
-// 搜索和筛选
-const searchKeyword = ref('')
-const filterType = ref(null)
-
-// 表格选择
-const selectedRows = ref([])
-
-// 加载状态
 const loading = ref(false)
-const publishLoading = ref(false)
-const deleteLoading = ref(false)
+const sessions = ref([])
+const showDetailModal = ref(false)
+const currentSession = ref(null)
+const totalCount = ref(0)
 
-// 弹窗显示状态
-const showPublishModal = ref(false)
-const showDeleteModal = ref(false)
-const deleteMode = ref('single') // 'single' | 'batch'
-const deleteTarget = ref(null)
-
-// 表单引用
-const formRef = ref(null)
-
-// 发布课程表单
-const publishForm = reactive({
-  courseName: '',
-  courseType: 'private',
-  category: null,
-  courseDate: null,
-  startTime: null,
-  endTime: null,
-  capacity: 1,
-  price: 0,
-  description: ''
+const searchForm = reactive({
+  courseName: null,
+  dayOfWeek: null
 })
 
-// 表单校验规则
-const publishRules = {
-  courseName: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
-  courseType: [{ required: true, message: '请选择课程类型', trigger: 'change' }],
-  category: [{ required: true, message: '请选择课程分类', trigger: 'change' }],
-  courseDate: [{ required: true, message: '请选择课程日期', trigger: 'change', type: 'number' }],
-  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change', type: 'number' }],
-  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change', type: 'number' }],
-  capacity: [{ required: true, message: '请输入课程容量', trigger: 'blur', type: 'number' }],
-  price: [{ required: true, message: '请输入课程价格', trigger: 'blur', type: 'number' }]
-}
-
-// 选项数据
-const typeOptions = [
-  { label: '私教课', value: 'private' },
-  { label: '公开课', value: 'public' }
+const weekOptions = [
+  { label: '周一', value: 1 },
+  { label: '周二', value: 2 },
+  { label: '周三', value: 3 },
+  { label: '周四', value: 4 },
+  { label: '周五', value: 5 },
+  { label: '周六', value: 6 },
+  { label: '周日', value: 7 }
 ]
 
-const categoryOptions = [
-  { label: '增肌训练', value: 'muscle' },
-  { label: '减脂塑形', value: 'fat_loss' },
-  { label: '瑜伽拉伸', value: 'yoga' },
-  { label: 'HIIT燃脂', value: 'hiit' },
-  { label: '核心训练', value: 'core' },
-  { label: '康复训练', value: 'rehab' }
-]
-
-// 模拟课程数据
-const courses = ref([
-  { id: 1, courseName: '增肌训练基础', courseType: 'private', category: 'muscle', courseDate: '2024-10-25', startTime: '09:00', endTime: '10:00', capacity: 1, bookingCount: 1, price: 300, status: 'active' },
-  { id: 2, courseName: 'HIIT燃脂团课', courseType: 'public', category: 'hiit', courseDate: '2024-10-25', startTime: '14:00', endTime: '15:00', capacity: 20, bookingCount: 12, price: 80, status: 'active' },
-  { id: 3, courseName: '瑜伽拉伸入门', courseType: 'public', category: 'yoga', courseDate: '2024-10-26', startTime: '10:00', endTime: '11:00', capacity: 15, bookingCount: 8, price: 60, status: 'active' },
-  { id: 4, courseName: '核心力量强化', courseType: 'private', category: 'core', courseDate: '2024-10-26', startTime: '16:00', endTime: '17:00', capacity: 1, bookingCount: 0, price: 350, status: 'active' },
-  { id: 5, courseName: '减脂塑形训练', courseType: 'public', category: 'fat_loss', courseDate: '2024-10-27', startTime: '19:00', endTime: '20:00', capacity: 25, bookingCount: 20, price: 90, status: 'active' },
-  { id: 6, courseName: '康复训练指导', courseType: 'private', category: 'rehab', courseDate: '2024-10-28', startTime: '14:00', endTime: '15:00', capacity: 1, bookingCount: 1, price: 400, status: 'active' }
-])
-
-// 课程统计
-const courseStats = computed(() => {
-  return {
-    total: courses.value.length,
-    private: courses.value.filter(c => c.courseType === 'private').length,
-    public: courses.value.filter(c => c.courseType === 'public').length,
-    totalBookings: courses.value.reduce((sum, c) => sum + c.bookingCount, 0)
+const pagination = reactive({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+  onUpdatePage: (page) => {
+    pagination.page = page
+    fetchSessions()
+  },
+  onUpdatePageSize: (pageSize) => {
+    pagination.pageSize = pageSize
+    pagination.page = 1
+    fetchSessions()
   }
 })
 
-// 筛选后的课程列表
-const filteredCourses = computed(() => {
-  let result = courses.value
-  
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(c => c.courseName.toLowerCase().includes(keyword))
-  }
-  
-  if (filterType.value) {
-    result = result.filter(c => c.courseType === filterType.value)
-  }
-  
-  return result
+const upcomingCount = computed(() =>
+  sessions.value.filter(s => s.status === 0).length
+)
+
+const totalBookings = computed(() =>
+  sessions.value.reduce((sum, s) => sum + (s.bookedCount || 0), 0)
+)
+
+const todayCount = computed(() => {
+  const today = new Date().toISOString().split('T')[0]
+  return sessions.value.filter(s => s.sessionDate === today).length
 })
 
-// 表格列定义
 const columns = [
-  { type: 'selection', fixed: 'left' },
-  { 
-    title: '课程名称', 
-    key: 'courseName',
-    width: 180,
-    render: (row) => h('div', { class: 'course-name-cell' }, [
-      h('span', { class: 'course-name-text' }, row.courseName),
-      h('span', { 
-        class: `course-type-tag ${row.courseType}` 
-      }, row.courseType === 'private' ? '私教' : '公开课')
+  {
+    title: '上课日期',
+    key: 'sessionDate',
+    width: 120,
+    render: (row) => h('div', { class: 'date-cell' }, [
+      h('div', { class: 'date-text' }, row.sessionDate || '-'),
+      h('div', { class: 'week-text' }, formatWeek(row.dayOfWeek))
     ])
   },
-  { 
-    title: '分类', 
+  {
+    title: '时间',
+    key: 'time',
+    width: 130,
+    render: (row) => h('span', { class: 'time-text' },
+      `${row.startTime || ''} - ${row.endTime || ''}`)
+  },
+  {
+    title: '课程名称',
+    key: 'courseName',
+    width: 160,
+    ellipsis: { tooltip: true },
+    render: (row) => h('span', { class: 'course-name-text' }, row.courseName)
+  },
+  {
+    title: '分类',
     key: 'category',
-    width: 120,
+    width: 100,
     render: (row) => {
-      const map = { muscle: '增肌训练', fat_loss: '减脂塑形', yoga: '瑜伽拉伸', hiit: 'HIIT燃脂', core: '核心训练', rehab: '康复训练' }
-      return map[row.category] || row.category
+      const typeMap = {
+        '力量训练': 'info',
+        '有氧燃脂': 'error',
+        '瑜伽普拉提': 'success',
+        '拳击格斗': 'warning'
+      }
+      return h('span', { class: `category-tag ${typeMap[row.category] || 'default'}` }, row.category || '-')
     }
   },
-  { 
-    title: '日期时间', 
-    key: 'datetime',
-    width: 180,
-    render: (row) => h('div', { class: 'datetime-cell' }, [
-      h('div', { class: 'date-text' }, row.courseDate),
-      h('div', { class: 'time-text' }, `${row.startTime} - ${row.endTime}`)
-    ])
-  },
-  { 
-    title: '容量/预约', 
-    key: 'capacity',
-    width: 120,
+  {
+    title: '预约/容量',
+    key: 'booking',
+    width: 110,
     render: (row) => h('div', { class: 'capacity-cell' }, [
-      h('span', { class: 'booking-count' }, row.bookingCount),
+      h('span', { class: 'booking-count' }, row.bookedCount || 0),
       h('span', { class: 'capacity-separator' }, '/'),
-      h('span', { class: 'capacity-total' }, row.capacity)
+      h('span', { class: 'capacity-total' }, row.capacity || 0)
     ])
   },
-  { 
-    title: '价格', 
-    key: 'price',
-    width: 100,
-    render: (row) => h('span', { class: 'price-text' }, `¥${row.price}`)
-  },
-  { 
-    title: '状态', 
-    key: 'status',
-    width: 100,
+  {
+    title: '剩余',
+    key: 'remaining',
+    width: 70,
     render: (row) => {
-      const isFull = row.bookingCount >= row.capacity
-      return h('span', { 
-        class: `status-badge ${isFull ? 'full' : 'available'}` 
-      }, isFull ? '已满员' : '可预约')
+      const remain = row.remainingCount ?? ((row.capacity || 0) - (row.bookedCount || 0))
+      if (remain <= 0) {
+        return h('span', { class: 'remaining-full' }, '已满')
+      }
+      return h('span', { class: 'remaining-text' }, remain)
+    }
+  },
+  {
+    title: '状态',
+    key: 'status',
+    width: 80,
+    render: (row) => {
+      const labelMap = { 0: '待开始', 1: '进行中', 2: '已结束', 3: '已取消' }
+      const colorMap = { 0: 'default', 1: 'success', 2: 'warning', 3: 'error' }
+      return h('span', { class: `status-badge ${colorMap[row.status] || 'default'}` }, labelMap[row.status] || '未知')
     }
   },
   {
     title: '操作',
     key: 'actions',
+    width: 90,
     fixed: 'right',
-    width: 150,
-    render: (row) => h('div', { class: 'action-cell' }, [
-      h('button', { 
-        class: 'action-btn edit',
-        onClick: () => handleEdit(row)
-      }, [h('span', { class: 'btn-icon' }, ''), '编辑']),
-      h('button', { 
-        class: 'action-btn delete',
-        onClick: () => handleSingleDelete(row)
-      }, [h('span', { class: 'btn-icon' }, ''), '删除'])
-    ])
+    render: (row) => h('button', {
+      class: 'action-btn view',
+      onClick: () => handleView(row)
+    }, '查看详情')
   }
 ]
 
-// 分页配置
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50],
-  onChange: (page) => { pagination.page = page },
-  onUpdatePageSize: (pageSize) => { pagination.pageSize = pageSize; pagination.page = 1 }
-})
-
-// 处理行选择
-function handleCheck(rowKeys) {
-  selectedRows.value = rowKeys
+function formatWeek(dayOfWeek) {
+  const map = { 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六', 7: '周日' }
+  return map[dayOfWeek] || ''
 }
 
-// 禁用过去的日期
-function disablePreviousDate(ts) {
-  return ts < Date.now() - 24 * 60 * 60 * 1000
+function getCategoryType(category) {
+  const map = { '力量训练': 'info', '有氧燃脂': 'error', '瑜伽普拉提': 'success', '拳击格斗': 'warning' }
+  return map[category] || 'default'
 }
 
-// 发布课程
-async function handlePublish() {
+function getStatusLabel(status) {
+  const map = { 0: '待开始', 1: '进行中', 2: '已结束', 3: '已取消' }
+  return map[status] || '未知'
+}
+
+function getStatusType(status) {
+  const map = { 0: 'default', 1: 'success', 2: 'warning', 3: 'error' }
+  return map[status] || 'default'
+}
+
+function handleSearch() {
+  pagination.page = 1
+  fetchSessions()
+}
+
+function handleView(row) {
+  currentSession.value = { ...row }
+  showDetailModal.value = true
+}
+
+async function fetchSessions() {
+  loading.value = true
   try {
-    await formRef.value?.validate()
-    publishLoading.value = true
-    
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    const newCourse = {
-      id: Date.now(),
-      courseName: publishForm.courseName,
-      courseType: publishForm.courseType,
-      category: publishForm.category,
-      courseDate: new Date(publishForm.courseDate).toISOString().split('T')[0],
-      startTime: formatTime(publishForm.startTime),
-      endTime: formatTime(publishForm.endTime),
-      capacity: publishForm.capacity,
-      bookingCount: 0,
-      price: publishForm.price,
-      status: 'active'
+    const params = {
+      pageNum: pagination.page,
+      pageSize: pagination.pageSize
     }
-    
-    courses.value.unshift(newCourse)
-    message.success('课程发布成功')
-    showPublishModal.value = false
-    resetForm()
+    if (searchForm.courseName) {
+      params.courseName = searchForm.courseName
+    }
+    if (searchForm.dayOfWeek) {
+      params.dayOfWeek = searchForm.dayOfWeek
+    }
+    const res = await getCoachMySessions(params)
+    sessions.value = res?.records || []
+    pagination.itemCount = res?.total || 0
+    totalCount.value = res?.total || 0
   } catch (error) {
-    console.error(error)
+    message.error('获取课程列表失败')
   } finally {
-    publishLoading.value = false
+    loading.value = false
   }
 }
 
-// 格式化时间
-function formatTime(timestamp) {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-}
-
-// 重置表单
-function resetForm() {
-  Object.assign(publishForm, {
-    courseName: '',
-    courseType: 'private',
-    category: null,
-    courseDate: null,
-    startTime: null,
-    endTime: null,
-    capacity: 1,
-    price: 0,
-    description: ''
-  })
-  formRef.value?.restoreValidation()
-}
-
-// 编辑课程
-function handleEdit(row) {
-  message.info(`编辑课程: ${row.courseName}`)
-}
-
-// 单个删除
-function handleSingleDelete(row) {
-  deleteMode.value = 'single'
-  deleteTarget.value = row
-  showDeleteModal.value = true
-}
-
-// 批量删除
-function handleBatchDelete() {
-  if (selectedRows.value.length === 0) {
-    message.warning('请先选择要删除的课程')
-    return
-  }
-  deleteMode.value = 'batch'
-  showDeleteModal.value = true
-}
-
-// 确认删除
-async function confirmDelete() {
-  deleteLoading.value = true
-  
-  try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    if (deleteMode.value === 'single') {
-      const index = courses.value.findIndex(c => c.id === deleteTarget.value.id)
-      if (index > -1) {
-        courses.value.splice(index, 1)
-        message.success('课程删除成功')
-      }
-    } else {
-      courses.value = courses.value.filter(c => !selectedRows.value.includes(c.id))
-      message.success(`成功删除 ${selectedRows.value.length} 门课程`)
-      selectedRows.value = []
-    }
-    
-    showDeleteModal.value = false
-    deleteTarget.value = null
-  } finally {
-    deleteLoading.value = false
-  }
-}
-
-// 监听课程类型变化，自动调整容量
-watch(() => publishForm.courseType, (newType) => {
-  publishForm.capacity = newType === 'private' ? 1 : 20
+onMounted(() => {
+  fetchSessions()
 })
 </script>
 
@@ -564,19 +374,13 @@ watch(() => publishForm.courseType, (newType) => {
   margin: 0 auto;
 }
 
-/* 操作栏 */
 .action-bar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
-}
-
-.action-left {
-  display: flex;
-  gap: 12px;
 }
 
 .action-right {
@@ -584,7 +388,6 @@ watch(() => publishForm.courseType, (newType) => {
   gap: 12px;
 }
 
-/* 迷你统计卡片 */
 .mini-stat-card {
   background: white;
   border-radius: 12px;
@@ -629,7 +432,6 @@ watch(() => publishForm.courseType, (newType) => {
   margin-top: 4px;
 }
 
-/* 表格卡片 */
 .table-card {
   background: white;
   border-radius: 16px;
@@ -637,11 +439,21 @@ watch(() => publishForm.courseType, (newType) => {
   box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 
-/* 表格单元格样式 */
-:deep(.course-name-cell) {
+:deep(.date-cell) {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+}
+
+:deep(.date-text) {
+  font-weight: 600;
+  color: #1A1A2E;
+  font-size: 13px;
+}
+
+:deep(.week-text) {
+  font-size: 11px;
+  color: #9CA3AF;
 }
 
 :deep(.course-name-text) {
@@ -649,40 +461,24 @@ watch(() => publishForm.courseType, (newType) => {
   color: #1A1A2E;
 }
 
-:deep(.course-type-tag) {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  width: fit-content;
-}
-
-:deep(.course-type-tag.private) {
-  color: #FF6B35;
-  background: rgba(255,107,53,0.1);
-}
-
-:deep(.course-type-tag.public) {
-  color: #06D6A0;
-  background: rgba(6,214,160,0.1);
-}
-
-:deep(.datetime-cell) {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-:deep(.date-text) {
-  font-weight: 500;
-  color: #1A1A2E;
-}
-
 :deep(.time-text) {
-  font-size: 12px;
-  color: #6B7280;
+  color: #555;
+  font-size: 13px;
 }
+
+:deep(.category-tag) {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+:deep(.category-tag.info) { color: #667eea; background: rgba(102,126,234,0.1); }
+:deep(.category-tag.error) { color: #EF476F; background: rgba(239,71,111,0.1); }
+:deep(.category-tag.success) { color: #06D6A0; background: rgba(6,214,160,0.1); }
+:deep(.category-tag.warning) { color: #FFB347; background: rgba(255,179,71,0.1); }
+:deep(.category-tag.default) { color: #6B7280; background: rgba(107,114,128,0.1); }
 
 :deep(.capacity-cell) {
   display: flex;
@@ -703,9 +499,15 @@ watch(() => publishForm.courseType, (newType) => {
   color: #6B7280;
 }
 
-:deep(.price-text) {
+:deep(.remaining-text) {
   font-weight: 600;
-  color: #1A1A2E;
+  color: #06D6A0;
+}
+
+:deep(.remaining-full) {
+  font-size: 11px;
+  color: #EF476F;
+  font-weight: 500;
 }
 
 :deep(.status-badge) {
@@ -716,71 +518,107 @@ watch(() => publishForm.courseType, (newType) => {
   border-radius: 20px;
 }
 
-:deep(.status-badge.available) {
-  color: #06D6A0;
-  background: rgba(6,214,160,0.1);
-}
-
-:deep(.status-badge.full) {
-  color: #EF476F;
-  background: rgba(239,71,111,0.1);
-}
-
-:deep(.action-cell) {
-  display: flex;
-  gap: 8px;
-}
+:deep(.status-badge.success) { color: #06D6A0; background: rgba(6,214,160,0.1); }
+:deep(.status-badge.warning) { color: #FFB347; background: rgba(255,179,71,0.1); }
+:deep(.status-badge.error) { color: #EF476F; background: rgba(239,71,111,0.1); }
+:deep(.status-badge.default) { color: #6B7280; background: rgba(107,114,128,0.1); }
 
 :deep(.action-btn) {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 6px;
   border: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-:deep(.action-btn.edit) {
+:deep(.action-btn.view) {
   color: #667eea;
   background: rgba(102,126,234,0.1);
 }
 
-:deep(.action-btn.edit:hover) {
+:deep(.action-btn.view:hover) {
   background: rgba(102,126,234,0.2);
 }
 
-:deep(.action-btn.delete) {
-  color: #EF476F;
-  background: rgba(239,71,111,0.1);
+.course-detail {
+  padding: 4px 0;
 }
 
-:deep(.action-btn.delete:hover) {
-  background: rgba(239,71,111,0.2);
+.detail-cover {
+  margin-bottom: 20px;
 }
 
-:deep(.btn-icon) {
+.detail-no-cover {
+  width: 100%;
+  height: 150px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
   font-size: 14px;
 }
 
-/* 响应式 */
+.detail-tags {
+  display: flex;
+  gap: 8px;
+}
+
+.section-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin: 0 0 8px 0;
+}
+
+.detail-description p {
+  color: #666;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 768px) {
   .action-bar {
     flex-direction: column;
     align-items: stretch;
-  }
-  
-  .action-left,
-  .action-right {
-    justify-content: stretch;
-  }
-  
-  .action-left .n-button,
-  .action-right .n-input-group {
-    flex: 1;
   }
 }
 </style>

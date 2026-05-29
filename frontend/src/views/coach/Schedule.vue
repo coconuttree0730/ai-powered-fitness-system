@@ -291,6 +291,7 @@
 import { ref, computed, h, onMounted } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import { useScheduleStore } from '@/stores/schedule'
+import { getCoachBookingsByRange, confirmPrivateCoachBooking, completePrivateCoachBooking, getCoachOwnBookingsByRange } from '@/api/privateCoachBooking'
 import {
   ChevronBackOutline,
   ChevronForwardOutline,
@@ -315,6 +316,7 @@ const showPublishModal = ref(false)
 const selectedDate = ref('')
 const selectedDayCourses = ref([])
 const publishLoading = ref(false)
+const privateBookingList = ref([])
 
 // 表单
 const formRef = ref(null)
@@ -359,7 +361,7 @@ const currentYearMonth = computed(() => {
 
 // 从 store 获取课程数据
 const courses = computed(() => {
-  return scheduleStore.schedules.map(s => ({
+  const scheduleCourses = scheduleStore.schedules.map(s => ({
     id: s.id,
     courseName: s.studentName || '课程',
     courseType: s.courseType,
@@ -369,8 +371,36 @@ const courses = computed(() => {
     capacity: s.courseType === 'private' ? 1 : 20,
     bookingCount: s.courseType === 'private' ? 1 : 0,
     location: s.venue,
-    description: s.description
+    description: s.description,
+    source: 'schedule'
   }))
+
+  const privateBookings = privateBookingList.value
+    .filter(b => b.status !== 2)
+    .map(b => {
+      const startTime = b.startTime && b.startTime.substring ? b.startTime.substring(0, 5) : ''
+      const endTime = b.endTime && b.endTime.substring ? b.endTime.substring(0, 5) : ''
+      return {
+        id: 'pcb-' + b.id,
+        courseName: `私教预约 - ${b.userName || '学员'}`,
+        courseType: 'private',
+        date: b.bookingDate,
+        startTime,
+        endTime,
+        capacity: 1,
+        bookingCount: 1,
+        location: '私教课程',
+        description: b.note || '',
+        source: 'private_booking',
+        bookingId: b.id,
+        userName: b.userName,
+        status: b.status,
+        statusDesc: b.statusDesc,
+        bookingNote: b.note
+      }
+    })
+
+  return [...scheduleCourses, ...privateBookings]
 })
 
 // 生成日历数据
@@ -429,6 +459,7 @@ function changeMonth(delta) {
   const newDate = new Date(currentDate.value)
   newDate.setMonth(newDate.getMonth() + delta)
   currentDate.value = newDate
+  fetchPrivateCoachBookings()
 }
 
 // 处理日期点击
@@ -440,6 +471,10 @@ function handleDayClick(day) {
 
 // 处理课程点击
 function handleCourseClick(course) {
+  if (course.source === 'private_booking') {
+    showPrivateBookingDetailModal(course)
+    return
+  }
   dialog.info({
     title: course.courseName,
     content: () => h('div', null, [
@@ -447,6 +482,47 @@ function handleCourseClick(course) {
       h('p', null, `时间: ${course.startTime} - ${course.endTime}`),
       h('p', null, `地点: ${course.location}`),
       h('p', null, `预约: ${course.bookingCount}/${course.capacity}`)
+    ])
+  })
+}
+
+function showPrivateBookingDetailModal(course) {
+  dialog.info({
+    title: '私教预约详情',
+    content: () => h('div', { style: 'line-height: 2;' }, [
+      h('p', null, `学员: ${course.userName || '未知'}`),
+      h('p', null, `日期: ${course.date}`),
+      h('p', null, `时间: ${course.startTime} - ${course.endTime}`),
+      h('p', null, `状态: ${course.statusDesc || ''}`),
+      h('p', null, `备注: ${course.bookingNote || '无'}`),
+      h('div', { style: 'margin-top: 16px; display: flex; gap: 8px;' }, [
+        course.status === 0 ? h('button', {
+          style: 'padding: 6px 16px; border-radius: 6px; border: none; background: #2EC4B6; color: #fff; cursor: pointer;',
+          onClick: async () => {
+            try {
+              await confirmPrivateCoachBooking(course.bookingId)
+              message.success('预约已确认')
+              dialog.destroyAll()
+              fetchPrivateCoachBookings()
+            } catch (e) {
+              message.error(e?.response?.data?.message || '操作失败')
+            }
+          }
+        }, '确认预约') : null,
+        course.status === 1 ? h('button', {
+          style: 'padding: 6px 16px; border-radius: 6px; border: none; background: #10B981; color: #fff; cursor: pointer;',
+          onClick: async () => {
+            try {
+              await completePrivateCoachBooking(course.bookingId)
+              message.success('已标记完成')
+              dialog.destroyAll()
+              fetchPrivateCoachBookings()
+            } catch (e) {
+              message.error(e?.response?.data?.message || '操作失败')
+            }
+          }
+        }, '标记完成') : null
+      ].filter(Boolean))
     ])
   })
 }
@@ -526,6 +602,25 @@ function resetForm() {
 function editCourse(course) {
   message.info(`编辑课程: ${course.courseName}`)
 }
+
+// 获取私教预约数据
+async function fetchPrivateCoachBookings() {
+  try {
+    const date = currentDate.value
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const startDate = new Date(year, month, 1).toISOString().split('T')[0]
+    const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
+    const res = await getCoachOwnBookingsByRange(startDate, endDate)
+    privateBookingList.value = res || []
+  } catch (error) {
+    console.error('获取私教预约失败:', error)
+  }
+}
+
+onMounted(() => {
+  fetchPrivateCoachBookings()
+})
 
 // 删除课程
 function deleteCourse(course) {

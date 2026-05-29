@@ -25,6 +25,34 @@
       </div>
     </div>
 
+    <!-- 通知区域 -->
+    <div v-if="notifications.length > 0" class="notifications-area">
+      <div class="notifications-header" @click="showNotifications = !showNotifications">
+        <div class="notifications-title">
+          <n-icon :component="WarningOutline" size="18" />
+          <span>课程通知</span>
+          <n-tag v-if="unreadNotificationCount > 0" type="error" size="small">{{ unreadNotificationCount }} 条未读</n-tag>
+        </div>
+        <n-icon :component="showNotifications ? SearchOutline : SearchOutline" size="18" class="arrow-icon" :style="{ transform: showNotifications ? 'rotate(180deg)' : 'rotate(0deg)' }" />
+      </div>
+      <div v-if="showNotifications" class="notifications-list">
+        <div
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="notification-item"
+          :class="{ unread: !notification.isRead }"
+          @click="handleNotificationRead(notification)"
+        >
+          <div class="notification-dot" v-if="!notification.isRead"></div>
+          <div class="notification-content">
+            <span class="notification-student">{{ notification.studentName }}</span>
+            <span class="notification-text">{{ notification.content }}</span>
+            <span class="notification-time">{{ notification.bookingDate }} {{ notification.startTime }}-{{ notification.endTime }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 学员卡片列表 -->
     <div v-if="filteredStudents.length === 0" class="empty-state">
       <n-empty description="暂无学员数据" />
@@ -77,17 +105,17 @@
           </div>
           
           <div class="courses-row">
-            <span class="courses-label">剩余课时</span>
-            <span class="courses-value" :class="{ 'warning': student.remainingCourses < 5 }">
-              {{ student.remainingCourses }}
-            </span>
-            <span class="courses-unit">节</span>
+            <span class="courses-label">套餐</span><span class="courses-value" style="font-size: 14px; font-weight: 500;">{{ student.packageCode || '-' }}</span>
           </div>
           
           <div class="meta-row">
             <span class="meta-item">
               <n-icon :component="CalendarOutline" size="12" />
-              最近上课: {{ student.lastClass || '暂无' }}
+              绑定: {{ student.bindTime || '暂无' }}
+            </span>
+            <span class="meta-item">
+              <n-icon :component="CalendarOutline" size="12" />
+              到期: {{ student.expireTime || '暂无' }}
             </span>
           </div>
         </div>
@@ -334,10 +362,12 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, h } from 'vue'
+import { ref, computed, nextTick, h, onMounted } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useScheduleStore } from '@/stores/schedule'
+import { getMyStudents } from '@/api/coach/students'
+import { getNotifications, getUnreadCount, markAsRead } from '@/api/coach/notifications'
 import {
   SearchOutline,
   CallOutline,
@@ -358,7 +388,7 @@ const scheduleStore = useScheduleStore()
 
 // 搜索和排序
 const searchKeyword = ref('')
-const sortBy = ref('remainingCourses')
+const sortBy = ref('joinDate')
 
 // 弹窗状态
 const showChatModal = ref(false)
@@ -378,10 +408,8 @@ const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
 
 // 排序选项
 const sortOptions = [
-  { label: '剩余课时', value: 'remainingCourses' },
-  { label: '最近上课', value: 'lastClass' },
-  { label: '入会时间', value: 'joinDate' },
-  { label: '姓名排序', value: 'name' }
+  { label: '姓名排序', value: 'name' },
+  { label: '绑定时间', value: 'joinDate' }
 ]
 
 // 更多操作选项
@@ -436,92 +464,12 @@ const scheduleRules = {
 }
 
 // 模拟学员数据
-const students = ref([
-  { 
-    id: 1, 
-    realName: '王小明', 
-    phone: '13800138001', 
-    remainingCourses: 12,
-    completedCourses: 28,
-    avatar: null,
-    avatarColor: 'linear-gradient(135deg, #FF6B35, #FF8C61)',
-    unreadCount: 3,
-    lastClass: '2024-10-20',
-    joinDate: '2024-01-15',
-    fitnessGoal: '增肌塑形',
-    notes: '注意肩部旧伤'
-  },
-  { 
-    id: 2, 
-    realName: '李小红', 
-    phone: '13800138002', 
-    remainingCourses: 3,
-    completedCourses: 45,
-    avatar: null,
-    avatarColor: 'linear-gradient(135deg, #06D6A0, #2EC4B6)',
-    unreadCount: 0,
-    lastClass: '2024-10-18',
-    joinDate: '2023-08-20',
-    fitnessGoal: '减脂瘦身',
-    notes: ''
-  },
-  { 
-    id: 3, 
-    realName: '张大力', 
-    phone: '13800138003', 
-    remainingCourses: 8,
-    completedCourses: 15,
-    avatar: null,
-    avatarColor: 'linear-gradient(135deg, #667eea, #764ba2)',
-    unreadCount: 1,
-    lastClass: '2024-10-22',
-    joinDate: '2024-03-10',
-    fitnessGoal: '力量提升',
-    notes: '深蹲动作需纠正'
-  },
-  { 
-    id: 4, 
-    realName: '刘美丽', 
-    phone: '13800138004', 
-    remainingCourses: 2,
-    completedCourses: 38,
-    avatar: null,
-    avatarColor: 'linear-gradient(135deg, #FFD166, #FFB347)',
-    unreadCount: 0,
-    lastClass: '2024-10-15',
-    joinDate: '2023-11-05',
-    fitnessGoal: '瑜伽塑形',
-    notes: '柔韧性较好'
-  },
-  { 
-    id: 5, 
-    realName: '陈健康', 
-    phone: '13800138005', 
-    remainingCourses: 20,
-    completedCourses: 5,
-    avatar: null,
-    avatarColor: 'linear-gradient(135deg, #EF476F, #FF6B9D)',
-    unreadCount: 0,
-    lastClass: '2024-10-23',
-    joinDate: '2024-09-01',
-    fitnessGoal: '体能恢复',
-    notes: '术后康复训练'
-  },
-  { 
-    id: 6, 
-    realName: '赵健身', 
-    phone: '13800138006', 
-    remainingCourses: 6,
-    completedCourses: 22,
-    avatar: null,
-    avatarColor: 'linear-gradient(135deg, #118AB2, #06B6D4)',
-    unreadCount: 5,
-    lastClass: '2024-10-21',
-    joinDate: '2024-02-14',
-    fitnessGoal: '综合训练',
-    notes: ''
-  }
-])
+const students = ref([])
+
+// 通知相关
+const notifications = ref([])
+const showNotifications = ref(false)
+const loadingNotifications = ref(false)
 
 // 消息记录
 const messagesMap = ref(new Map())
@@ -539,22 +487,16 @@ const filteredStudents = computed(() => {
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(s => 
-      s.realName.toLowerCase().includes(keyword) || 
-      s.phone.includes(keyword)
+      s.realName.toLowerCase().includes(keyword)
     )
   }
   
-  // 排序
   result = [...result].sort((a, b) => {
     switch (sortBy.value) {
-      case 'remainingCourses':
-        return a.remainingCourses - b.remainingCourses
-      case 'lastClass':
-        return (b.lastClass || '').localeCompare(a.lastClass || '')
-      case 'joinDate':
-        return new Date(b.joinDate) - new Date(a.joinDate)
       case 'name':
         return a.realName.localeCompare(b.realName)
+      case 'joinDate':
+        return (b.bindTime || '').localeCompare(a.bindTime || '')
       default:
         return 0
     }
@@ -565,6 +507,7 @@ const filteredStudents = computed(() => {
 
 // 格式化手机号
 function formatPhone(phone) {
+  if (!phone) return '未填写手机号'
   return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1****$3')
 }
 
@@ -815,6 +758,65 @@ function goToSchedule() {
   showSuccessModal.value = false
   router.push('/coach/schedule')
 }
+
+async function fetchStudents() {
+  try {
+    const data = await getMyStudents()
+    students.value = (data || []).map(item => ({
+      id: item.memberId,
+      bindingId: item.id,
+      realName: item.studentName || `学员${item.memberId || ''}`,
+      avatar: item.studentAvatar,
+      memberId: item.memberId,
+      coachId: item.coachId,
+      packageCode: item.packageCode,
+      bindTime: item.bindTime,
+      expireTime: item.expireTime,
+      remainingCourses: 0,
+      completedCourses: 0,
+      phone: item.studentPhone || '',
+      avatarColor: 'linear-gradient(135deg, #FF6B35, #FF8C61)',
+      unreadCount: 0,
+      lastClass: '',
+      joinDate: item.bindTime || '',
+      fitnessGoal: '',
+      notes: ''
+    }))
+  } catch (error) {
+    students.value = []
+    console.error('加载学员列表失败:', error)
+    message.error(error.response?.data?.message || error.message || '加载学员列表失败')
+  }
+}
+
+async function fetchNotifications() {
+  loadingNotifications.value = true
+  try {
+    const data = await getNotifications()
+    notifications.value = data || []
+  } catch {
+    notifications.value = []
+  } finally {
+    loadingNotifications.value = false
+  }
+}
+
+async function handleNotificationRead(notification) {
+  if (notification.isRead) return
+  try {
+    await markAsRead(notification.id)
+    notification.isRead = true
+  } catch {
+    // silently fail
+  }
+}
+
+const unreadNotificationCount = computed(() => notifications.value.filter(n => !n.isRead).length)
+
+onMounted(() => {
+  fetchStudents()
+  fetchNotifications()
+})
 </script>
 
 <style scoped>
@@ -1175,6 +1177,99 @@ function goToSchedule() {
 
 .chat-input-area .n-input {
   flex: 1;
+}
+
+/* 通知区域 */
+.notifications-area {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notifications-header:hover {
+  background: #f8fafc;
+}
+
+.notifications-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.arrow-icon {
+  transition: transform 0.3s;
+  color: #9CA3AF;
+}
+
+.notifications-list {
+  border-top: 1px solid #f0f0f0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f8f8f8;
+}
+
+.notification-item:hover {
+  background: #f8fafc;
+}
+
+.notification-item.unread {
+  background: #fff7e6;
+}
+
+.notification-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF6B35;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.notification-student {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.notification-text {
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.4;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #9CA3AF;
 }
 
 /* 成功提示样式 */

@@ -8,9 +8,9 @@ import com.fitness.common.exception.BusinessException;
 import com.fitness.integration.minio.model.vo.FileUploadVO;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.integration.security.SecurityUtils;
-import com.fitness.modules.product.mapper.ProductMapper;
-import com.fitness.modules.product.model.entity.Product;
-import com.fitness.modules.product.model.vo.ProductVO;
+import com.fitness.modules.coach.mapper.CoachPackageMapper;
+import com.fitness.modules.coach.model.entity.CoachPackage;
+import com.fitness.modules.coach.model.vo.CoachPackageVO;
 import com.fitness.modules.user.mapper.CoachDetailMapper;
 import com.fitness.modules.user.mapper.UserFitnessProfileMapper;
 import com.fitness.modules.user.mapper.UserMapper;
@@ -47,7 +47,7 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     private final UserMapper userMapper;
     private final UserFitnessProfileMapper userFitnessProfileMapper;
     private final FileService fileService;
-    private final ProductMapper productMapper;
+    private final CoachPackageMapper coachPackageMapper;
     private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
@@ -227,26 +227,20 @@ public class CoachDetailServiceImpl implements CoachDetailService {
     }
 
     @Override
-    public List<ProductVO> getCoachPackages(Long coachId) {
-        List<Product> products = productMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Product>()
-                        .eq(Product::getCoachId, coachId)
-                        .eq(Product::getCategory, "COURSE")
-                        .eq(Product::getStatus, "ACTIVE")
-                        .orderByAsc(Product::getSortOrder)
-        );
+    public List<CoachPackageVO> getCoachPackages(Long coachId) {
+        List<CoachPackage> packages = coachPackageMapper.selectByCoachId(coachId);
 
-        return products.stream().map(product -> {
-            ProductVO vo = new ProductVO();
-            vo.setId(product.getId());
-            vo.setName(product.getName());
-            vo.setCode(product.getCode());
-            vo.setDescription(product.getDescription());
-            vo.setOriginalPrice(product.getOriginalPrice());
-            vo.setStatus(product.getStatus());
-            vo.setCoachId(product.getCoachId());
-            vo.setImageUrl(product.getImageUrl());
-            vo.setStock(product.getStock());
+        return packages.stream().map(pkg -> {
+            CoachPackageVO vo = new CoachPackageVO();
+            vo.setId(pkg.getId());
+            vo.setName(pkg.getName());
+            vo.setPackageCode(pkg.getPackageCode());
+            vo.setDescription(pkg.getDescription());
+            vo.setCoverImage(pkg.getCoverImage());
+            vo.setOriginalPrice(pkg.getOriginalPrice());
+            vo.setTotalSessions(pkg.getTotalSessions());
+            vo.setValidityDays(pkg.getValidityDays());
+            vo.setStatus(pkg.getStatus());
             return vo;
         }).collect(Collectors.toList());
     }

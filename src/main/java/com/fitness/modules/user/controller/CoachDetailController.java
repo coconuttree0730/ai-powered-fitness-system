@@ -6,7 +6,7 @@ import com.fitness.modules.user.model.vo.CoachDetailVO;
 import com.fitness.modules.user.model.vo.HomePageCoachVO;
 import com.fitness.modules.user.model.vo.MyPrivateCoachVO;
 import com.fitness.modules.user.service.CoachDetailService;
-import com.fitness.modules.product.model.vo.ProductVO;
+import com.fitness.modules.coach.model.vo.CoachPackageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -91,8 +91,8 @@ public class CoachDetailController {
     @Operation(summary = "获取指定教练的可购买私教套餐列表")
     @GetMapping("/{id}/packages")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<ProductVO>> getCoachPackages(@PathVariable Long id) {
-        List<ProductVO> packages = coachDetailService.getCoachPackages(id);
+    public Result<List<CoachPackageVO>> getCoachPackages(@PathVariable Long id) {
+        List<CoachPackageVO> packages = coachDetailService.getCoachPackages(id);
         return Result.success(packages);
     }
 }
