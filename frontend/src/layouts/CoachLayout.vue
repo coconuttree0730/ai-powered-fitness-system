@@ -54,10 +54,11 @@
 </template>
 
 <script setup>
-import { computed, h } from 'vue'
+import { computed, h, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon, NAvatar, NMessageProvider, NDialogProvider } from 'naive-ui'
+import { NIcon, NAvatar, NBadge, NMessageProvider, NDialogProvider } from 'naive-ui'
 import { useUserInfo } from '@/composables/useUserInfo'
+import { getUnreadCount } from '@/api/coach/notifications'
 import {
   HomeOutline,
   PersonOutline,
@@ -74,6 +75,18 @@ const { userAvatar, username, usernameInitial, goHome, handleLogout } = useUserI
 const activeKey = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '教练中心')
 
+const unreadCount = ref(0)
+let unreadTimer = null
+
+async function fetchUnreadCount() {
+  try {
+    const res = await getUnreadCount()
+    unreadCount.value = res?.count || 0
+  } catch {
+    // silently fail
+  }
+}
+
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
@@ -84,7 +97,17 @@ const menuOptions = [
   { label: '我的课程', key: '/coach/courses', icon: renderIcon(CalendarOutline) },
   { label: '我的套餐', key: '/coach/packages', icon: renderIcon(PricetagsOutline) },
   { label: '课程日程', key: '/coach/schedule', icon: renderIcon(TimeOutline) },
-  { label: '我的学员', key: '/coach/students', icon: renderIcon(PeopleOutline) }
+  {
+    label: () =>
+      h('span', { style: 'display: flex; align-items: center; gap: 8px' }, [
+        '我的学员',
+        unreadCount.value > 0
+          ? h(NBadge, { value: unreadCount.value, max: 99, type: 'error' })
+          : null
+      ]),
+    key: '/coach/students',
+    icon: renderIcon(PeopleOutline)
+  }
 ]
 
 const userOptions = [
@@ -103,6 +126,22 @@ function handleUserSelect(key) {
     handleLogout()
   }
 }
+
+onMounted(() => {
+  fetchUnreadCount()
+  unreadTimer = setInterval(fetchUnreadCount, 30000)
+})
+
+onBeforeUnmount(() => {
+  if (unreadTimer) {
+    clearInterval(unreadTimer)
+    unreadTimer = null
+  }
+})
+
+watch(() => route.path, () => {
+  fetchUnreadCount()
+})
 </script>
 
 <style scoped>

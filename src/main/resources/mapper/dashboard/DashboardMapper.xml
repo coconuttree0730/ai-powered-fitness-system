@@ -87,17 +87,19 @@
     <!-- 统计今日订单数 -->
     <select id="countTodayOrders" resultType="java.lang.Integer">
         SELECT COUNT(*)
-        FROM product_order
-        WHERE created_at >= CURRENT_DATE AND created_at &lt; CURRENT_DATE + INTERVAL '1 day'
-          AND status IN ('PAID', 'SHIPPED', 'COMPLETED')
+        FROM orders
+        WHERE create_time >= CURRENT_DATE AND create_time &lt; CURRENT_DATE + INTERVAL '1 day'
+          AND status IN ('PAID', 'COMPLETED')
+          AND order_type = 'PRODUCT'
     </select>
 
     <!-- 统计今日营收 -->
     <select id="sumTodayRevenue" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(pay_amount), 0)
-        FROM product_order
-        WHERE created_at >= CURRENT_DATE AND created_at &lt; CURRENT_DATE + INTERVAL '1 day'
-          AND status IN ('PAID', 'SHIPPED', 'COMPLETED')
+        FROM orders
+        WHERE create_time >= CURRENT_DATE AND create_time &lt; CURRENT_DATE + INTERVAL '1 day'
+          AND status IN ('PAID', 'COMPLETED')
+          AND order_type = 'PRODUCT'
     </select>
 
     <!-- 查询营收趋势数据 -->
@@ -105,23 +107,25 @@
         <choose>
             <when test="groupBy == 'hour'">
                 SELECT
-                    TO_CHAR(DATE_TRUNC('hour', created_at), 'HH24:00') AS date,
+                    TO_CHAR(DATE_TRUNC('hour', create_time), 'HH24:00') AS date,
                     COALESCE(SUM(pay_amount), 0) AS amount
-                FROM product_order
-                WHERE created_at >= CURRENT_DATE AND created_at &lt; CURRENT_DATE + INTERVAL '1 day'
-                  AND status IN ('PAID', 'SHIPPED', 'COMPLETED')
-                GROUP BY DATE_TRUNC('hour', created_at)
-                ORDER BY DATE_TRUNC('hour', created_at)
+                FROM orders
+                WHERE create_time >= CURRENT_DATE AND create_time &lt; CURRENT_DATE + INTERVAL '1 day'
+                  AND status IN ('PAID', 'COMPLETED')
+                  AND order_type = 'PRODUCT'
+                GROUP BY DATE_TRUNC('hour', create_time)
+                ORDER BY DATE_TRUNC('hour', create_time)
             </when>
             <otherwise>
                 SELECT
-                    TO_CHAR(DATE(created_at), 'MM-DD') AS date,
+                    TO_CHAR(DATE(create_time), 'MM-DD') AS date,
                     COALESCE(SUM(pay_amount), 0) AS amount
-                FROM product_order
-                WHERE created_at >= #{startDate}::date AND created_at &lt; #{endDate}::date + INTERVAL '1 day'
-                  AND status IN ('PAID', 'SHIPPED', 'COMPLETED')
-                GROUP BY DATE(created_at)
-                ORDER BY DATE(created_at)
+                FROM orders
+                WHERE create_time >= #{startDate}::date AND create_time &lt; #{endDate}::date + INTERVAL '1 day'
+                  AND status IN ('PAID', 'COMPLETED')
+                  AND order_type = 'PRODUCT'
+                GROUP BY DATE(create_time)
+                ORDER BY DATE(create_time)
             </otherwise>
         </choose>
     </select>

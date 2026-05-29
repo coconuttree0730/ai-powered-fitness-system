@@ -242,17 +242,97 @@
         <div class="section-header">
           <h2 class="section-title">订单记录</h2>
         </div>
-        <n-tabs type="line">
-          <n-tab-pane name="all" tab="全部">
-            <n-empty description="暂无订单记录" />
-          </n-tab-pane>
-          <n-tab-pane name="pending" tab="待付款">
-            <n-empty description="暂无待付款订单" />
-          </n-tab-pane>
-          <n-tab-pane name="paid" tab="已完成">
-            <n-empty description="暂无已完成订单" />
-          </n-tab-pane>
-        </n-tabs>
+
+        <n-spin :show="orderLoading">
+          <n-tabs v-model:value="orderTypeTab" type="line" animated>
+            <n-tab-pane name="membership" tab="会员卡订单" />
+            <n-tab-pane name="product" tab="商品订单" />
+            <n-tab-pane name="coach" tab="私教课订单" />
+          </n-tabs>
+
+          <n-empty v-if="currentOrderList.length === 0 && !orderLoading" description="暂无订单记录" />
+
+          <div v-else class="order-cards">
+            <div
+              v-for="order in currentOrderList"
+              :key="order.orderNo"
+              class="order-card"
+              :class="{ clickable: isCardClickable(order) }"
+              @click="handleOrderCardClick(order)"
+            >
+              <!-- 会员卡订单卡片 -->
+              <template v-if="orderTypeTab === 'membership'">
+                <div class="card-left">
+                  <div class="member-card-icon">
+                    <n-icon size="28" color="#FF6B35" :component="CardIcon" />
+                  </div>
+                </div>
+                <div class="card-mid">
+                  <div class="card-title">{{ order.membershipExt?.cardName || '会员卡' }}</div>
+                  <div class="card-meta">
+                    <span v-if="order.membershipExt?.expireTime">有效期至 {{ formatDate(order.membershipExt.expireTime) }}</span>
+                    <span>{{ order.payMethodLabel || '' }}</span>
+                  </div>
+                </div>
+                <div class="card-right">
+                  <div class="card-amount">¥{{ order.payAmount }}</div>
+                  <n-tag :type="getOrderStatusType(order.status)" size="small" round>{{ order.statusLabel }}</n-tag>
+                  <n-button v-if="canContinuePay(order)" type="primary" size="tiny" ghost @click.stop="continuePay(order)">
+                    继续支付
+                  </n-button>
+                </div>
+              </template>
+
+              <!-- 商品订单卡片 -->
+              <template v-if="orderTypeTab === 'product'">
+                <div class="card-left">
+                  <div class="product-thumb-placeholder">
+                    <n-icon size="28" color="#999"><CartOutline /></n-icon>
+                  </div>
+                </div>
+                <div class="card-mid">
+                  <div class="card-title">{{ order.productExt?.productName || '商品' }}</div>
+                  <div class="card-meta">
+                    <span>×{{ order.productExt?.quantity || 1 }}</span>
+                    <n-tag v-if="order.productExt?.pickupStatus"
+                      :type="order.productExt.pickupStatus === 'PICKED' ? 'success' : 'warning'"
+                      size="tiny" round>{{ order.productExt.pickupStatus === 'PICKED' ? '已取货' : '待取货' }}</n-tag>
+                  </div>
+                </div>
+                <div class="card-right">
+                  <div class="card-amount">¥{{ order.payAmount }}</div>
+                  <n-tag :type="getOrderStatusType(order.status)" size="small" round>{{ order.statusLabel }}</n-tag>
+                  <n-button v-if="canContinuePay(order)" type="primary" size="tiny" ghost @click.stop="continuePay(order)">
+                    继续支付
+                  </n-button>
+                </div>
+              </template>
+
+              <!-- 私教课订单卡片 -->
+              <template v-if="orderTypeTab === 'coach'">
+                <div class="card-left">
+                  <n-avatar round :size="40" :src="order.coachPackageExt?.coachAvatar">
+                    {{ order.coachPackageExt?.coachName?.charAt(0) || '教' }}
+                  </n-avatar>
+                </div>
+                <div class="card-mid">
+                  <div class="card-title">{{ order.coachPackageExt?.coachName || '教练' }}</div>
+                  <div class="card-meta">
+                    <span>{{ order.coachPackageExt?.packageName || '私教套餐' }}</span>
+                    <span v-if="order.coachPackageExt?.expireTime">有效期至 {{ formatDate(order.coachPackageExt.expireTime) }}</span>
+                  </div>
+                </div>
+                <div class="card-right">
+                  <div class="card-amount">¥{{ order.payAmount }}</div>
+                  <n-tag :type="getOrderStatusType(order.status)" size="small" round>{{ order.statusLabel }}</n-tag>
+                  <n-button v-if="canContinuePay(order)" type="primary" size="tiny" ghost @click.stop="continuePay(order)">
+                    继续支付
+                  </n-button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </n-spin>
       </div>
 
       <!-- 健身档案 -->
@@ -347,6 +427,23 @@
         </n-form>
       </div>
     </div>
+
+    <!-- 商品取货二维码弹窗 -->
+    <n-modal v-model:show="showPickupQrModal" preset="card" style="width: 90%; max-width: 380px" :show-header="false">
+      <div class="qr-content">
+        <h3>取货码</h3>
+        <p class="qr-hint">出示此二维码给工作人员核销取货</p>
+        <div class="qr-wrapper">
+          <canvas ref="qrCanvasRef" width="220" height="220"></canvas>
+        </div>
+        <div class="qr-info">
+          <p>{{ pickupInfo.productName }}</p>
+          <p>商品数量：{{ pickupInfo.quantity }}</p>
+          <p>订单号：{{ pickupInfo.orderNo }}</p>
+          <p>取货码：{{ pickupInfo.pickupCode }}</p>
+        </div>
+      </div>
+    </n-modal>
 
     <!-- 绑定/更换手机弹窗 -->
     <n-modal v-model:show="showBindPhoneModal" :title="userInfo.phone ? '更换手机号' : '绑定手机号'" preset="card" style="width: 400px">
@@ -534,9 +631,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useMessage, NTag } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import {
   PersonOutline,
@@ -545,9 +642,17 @@ import {
   FitnessOutline,
   CopyOutline,
   CheckmarkCircleOutline,
-  InformationCircleOutline
+  InformationCircleOutline,
+  Card as CardIcon
 } from '@vicons/ionicons5'
 import { getProfile, updateProfile } from '@/api/plan'
+import { getMyAllOrders, payUnifiedOrder, submitAlipayForm } from '@/api/membership'
+import {
+  clearPaymentMarker,
+  isPaymentFinished,
+  markPaymentStarted,
+  readPaymentMarker
+} from '@/utils/paymentMarker'
 import {
   getCurrentUser,
   updateUsername,
@@ -708,12 +813,144 @@ const smsPasswordRules = {
   ]
 }
 
+// 订单记录
+const orderLoading = ref(false)
+const orderTypeTab = ref('membership')
+const showPickupQrModal = ref(false)
+const qrCanvasRef = ref(null)
+const pickupInfo = reactive({
+  productName: '',
+  orderNo: '',
+  quantity: 1,
+  pickupCode: ''
+})
+
+const allOrders = ref([])
+
+const currentOrderList = computed(() => {
+  let list = []
+  switch (orderTypeTab.value) {
+    case 'membership':
+      list = allOrders.value.filter(o => o.orderType === 'MEMBERSHIP')
+      return list.filter(o => {
+        if (o.status !== 'PAID') return true
+        const expireTime = o.membershipExt?.expireTime
+        if (!expireTime) return true
+        return new Date(expireTime) > new Date()
+      })
+    case 'product':
+      return allOrders.value.filter(o => o.orderType === 'PRODUCT')
+    case 'coach':
+      return allOrders.value.filter(o => o.orderType === 'COACH_PACKAGE')
+    default:
+      return []
+  }
+})
+
+function getOrderStatusType(status) {
+  const map = {
+    'PAID': 'info',
+    'NOT_PICKED': 'warning',
+    'PENDING': 'warning',
+    'COMPLETED': 'success',
+    'CANCELLED': 'default',
+    'TIMEOUT': 'default'
+  }
+  return map[status] || 'default'
+}
+
+function isCardClickable(order) {
+  return orderTypeTab.value === 'product'
+    && ['NOT_PICKED', 'PAID'].includes(order.status)
+    && order.productExt?.pickupCode
+}
+
+function canContinuePay(order) {
+  return order?.status === 'PENDING'
+}
+
+async function continuePay(order) {
+  if (!order?.orderNo) return
+
+  try {
+    message.info('开始支付，请在支付宝完成付款')
+    const payData = await payUnifiedOrder(order.orderNo, 'ALIPAY')
+    if (payData?.payForm) {
+      markPaymentStarted(order)
+      submitAlipayForm(payData.payForm)
+    } else {
+      message.error('获取支付信息失败')
+    }
+  } catch (error) {
+    message.error(error.response?.data?.message || error.message || '支付请求失败，请重试')
+  }
+}
+
+async function handleOrderCardClick(order) {
+  if (!isCardClickable(order)) return
+  pickupInfo.productName = order.productExt.productName
+  pickupInfo.orderNo = order.orderNo
+  pickupInfo.quantity = order.productExt.quantity || 1
+  pickupInfo.pickupCode = order.productExt.pickupCode
+  showPickupQrModal.value = true
+  await nextTick()
+  if (qrCanvasRef.value) {
+    try {
+      const QRCode = await import('qrcode')
+      const data = JSON.stringify({
+        type: 'PRODUCT_PICKUP',
+        orderNo: order.orderNo,
+        pickupCode: order.productExt.pickupCode,
+        quantity: order.productExt.quantity || 1
+      })
+      QRCode.toCanvas(qrCanvasRef.value, data, { width: 220 })
+    } catch (e) {
+      console.error('生成二维码失败:', e)
+    }
+  }
+}
+
+function notifyPaymentCompletion(orders) {
+  const marker = readPaymentMarker()
+  if (!marker?.orderNo) return
+
+  const paidOrder = orders.find(order =>
+    order.orderNo === marker.orderNo && isPaymentFinished(order)
+  )
+  if (!paidOrder) return
+
+  clearPaymentMarker()
+  message.success('支付完成，订单状态已更新')
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  })
+}
+
+async function loadOrders() {
+  orderLoading.value = true
+  try {
+    const data = await getMyAllOrders()
+    allOrders.value = data || []
+    notifyPaymentCompletion(allOrders.value)
+  } catch (error) {
+    console.error('加载订单记录失败:', error)
+  } finally {
+    orderLoading.value = false
+  }
+}
+
 // 初始化
 onMounted(() => {
   // 获取最新用户信息
   fetchUserInfo()
   // 获取健身档案
   fetchFitnessProfile()
+  // 获取订单记录
+  loadOrders()
 })
 
 // 获取用户信息
@@ -1655,5 +1892,146 @@ async function confirmChangePassword() {
   font-size: 12px;
   color: #999;
   margin-top: 4px;
+}
+
+/* ===== 订单卡片 ===== */
+.order-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.order-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #fafbfc;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border-color: #e0e0e0;
+}
+
+.order-card.clickable {
+  cursor: pointer;
+}
+
+.order-card.clickable:hover {
+  border-color: #FF6B35;
+  background: #fff8f6;
+}
+
+.card-left {
+  flex-shrink: 0;
+}
+
+.card-mid {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #999;
+}
+
+.card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.card-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.product-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.product-thumb-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff5f2, #ffe8e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-content {
+  text-align: center;
+  padding: 16px;
+}
+
+.qr-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin: 0 0 8px 0;
+}
+
+.qr-hint {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0 0 24px 0;
+}
+
+.qr-wrapper {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.qr-info p {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 4px 0;
+}
+
+@media (max-width: 768px) {
+  .order-card {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .card-amount {
+    font-size: 16px;
+  }
 }
 </style>

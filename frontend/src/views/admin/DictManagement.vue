@@ -239,7 +239,7 @@ async function handleEditDict(row) {
 async function handleStatusChange(row, val) {
   const newStatus = val ? 'ACTIVE' : 'INACTIVE'
   try {
-    await updateDict(row.id, { ...row, status: newStatus })
+    await updateDict(row.id, { status: newStatus })
     ElMessage.success(val ? '已启用' : '已禁用')
     loadDicts()
   } catch (error) {

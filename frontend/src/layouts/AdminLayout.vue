@@ -68,20 +68,10 @@
           <el-icon><TrendCharts /></el-icon>
           <span>数据分析</span>
         </el-menu-item>
-        <el-sub-menu index="/admin/knowledge">
-          <template #title>
-            <el-icon><Collection /></el-icon>
-            <span>知识库管理</span>
-          </template>
-          <el-menu-item index="/admin/knowledge-base">
-            <el-icon><Document /></el-icon>
-            <span>文档管理</span>
-          </el-menu-item>
-          <el-menu-item index="/admin/knowledge-categories">
-            <el-icon><Folder /></el-icon>
-            <span>分类管理</span>
-          </el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/admin/knowledge-base">
+          <el-icon><Collection /></el-icon>
+          <span>知识库管理</span>
+        </el-menu-item>
         <el-menu-item index="/admin/repairs">
           <el-icon><Tools /></el-icon>
           <span>报修管理</span>
@@ -147,7 +137,7 @@ import { useUserInfo } from '@/composables/useUserInfo'
 
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
-  CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection, Folder,
+  CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection,
   Setting, CollectionTag, VideoCamera, Clock, Reading
 } from '@element-plus/icons-vue'
 

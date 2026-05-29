@@ -4,7 +4,7 @@
     <div class="card-section">
       <div class="section-header">
         <h3 class="section-title">我的专属教练</h3>
-        <n-button v-if="myPrivateCoach" type="primary" size="small" class="book-btn" @click="showBookingModal = true">
+        <n-button v-if="myPrivateCoach" type="primary" size="small" class="book-btn" @click="openBookingModal">
           预约课程
         </n-button>
       </div>
@@ -116,83 +116,80 @@
       </div>
     </div>
 
-    <!-- 训练记录 -->
-    <div class="card-section">
-      <div class="section-header">
-        <h3 class="section-title">训练记录</h3>
-      </div>
-      
-      <!-- 桌面端表格 -->
-      <div v-if="!isMobile" class="table-wrapper">
-        <n-data-table
-          :columns="recordColumns"
-          :data="trainingRecords"
-          :pagination="false"
-          :bordered="false"
-          class="record-table"
-        />
-      </div>
-      
-      <!-- 移动端训练记录卡片 -->
-      <div v-else class="mobile-training-list">
-        <div class="training-cards">
-          <div 
-            v-for="(record, index) in trainingRecords" 
-            :key="index"
-            class="training-card"
-            :style="{ animationDelay: `${index * 100}ms` }"
-          >
-            <div class="training-header">
-              <div class="training-date">
-                <span class="day">{{ getDay(record.date) }}</span>
-                <span class="month">{{ getMonth(record.date) }}</span>
-              </div>
-              <n-tag type="success" size="small" round class="status-tag">
-                已完成
-              </n-tag>
-            </div>
-            <div class="training-body">
-              <h4 class="course-name">{{ record.courseType }}</h4>
-              <div class="coach-info">
-                <n-icon size="14" :component="PersonOutline" />
-                <span>{{ record.coach }}</span>
-              </div>
-              <div class="training-stats">
-                <div class="stat-item">
-                  <n-icon size="16" :component="TimeOutline" />
-                  <span>{{ record.duration }}</span>
-                </div>
-                <div class="stat-item highlight">
-                  <n-icon size="16" :component="FlameOutline" />
-                  <span>{{ record.calories }}</span>
-                </div>
-              </div>
+    <!-- 预约课程弹窗（日历选择器） -->
+    <n-modal v-model:show="showBookingModal" preset="card" style="width: 780px; max-width: 95vw" :title="`预约私教课程 - ${myPrivateCoach?.name || ''}`">
+      <div class="booking-calendar-container">
+        <div class="booking-calendar-panel">
+          <div class="calendar-nav">
+            <n-button text @click="calendarPrevMonth">
+              <n-icon :component="ChevronBackOutline" size="18" />
+            </n-button>
+            <span class="calendar-month-label">{{ calendarYearMonth }}</span>
+            <n-button text @click="calendarNextMonth">
+              <n-icon :component="ChevronForwardOutline" size="18" />
+            </n-button>
+          </div>
+          <div class="calendar-week-header">
+            <div v-for="day in weekDayLabels" :key="day" class="week-day-cell">{{ day }}</div>
+          </div>
+          <div class="calendar-days-grid">
+            <div
+              v-for="(day, idx) in calendarDays"
+              :key="idx"
+              class="calendar-day-cell"
+              :class="{
+                'other-month': !day.isCurrentMonth,
+                'is-today': day.isToday,
+                'is-selected': selectedDate && day.dateStr === selectedDate,
+                'has-bookings': day.bookingCount > 0
+              }"
+              @click="selectCalendarDate(day)"
+            >
+              <span class="day-number">{{ day.dayNumber }}</span>
+              <span v-if="day.bookingCount > 0" class="day-booking-dot"></span>
             </div>
           </div>
         </div>
+        <div class="booking-slots-panel">
+          <div class="slots-header">
+            <span class="slots-date-label">{{ selectedDateLabel }}</span>
+          </div>
+          <div class="slots-list" v-if="selectedDateSlots.length > 0">
+            <div
+              v-for="slot in selectedDateSlots"
+              :key="slot.value"
+              class="slot-item"
+              :class="{
+                'slot-free': slot.free,
+                'slot-booked': !slot.free,
+                'slot-selected': selectedTimeSlot === slot.value && slot.free
+              }"
+              @click="selectTimeSlot(slot)"
+            >
+              <div class="slot-time">{{ slot.label }}</div>
+              <div class="slot-status">
+                <span v-if="!slot.free" class="booked-text">
+                  <n-icon :component="PersonOutline" size="12" />
+                  {{ slot.bookedBy }}
+                </span>
+                <span v-else class="free-text">空闲</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="slots-empty">
+            <n-empty description="请先选择日期" />
+          </div>
+        </div>
       </div>
-    </div>
-
-    <!-- 预约课程弹窗 -->
-    <n-modal v-model:show="showBookingModal" preset="card" style="width: 500px" title="预约课程">
-      <n-form :model="bookingForm" label-placement="left" label-width="80">
-        <n-form-item label="课程类型">
-          <n-select v-model:value="bookingForm.courseType" :options="courseOptions" />
-        </n-form-item>
-        <n-form-item label="预约日期">
-          <n-date-picker v-model:value="bookingForm.date" type="date" style="width: 100%" />
-        </n-form-item>
-        <n-form-item label="时间段">
-          <n-select v-model:value="bookingForm.timeSlot" :options="timeOptions" />
-        </n-form-item>
-        <n-form-item label="备注">
-          <n-input v-model:value="bookingForm.note" type="textarea" :rows="3" placeholder="请输入备注信息..." />
-        </n-form-item>
-      </n-form>
+      <div class="booking-note-section">
+        <n-input v-model:value="bookingNote" type="textarea" :rows="2" placeholder="备注（可选）" />
+      </div>
       <template #footer>
         <n-space justify="end">
           <n-button @click="showBookingModal = false">取消</n-button>
-          <n-button type="primary" :loading="bookingLoading" @click="confirmBooking">确认预约</n-button>
+          <n-button type="primary" :loading="bookingLoading" :disabled="!selectedTimeSlot" @click="confirmCalendarBooking">
+            确认预约
+          </n-button>
         </n-space>
       </template>
     </n-modal>
@@ -316,15 +313,26 @@
         </n-space>
       </template>
     </n-modal>
+
   </div>
 </template>
 
 <script setup>
-import { ref, h, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { useMessage, NTag, NIcon, NSpin } from 'naive-ui'
-import { PersonOutline, TimeOutline, FlameOutline } from '@vicons/ionicons5'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { useMessage, NTag } from 'naive-ui'
+import { PersonOutline, TimeOutline, FlameOutline, ChevronBackOutline, ChevronForwardOutline } from '@vicons/ionicons5'
 import { getHomePageCoaches, getMyPrivateCoach, getCoachDetail, getCoachPackages } from '@/api/coachDetail'
-import { createOrder, payOrder } from '@/api/product'
+import { createCoachPackageOrder, payCoachOrder } from '@/api/coachProduct'
+import { createPrivateCoachBooking, getCoachBookingsByRange } from '@/api/privateCoachBooking'
+import { getStudentBinding } from '@/api/coach/students'
+import { getUnifiedOrderDetail, submitAlipayForm } from '@/api/membership'
+import {
+  clearPaymentMarker,
+  isPaymentFinished,
+  markPaymentStarted,
+  readPaymentMarker
+} from '@/utils/paymentMarker'
+import { useAuthStore } from '@/stores/auth'
 
 const message = useMessage()
 const recommendedSection = ref(null)
@@ -363,32 +371,29 @@ const coachPackages = ref([])
 const selectedPackage = ref(null)
 const buyLoading = ref(false)
 
+const authStore = useAuthStore()
+const currentUserId = computed(() => authStore.userInfo?.id)
+
 // 滚动状态
 const scrollPosition = ref(0)
 const maxScroll = ref(0)
 
-const bookingForm = ref({
-  courseType: 'muscle',
-  date: null,
-  timeSlot: '14:00',
-  note: ''
-})
+const bookingNote = ref('')
+const calendarMonth = ref(new Date())
+const selectedDate = ref(null)
+const selectedTimeSlot = ref(null)
+const monthBookings = ref([])
 
-const courseOptions = [
-  { label: '增肌训练', value: 'muscle' },
-  { label: '减脂塑形', value: 'fatloss' },
-  { label: '体能提升', value: 'fitness' },
-  { label: '康复训练', value: 'rehab' }
+const TIME_SLOTS = [
+  { label: '09:00 - 10:00', value: '09:00', start: '09:00', end: '10:00' },
+  { label: '10:00 - 11:00', value: '10:00', start: '10:00', end: '11:00' },
+  { label: '14:00 - 15:00', value: '14:00', start: '14:00', end: '15:00' },
+  { label: '15:00 - 16:00', value: '15:00', start: '15:00', end: '16:00' },
+  { label: '18:00 - 19:00', value: '18:00', start: '18:00', end: '19:00' },
+  { label: '19:00 - 20:00', value: '19:00', start: '19:00', end: '20:00' }
 ]
 
-const timeOptions = [
-  { label: '09:00 - 10:00', value: '09:00' },
-  { label: '10:00 - 11:00', value: '10:00' },
-  { label: '14:00 - 15:00', value: '14:00' },
-  { label: '15:00 - 16:00', value: '15:00' },
-  { label: '18:00 - 19:00', value: '18:00' },
-  { label: '19:00 - 20:00', value: '19:00' }
-]
+const weekDayLabels = ['日', '一', '二', '三', '四', '五', '六']
 
 // 渐变色数组
 const gradients = [
@@ -400,27 +405,6 @@ const gradients = [
   'linear-gradient(135deg, #fc4a1a, #f7b733)',
   'linear-gradient(135deg, #7F00FF, #E100FF)',
   'linear-gradient(135deg, #00c6ff, #0072ff)'
-]
-
-const recordColumns = [
-  { title: '日期', key: 'date' },
-  { title: '教练', key: 'coach' },
-  { title: '课程类型', key: 'courseType' },
-  { title: '时长', key: 'duration' },
-  { title: '消耗卡路里', key: 'calories' },
-  {
-    title: '状态',
-    key: 'status',
-    render(row) {
-      return h(NTag, { type: 'success', size: 'small' }, { default: () => '已完成' })
-    }
-  }
-]
-
-const trainingRecords = [
-  { date: '2024-10-15', coach: '张教练', courseType: '增肌训练', duration: '60分钟', calories: '420 kcal', status: 'completed' },
-  { date: '2024-10-12', coach: '张教练', courseType: '体能测试', duration: '45分钟', calories: '280 kcal', status: 'completed' },
-  { date: '2024-10-08', coach: '张教练', courseType: '核心训练', duration: '50分钟', calories: '350 kcal', status: 'completed' }
 ]
 
 // 计算属性：是否可以向左滚动
@@ -559,24 +543,30 @@ async function handleConfirmBuy() {
 
   buyLoading.value = true
   try {
-    const orderResult = await createOrder({
-      productId: selectedPackage.value.id,
-      quantity: 1,
-      usePoints: 0
-    })
+    const orderResult = await createCoachPackageOrder(selectedPackage.value.id)
 
-    const payResult = await payOrder(orderResult.orderNo, 'BALANCE')
+    if (!orderResult || !orderResult.orderNo) {
+      message.error('创建订单失败')
+      return
+    }
 
-    showPackageModal.value = false
-    showDetailModal.value = false
+    message.info('开始支付，请在支付宝完成付款')
+    const payResult = await payCoachOrder(orderResult.orderNo)
 
-    message.success('购买成功，您已成为该教练的学员')
+    if (!payResult) {
+      message.error('支付请求失败')
+      return
+    }
 
-    await refreshAll()
+    if (payResult.payForm) {
+      markPaymentStarted({ orderNo: orderResult.orderNo, orderType: 'COACH_PACKAGE' })
+      submitAlipayForm(payResult.payForm)
+    } else {
+      message.error('获取支付表单失败，请稍后重试')
+    }
   } catch (error) {
-    console.error('购买失败:', error)
-    const msg = error?.response?.data?.message || error?.message || '购买失败，请稍后重试'
-    message.error(msg)
+    console.error('支付失败:', error)
+    message.error(error.response?.data?.message || error.message || '支付失败，请重试')
   } finally {
     buyLoading.value = false
   }
@@ -587,6 +577,22 @@ async function refreshAll() {
     fetchMyPrivateCoach(),
     fetchRecommendedCoaches()
   ])
+}
+
+async function syncPendingCoachPayment() {
+  const marker = readPaymentMarker()
+  if (!marker?.orderNo || marker.orderType !== 'COACH_PACKAGE') return
+
+  try {
+    const order = await getUnifiedOrderDetail(marker.orderNo)
+    if (isPaymentFinished(order)) {
+      clearPaymentMarker()
+      message.success('支付完成，已为你绑定教练')
+      await refreshAll()
+    }
+  } catch (error) {
+    console.error('同步私教套餐支付状态失败:', error)
+  }
 }
 
 // 获取推荐教练列表
@@ -618,33 +624,184 @@ async function fetchMyPrivateCoach() {
   }
 }
 
-function confirmBooking() {
+const calendarYearMonth = computed(() => {
+  const d = calendarMonth.value
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`
+})
+
+const calendarDays = computed(() => {
+  const year = calendarMonth.value.getFullYear()
+  const month = calendarMonth.value.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const startDayOfWeek = firstDay.getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const daysInPrevMonth = new Date(year, month, 0).getDate()
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+  const bookingCountMap = {}
+  monthBookings.value.forEach(b => {
+    bookingCountMap[b.bookingDate] = (bookingCountMap[b.bookingDate] || 0) + 1
+  })
+
+  const days = []
+
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    const day = daysInPrevMonth - i
+    const dateStr = `${year}-${String(month === 0 ? 12 : month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    days.push({
+      dayNumber: day,
+      isCurrentMonth: false,
+      isToday: dateStr === todayStr,
+      dateStr,
+      bookingCount: 0
+    })
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({
+      dayNumber: i,
+      isCurrentMonth: true,
+      isToday: dateStr === todayStr,
+      dateStr,
+      bookingCount: bookingCountMap[dateStr] || 0
+    })
+  }
+
+  const remainingSlots = 42 - days.length
+  for (let i = 1; i <= remainingSlots; i++) {
+    days.push({
+      dayNumber: i,
+      isCurrentMonth: false,
+      isToday: false,
+      dateStr: '',
+      bookingCount: 0
+    })
+  }
+
+  return days
+})
+
+const selectedDateLabel = computed(() => {
+  if (!selectedDate.value) return '请选择日期'
+  const d = new Date(selectedDate.value + 'T00:00:00')
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  return `${year}年${month}月${day}日 ${weekDays[d.getDay()]}`
+})
+
+const selectedDateSlots = computed(() => {
+  if (!selectedDate.value) return []
+  const dateBookings = monthBookings.value.filter(b => b.bookingDate === selectedDate.value)
+  return TIME_SLOTS.map(slot => {
+    const booked = dateBookings.find(b => {
+      const bStart = b.startTime && b.startTime.substring ? b.startTime.substring(0, 5) : ''
+      return bStart === slot.value && b.status !== 2
+    })
+    return {
+      value: slot.value,
+      label: slot.label,
+      start: slot.start,
+      end: slot.end,
+      free: !booked,
+      bookedBy: booked ? booked.userName : null
+    }
+  })
+})
+
+function calendarPrevMonth() {
+  const d = new Date(calendarMonth.value)
+  d.setMonth(d.getMonth() - 1)
+  calendarMonth.value = d
+  loadMonthBookings()
+}
+
+function calendarNextMonth() {
+  const d = new Date(calendarMonth.value)
+  d.setMonth(d.getMonth() + 1)
+  calendarMonth.value = d
+  loadMonthBookings()
+}
+
+function selectCalendarDate(day) {
+  if (!day.isCurrentMonth) return
+  selectedDate.value = day.dateStr
+  selectedTimeSlot.value = null
+}
+
+function selectTimeSlot(slot) {
+  if (!slot.free) return
+  selectedTimeSlot.value = slot.value
+}
+
+async function loadMonthBookings() {
+  const d = calendarMonth.value
+  const startDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  const endDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+
+  const coachId = myPrivateCoach.value?.id || myPrivateCoach.value?.coachId
+  if (!coachId) {
+    monthBookings.value = []
+    return
+  }
+
+  try {
+    const data = await getCoachBookingsByRange(coachId, startDate, endDate)
+    monthBookings.value = data || []
+  } catch {
+    monthBookings.value = []
+  }
+}
+
+async function confirmCalendarBooking() {
+  if (!selectedDate.value || !selectedTimeSlot.value) return
+
+  const slot = TIME_SLOTS.find(s => s.value === selectedTimeSlot.value)
+  if (!slot) return
+
   bookingLoading.value = true
-  setTimeout(() => {
-    bookingLoading.value = false
+  try {
+    await createPrivateCoachBooking({
+      coachId: myPrivateCoach.value?.id || myPrivateCoach.value?.coachId,
+      bookingDate: selectedDate.value,
+      startTime: slot.start + ':00',
+      endTime: slot.end + ':00',
+      note: bookingNote.value || null
+    })
+    message.success('预约成功！教练确认后即可上课')
     showBookingModal.value = false
-    message.success('预约成功！')
-    bookingForm.value = { courseType: 'muscle', date: null, timeSlot: '14:00', note: '' }
-  }, 1500)
+    resetBookingState()
+  } catch (error) {
+    console.error('预约失败:', error)
+    const msg = error?.response?.data?.message || error?.message || '预约失败，请稍后重试'
+    message.error(msg)
+  } finally {
+    bookingLoading.value = false
+  }
 }
 
-// 日期格式化函数
-function getDay(dateStr) {
-  const date = new Date(dateStr)
-  return date.getDate()
+function openBookingModal() {
+  resetBookingState()
+  calendarMonth.value = new Date()
+  showBookingModal.value = true
+  loadMonthBookings()
 }
 
-function getMonth(dateStr) {
-  const date = new Date(dateStr)
-  const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-  return months[date.getMonth()]
+function resetBookingState() {
+  selectedDate.value = null
+  selectedTimeSlot.value = null
+  bookingNote.value = ''
 }
 
 onMounted(() => {
   fetchRecommendedCoaches()
   fetchMyPrivateCoach()
-  
-  // 监听窗口大小变化
+  syncPendingCoachPayment()
+
   window.addEventListener('resize', handleScroll)
 })
 </script>
@@ -1016,20 +1173,6 @@ onMounted(() => {
   color: #FFD93D;
 }
 
-.record-table :deep(.n-data-table-th) {
-  font-weight: 600;
-  color: #6B7280;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 14px 16px;
-}
-
-.record-table :deep(.n-data-table-td) {
-  padding: 14px 16px;
-  font-size: 14px;
-}
-
 /* 响应式调整 */
 @media (max-width: 1200px) {
   .coach-card-square {
@@ -1086,165 +1229,6 @@ onMounted(() => {
   .slider-btn svg {
     width: 20px;
     height: 20px;
-  }
-}
-
-/* ==================== 移动端训练记录卡片样式 ==================== */
-.mobile-training-list {
-  padding: 8px 0;
-}
-
-.training-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.training-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f1f5f9;
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  animation: slideInUp 0.5s ease forwards;
-  opacity: 0;
-  transition: all 0.3s ease;
-}
-
-.training-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.training-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.training-date {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-}
-
-.training-date .day {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.training-date .month {
-  font-size: 11px;
-  opacity: 0.9;
-  margin-top: 2px;
-}
-
-.status-tag {
-  font-size: 10px;
-}
-
-.training-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.course-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1A1A2E;
-  margin: 0 0 8px 0;
-}
-
-.coach-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #6B7280;
-  margin-bottom: 12px;
-}
-
-.training-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.training-stats .stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #6B7280;
-  background: #f1f5f9;
-  padding: 6px 12px;
-  border-radius: 20px;
-}
-
-.training-stats .stat-item.highlight {
-  background: linear-gradient(135deg, #fff5f2 0%, #ffe8e0 100%);
-  color: #FF6B35;
-}
-
-.training-stats .stat-item :deep(.n-icon) {
-  color: inherit;
-}
-
-/* 响应式调整 */
-@media (max-width: 480px) {
-  .training-card {
-    padding: 16px;
-    gap: 12px;
-  }
-  
-  .training-date {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-  }
-  
-  .training-date .day {
-    font-size: 18px;
-  }
-  
-  .training-date .month {
-    font-size: 10px;
-  }
-  
-  .course-name {
-    font-size: 15px;
-  }
-  
-  .training-stats {
-    gap: 10px;
-  }
-  
-  .training-stats .stat-item {
-    font-size: 12px;
-    padding: 5px 10px;
   }
 }
 
@@ -1459,5 +1443,180 @@ onMounted(() => {
   padding: 32px 0;
   color: #9ca3af;
   font-size: 14px;
+}
+
+.booking-calendar-container {
+  display: flex;
+  gap: 24px;
+}
+
+.booking-calendar-panel {
+  flex: 0 0 320px;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.calendar-month-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.calendar-week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.week-day-cell {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 4px 0;
+}
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-day-cell {
+  position: relative;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  transition: all 0.15s ease;
+}
+
+.calendar-day-cell:hover {
+  background: #E8F8F5;
+}
+
+.calendar-day-cell.other-month {
+  color: #d1d5db;
+  cursor: default;
+}
+
+.calendar-day-cell.is-today {
+  font-weight: 700;
+  color: #2EC4B6;
+}
+
+.calendar-day-cell.is-selected {
+  background: #2EC4B6;
+  color: #fff;
+  font-weight: 600;
+}
+
+.calendar-day-cell.is-selected.is-today {
+  color: #fff;
+}
+
+.day-number {
+  display: block;
+}
+
+.day-booking-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #F59E0B;
+  margin: 2px auto 0;
+}
+
+.calendar-day-cell.is-selected .day-booking-dot {
+  background: #fff;
+}
+
+.booking-slots-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.slots-header {
+  margin-bottom: 12px;
+}
+
+.slots-date-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slot-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.slot-item.slot-free:hover {
+  border-color: #2EC4B6;
+  background: #E8F8F5;
+}
+
+.slot-item.slot-booked {
+  cursor: not-allowed;
+  background: #F3F4F6;
+  opacity: 0.6;
+}
+
+.slot-item.slot-selected {
+  border-color: #2EC4B6;
+  background: #2EC4B6;
+  color: #fff;
+}
+
+.slot-time {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.slot-status {
+  font-size: 12px;
+}
+
+.free-text {
+  color: #10B981;
+}
+
+.slot-selected .free-text {
+  color: #fff;
+}
+
+.booked-text {
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.slots-empty {
+  padding: 32px 0;
+}
+
+.booking-note-section {
+  margin-top: 16px;
 }
 </style>

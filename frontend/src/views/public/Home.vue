@@ -134,7 +134,7 @@
     </section>
 
     <!-- 统计数据 -->
-    <section class="stats-section">
+    <!-- <section class="stats-section">
       <div class="stats-container">
         <div class="stats-grid">
           <div v-for="(stat, index) in stats" :key="index" class="stat-item" v-intersect="onStatIntersect">
@@ -144,7 +144,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- 品牌理念 -->
     <section id="philosophy" class="section philosophy-section">
@@ -659,7 +659,7 @@
     </section>
 
     <!-- 线上线下结合 -->
-    <section class="section omnichannel-section">
+    <!-- <section class="section omnichannel-section">
       <div class="omnichannel-container">
         <div class="omnichannel-grid">
           <div class="omnichannel-content" v-intersect="onReveal">
@@ -704,7 +704,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- CTA区域 - 仅未登录用户可见 -->
     <section v-if="!authStore.isLoggedIn" id="cta" class="section cta-section">
@@ -767,7 +767,7 @@
           <div class="footer-column">
             <h4 class="footer-title">服务项目</h4>
             <ul class="footer-links">
-              <li><a href="#">AI训练计划</a></li>
+              <!-- <li><a href="#">AI训练计划</a></li> -->
               <li><a href="#">私教课程</a></li>
               <li><a href="#">团体课程</a></li>
               <li><a href="#">营养指导</a></li>
@@ -790,7 +790,7 @@
               <div class="footer-contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <div class="footer-contact-content">
                 <h4>门店地址</h4>
-                <p>北京市朝阳区建国路88号SOHO现代城A座</p>
+                <p>天津市津南区建国路 88 号现代城负一层</p>
               </div>
             </div>
             <div class="footer-contact-item">
@@ -804,7 +804,7 @@
               <div class="footer-contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
               <div class="footer-contact-content">
                 <h4>营业时间</h4>
-                <p>周一至周日 06:00-23:00</p>
+                <p>周一至周日 6:00 - 23:00</p>
               </div>
             </div>
           </div>
@@ -1168,13 +1168,13 @@ const svgIcons = {
   trophy2: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>`
 }
 
-// 统计数据
-const stats = [
-  { icon: svgIcons.users, value: 50000, label: '活跃会员' },
-  { icon: svgIcons.trophy, value: 200, label: '专业教练' },
-  { icon: svgIcons.book, value: 500, label: '精品课程' },
-  { icon: svgIcons.star, value: 98, label: '% 满意度' }
-]
+  // // 统计数据
+  // const stats = [
+  //   { icon: svgIcons.users, value: 50000, label: '活跃会员' },
+  //   { icon: svgIcons.trophy, value: 200, label: '专业教练' },
+  //   { icon: svgIcons.book, value: 500, label: '精品课程' },
+  //   { icon: svgIcons.star, value: 98, label: '% 满意度' }
+  // ]
 
 // 滚动公告
 const marqueeItems = ref([])
@@ -1225,22 +1225,22 @@ function getAnnouncementTypeLabel(type) {
 }
 
 // 默认跑马灯数据
-function getDefaultMarqueeItems() {
-  return [
-    '新用户注册即送7天VIP会员体验！',
-    '<span class="marquee-notice-divider">|</span>',
-    '客服热线 <strong>400-888-9999</strong> 全天候为您服务',
-    '<span class="marquee-notice-divider">|</span>'
-  ]
-}
+// function getDefaultMarqueeItems() {
+//   return [
+//     '新用户注册即送7天VIP会员体验！',
+//     '<span class="marquee-notice-divider">|</span>',
+//     '客服热线 <strong>400-888-9999</strong> 全天候为您服务',
+//     '<span class="marquee-notice-divider">|</span>'
+//   ]
+// }
 
 // 品牌理念 // TODO ：首页-品牌理念内容（硬编码）
-const philosophyValues = [
-  { icon: svgIcons.target, title: '精准定制', desc: 'AI算法分析身体数据，生成专属训练方案' },
-  { icon: svgIcons.trending, title: '科学追踪', desc: '实时监测训练数据，动态调整计划强度' },
-  { icon: svgIcons.handshake, title: '专业陪伴', desc: '认证教练团队全程指导，解答健身疑惑' },
-  { icon: svgIcons.sparkles, title: '持续激励', desc: '成就系统与社群互动，保持健身动力' }
-]
+// const philosophyValues = [
+//   { icon: svgIcons.target, title: '精准定制', desc: 'AI算法分析身体数据，生成专属训练方案' },
+//   { icon: svgIcons.trending, title: '科学追踪', desc: '实时监测训练数据，动态调整计划强度' },
+//   { icon: svgIcons.handshake, title: '专业陪伴', desc: '认证教练团队全程指导，解答健身疑惑' },
+//   { icon: svgIcons.sparkles, title: '持续激励', desc: '成就系统与社群互动，保持健身动力' }
+// ]
 
 // AI功能
 const aiFeatures = [
@@ -1352,7 +1352,7 @@ const membershipPlans = ref([])
 const membershipLoading = ref(false)
 const membershipLoaded = ref(false)
 
-// 默认会员卡数据（加载失败时使用）
+// 默认会员卡数据（加载失败时使用）~~~~~~~~~~
 function getDefaultMembershipPlans() {
   return [
     {
@@ -1656,12 +1656,12 @@ function handleEquipmentClick(equipment) {
 }
 
 // 线上线下
-const omnichannelFeatures = [
-  { icon: svgIcons.mobile, title: '智能预约系统', desc: '一键预约课程、私教、场地，实时查看健身房人流情况，避开高峰。' },
-  { icon: svgIcons.video, title: '线上课程库', desc: '500+精品线上课程，在家也能享受专业指导，随时随地开始训练。' },
-  { icon: svgIcons.chat, title: '教练指导服务', desc: '训练遇到问题？随时与教练在线沟通，获取专业建议与动作纠正。' },
-  { icon: svgIcons.trophy2, title: '社群挑战赛', desc: '参与线上线下挑战赛，与志同道合的伙伴一起进步，赢取丰厚奖励。' }
-]
+// const omnichannelFeatures = [
+//   { icon: svgIcons.mobile, title: '智能预约系统', desc: '一键预约课程、私教、场地，实时查看健身房人流情况，避开高峰。' },
+//   { icon: svgIcons.video, title: '线上课程库', desc: '500+精品线上课程，在家也能享受专业指导，随时随地开始训练。' },
+//   { icon: svgIcons.chat, title: '教练指导服务', desc: '训练遇到问题？随时与教练在线沟通，获取专业建议与动作纠正。' },
+//   { icon: svgIcons.trophy2, title: '社群挑战赛', desc: '参与线上线下挑战赛，与志同道合的伙伴一起进步，赢取丰厚奖励。' }
+// ]
 
 // CTA
 const ctaPhone = ref('')

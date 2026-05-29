@@ -29,6 +29,14 @@ export function getWeekEndKey(today = new Date()) {
   return toDateKey(baseDate)
 }
 
+function isSessionExpired(session, now) {
+  const dateKey = toDateKey(session.sessionDate)
+  if (!dateKey || !session.startTime) return false
+  const startTime = String(session.startTime).slice(0, 5)
+  const sessionDateTime = new Date(`${dateKey}T${startTime}:00`)
+  return sessionDateTime < now
+}
+
 export function buildWeekSessionCards(sessions = [], bookings = [], today = new Date()) {
   const todayKey = getTodayKey(today)
   const weekEndKey = getWeekEndKey(today)
@@ -45,6 +53,7 @@ export function buildWeekSessionCards(sessions = [], bookings = [], today = new 
       const dateKey = toDateKey(session.sessionDate)
       return dateKey >= todayKey && dateKey <= weekEndKey
     })
+    .filter((session) => !isSessionExpired(session, today))
     .map((session) => {
       const booking = bookingMap.get(session.id)
       return {
