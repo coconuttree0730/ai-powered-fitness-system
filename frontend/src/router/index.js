@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { tryRefreshToken, clearAllTokens } from '@/utils/request'
 
 const routes = [
   {
@@ -268,9 +269,16 @@ router.beforeEach(async (to, from) => {
 
   // 需要认证的页面
   if (to.meta.requiresAuth) {
-    // 检查是否已登录
     if (!authStore.isLoggedIn) {
       return { path: '/', query: { redirect: to.fullPath } }
+    }
+
+    if (authStore.isAccessTokenExpired()) {
+      const newToken = await tryRefreshToken()
+      if (!newToken) {
+        clearAllTokens()
+        return { path: '/', query: { redirect: to.fullPath } }
+      }
     }
 
     // 检查角色权限

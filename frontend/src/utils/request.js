@@ -10,8 +10,17 @@ const request = axios.create({
   }
 })
 
+export class ApiError extends Error {
+  constructor(code, message, data) {
+    super(message)
+    this.code = code
+    this.data = data
+  }
+}
+
 let isRefreshing = false
 let pendingRequests = []
+const MAX_REFRESH_RETRIES = 3
 
 function getAccessToken() {
   return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || ''
@@ -49,8 +58,9 @@ function resolvePendingRequests(token) {
 }
 
 function rejectPendingRequests() {
-  pendingRequests.forEach(cb => cb(null))
+  const queue = [...pendingRequests]
   pendingRequests = []
+  queue.forEach(cb => cb(null))
 }
 
 async function tryRefreshToken() {
@@ -87,7 +97,7 @@ request.interceptors.response.use(
   (response) => {
     const res = response.data
     if (res.code !== 200) {
-      return Promise.reject(new Error(res.message || '请求失败'))
+      return Promise.reject(new ApiError(res.code, res.message || '请求失败', res.data))
     }
     return res.data
   },
@@ -95,6 +105,14 @@ request.interceptors.response.use(
     const originalRequest = error.config
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retryCount = originalRequest._retryCount || 0
+      if (originalRequest._retryCount >= MAX_REFRESH_RETRIES) {
+        clearAllTokens()
+        router.push('/')
+        return Promise.reject(error)
+      }
+      originalRequest._retryCount += 1
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingRequests.push((token) => {
@@ -138,5 +156,5 @@ request.interceptors.response.use(
   }
 )
 
-export { getAccessToken, getRefreshToken, saveAccessToken, clearAllTokens }
+export { getAccessToken, getRefreshToken, saveAccessToken, clearAllTokens, tryRefreshToken }
 export default request

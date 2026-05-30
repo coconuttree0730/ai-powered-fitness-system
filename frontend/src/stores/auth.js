@@ -80,6 +80,17 @@ export const useAuthStore = defineStore('auth', () => {
     return '/'
   }
 
+  function isAccessTokenExpired() {
+    const token = accessToken.value
+    if (!token) return true
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.exp * 1000 < Date.now()
+    } catch {
+      return true
+    }
+  }
+
   async function fetchUserInfo() {
     try {
       const res = await getCurrentUser()
@@ -138,8 +149,9 @@ export const useAuthStore = defineStore('auth', () => {
     userRoles,
     isAdmin,
     isCoach,
-    isMember,
-    login,
+        isMember,
+        isAccessTokenExpired,
+        login,
     fetchUserInfo,
     logout,
     setLoginState,
