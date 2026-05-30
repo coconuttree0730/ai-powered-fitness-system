@@ -56,6 +56,10 @@
             <el-icon><Goods /></el-icon>
             <span>商品管理</span>
           </el-menu-item>
+          <el-menu-item index="/admin/coach-packages">
+            <el-icon><UserFilled /></el-icon>
+            <span>私教套餐管理</span>
+          </el-menu-item>
           <el-menu-item index="/admin/order-management">
             <el-icon><ShoppingCart /></el-icon>
             <span>订单管理</span>
@@ -141,7 +145,7 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,
   CreditCard, Document, ShoppingCart, ShoppingBag, Goods, Collection,
-  Setting, CollectionTag, VideoCamera, Clock, Reading
+  Setting, CollectionTag, VideoCamera, Clock, Reading, UserFilled
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

@@ -861,15 +861,6 @@ async function handleSaveReport() {
 
   saveLoading.value = true
   try {
-    console.log('开始保存报告...')
-    console.log('报告数据:', {
-      reportTitle: analysisReport.value.reportTitle,
-      analysisType: analysisReport.value.analysisType,
-      hasReportContent: !!analysisReport.value.reportContent,
-      suggestionsLength: analysisReport.value.suggestions?.length || 0,
-      generateTime: analysisReport.value.generateTime
-    })
-
     const reportData = {
       reportTitle: analysisReport.value.reportTitle || 'AI分析报告',
       analysisType: analysisReport.value.analysisType || 'OVERALL',
@@ -878,10 +869,7 @@ async function handleSaveReport() {
       generateTime: analysisReport.value.generateTime || new Date().toISOString()
     }
 
-    console.log('发送保存请求，数据:', reportData)
-
-    const response = await saveAnalysisReport(reportData)
-    console.log('保存成功，响应:', response)
+    await saveAnalysisReport(reportData)
 
     ElMessage.success('报告保存成功，可在数据分析菜单查看')
 
@@ -890,14 +878,6 @@ async function handleSaveReport() {
     renderedContent.value = ''
     renderedSuggestions.value = ''
   } catch (error) {
-    console.error('保存报告失败 - 完整错误:', error)
-    console.error('错误详情:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      config: error.config?.url
-    })
-
     let errorMsg = '保存报告失败，请稍后重试'
     if (error.response) {
       switch (error.response.status) {

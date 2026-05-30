@@ -13,8 +13,13 @@ export function getToken() {
   return getAccessToken()
 }
 
-export function setToken(token) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token)
+function getActiveStorage() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) ? localStorage : sessionStorage
+}
+
+export function saveAccessToken(token) {
+  const storage = getActiveStorage()
+  storage.setItem(ACCESS_TOKEN_KEY, token)
 }
 
 export function removeToken() {
@@ -22,4 +27,12 @@ export function removeToken() {
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   sessionStorage.removeItem(ACCESS_TOKEN_KEY)
   sessionStorage.removeItem(REFRESH_TOKEN_KEY)
+}
+
+export function getUploadConfig(folder = 'files') {
+  return {
+    action: '/api/v1/files/upload',
+    headers: { Authorization: 'Bearer ' + getAccessToken() },
+    data: { folder }
+  }
 }

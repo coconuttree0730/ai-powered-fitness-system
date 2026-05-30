@@ -213,6 +213,12 @@ const routes = [
         meta: { title: '商品管理' }
       },
       {
+        path: 'coach-packages',
+        name: 'CoachPackageManagement',
+        component: () => import('@/views/admin/CoachPackageManagement.vue'),
+        meta: { title: '私教套餐管理' }
+      },
+      {
         path: 'knowledge-base',
         name: 'KnowledgeBaseManagement',
         component: () => import('@/views/admin/KnowledgeBase.vue'),

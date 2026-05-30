@@ -486,29 +486,21 @@ function handleAdd() {
 
 // 编辑
 async function handleEdit(row) {
-  console.log('编辑会员卡 - 原始数据:', row)
-  console.log('编辑会员卡 - row.contents:', row.contents)
-
   isEdit.value = true
   editLoading.value = true
   dialogVisible.value = true
 
-  // 如果分页数据中没有contents，调用详情API获取
   let contents = []
   if (row.contents && row.contents.length > 0) {
     contents = JSON.parse(JSON.stringify(row.contents))
-    console.log('使用分页数据的contents:', contents)
   } else {
     try {
-      console.log('分页数据无contents，调用详情API获取...')
       const detail = await getAdminCardDetail(row.id)
-      console.log('详情API返回:', detail)
       if (detail && detail.contents && detail.contents.length > 0) {
         contents = detail.contents
-        console.log('从详情API获取到contents:', contents)
       }
     } catch (error) {
-      console.error('获取详情失败:', error)
+      ElMessage.error('获取详情失败')
     }
   }
 
@@ -526,9 +518,6 @@ async function handleEdit(row) {
     isRecommend: row.isRecommend || false,
     contents: contents
   })
-
-  console.log('编辑会员卡 - 最终表单数据:', form)
-  console.log('编辑会员卡 - form.contents:', form.contents, '长度:', form.contents.length)
 
   editLoading.value = false
 }

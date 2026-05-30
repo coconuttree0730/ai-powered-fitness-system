@@ -1,6 +1,7 @@
 import axios from 'axios'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
+import { getAccessToken, getRefreshToken, saveAccessToken, removeToken } from '@/utils/auth'
 
 const request = axios.create({
   baseURL: '/api/v1',
@@ -22,28 +23,14 @@ let isRefreshing = false
 let pendingRequests = []
 const MAX_REFRESH_RETRIES = 3
 
-function getAccessToken() {
-  return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || ''
-}
-
-function getRefreshToken() {
-  return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken') || ''
-}
-
-function saveAccessToken(token) {
-  localStorage.setItem('accessToken', token)
-  sessionStorage.setItem('accessToken', token)
-
+function syncTokenToStore(token) {
   const authStore = useAuthStore()
   authStore.accessToken = token
 }
 
 function clearAllTokens() {
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
+  removeToken()
   localStorage.removeItem('userInfo')
-  sessionStorage.removeItem('accessToken')
-  sessionStorage.removeItem('refreshToken')
   sessionStorage.removeItem('userInfo')
 
   const authStore = useAuthStore()
@@ -64,14 +51,15 @@ function rejectPendingRequests() {
 }
 
 async function tryRefreshToken() {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) return null
+  const token = getRefreshToken()
+  if (!token) return null
 
   try {
-    const response = await axios.post('/api/v1/auth/refresh', { refreshToken })
+    const response = await axios.post('/api/v1/auth/refresh', { refreshToken: token })
     if (response.data && response.data.code === 200) {
       const newAccessToken = response.data.data.accessToken
       saveAccessToken(newAccessToken)
+      syncTokenToStore(newAccessToken)
       return newAccessToken
     }
   } catch (e) {
