@@ -3,6 +3,7 @@ package com.fitness.modules.user.controller;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.result.Result;
+import com.fitness.common.util.SensitiveDataMasker;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.modules.user.model.dto.SendEmailCodeDTO;
 import com.fitness.modules.user.model.dto.UpdateEmailDTO;
@@ -82,7 +83,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updateUsername(@Valid @RequestBody UpdateUsernameDTO dto) {
         Long userId = getCurrentUserId();
-        log.info("更新用户名请求, userId: {}, newUsername: {}", userId, dto.getUsername());
+        log.info("更新用户名请求, userId: {}, newUsername: {}", userId, SensitiveDataMasker.maskUsername(dto.getUsername()));
         UserVO userVO = userService.updateUsername(userId, dto.getUsername());
         return Result.success(userVO);
     }
@@ -116,7 +117,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updatePhone(@Valid @RequestBody UpdatePhoneDTO dto) {
         Long userId = getCurrentUserId();
-        log.info("更新手机号请求, userId: {}, newPhone: {}", userId, dto.getPhone());
+        log.info("更新手机号请求, userId: {}, newPhone: {}", userId, SensitiveDataMasker.maskPhone(dto.getPhone()));
         UserVO userVO = userService.updatePhone(userId, dto.getPhone(), dto.getCode(), dto.getOldCode());
         return Result.success(userVO);
     }
@@ -147,7 +148,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updateEmail(@Valid @RequestBody UpdateEmailDTO dto) {
         Long userId = getCurrentUserId();
-        log.info("更新邮箱请求, userId: {}, newEmail: {}", userId, dto.getEmail());
+        log.info("更新邮箱请求, userId: {}, newEmail: {}", userId, SensitiveDataMasker.maskEmail(dto.getEmail()));
         UserVO userVO = userService.updateEmail(userId, dto.getEmail(), dto.getCode());
         return Result.success(userVO);
     }
@@ -234,7 +235,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public Result<UserVO> updateNickname(@Valid @RequestBody UpdateNicknameDTO dto) {
         Long userId = getCurrentUserId();
-        log.info("更新昵称请求, userId: {}, nickname: {}", userId, dto.getNickname());
+        log.info("更新昵称请求, userId: {}, nickname: {}", userId, SensitiveDataMasker.maskUsername(dto.getNickname()));
         UserVO userVO = userService.updateNickname(userId, dto.getNickname().trim());
         return Result.success(userVO);
     }

@@ -2,6 +2,7 @@ package com.fitness.modules.user.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fitness.common.result.Result;
+import com.fitness.common.util.SensitiveDataMasker;
 import com.fitness.modules.user.model.dto.ResetPasswordDTO;
 import com.fitness.modules.user.model.dto.UserDTO;
 import com.fitness.modules.user.model.dto.UserQueryDTO;
@@ -38,7 +39,7 @@ public class UserAdminController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Long> createUser(@Valid @RequestBody UserDTO dto) {
-        log.info("创建用户请求: username={}", dto.getUsername());
+        log.info("创建用户请求: username={}", SensitiveDataMasker.maskUsername(dto.getUsername()));
         Long userId = userService.createUser(dto);
         return Result.success(userId);
     }

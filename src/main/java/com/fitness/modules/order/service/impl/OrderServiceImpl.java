@@ -28,12 +28,14 @@ import com.fitness.modules.user.model.entity.User;
 import com.fitness.modules.user.service.CoachStudentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -70,6 +72,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     private final MembershipCardMapper membershipCardMapper;
     private final UserMapper userMapper;
     private final CoachStudentService coachStudentService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -100,6 +103,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         }
 
         int quantity = dto.getQuantity() != null ? dto.getQuantity() : 1;
+
+        String stockKey = "fitness:product:stock:reserved:" + dto.getProductId();
+        Duration stockTtl = Duration.ofMinutes(ORDER_TIMEOUT_MINUTES + 5);
+        Integer stockToInit = product.getStock();
+        if (stockToInit != null) {
+            stringRedisTemplate.opsForValue().setIfAbsent(stockKey, String.valueOf(stockToInit), stockTtl);
+            Long reserved = stringRedisTemplate.opsForValue().decrement(stockKey, quantity);
+            if (reserved == null || reserved < 0) {
+                stringRedisTemplate.opsForValue().increment(stockKey, quantity);
+                throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+            }
+        }
+
         if (product.getStock() != null && product.getStock() < quantity) {
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
@@ -345,13 +361,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
             log.debug("处理支付成功: orderNo={}", orderNo);
 
-            order.setStatus(STATUS_PAID);
             order.setPayMethod("ALIPAY");
             order.setPayTime(LocalDateTime.now());
             order.setAlipayTradeNo(tradeNo);
-            updateById(order);
 
-            handlePostPaidLogic(order);
+            try {
+                handlePostPaidLogic(order);
+            } catch (BusinessException e) {
+                log.error("支付后置处理失败，订单保持待处理: orderNo={}, error={}", orderNo, e.getMessage());
+                return;
+            }
+
+            order.setStatus(STATUS_PAID);
+            updateById(order);
 
             log.info("订单支付宝支付成功: orderNo={}, tradeNo={}, userId={}", orderNo, tradeNo, order.getUserId());
         } else {
@@ -378,6 +400,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         if (affected <= 0) {
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
+        releaseStockReservation(order);
         order.setStatus(STATUS_NOT_PICKED);
         updateById(order);
         ext.setPickupCode(generatePickupCode());
@@ -483,12 +506,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
 
         log.info("Sync paid Alipay order: orderNo={}, alipayStatus={}",
                 order.getOrderNo(), alipayStatus);
+
+        try {
+            handlePostPaidLogic(order);
+        } catch (BusinessException e) {
+            log.error("同步支付后后置处理失败，订单保持待处理: orderNo={}, error={}",
+                    order.getOrderNo(), e.getMessage());
+            return;
+        }
+
         order.setStatus(STATUS_PAID);
         order.setPayMethod("ALIPAY");
         order.setPayTime(LocalDateTime.now());
         updateById(order);
-
-        handlePostPaidLogic(order);
     }
 
     @Override
@@ -508,6 +538,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         }
 
         refundProductPointsIfNeeded(order);
+        releaseStockReservation(order);
         order.setStatus(STATUS_CANCELLED);
         updateById(order);
 
@@ -522,6 +553,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
 
         for (Order order : timeoutOrders) {
             refundProductPointsIfNeeded(order);
+            releaseStockReservation(order);
             order.setStatus(STATUS_TIMEOUT);
             updateById(order);
             log.info("订单超时自动取消: orderNo={}", order.getOrderNo());
@@ -546,6 +578,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             userMapper.addPoints(order.getUserId(), ext.getPointsUsed());
             log.info("退还商品订单积分: orderNo={}, userId={}, points={}",
                     order.getOrderNo(), order.getUserId(), ext.getPointsUsed());
+        }
+    }
+
+    private void releaseStockReservation(Order order) {
+        if (!"PRODUCT".equals(order.getOrderType())) {
+            return;
+        }
+        ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
+        if (ext != null && ext.getProductId() != null && ext.getQuantity() != null && ext.getQuantity() > 0) {
+            String stockKey = "fitness:product:stock:reserved:" + ext.getProductId();
+            stringRedisTemplate.opsForValue().increment(stockKey, ext.getQuantity());
         }
     }
 

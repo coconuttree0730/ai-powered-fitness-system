@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
+import com.fitness.common.util.SensitiveDataMasker;
 import com.fitness.integration.minio.service.FileService;
 import com.fitness.integration.security.JwtTokenProvider;
 import com.fitness.modules.user.mapper.RoleMapper;
@@ -75,7 +76,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             bindUserRole(user.getId(), dto.getRoleCode());
         }
 
-        log.info("用户注册成功: {}", dto.getUsername());
+        log.info("用户注册成功: {}", SensitiveDataMasker.maskUsername(dto.getUsername()));
         return convertToVO(user);
     }
 
@@ -91,7 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PASSWORD_ERROR);
         }
 
-        log.info("用户登录成功: {}", dto.getUsername());
+        log.info("用户登录成功: {}", SensitiveDataMasker.maskUsername(dto.getUsername()));
         return buildAuthResult(user, Boolean.TRUE.equals(dto.getRememberMe()));
     }
 
@@ -114,7 +115,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPassword(passwordEncoder.encode(newPassword));
         userMapper.updateById(user);
 
-        log.info("用户修改密码成功: {}", user.getUsername());
+        log.info("用户修改密码成功: {}", SensitiveDataMasker.maskUsername(user.getUsername()));
         return true;
     }
 
@@ -173,7 +174,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
 
-        log.info("管理员创建用户成功: {}", dto.getUsername());
+        log.info("管理员创建用户成功: {}", SensitiveDataMasker.maskUsername(dto.getUsername()));
         return user.getId();
     }
 

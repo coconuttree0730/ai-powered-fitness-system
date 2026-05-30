@@ -71,3 +71,5 @@ bug-log/
 
 # Temporary files
 *.tmp
+# Added by ggshield
+.cache_ggshield

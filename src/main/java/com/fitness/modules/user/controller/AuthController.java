@@ -2,6 +2,7 @@ package com.fitness.modules.user.controller;
 
 import com.fitness.common.ratelimit.RateLimit;
 import com.fitness.common.result.Result;
+import com.fitness.common.util.SensitiveDataMasker;
 import com.fitness.modules.user.model.dto.LoginDTO;
 import com.fitness.modules.user.model.dto.LogoutDTO;
 import com.fitness.modules.user.model.dto.RefreshTokenDTO;
@@ -46,7 +47,7 @@ public class AuthController {
     @RateLimit(key = "auth:register", limit = 5, window = 60)
     @PostMapping("/register")
     public Result<UserVO> register(@Valid @RequestBody UserDTO dto) {
-        log.info("用户注册请求: {}", dto.getUsername());
+        log.info("用户注册请求: {}", SensitiveDataMasker.maskUsername(dto.getUsername()));
         UserVO userVO = userService.register(dto);
         return Result.success(userVO);
     }
@@ -55,7 +56,7 @@ public class AuthController {
     @RateLimit(key = "auth:login", limit = 10, window = 60)
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
-        log.info("用户登录请求: {}", dto.getUsername());
+        log.info("用户登录请求: {}", SensitiveDataMasker.maskUsername(dto.getUsername()));
         Map<String, Object> tokenInfo = userService.login(dto);
         return Result.success(tokenInfo);
     }
@@ -89,7 +90,7 @@ public class AuthController {
     @RateLimit(key = "auth:sms", limit = 10, window = 60)
     @PostMapping("/sms-code")
     public Result<Map<String, Object>> sendSmsCode(@Valid @RequestBody SmsCodeDTO dto) {
-        log.info("发送短信验证码请求: phone={}", dto.getPhone());
+        log.info("发送短信验证码请求: phone={}", SensitiveDataMasker.maskPhone(dto.getPhone()));
 
         if (!sliderVerifyService.isVerified(dto.getVerifyToken())) {
             log.warn("发送短信验证码失败: 滑块验证未通过或已过期, phone={}", dto.getPhone());
@@ -115,7 +116,7 @@ public class AuthController {
     @Operation(summary = "短信验证码登录", description = "使用手机号和短信验证码登录，未注册手机号将自动创建账号")
     @PostMapping("/login/sms")
     public Result<Map<String, Object>> loginBySmsCode(@Valid @RequestBody SmsCodeLoginDTO dto) {
-        log.info("短信验证码登录请求: phone={}", dto.getPhone());
+        log.info("短信验证码登录请求: phone={}", SensitiveDataMasker.maskPhone(dto.getPhone()));
         Map<String, Object> tokenInfo = userService.loginBySmsCode(
                 dto.getPhone(), dto.getSmsCode(), Boolean.TRUE.equals(dto.getRememberMe()));
         return Result.success(tokenInfo);

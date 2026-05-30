@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
 
     private final RedisTemplateCacheSupport redisTemplateCacheSupport;
+    private final ProductMapper productMapper;
 
     @Override
     public List<ProductVO> getProductList(String category) {
@@ -133,19 +134,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        int currentStock = product.getStock() != null ? product.getStock() : 0;
         if ("IN".equals(dto.getType())) {
-            product.setStock(currentStock + dto.getQuantity());
+            productMapper.updateStockAtomically(id, dto.getQuantity());
         } else if ("OUT".equals(dto.getType())) {
+            int currentStock = product.getStock() != null ? product.getStock() : 0;
             if (currentStock < dto.getQuantity()) {
                 throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
             }
-            product.setStock(currentStock - dto.getQuantity());
+            productMapper.updateStockAtomically(id, -dto.getQuantity());
         } else {
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
 
-        updateById(product);
         redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
         return convertToVO(product);
     }
