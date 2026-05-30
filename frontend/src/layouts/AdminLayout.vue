@@ -1,5 +1,6 @@
 <template>
-  <el-container class="admin-layout">
+  <el-config-provider :locale="zhCn">
+    <el-container class="admin-layout">
     <el-aside width="220px" class="sidebar">
       <div class="logo">
         <h2>智能健身房</h2>
@@ -126,7 +127,8 @@
         <router-view />
       </el-main>
     </el-container>
-  </el-container>
+    </el-container>
+  </el-config-provider>
 
 </template>
 
@@ -134,6 +136,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserInfo } from '@/composables/useUserInfo'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 import {
   DataAnalysis, User, Calendar, Box, Tools, TrendCharts,

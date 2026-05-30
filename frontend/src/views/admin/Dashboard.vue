@@ -218,12 +218,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import {
   User, Calendar, Tickets, Box, Goods, Money, ArrowUp, ArrowDown,
   Refresh, TrendCharts, PieChart, Reading, MagicStick,
@@ -274,31 +272,11 @@ const repairStatsData = ref([])
 // 定时器
 let refreshTimer = null
 
-// Markdown 渲染报告内容
-const renderedContent = computed(() => {
-  if (!analysisReport.value?.reportContent) return ''
-  const raw = analysisReport.value.reportContent
-  const html = marked.parse(raw, {
-    breaks: true,
-    gfm: true,
-    headerIds: false,
-    mangle: false
-  })
-  return DOMPurify.sanitize(html)
-})
+// Markdown 渲染报告内容（懒加载 marked/DOMPurify 后填充）
+const renderedContent = ref('')
 
-// Markdown 渲染优化建议
-const renderedSuggestions = computed(() => {
-  if (!analysisReport.value?.suggestions?.length) return ''
-  const raw = analysisReport.value.suggestions.join('\n\n')
-  const html = marked.parse(raw, {
-    breaks: true,
-    gfm: true,
-    headerIds: false,
-    mangle: false
-  })
-  return DOMPurify.sanitize(html)
-})
+// Markdown 渲染优化建议（懒加载后填充）
+const renderedSuggestions = ref('')
 
 // 核心指标数据
 const stats = computed(() => [
@@ -698,6 +676,7 @@ async function fetchAllData() {
     fetchEquipmentStatus(),
     fetchRepairStats()
   ])
+  updateCharts()
 }
 
 // 获取统计数据
@@ -835,7 +814,34 @@ async function handleAnalysis() {
     const res = await generateAnalysis({ analysisType: 'OVERALL' })
     if (res) {
       analysisReport.value = res
-      // 数据返回后才打开对话框
+
+      const [{ marked }, { default: DOMPurify }] = await Promise.all([
+        import('marked'),
+        import('dompurify')
+      ])
+
+      const rawContent = res.reportContent || ''
+      const html = marked.parse(rawContent, {
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false
+      })
+      renderedContent.value = DOMPurify.sanitize(html)
+
+      if (res.suggestions?.length) {
+        const rawSuggestions = res.suggestions.join('\n\n')
+        const suggestionsHtml = marked.parse(rawSuggestions, {
+          breaks: true,
+          gfm: true,
+          headerIds: false,
+          mangle: false
+        })
+        renderedSuggestions.value = DOMPurify.sanitize(suggestionsHtml)
+      } else {
+        renderedSuggestions.value = ''
+      }
+
       analysisVisible.value = true
     }
   } catch (error) {
@@ -879,9 +885,10 @@ async function handleSaveReport() {
 
     ElMessage.success('报告保存成功，可在数据分析菜单查看')
 
-    // 保存成功后关闭弹窗并清空报告，防止重复提交
     analysisVisible.value = false
     analysisReport.value = null
+    renderedContent.value = ''
+    renderedSuggestions.value = ''
   } catch (error) {
     console.error('保存报告失败 - 完整错误:', error)
     console.error('错误详情:', {
@@ -981,14 +988,6 @@ function updateCharts() {
   repairStatsChart?.setOption(repairStatsOption.value)
 }
 
-// 监听图表配置变化
-watch(revenueOption, () => revenueChart?.setOption(revenueOption.value), { deep: true })
-watch(memberCardOption, () => memberCardChart?.setOption(memberCardOption.value), { deep: true })
-watch(courseStatsOption, () => courseStatsChart?.setOption(courseStatsOption.value), { deep: true })
-watch(userGrowthOption, () => userGrowthChart?.setOption(userGrowthOption.value), { deep: true })
-watch(equipmentStatusOption, () => equipmentStatusChart?.setOption(equipmentStatusOption.value), { deep: true })
-watch(repairStatsOption, () => repairStatsChart?.setOption(repairStatsOption.value), { deep: true })
-
 // 窗口大小变化时重新调整图表大小
 function handleResize() {
   revenueChart?.resize()
@@ -1000,11 +999,11 @@ function handleResize() {
 }
 
 onMounted(() => {
-  fetchAllData()
-  startAutoRefresh()
   nextTick(() => {
     initCharts()
   })
+  fetchAllData()
+  startAutoRefresh()
   window.addEventListener('resize', handleResize)
 })
 

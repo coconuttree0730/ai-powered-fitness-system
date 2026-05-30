@@ -929,6 +929,7 @@ async function sendMessage() {
           isFinal: true,
           statusText: ''
         })
+        resetSending()
         scrollToBottom()
         await flushStreamRender()
         return
