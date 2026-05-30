@@ -6,6 +6,9 @@ import com.fitness.common.cache.RedisCacheNames;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.modules.order.mapper.OrderMapper;
+import com.fitness.modules.order.model.enums.OrderStatusEnum;
+import com.fitness.modules.order.model.enums.OrderTypeEnum;
+import com.fitness.modules.order.model.enums.PayMethodEnum;
 import com.fitness.modules.order.mapper.ProductOrderExtMapper;
 import com.fitness.modules.order.model.dto.OrderDTO;
 import com.fitness.modules.order.model.entity.Order;
@@ -31,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -42,11 +44,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, ProductOrder>
         implements ProductOrderService {
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final String PICKUP_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final int PICKUP_CODE_LENGTH = 6;
-    private static final String STATUS_NOT_PICKED = "NOT_PICKED";
 
     private static final BigDecimal POINTS_TO_MONEY_RATE = new BigDecimal("0.01");
 
@@ -129,7 +126,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         }
 
         OrderDTO orderDTO = new OrderDTO();
-        orderDTO.setOrderType("PRODUCT");
+        orderDTO.setOrderType(OrderTypeEnum.PRODUCT.getCode());
         orderDTO.setProductId(dto.getProductId());
         orderDTO.setQuantity(dto.getQuantity());
         orderDTO.setUsePoints(dto.getUsePoints());
@@ -160,7 +157,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     public List<ProductOrderVO> getUserOrders(Long userId) {
         List<OrderVO> orders = orderService.getUserOrders(userId);
         return orders.stream()
-                .filter(vo -> "PRODUCT".equals(vo.getOrderType()))
+                .filter(vo -> OrderTypeEnum.PRODUCT.getCode().equals(vo.getOrderType()))
                 .map(this::convertOrderVOToProductOrderVO)
                 .collect(Collectors.toList());
     }
@@ -182,11 +179,11 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         }
         ensureProductOrder(order);
 
-        if (!STATUS_NOT_PICKED.equals(order.getStatus()) && !"PAID".equals(order.getStatus())) {
+        if (!OrderStatusEnum.NOT_PICKED.getCode().equals(order.getStatus())) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR);
         }
 
-        order.setStatus("SHIPPED");
+        order.setStatus(OrderStatusEnum.SHIPPED.getCode());
         orderMapper.updateById(order);
 
         ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
@@ -208,7 +205,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         }
         ensureProductOrder(order);
 
-        order.setStatus("COMPLETED");
+        order.setStatus(OrderStatusEnum.COMPLETED.getCode());
         orderMapper.updateById(order);
 
         log.info("订单完成: orderNo={}", orderNo);
@@ -223,7 +220,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         }
         ensureProductOrder(order);
 
-        if (!STATUS_NOT_PICKED.equals(order.getStatus()) && !"PAID".equals(order.getStatus())) {
+        if (!OrderStatusEnum.NOT_PICKED.getCode().equals(order.getStatus())) {
             throw new BusinessException(ErrorCode.ORDER_NOT_PAID);
         }
 
@@ -236,7 +233,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             throw new BusinessException(ErrorCode.PARAM_ERROR, "取货码不正确");
         }
 
-        order.setStatus("COMPLETED");
+        order.setStatus(OrderStatusEnum.COMPLETED.getCode());
         orderMapper.updateById(order);
 
         ext.setPickupStatus("PICKED");
@@ -248,19 +245,11 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
     @Override
     public List<ProductOrderVO> getAllOrders(String status, String keyword) {
-        List<Order> orders = orderMapper.selectByType("PRODUCT", status, keyword);
+        List<Order> orders = orderMapper.selectByType(OrderTypeEnum.PRODUCT.getCode(), status, keyword);
         return orders.stream().map(this::convertUnifiedOrderToVO).collect(Collectors.toList());
     }
 
     // ==================== 辅助方法 ====================
-
-    private String generatePickupCode() {
-        StringBuilder code = new StringBuilder(PICKUP_CODE_LENGTH);
-        for (int i = 0; i < PICKUP_CODE_LENGTH; i++) {
-            code.append(PICKUP_CODE_CHARS.charAt(SECURE_RANDOM.nextInt(PICKUP_CODE_CHARS.length())));
-        }
-        return code.toString();
-    }
 
     private ProductOrderVO convertToVO(ProductOrder order) {
         ProductOrderVO vo = new ProductOrderVO();
@@ -268,7 +257,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         vo.setStatusLabel(getStatusLabel(order.getStatus()));
         vo.setPayMethodLabel(getPayMethodLabel(order.getPayMethod()));
 
-        if ("PENDING".equals(order.getStatus()) && order.getExpireTime() != null) {
+        if (OrderStatusEnum.PENDING.getCode().equals(order.getStatus()) && order.getExpireTime() != null) {
             long seconds = ChronoUnit.SECONDS.between(LocalDateTime.now(), order.getExpireTime());
             vo.setRemainingSeconds(Math.max(0, seconds));
         }
@@ -321,42 +310,28 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     }
 
     private void ensureProductOrder(Order order) {
-        if (!"PRODUCT".equals(order.getOrderType())) {
+        if (!OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR, "非商品订单");
         }
     }
 
     private String getStatusLabel(String status) {
-        return switch (status) {
-            case "PENDING" -> "待支付";
-            case "PAID" -> "已支付";
-            case "NOT_PICKED" -> "待取货";
-            case "PROCESSING" -> "处理中";
-            case "SHIPPED" -> "已发货";
-            case "COMPLETED" -> "已完成";
-            case "CANCELLED" -> "已取消";
-            case "TIMEOUT" -> "已超时";
-            default -> status;
-        };
+        return OrderStatusEnum.getLabelByCode(status);
     }
 
     private String getPayMethodLabel(String payMethod) {
-        if (payMethod == null)
-            return null;
-        return switch (payMethod) {
-            case "ALIPAY" -> "支付宝";
-            case "BALANCE" -> "余额支付";
-            default -> payMethod;
-        };
+        return PayMethodEnum.getLabelByCode(payMethod);
     }
 
     private String getPickupStatusLabel(String pickupStatus) {
         if (pickupStatus == null)
             return null;
-        return switch (pickupStatus) {
-            case "NOT_PICKED" -> "未取货";
-            case "PICKED" -> "已取货";
-            default -> pickupStatus;
-        };
+        if (OrderStatusEnum.NOT_PICKED.getCode().equals(pickupStatus)) {
+            return "未取货";
+        }
+        if ("PICKED".equals(pickupStatus)) {
+            return "已取货";
+        }
+        return pickupStatus;
     }
 }

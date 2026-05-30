@@ -23,16 +23,13 @@ public class SecurityConfig {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final AuthenticationEntryPoint authenticationEntryPoint;
         private final CustomAuthorizationDeniedHandler authorizationDeniedHandler;
-        // private final CorsConfigurationSource corsConfigurationSource;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
-                                // .cors(cors -> cors.configurationSource(corsConfigurationSource))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .securityContext(securityContext -> securityContext.requireExplicitSave(false))
                                 .exceptionHandling(exception -> exception
                                                 .authenticationEntryPoint(authenticationEntryPoint)
                                                 .accessDeniedHandler(authorizationDeniedHandler))

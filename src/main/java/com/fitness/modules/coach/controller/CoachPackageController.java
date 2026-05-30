@@ -6,6 +6,7 @@ import com.fitness.modules.coach.model.dto.CoachPackageDTO;
 import com.fitness.modules.coach.model.vo.CoachPackageVO;
 import com.fitness.modules.coach.service.CoachPackageService;
 import com.fitness.modules.order.model.dto.OrderDTO;
+import com.fitness.modules.order.model.enums.OrderTypeEnum;
 import com.fitness.modules.order.model.vo.OrderVO;
 import com.fitness.modules.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -120,7 +121,7 @@ public class CoachPackageController {
     public Result<OrderVO> purchasePackage(@PathVariable Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         OrderDTO dto = new OrderDTO();
-        dto.setOrderType("COACH_PACKAGE");
+        dto.setOrderType(OrderTypeEnum.COACH_PACKAGE.getCode());
         dto.setCoachPackageId(id);
         OrderVO vo = orderService.createOrder(dto, userId);
         return Result.success(vo);

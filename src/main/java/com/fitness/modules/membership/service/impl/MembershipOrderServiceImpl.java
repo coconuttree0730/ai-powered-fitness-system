@@ -20,6 +20,9 @@ import com.fitness.modules.order.mapper.OrderMapper;
 import com.fitness.modules.order.model.dto.OrderDTO;
 import com.fitness.modules.order.model.entity.MembershipOrderExt;
 import com.fitness.modules.order.model.entity.Order;
+import com.fitness.modules.order.model.enums.OrderStatusEnum;
+import com.fitness.modules.order.model.enums.OrderTypeEnum;
+import com.fitness.modules.order.model.enums.PayMethodEnum;
 import com.fitness.modules.order.model.vo.OrderVO;
 import com.fitness.modules.order.service.OrderService;
 import com.fitness.modules.user.mapper.UserMapper;
@@ -61,7 +64,7 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
         }
 
         OrderDTO orderDTO = new OrderDTO();
-        orderDTO.setOrderType("MEMBERSHIP");
+        orderDTO.setOrderType(OrderTypeEnum.MEMBERSHIP.getCode());
         orderDTO.setCardId(dto.getCardId());
         orderDTO.setRemark(dto.getRemark());
 
@@ -90,7 +93,7 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
     public List<MembershipOrderVO> getUserOrders(Long userId) {
         List<OrderVO> orders = orderService.getUserOrders(userId);
         return orders.stream()
-                .filter(vo -> "MEMBERSHIP".equals(vo.getOrderType()))
+                .filter(vo -> OrderTypeEnum.MEMBERSHIP.getCode().equals(vo.getOrderType()))
                 .map(this::convertOrderVOToMembershipOrderVO)
                 .collect(Collectors.toList());
     }
@@ -112,14 +115,14 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
         if (!order.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作此订单");
         }
-        if (!"PAID".equals(order.getStatus())) {
+        if (!OrderStatusEnum.PAID.getCode().equals(order.getStatus())) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR, "订单状态不正确，无法激活");
         }
-        if (!"MEMBERSHIP".equals(order.getOrderType())) {
+        if (!OrderTypeEnum.MEMBERSHIP.getCode().equals(order.getOrderType())) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR, "非会员卡订单，无法激活");
         }
 
-        order.setStatus("ACTIVATED");
+        order.setStatus(OrderStatusEnum.ACTIVATED.getCode());
         unifiedOrderMapper.updateById(order);
 
         MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(order.getId());
@@ -142,89 +145,99 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
 
     @Override
     public CardWalletVO getCardWallet(Long userId) {
-        CardWalletVO vo = new CardWalletVO();
-
         UserMembershipVO membership = userMembershipService.getUserMembership(userId);
         if (membership != null && Boolean.TRUE.equals(membership.getIsActive())) {
-            vo.setWalletStatus("ACTIVATED");
-            vo.setMembership(membership);
-            return vo;
+            return buildActivatedWallet(membership);
         }
 
-        Order paidOrder = unifiedOrderMapper.selectLatestPaidOrderByType(userId, "MEMBERSHIP");
+        Order paidOrder = unifiedOrderMapper.selectLatestPaidOrderByType(userId, OrderTypeEnum.MEMBERSHIP.getCode());
         if (paidOrder != null) {
-            vo.setWalletStatus("PAID_UNACTIVATED");
-            CardWalletVO.PaidOrderItem item = new CardWalletVO.PaidOrderItem();
-            item.setOrderNo(paidOrder.getOrderNo());
-            item.setPrice(paidOrder.getPayAmount().toPlainString());
-
-            MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(paidOrder.getId());
-            if (ext != null) {
-                item.setCardName(ext.getCardName() != null ? ext.getCardName() : "");
-                MembershipCard card = cardMapper.selectById(ext.getCardId());
-                if (card != null) {
-                    item.setDurationDays(card.getDurationDays());
-                }
-            }
-            vo.setPaidOrder(item);
-            return vo;
+            return buildPaidUnactivatedWallet(paidOrder);
         }
 
-        Order pendingOrder = unifiedOrderMapper.selectLatestPendingOrderByType(userId, "MEMBERSHIP");
+        Order pendingOrder = unifiedOrderMapper.selectLatestPendingOrderByType(userId, OrderTypeEnum.MEMBERSHIP.getCode());
         if (pendingOrder != null) {
-            String alipayStatus = alipayService.queryOrderStatus(pendingOrder.getOrderNo());
-            if ("TRADE_SUCCESS".equals(alipayStatus) || "TRADE_FINISHED".equals(alipayStatus)) {
-                log.info("补偿查询发现已支付订单: orderNo={}, 同步状态", pendingOrder.getOrderNo());
-                pendingOrder.setStatus("PAID");
-                pendingOrder.setPayMethod("ALIPAY");
-                pendingOrder.setPayTime(LocalDateTime.now());
-
-                MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(pendingOrder.getId());
-                if (ext != null) {
-                    MembershipCard pendingCard = cardMapper.selectById(ext.getCardId());
-                    if (pendingCard != null) {
-                        ext.setExpireTime(LocalDateTime.now().plusDays(pendingCard.getDurationDays()));
-                        membershipOrderExtMapper.updateById(ext);
-                        if (pendingCard.getPointsReward() != null && pendingCard.getPointsReward() > 0) {
-                            userMapper.addPoints(userId, pendingCard.getPointsReward());
-                        }
-                    }
-                }
-                unifiedOrderMapper.updateById(pendingOrder);
-
-                vo.setWalletStatus("PAID_UNACTIVATED");
-                CardWalletVO.PaidOrderItem item = new CardWalletVO.PaidOrderItem();
-                item.setOrderNo(pendingOrder.getOrderNo());
-                item.setPrice(pendingOrder.getPayAmount().toPlainString());
-                if (ext != null) {
-                    item.setCardName(ext.getCardName() != null ? ext.getCardName() : "");
-                    MembershipCard pendingCard = cardMapper.selectById(ext.getCardId());
-                    if (pendingCard != null) {
-                        item.setDurationDays(pendingCard.getDurationDays());
-                    }
-                }
-                vo.setPaidOrder(item);
-                return vo;
-            }
-
-            vo.setWalletStatus("PENDING_ORDER");
-            CardWalletVO.PendingOrderItem item = new CardWalletVO.PendingOrderItem();
-            item.setOrderNo(pendingOrder.getOrderNo());
-            item.setPrice(pendingOrder.getPayAmount().toPlainString());
-
-            MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(pendingOrder.getId());
-            if (ext != null) {
-                item.setCardName(ext.getCardName() != null ? ext.getCardName() : "");
-            }
-            vo.setPendingOrder(item);
-            return vo;
+            return buildPendingWallet(pendingOrder);
         }
 
+        CardWalletVO vo = new CardWalletVO();
         vo.setWalletStatus("NONE");
         return vo;
     }
 
     // ==================== 辅助方法 ====================
+
+    private CardWalletVO buildActivatedWallet(UserMembershipVO membership) {
+        CardWalletVO vo = new CardWalletVO();
+        vo.setWalletStatus("ACTIVATED");
+        vo.setMembership(membership);
+        return vo;
+    }
+
+    private CardWalletVO buildPaidUnactivatedWallet(Order paidOrder) {
+        CardWalletVO vo = new CardWalletVO();
+        vo.setWalletStatus("PAID_UNACTIVATED");
+        vo.setPaidOrder(buildPaidOrderItem(paidOrder));
+        return vo;
+    }
+
+    private CardWalletVO.PaidOrderItem buildPaidOrderItem(Order order) {
+        CardWalletVO.PaidOrderItem item = new CardWalletVO.PaidOrderItem();
+        item.setOrderNo(order.getOrderNo());
+        item.setPrice(order.getPayAmount().toPlainString());
+
+        MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(order.getId());
+        if (ext != null) {
+            item.setCardName(ext.getCardName() != null ? ext.getCardName() : "");
+            MembershipCard card = cardMapper.selectById(ext.getCardId());
+            if (card != null) {
+                item.setDurationDays(card.getDurationDays());
+            }
+        }
+        return item;
+    }
+
+    private CardWalletVO buildPendingWallet(Order pendingOrder) {
+        String alipayStatus = alipayService.queryOrderStatus(pendingOrder.getOrderNo());
+        if ("TRADE_SUCCESS".equals(alipayStatus) || "TRADE_FINISHED".equals(alipayStatus)) {
+            return syncAndBuildPaidWallet(pendingOrder);
+        }
+
+        CardWalletVO vo = new CardWalletVO();
+        vo.setWalletStatus("PENDING_ORDER");
+        CardWalletVO.PendingOrderItem item = new CardWalletVO.PendingOrderItem();
+        item.setOrderNo(pendingOrder.getOrderNo());
+        item.setPrice(pendingOrder.getPayAmount().toPlainString());
+
+        MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(pendingOrder.getId());
+        if (ext != null) {
+            item.setCardName(ext.getCardName() != null ? ext.getCardName() : "");
+        }
+        vo.setPendingOrder(item);
+        return vo;
+    }
+
+    private CardWalletVO syncAndBuildPaidWallet(Order pendingOrder) {
+        log.info("补偿查询发现已支付订单: orderNo={}, 同步状态", pendingOrder.getOrderNo());
+        pendingOrder.setStatus(OrderStatusEnum.PAID.getCode());
+        pendingOrder.setPayMethod(PayMethodEnum.ALIPAY.getCode());
+        pendingOrder.setPayTime(LocalDateTime.now());
+
+        MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(pendingOrder.getId());
+        if (ext != null) {
+            MembershipCard card = cardMapper.selectById(ext.getCardId());
+            if (card != null) {
+                ext.setExpireTime(LocalDateTime.now().plusDays(card.getDurationDays()));
+                membershipOrderExtMapper.updateById(ext);
+                if (card.getPointsReward() != null && card.getPointsReward() > 0) {
+                    userMapper.addPoints(pendingOrder.getUserId(), card.getPointsReward());
+                }
+            }
+        }
+        unifiedOrderMapper.updateById(pendingOrder);
+
+        return buildPaidUnactivatedWallet(pendingOrder);
+    }
 
     private MembershipOrderVO convertOrderVOToMembershipOrderVO(OrderVO orderVO) {
         MembershipOrderVO vo = new MembershipOrderVO();
@@ -260,23 +273,10 @@ public class MembershipOrderServiceImpl extends ServiceImpl<MembershipOrderMappe
     }
 
     private String getStatusLabel(String status) {
-        return switch (status) {
-            case "PENDING" -> "待支付";
-            case "PAID" -> "已支付";
-            case "ACTIVATED" -> "已激活";
-            case "CANCELLED" -> "已取消";
-            case "TIMEOUT" -> "已超时";
-            default -> status;
-        };
+        return OrderStatusEnum.getLabelByCode(status);
     }
 
     private String getPayMethodLabel(String payMethod) {
-        if (payMethod == null)
-            return null;
-        return switch (payMethod) {
-            case "ALIPAY" -> "支付宝";
-            case "BALANCE" -> "余额支付";
-            default -> payMethod;
-        };
+        return PayMethodEnum.getLabelByCode(payMethod);
     }
 }

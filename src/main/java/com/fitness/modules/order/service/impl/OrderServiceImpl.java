@@ -4,6 +4,8 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
+import com.fitness.common.cache.RedisCacheNames;
+import com.fitness.common.cache.RedisTemplateCacheSupport;
 import com.fitness.integration.payment.service.AlipayService;
 import com.fitness.modules.coach.mapper.CoachPackageMapper;
 import com.fitness.modules.coach.model.entity.CoachPackage;
@@ -14,6 +16,9 @@ import com.fitness.modules.order.mapper.CoachPackageOrderExtMapper;
 import com.fitness.modules.order.mapper.MembershipOrderExtMapper;
 import com.fitness.modules.order.mapper.OrderMapper;
 import com.fitness.modules.order.mapper.ProductOrderExtMapper;
+import com.fitness.modules.order.model.enums.OrderStatusEnum;
+import com.fitness.modules.order.model.enums.OrderTypeEnum;
+import com.fitness.modules.order.model.enums.PayMethodEnum;
 import com.fitness.modules.order.model.dto.OrderDTO;
 import com.fitness.modules.order.model.entity.CoachPackageOrderExt;
 import com.fitness.modules.order.model.entity.MembershipOrderExt;
@@ -41,6 +46,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,11 +61,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     private static final String PICKUP_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int PICKUP_CODE_LENGTH = 6;
 
-    private static final String STATUS_PENDING = "PENDING";
-    private static final String STATUS_PAID = "PAID";
-    private static final String STATUS_NOT_PICKED = "NOT_PICKED";
-    private static final String STATUS_CANCELLED = "CANCELLED";
-    private static final String STATUS_TIMEOUT = "TIMEOUT";
     private static final BigDecimal POINTS_TO_MONEY_RATE = new BigDecimal("0.01");
 
     private final OrderMapper orderMapper;
@@ -73,17 +74,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     private final UserMapper userMapper;
     private final CoachStudentService coachStudentService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplateCacheSupport redisTemplateCacheSupport;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderVO createOrder(OrderDTO dto, Long userId) {
         log.debug("创建订单: userId={}, orderType={}", userId, dto.getOrderType());
 
-        if ("PRODUCT".equals(dto.getOrderType())) {
+        if (OrderTypeEnum.PRODUCT.getCode().equals(dto.getOrderType())) {
             return createProductOrder(dto, userId);
-        } else if ("COACH_PACKAGE".equals(dto.getOrderType())) {
+        } else if (OrderTypeEnum.COACH_PACKAGE.getCode().equals(dto.getOrderType())) {
             return createCoachPackageOrder(dto, userId);
-        } else if ("MEMBERSHIP".equals(dto.getOrderType())) {
+        } else if (OrderTypeEnum.MEMBERSHIP.getCode().equals(dto.getOrderType())) {
             return createMembershipOrder(dto, userId);
         } else {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "不支持的订单类型: " + dto.getOrderType());
@@ -151,7 +153,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             if (actualUsePoints > 0) {
                 int deducted = userMapper.deductPoints(userId, actualUsePoints);
                 if (deducted <= 0) {
-                    throw new BusinessException(ErrorCode.PARAM_ERROR, "积分不足，无法创建订单");
+                    throw new BusinessException(ErrorCode.PARAM_ERROR, "积分不足或并发操作冲突，请重试");
                 }
             }
         }
@@ -161,11 +163,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setOrderType("PRODUCT");
+        order.setOrderType(OrderTypeEnum.PRODUCT.getCode());
         order.setOriginalAmount(originalAmount);
         order.setDiscountAmount(pointsDiscount);
         order.setPayAmount(payAmount);
-        order.setStatus(STATUS_PENDING);
+        order.setStatus(OrderStatusEnum.PENDING.getCode());
         order.setRemark(dto.getRemark());
         save(order);
 
@@ -176,6 +178,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         ext.setQuantity(quantity);
         ext.setPointsUsed(actualUsePoints);
         ext.setPointsDiscount(pointsDiscount);
+        ext.setPickupStatus(null);
         productOrderExtMapper.insert(ext);
 
         log.info("创建商品订单成功: orderNo={}, userId={}, productId={}, originalAmount={}, pointsDiscount={}, payAmount={}",
@@ -198,11 +201,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setOrderType("COACH_PACKAGE");
+        order.setOrderType(OrderTypeEnum.COACH_PACKAGE.getCode());
         order.setOriginalAmount(pkg.getOriginalPrice());
         order.setDiscountAmount(BigDecimal.ZERO);
         order.setPayAmount(pkg.getOriginalPrice());
-        order.setStatus(STATUS_PENDING);
+        order.setStatus(OrderStatusEnum.PENDING.getCode());
         order.setRemark(dto.getRemark());
         save(order);
 
@@ -234,11 +237,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setOrderType("MEMBERSHIP");
+        order.setOrderType(OrderTypeEnum.MEMBERSHIP.getCode());
         order.setOriginalAmount(card.getPrice());
         order.setDiscountAmount(BigDecimal.ZERO);
         order.setPayAmount(card.getPrice());
-        order.setStatus(STATUS_PENDING);
+        order.setStatus(OrderStatusEnum.PENDING.getCode());
         order.setRemark(dto.getRemark());
         save(order);
 
@@ -264,7 +267,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     public AlipayPayVO payOrder(String orderNo, String payMethod, Long userId) {
         log.info("开始支付: orderNo={}, payMethod={}", orderNo, payMethod);
 
-        if (!"ALIPAY".equals(payMethod)) {
+        if (!PayMethodEnum.ALIPAY.getCode().equals(payMethod)) {
             throw new BusinessException(ErrorCode.UNSUPPORTED_PAY_METHOD);
         }
 
@@ -276,13 +279,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作此订单");
         }
 
-        if (!STATUS_PENDING.equals(order.getStatus())) {
+        if (!OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR);
         }
 
         if (isOrderTimeout(order)) {
             log.warn("订单已超时: orderNo={}", orderNo);
-            order.setStatus(STATUS_TIMEOUT);
+            order.setStatus(OrderStatusEnum.TIMEOUT.getCode());
             updateById(order);
             throw new BusinessException(ErrorCode.ORDER_TIMEOUT);
         }
@@ -306,21 +309,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     }
 
     private String buildPaySubject(Order order) {
-        return switch (order.getOrderType()) {
-            case "PRODUCT" -> {
-                ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
-                yield ext != null ? "购买商品：" + ext.getProductName() : "购买商品";
-            }
-            case "COACH_PACKAGE" -> {
-                CoachPackageOrderExt ext = coachPackageOrderExtMapper.selectByOrderId(order.getId());
-                yield ext != null ? "购买教练套餐：" + ext.getPackageName() : "购买教练套餐";
-            }
-            case "MEMBERSHIP" -> {
-                MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(order.getId());
-                yield ext != null ? "购买会员卡：" + ext.getCardName() : "购买会员卡";
-            }
-            default -> "订单支付：" + order.getOrderNo();
-        };
+        if (OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
+            ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
+            return ext != null ? "购买商品：" + ext.getProductName() : "购买商品";
+        }
+        if (OrderTypeEnum.COACH_PACKAGE.getCode().equals(order.getOrderType())) {
+            CoachPackageOrderExt ext = coachPackageOrderExtMapper.selectByOrderId(order.getId());
+            return ext != null ? "购买教练套餐：" + ext.getPackageName() : "购买教练套餐";
+        }
+        if (OrderTypeEnum.MEMBERSHIP.getCode().equals(order.getOrderType())) {
+            MembershipOrderExt ext = membershipOrderExtMapper.selectByOrderId(order.getId());
+            return ext != null ? "购买会员卡：" + ext.getCardName() : "购买会员卡";
+        }
+        return "订单支付：" + order.getOrderNo();
     }
 
     @Override
@@ -344,7 +345,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
         }
 
-        if (!STATUS_PENDING.equals(order.getStatus())) {
+        if (!OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
             log.warn("订单状态不是待支付，无需处理: orderNo={}, status={}", orderNo, order.getStatus());
             return;
         }
@@ -361,7 +362,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
             log.debug("处理支付成功: orderNo={}", orderNo);
 
-            order.setPayMethod("ALIPAY");
+            order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
             order.setPayTime(LocalDateTime.now());
             order.setAlipayTradeNo(tradeNo);
 
@@ -372,7 +373,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
                 return;
             }
 
-            order.setStatus(STATUS_PAID);
+            order.setStatus(OrderStatusEnum.PAID.getCode());
             updateById(order);
 
             log.info("订单支付宝支付成功: orderNo={}, tradeNo={}, userId={}", orderNo, tradeNo, order.getUserId());
@@ -382,11 +383,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     }
 
     private void handlePostPaidLogic(Order order) {
-        switch (order.getOrderType()) {
-            case "PRODUCT" -> handleProductPostPaid(order);
-            case "COACH_PACKAGE" -> handleCoachPackagePostPaid(order);
-            case "MEMBERSHIP" -> handleMembershipPostPaid(order);
-            default -> log.warn("未知订单类型，跳过后置处理: orderType={}", order.getOrderType());
+        if (OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
+            handleProductPostPaid(order);
+        } else if (OrderTypeEnum.COACH_PACKAGE.getCode().equals(order.getOrderType())) {
+            handleCoachPackagePostPaid(order);
+        } else if (OrderTypeEnum.MEMBERSHIP.getCode().equals(order.getOrderType())) {
+            handleMembershipPostPaid(order);
+        } else {
+            log.warn("未知订单类型，跳过后置处理: orderType={}", order.getOrderType());
         }
     }
 
@@ -401,7 +405,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
         releaseStockReservation(order);
-        order.setStatus(STATUS_NOT_PICKED);
+        order.setStatus(OrderStatusEnum.NOT_PICKED.getCode());
         updateById(order);
         ext.setPickupCode(generatePickupCode());
         ext.setPickupStatus("NOT_PICKED");
@@ -483,11 +487,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     public List<OrderVO> getUserOrders(Long userId) {
         List<Order> orders = orderMapper.selectByUserId(userId);
         orders.forEach(this::syncPaidOrderIfNeeded);
-        return orders.stream().map(this::convertToVO).collect(Collectors.toList());
+        if (orders.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+
+        Map<Long, ProductOrderExt> productExtMap = productOrderExtMapper.selectByOrderIds(orderIds)
+                .stream().collect(Collectors.toMap(ProductOrderExt::getOrderId, e -> e));
+        Map<Long, CoachPackageOrderExt> coachExtMap = coachPackageOrderExtMapper.selectByOrderIds(orderIds)
+                .stream().collect(Collectors.toMap(CoachPackageOrderExt::getOrderId, e -> e));
+        Map<Long, MembershipOrderExt> membershipExtMap = membershipOrderExtMapper.selectByOrderIds(orderIds)
+                .stream().collect(Collectors.toMap(MembershipOrderExt::getOrderId, e -> e));
+
+        Set<Long> coachIds = coachExtMap.values().stream()
+                .map(CoachPackageOrderExt::getCoachId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        Map<Long, User> coachMap = coachIds.isEmpty() ? Map.of()
+                : userMapper.selectBatchIds(coachIds).stream()
+                        .collect(Collectors.toMap(User::getId, u -> u));
+
+        return orders.stream()
+                .map(order -> convertToVO(order, productExtMap, coachExtMap, membershipExtMap, coachMap))
+                .collect(Collectors.toList());
     }
 
     private void syncPaidOrderIfNeeded(Order order) {
-        if (order == null || !STATUS_PENDING.equals(order.getStatus())) {
+        if (order == null || !OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
             return;
         }
 
@@ -515,8 +542,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             return;
         }
 
-        order.setStatus(STATUS_PAID);
-        order.setPayMethod("ALIPAY");
+        order.setStatus(OrderStatusEnum.PAID.getCode());
+        order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
         order.setPayTime(LocalDateTime.now());
         updateById(order);
     }
@@ -533,14 +560,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作此订单");
         }
 
-        if (!STATUS_PENDING.equals(order.getStatus())) {
+        if (!OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR);
         }
 
         refundProductPointsIfNeeded(order);
         releaseStockReservation(order);
-        order.setStatus(STATUS_CANCELLED);
+        order.setStatus(OrderStatusEnum.CANCELLED.getCode());
         updateById(order);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
 
         log.info("取消订单: orderNo={}, userId={}", orderNo, userId);
     }
@@ -554,12 +582,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         for (Order order : timeoutOrders) {
             refundProductPointsIfNeeded(order);
             releaseStockReservation(order);
-            order.setStatus(STATUS_TIMEOUT);
+            order.setStatus(OrderStatusEnum.TIMEOUT.getCode());
             updateById(order);
             log.info("订单超时自动取消: orderNo={}", order.getOrderNo());
         }
 
         if (!timeoutOrders.isEmpty()) {
+            redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
             log.info("批量处理超时订单完成，共处理 {} 条", timeoutOrders.size());
         }
     }
@@ -570,7 +599,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     }
 
     private void refundProductPointsIfNeeded(Order order) {
-        if (!"PRODUCT".equals(order.getOrderType())) {
+        if (!OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
             return;
         }
         ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
@@ -582,7 +611,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     }
 
     private void releaseStockReservation(Order order) {
-        if (!"PRODUCT".equals(order.getOrderType())) {
+        if (!OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
             return;
         }
         ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
@@ -621,20 +650,51 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         vo.setOrderTypeLabel(getOrderTypeLabel(order.getOrderType()));
 
         if (order.getOrderType() != null) {
-            switch (order.getOrderType()) {
-                case "PRODUCT" -> vo.setProductExt(productOrderExtMapper.selectByOrderId(order.getId()));
-                case "COACH_PACKAGE" -> {
-                    CoachPackageOrderExt ext = coachPackageOrderExtMapper.selectByOrderId(order.getId());
-                    if (ext != null && ext.getCoachId() != null) {
-                        User coach = userMapper.selectById(ext.getCoachId());
-                        if (coach != null) {
-                            ext.setCoachName(coach.getUsername());
-                            ext.setCoachAvatar(coach.getAvatar());
-                        }
+            if (OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
+                vo.setProductExt(productOrderExtMapper.selectByOrderId(order.getId()));
+            } else if (OrderTypeEnum.COACH_PACKAGE.getCode().equals(order.getOrderType())) {
+                CoachPackageOrderExt ext = coachPackageOrderExtMapper.selectByOrderId(order.getId());
+                if (ext != null && ext.getCoachId() != null) {
+                    User coach = userMapper.selectById(ext.getCoachId());
+                    if (coach != null) {
+                        ext.setCoachName(coach.getUsername());
+                        ext.setCoachAvatar(coach.getAvatar());
                     }
-                    vo.setCoachPackageExt(ext);
                 }
-                case "MEMBERSHIP" -> vo.setMembershipExt(membershipOrderExtMapper.selectByOrderId(order.getId()));
+                vo.setCoachPackageExt(ext);
+            } else if (OrderTypeEnum.MEMBERSHIP.getCode().equals(order.getOrderType())) {
+                vo.setMembershipExt(membershipOrderExtMapper.selectByOrderId(order.getId()));
+            }
+        }
+
+        return vo;
+    }
+
+    private OrderVO convertToVO(Order order, Map<Long, ProductOrderExt> productExtMap,
+            Map<Long, CoachPackageOrderExt> coachExtMap,
+            Map<Long, MembershipOrderExt> membershipExtMap,
+            Map<Long, User> coachMap) {
+        OrderVO vo = new OrderVO();
+        BeanUtil.copyProperties(order, vo);
+        vo.setStatusLabel(getStatusLabel(order.getStatus()));
+        vo.setPayMethodLabel(getPayMethodLabel(order.getPayMethod()));
+        vo.setOrderTypeLabel(getOrderTypeLabel(order.getOrderType()));
+
+        if (order.getOrderType() != null) {
+            if (OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
+                vo.setProductExt(productExtMap.get(order.getId()));
+            } else if (OrderTypeEnum.COACH_PACKAGE.getCode().equals(order.getOrderType())) {
+                CoachPackageOrderExt ext = coachExtMap.get(order.getId());
+                if (ext != null && ext.getCoachId() != null) {
+                    User coach = coachMap.get(ext.getCoachId());
+                    if (coach != null) {
+                        ext.setCoachName(coach.getUsername());
+                        ext.setCoachAvatar(coach.getAvatar());
+                    }
+                }
+                vo.setCoachPackageExt(ext);
+            } else if (OrderTypeEnum.MEMBERSHIP.getCode().equals(order.getOrderType())) {
+                vo.setMembershipExt(membershipExtMap.get(order.getId()));
             }
         }
 
@@ -642,38 +702,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     }
 
     private String getStatusLabel(String status) {
-        return switch (status) {
-            case STATUS_PENDING -> "待支付";
-            case STATUS_PAID -> "已支付";
-            case STATUS_NOT_PICKED -> "待取货";
-            case STATUS_CANCELLED -> "已取消";
-            case STATUS_TIMEOUT -> "已超时";
-            case "SHIPPED" -> "已发货";
-            case "COMPLETED" -> "已完成";
-            default -> status;
-        };
+        return OrderStatusEnum.getLabelByCode(status);
     }
 
     private String getPayMethodLabel(String payMethod) {
-        if (payMethod == null) {
-            return null;
-        }
-        return switch (payMethod) {
-            case "ALIPAY" -> "支付宝";
-            case "BALANCE" -> "余额支付";
-            default -> payMethod;
-        };
+        return PayMethodEnum.getLabelByCode(payMethod);
     }
 
     private String getOrderTypeLabel(String orderType) {
-        if (orderType == null) {
-            return null;
-        }
-        return switch (orderType) {
-            case "PRODUCT" -> "商品订单";
-            case "COACH_PACKAGE" -> "教练套餐订单";
-            case "MEMBERSHIP" -> "会员卡订单";
-            default -> orderType;
-        };
+        return OrderTypeEnum.getLabelByCode(orderType);
     }
 }
