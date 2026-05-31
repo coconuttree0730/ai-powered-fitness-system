@@ -294,9 +294,9 @@
                   <div class="card-title">{{ order.productExt?.productName || '商品' }}</div>
                   <div class="card-meta">
                     <span>×{{ order.productExt?.quantity || 1 }}</span>
-                    <n-tag v-if="order.productExt?.pickupStatus"
+                    <!-- <n-tag v-if="order.productExt?.pickupStatus"
                       :type="order.productExt.pickupStatus === 'PICKED' ? 'success' : 'warning'"
-                      size="tiny" round>{{ order.productExt.pickupStatus === 'PICKED' ? '已取货' : '待取货' }}</n-tag>
+                      size="tiny" round>{{ order.productExt.pickupStatus === 'PICKED' ? '已取货' : '待取货' }}</n-tag> -->
                   </div>
                 </div>
                 <div class="card-right">

@@ -62,11 +62,10 @@
         </div>
         <div class="package-body">
           <div class="package-meta">
-            <span class="meta-item">编码: {{ pkg.code || '-' }}</span>
+            <span class="meta-item">编码: {{ pkg.packageCode || '-' }}</span>
             <span class="meta-item">{{ pkg.totalSessions || 0 }} 课时</span>
             <span class="meta-item">{{ pkg.validityDays || 0 }} 天</span>
             <span class="meta-item price">¥{{ pkg.originalPrice }}</span>
-            <span class="meta-item">库存: {{ pkg.stock }}</span>
           </div>
           <p class="package-desc">{{ pkg.description || '暂无描述' }}</p>
         </div>
@@ -89,7 +88,7 @@
           <n-input v-model:value="form.name" placeholder="例如：单次体验课" />
         </n-form-item>
         <n-form-item label="套餐编码" path="packageCode">
-          <n-select v-model:value="form.packageCode" :options="dictOptions" placeholder="请选择套餐编码" clearable />
+          <n-input v-model:value="form.packageCode" placeholder="请输入套餐编码" />
         </n-form-item>
         <n-form-item label="课时数" path="totalSessions">
           <n-input-number v-model:value="form.totalSessions" :min="1" :precision="0" style="width: 100%">
@@ -105,9 +104,6 @@
           <n-input-number v-model:value="form.originalPrice" :min="0" :precision="2" style="width: 100%">
             <template #prefix>¥</template>
           </n-input-number>
-        </n-form-item>
-        <n-form-item label="库存" path="stock">
-          <n-input-number v-model:value="form.stock" :min="0" :precision="0" style="width: 100%" />
         </n-form-item>
         <n-form-item label="排序" path="sortOrder">
           <n-input-number v-model:value="form.sortOrder" :min="0" style="width: 100%" />
@@ -141,7 +137,6 @@ import {
   CheckmarkCircleOutline,
   CloseCircleOutline
 } from '@vicons/ionicons5'
-import { getDictOptions } from '@/api/dict'
 import {
   getMyPackages,
   createPackage,
@@ -160,16 +155,13 @@ const submitting = ref(false)
 const isEdit = ref(false)
 const editId = ref(null)
 const formRef = ref(null)
-const dictOptions = ref([])
 
 const form = ref({
   name: '',
-  packageCode: null,
+  packageCode: '',
   totalSessions: 1,
   validityDays: 30,
-  category: 'COURSE',
   originalPrice: 0,
-  stock: 999,
   sortOrder: 0,
   status: 'ACTIVE',
   description: ''
@@ -177,11 +169,10 @@ const form = ref({
 
 const rules = {
   name: [{ required: true, message: '请输入套餐名称', trigger: 'blur' }],
-  packageCode: [{ required: true, message: '请选择套餐编码', trigger: 'change' }],
+  packageCode: [{ required: true, message: '请输入套餐编码', trigger: 'blur' }],
   totalSessions: [{ required: true, type: 'number', message: '请输入课时数', trigger: 'blur' }],
   validityDays: [{ required: true, type: 'number', message: '请输入有效期天数', trigger: 'blur' }],
-  originalPrice: [{ required: true, type: 'number', message: '请输入价格', trigger: 'blur' }],
-  stock: [{ required: true, type: 'number', message: '请输入库存', trigger: 'blur' }]
+  originalPrice: [{ required: true, type: 'number', message: '请输入价格', trigger: 'blur' }]
 }
 
 const modalTitle = computed(() => isEdit.value ? '编辑套餐' : '新增套餐')
@@ -205,12 +196,10 @@ async function fetchPackages() {
 function resetForm() {
   form.value = {
     name: '',
-    packageCode: null,
+    packageCode: '',
     totalSessions: 1,
     validityDays: 30,
-    category: 'COURSE',
     originalPrice: 0,
-    stock: 999,
     sortOrder: 0,
     status: 'ACTIVE',
     description: ''
@@ -221,30 +210,18 @@ function resetForm() {
 
 async function openAddModal() {
   resetForm()
-  try {
-    dictOptions.value = await getDictOptions('coach_package_code')
-  } catch {
-    dictOptions.value = []
-  }
   showModal.value = true
 }
 
 async function openEditModal(pkg) {
   isEdit.value = true
   editId.value = pkg.id
-  try {
-    dictOptions.value = await getDictOptions('coach_package_code')
-  } catch {
-    dictOptions.value = []
-  }
   form.value = {
     name: pkg.name,
-    packageCode: pkg.code,
+    packageCode: pkg.packageCode,
     totalSessions: pkg.totalSessions || 1,
     validityDays: pkg.validityDays || 30,
-    category: 'COURSE',
     originalPrice: pkg.originalPrice,
-    stock: pkg.stock,
     sortOrder: pkg.sortOrder || 0,
     status: pkg.status,
     description: pkg.description || ''

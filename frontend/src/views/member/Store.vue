@@ -103,71 +103,6 @@
       </n-grid-item>
     </n-grid>
 
-    <!-- 订单记录 -->
-    <div class="card-section" style="margin-top: 32px;">
-      <div class="section-header">
-        <h3 class="section-title">我的订单</h3>
-      </div>
-      
-      <!-- 桌面端表格 -->
-      <div v-if="!isMobile" class="table-wrapper">
-        <n-data-table
-          :columns="orderColumns"
-          :data="orderRecords"
-          :pagination="{ pageSize: 5 }"
-          :bordered="false"
-          class="record-table"
-        />
-      </div>
-      
-      <!-- 移动端订单卡片列表 -->
-      <div v-else class="mobile-order-list">
-        <div v-if="orderRecords.length === 0" class="empty-orders">
-          <n-empty description="暂无订单记录" />
-        </div>
-        <div v-else class="order-cards">
-          <div 
-            v-for="(order, index) in orderRecords" 
-            :key="order.orderNo"
-            class="order-card"
-            :style="{ animationDelay: `${index * 80}ms` }"
-          >
-            <div class="order-card-header">
-              <div class="order-meta">
-                <span class="order-no">{{ order.orderNo }}</span>
-                <span class="order-time">{{ formatOrderTime(order.createdAt) }}</span>
-              </div>
-              <n-tag :type="getOrderStatusType(order.status)" size="small" round class="order-status">
-                {{ getOrderStatusText(order.status) }}
-              </n-tag>
-            </div>
-            <div class="order-card-body">
-              <div class="product-info-row">
-                <div class="product-icon-mini" :style="{ background: order.productGradient || '#f3f4f6' }">
-                  <span v-if="!order.productImage">{{ order.productName?.[0] || '商' }}</span>
-                  <img v-else :src="order.productImage" class="mini-img" />
-                </div>
-                <div class="product-detail">
-                  <h4 class="product-name-text">{{ order.productName }}</h4>
-                  <div class="price-row">
-                    <span class="final-price">¥{{ order.payAmount }}</span>
-                    <span v-if="order.pointsDiscount > 0" class="discount-tag-mini">
-                      省¥{{ order.pointsDiscount }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="order-card-footer" v-if="order.status === 'PENDING'">
-              <n-button type="primary" size="small" @click="handlePay(order)">
-                去支付
-              </n-button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- 购买确认弹窗 -->
     <n-modal v-model:show="showOrderModal" preset="card" style="width: 500px" :show-header="false">
       <div class="order-content">
@@ -269,15 +204,12 @@
 </template>
 
 <script setup>
-import { ref, computed, h, watch, onMounted, onUnmounted } from 'vue'
-import { useMessage, NTag, NButton } from 'naive-ui'
-import { getProducts, calculatePrice, createOrder, getOrders, payOrder } from '@/api/product'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useMessage } from 'naive-ui'
+import { getProducts, calculatePrice, createOrder, payOrder } from '@/api/product'
 import { submitAlipayForm } from '@/api/membership'
 import {
-  clearPaymentMarker,
-  isPaymentFinished,
-  markPaymentStarted,
-  readPaymentMarker
+  markPaymentStarted
 } from '@/utils/paymentMarker'
 
 const message = useMessage()
@@ -317,7 +249,6 @@ const orderQuantity = ref(1)
 const usePoints = ref(0)
 const payMethod = ref('ALIPAY')
 const products = ref([])
-const orderRecords = ref([])
 const loading = ref(false)
 
 // 计算价格
@@ -398,116 +329,6 @@ const filteredProducts = computed(() => {
   }
   return products.value.filter(p => p.category === activeTab.value)
 })
-
-const orderColumns = [
-  { title: '订单号', key: 'orderNo', width: 150 },
-  { title: '日期', key: 'createdAt', width: 120 },
-  { title: '商品名称', key: 'productName' },
-  { 
-    title: '原价', 
-    key: 'originalPrice',
-    width: 100,
-    render(row) {
-      return h('span', { style: { textDecoration: 'line-through', color: '#999' } }, 
-        `¥${((row.originalPrice || 0) * (row.quantity || 1)).toFixed(2)}`)
-    }
-  },
-  { 
-    title: '积分抵扣', 
-    key: 'pointsDiscount',
-    width: 100,
-    render(row) {
-      const discount = row.pointsDiscount || 0
-      return h('span', { style: { color: '#FF6B35' } }, 
-        discount > 0 ? `-¥${discount}` : '-')
-    }
-  },
-  { 
-    title: '实付金额', 
-    key: 'payAmount',
-    width: 100,
-    render(row) {
-      return h('span', { style: { color: '#FF6B35', fontWeight: 600 } }, `¥${row.payAmount || 0}`)
-    }
-  },
-  { 
-    title: '状态', 
-    key: 'status',
-    width: 100,
-    render(row) {
-      const statusMap = {
-        'PENDING': { type: 'warning', text: '待支付' },
-        'PAID': { type: 'processing', text: '已支付' },
-        'NOT_PICKED': { type: 'warning', text: '待取货' },
-        'SHIPPED': { type: 'success', text: '已发货' },
-        'COMPLETED': { type: 'default', text: '已完成' },
-        'CANCELLED': { type: 'error', text: '已取消' }
-      }
-      const status = statusMap[row.status] || { type: 'default', text: row.status }
-      return h(NTag, { type: status.type, size: 'small' }, { default: () => status.text })
-    }
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 120,
-    render(row) {
-      if (row.status === 'PENDING') {
-        return h(NButton, { 
-          type: 'primary', 
-          size: 'small',
-          onClick: () => handlePay(row)
-        }, { default: () => '去支付' })
-      }
-      return null
-    }
-  }
-]
-
-// 格式化订单时间
-function formatOrderTime(dateStr) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now - date
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (days === 0) {
-    return '今天'
-  } else if (days === 1) {
-    return '昨天'
-  } else if (days < 7) {
-    return `${days}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-  }
-}
-
-// 获取订单状态类型
-function getOrderStatusType(status) {
-  const statusMap = {
-    'PENDING': 'warning',
-    'PAID': 'processing',
-    'NOT_PICKED': 'warning',
-    'SHIPPED': 'success',
-    'COMPLETED': 'default',
-    'CANCELLED': 'error'
-  }
-  return statusMap[status] || 'default'
-}
-
-// 获取订单状态文本
-function getOrderStatusText(status) {
-  const statusMap = {
-    'PENDING': '待支付',
-    'PAID': '已支付',
-    'NOT_PICKED': '待取货',
-    'SHIPPED': '已发货',
-    'COMPLETED': '已完成',
-    'CANCELLED': '已取消'
-  }
-  return statusMap[status] || status
-}
 
 // 商品图标
 function getProductIcon(type) {
@@ -605,46 +426,22 @@ async function handlePayOrder(orderNo) {
   }
 }
 
-async function handlePay(row) {
-  await handlePayOrder(row.orderNo)
-  await loadData()
-}
-
-function notifyPaymentCompletion(orders) {
-  const marker = readPaymentMarker()
-  if (!marker?.orderNo) return
-
-  const paidOrder = orders.find(order =>
-    order.orderNo === marker.orderNo && isPaymentFinished(order)
-  )
-  if (!paidOrder) return
-
-  clearPaymentMarker()
-  message.success('支付完成，订单状态已更新')
-}
-
 async function loadData() {
   loading.value = true
   try {
     // 从API获取商品数据
     const productData = await getProducts()
-    
+
     // 处理API返回的数据，添加前端展示字段
     products.value = productData.map(p => ({
       ...p,
       icon: getProductIcon(getIconType(p.category)),
       gradient: getGradient(p.category)
     })) || []
-    
-    // 获取订单数据
-    const orderData = await getOrders()
-    orderRecords.value = orderData || []
-    notifyPaymentCompletion(orderRecords.value)
   } catch (error) {
     console.error('数据加载失败:', error)
     message.error('数据加载失败，请检查网络连接')
     products.value = []
-    orderRecords.value = []
   } finally {
     loading.value = false
   }

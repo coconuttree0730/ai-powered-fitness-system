@@ -11,11 +11,15 @@
           <div v-if="noMoreMessages" class="no-more-messages">
             <span>没有更多消息了</span>
           </div>
-          <div v-for="(msg, index) in messages" :key="msg.id || index"
+          <div v-for="(msg, index) in messages" :key="msg.id || msg.type + '_' + index"
                :class="['message', msg.type]">
             <!-- 跳过渲染空的 AI 消息（当正在显示"正在输入"动画时） -->
             <template v-if="!(msg.type === 'ai' && !msg.content && !msg.statusText && isAiTyping)">
-              <div class="message-avatar">{{ msg.type === 'ai' ? 'AI' : userAvatar }}</div>
+              <div class="message-avatar">
+                <img v-if="msg.type === 'ai'" src="/ai.png" alt="AI" class="avatar-img" />
+                <img v-else-if="userAvatarUrl" :src="userAvatarUrl" alt="用户" class="avatar-img" />
+                <span v-else>{{ userAvatarText }}</span>
+              </div>
               <div class="message-bubble-wrapper">
                 <!-- 状态文字显示在气泡上方 -->
                 <div v-if="msg.type === 'ai' && msg.statusText" class="stream-status">{{ msg.statusText }}</div>
@@ -59,7 +63,9 @@
 
           <!-- 健身计划生成中动画 -->
           <div v-if="planGenerationStore.isGenerating" class="message ai plan-generating-message">
-            <div class="message-avatar">AI</div>
+            <div class="message-avatar">
+              <img src="/ai.png" alt="AI" class="avatar-img" />
+            </div>
             <div class="message-content plan-generating-content">
               <div class="plan-generating-animation">
                 <div class="generating-header">
@@ -104,8 +110,10 @@
           <!-- 健身计划预览组件 (Tab版详细展示) - 作为聊天消息展示 -->
           <transition name="plan-fade">
             <div v-if="showPlanPreview && fitnessPlanData" class="message ai plan-message-wrapper">
-              <div class="message-avatar">AI</div>
-              <div class="message-content plan-message-content">
+              <div class="message-avatar">
+              <img src="/ai.png" alt="AI" class="avatar-img" />
+            </div>
+            <div class="message-content plan-message-content">
                 <FitnessPlanPreview
                   :plan-data="fitnessPlanData"
                   :is-embedded="true"
@@ -608,7 +616,8 @@ function handleScroll() {
   }
 }
 
-const userAvatar = computed(() => authStore.userInfo?.username?.charAt(0) || '张')
+const userAvatarUrl = computed(() => authStore.userInfo?.avatar || '')
+const userAvatarText = computed(() => authStore.userInfo?.username?.charAt(0) || '张')
 
 const inputMessage = ref('')
 const sending = ref(false)
@@ -661,16 +670,19 @@ function scrollToBottom() {
 }
 
 function updateAiMessage(index, patch) {
-  messages.value[index] = {
+  const updated = {
     ...messages.value[index],
     ...patch
   }
+  messages.value.splice(index, 1, updated)
 }
 
 function flushStreamRender() {
   return new Promise((resolve) => {
     nextTick(() => {
-      requestAnimationFrame(() => resolve())
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve())
+      })
     })
   })
 }
@@ -824,14 +836,15 @@ async function sendMessage() {
   }
 
   const userMsg = inputMessage.value.trim()
-  messages.value.push({ type: 'user', content: userMsg })
   inputMessage.value = ''
   sending.value = true
   isAiTyping.value = true
-  scrollToBottom()
 
-  const aiMessageIndex = messages.value.length
+  messages.value.push({ type: 'user', content: userMsg })
+
+  const aiMessageId = 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
   messages.value.push({
+    id: aiMessageId,
     type: 'ai',
     content: '',
     nodes: [],
@@ -839,11 +852,14 @@ async function sendMessage() {
     statusText: '正在理解你的问题...'
   })
 
+  const aiMessageIndex = messages.value.length - 1
+  scrollToBottom()
+
   abortController.value = new AbortController()
   let isCompleted = false
 
-  const resetSending = () => {
-    if (!isCompleted) {
+  const resetSending = (force = false) => {
+    if (!isCompleted || force) {
       isCompleted = true
       sending.value = false
       isAiTyping.value = false
@@ -929,7 +945,7 @@ async function sendMessage() {
           isFinal: true,
           statusText: ''
         })
-        resetSending()
+        resetSending(true)
         scrollToBottom()
         await flushStreamRender()
         return
@@ -970,7 +986,7 @@ async function sendMessage() {
         await handleStreamEvent(parseSseEventBlock(buffer))
       }
 
-      if (!receivedDoneEvent) {
+      if (!receivedDoneEvent && !isCompleted) {
         updateAiMessage(aiMessageIndex, {
           type: 'ai',
           content: fullContent,
@@ -991,14 +1007,16 @@ async function sendMessage() {
     } else {
       console.error('Send message failed:', error)
       message.error('发送消息失败，请稍后重试')
-      const errorContent = '抱歉，我遇到了一些问题，请稍后再试。'
-      updateAiMessage(aiMessageIndex, {
-        type: 'ai',
-        content: errorContent,
-        nodes: parseToNodes(errorContent, true),
-        isFinal: true,
-        statusText: ''
-      })
+      if (!isCompleted) {
+        const errorContent = '抱歉，我遇到了一些问题，请稍后再试。'
+        updateAiMessage(aiMessageIndex, {
+          type: 'ai',
+          content: errorContent,
+          nodes: parseToNodes(errorContent, true),
+          isFinal: true,
+          statusText: ''
+        })
+      }
     }
   } finally {
     clearTimeout(timeoutId)
@@ -1732,6 +1750,14 @@ async function regeneratePlan() {
   flex-shrink: 0;
   font-size: 18px;
   font-weight: 600;
+  overflow: hidden;
+}
+
+.message-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .message.ai .message-avatar {
@@ -1886,6 +1912,11 @@ async function regeneratePlan() {
   background: linear-gradient(135deg, #FF6B35, #E55A2B);
   color: white;
   border-bottom-right-radius: 4px;
+  white-space: normal;
+  word-break: break-word;
+  min-width: 60px;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .plan-message {
@@ -3215,6 +3246,11 @@ async function regeneratePlan() {
   flex-direction: column;
   gap: 6px;
   max-width: 80%;
+  align-items: flex-start;
+}
+
+.message.user .message-bubble-wrapper {
+  align-items: flex-end;
 }
 
 .stream-status {

@@ -14,17 +14,86 @@
         </template>
       </n-empty>
 
-      <n-data-table
-        v-else
-        :columns="columns"
-        :data="plans"
-        :pagination="false"
-        :bordered="false"
-        :row-key="row => row.id"
-        striped
-        size="medium"
-        class="plan-table"
-      />
+      <div v-else class="plans-grid">
+        <div
+          v-for="(plan, index) in plans"
+          :key="plan.id"
+          class="plan-card"
+        >
+          <div class="plan-card-header">
+            <div class="plan-number">#{{ String(index + 1).padStart(2, '0') }}</div>
+            <div class="plan-date">{{ formatDateTime(plan.createTime) }}</div>
+          </div>
+
+          <div class="plan-card-body">
+            <div class="plan-goal-row">
+              <n-tag
+                size="large"
+                :type="getGoalType(plan.fitnessGoal || plan.goal)"
+                round
+                class="goal-tag"
+              >
+                {{ plan.fitnessGoal || plan.goal || '健身计划' }}
+              </n-tag>
+              <n-tag
+                size="small"
+                :type="getExperienceType(plan.experience)"
+                round
+              >
+                {{ formatExperience(plan.experience) }}
+              </n-tag>
+            </div>
+
+            <div class="plan-stats">
+              <div class="stat-item">
+                <n-icon size="18" color="#f97316"><BarbellOutline /></n-icon>
+                <span class="stat-label">身高</span>
+                <span class="stat-value">{{ plan.height ? `${plan.height}cm` : '--' }}</span>
+              </div>
+              <div class="stat-item">
+                <n-icon size="18" color="#f97316"><ScaleOutline /></n-icon>
+                <span class="stat-label">体重</span>
+                <span class="stat-value">{{ plan.weight ? `${plan.weight}kg` : '--' }}</span>
+              </div>
+              <div class="stat-item">
+                <n-icon size="18" color="#f97316"><PersonOutline /></n-icon>
+                <span class="stat-label">年龄</span>
+                <span class="stat-value">{{ plan.age ? `${plan.age}岁` : '--' }}</span>
+              </div>
+              <div class="stat-item">
+                <n-icon size="18" color="#f97316"><MaleFemaleOutline /></n-icon>
+                <span class="stat-label">性别</span>
+                <span class="stat-value">{{ formatGender(plan.gender) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-card-footer">
+            <n-button
+              text
+              type="primary"
+              size="small"
+              @click="handleView(plan)"
+            >
+              <template #icon>
+                <n-icon><EyeOutline /></n-icon>
+              </template>
+              查看详情
+            </n-button>
+            <n-button
+              text
+              type="error"
+              size="small"
+              @click="handleDelete(plan)"
+            >
+              <template #icon>
+                <n-icon><TrashOutline /></n-icon>
+              </template>
+              删除
+            </n-button>
+          </div>
+        </div>
+      </div>
     </n-spin>
 
     <!-- 查看详情弹窗 - 独立内嵌视图 -->
@@ -157,9 +226,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, h } from 'vue'
-import { NButton, NTag, useMessage, useDialog, NSpace, NTabs, NTabPane, NIcon } from 'naive-ui'
-import { InformationCircleOutline, TimeOutline } from '@vicons/ionicons5'
+import { ref, onMounted } from 'vue'
+import { NButton, NTag, useMessage, useDialog, NTabs, NTabPane, NIcon } from 'naive-ui'
+import {
+  InformationCircleOutline,
+  TimeOutline,
+  EyeOutline,
+  TrashOutline,
+  BarbellOutline,
+  ScaleOutline,
+  PersonOutline,
+  MaleFemaleOutline
+} from '@vicons/ionicons5'
 import { getMyPlans, deletePlan, getPlanDetail } from '@/api/plan'
 
 const message = useMessage()
@@ -172,97 +250,41 @@ const selectedPlan = ref(null)
 const previewData = ref(null)
 const activeDay = ref(0)
 
-const columns = [
-  {
-    title: '序号',
-    key: 'index',
-    width: 70,
-    render: (_, index) => index + 1
-  },
-  {
-    title: '计划生成日期',
-    key: 'createTime',
-    width: 180,
-    render: row => formatDateTime(row.createTime),
-    sorter: (a, b) => new Date(a.createTime) - new Date(b.createTime)
-  },
-  {
-    title: '身高',
-    key: 'height',
-    width: 80,
-    render: row => row.height ? `${row.height}cm` : '-'
-  },
-  {
-    title: '体重',
-    key: 'weight',
-    width: 80,
-    render: row => row.weight ? `${row.weight}kg` : '-'
-  },
-  {
-    title: '年龄',
-    key: 'age',
-    width: 70,
-    render: row => row.age ? `${row.age}岁` : '-'
-  },
-  {
-    title: '性别',
-    key: 'gender',
-    width: 80,
-    render: row => {
-      const map = { MALE: '男', FEMALE: '女', male: '男', female: '女' }
-      return map[row.gender] || row.gender || '-'
-    }
-  },
-  {
-    title: '健身经验',
-    key: 'experience',
-    width: 100,
-    render: row => {
-      const exp = row.experience || ''
-      if (!exp) return '-'
-      if (exp.includes('初级') || exp === 'BEGINNER') return h(NTag, { size: 'small', type: 'success' }, () => '初级')
-      if (exp.includes('中级') || exp === 'INTERMEDIATE') return h(NTag, { size: 'small', type: 'warning' }, () => '中级')
-      if (exp.includes('高级') || exp === 'ADVANCED') return h(NTag, { size: 'small', type: 'error' }, () => '高级')
-      return exp
-    }
-  },
-  {
-    title: '健身目标',
-    key: 'fitnessGoal',
-    width: 110,
-    render: row => {
-      const goal = row.fitnessGoal || row.goal || ''
-      if (!goal) return '-'
-      const colorMap = {
-        '增肌': 'info', 'MUSCLE_GAIN': 'info',
-        '减脂': 'success', 'FAT_LOSS': 'success',
-        '塑形': 'warning', 'BODY_SHAPING': 'warning',
-        '增强体能': 'error', 'ENDURANCE': 'error'
-      }
-      return h(NTag, { size: 'small', type: colorMap[goal] || 'default', bordered: false }, () => goal)
-    }
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 180,
-    fixed: 'right',
-    render: row => h(NSpace, {}, () => [
-      h(NButton, {
-        text: true,
-        type: 'primary',
-        size: 'small',
-        onClick: () => handleView(row)
-      }, () => '查看'),
-      h(NButton, {
-        text: true,
-        type: 'error',
-        size: 'small',
-        onClick: () => handleDelete(row)
-      }, () => '删除')
-    ])
+function getGoalType(goal) {
+  if (!goal) return 'default'
+  const colorMap = {
+    '增肌': 'info',
+    'MUSCLE_GAIN': 'info',
+    '减脂': 'success',
+    'FAT_LOSS': 'success',
+    '塑形': 'warning',
+    'BODY_SHAPING': 'warning',
+    '增强体能': 'error',
+    'ENDURANCE': 'error'
   }
-]
+  return colorMap[goal] || 'default'
+}
+
+function getExperienceType(exp) {
+  if (!exp) return 'default'
+  if (exp.includes('初级') || exp === 'BEGINNER') return 'success'
+  if (exp.includes('中级') || exp === 'INTERMEDIATE') return 'warning'
+  if (exp.includes('高级') || exp === 'ADVANCED') return 'error'
+  return 'default'
+}
+
+function formatExperience(exp) {
+  if (!exp) return '未知'
+  if (exp.includes('初级') || exp === 'BEGINNER') return '初级'
+  if (exp.includes('中级') || exp === 'INTERMEDIATE') return '中级'
+  if (exp.includes('高级') || exp === 'ADVANCED') return '高级'
+  return exp
+}
+
+function formatGender(gender) {
+  const map = { MALE: '男', FEMALE: '女', male: '男', female: '女' }
+  return map[gender] || gender || '--'
+}
 
 onMounted(() => {
   fetchPlans()
@@ -373,25 +395,103 @@ function formatDateTime(dateStr) {
   color: #9ca3af;
 }
 
-.plan-table {
-  border-radius: 12px;
+/* 卡片网格 */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.plan-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-.plan-table :deep(.n-data-table-tr) {
-  cursor: default;
+.plan-card:hover {
+  border-color: #f97316;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.12);
+  transform: translateY(-4px);
 }
 
-.plan-table :deep(.n-data-table-th) {
-  background: #f8fafc;
+.plan-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+}
+
+.plan-number {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ea580c;
+  letter-spacing: -0.5px;
+}
+
+.plan-date {
+  font-size: 13px;
+  color: #78716c;
+  font-weight: 500;
+}
+
+.plan-card-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-goal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.goal-tag {
   font-weight: 600;
-  color: #374151;
-  font-size: 13px;
+  font-size: 15px;
 }
 
-.plan-table :deep(.n-data-table-td) {
-  font-size: 13px;
-  color: #4b5563;
+.plan-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-left: auto;
+}
+
+.plan-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 16px;
+  border-top: 1px solid #f3f4f6;
 }
 
 /* 弹窗样式 */
@@ -756,34 +856,69 @@ function formatDateTime(dateStr) {
   }
 }
 
+@media (max-width: 768px) {
+  .plans-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+}
+
 @media (max-width: 480px) {
   .fitness-plans-page {
     padding: 8px;
   }
-  
+
   .page-header h2 {
     font-size: 16px;
   }
-  
-  .plan-table :deep(.n-data-table-th),
-  .plan-table :deep(.n-data-table-td) {
-    padding: 10px 12px;
-    font-size: 12px;
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
-  
+
+  .plan-card-header {
+    padding: 12px 16px 10px;
+  }
+
+  .plan-number {
+    font-size: 18px;
+  }
+
+  .plan-card-body {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .plan-stats {
+    gap: 10px;
+  }
+
+  .stat-item {
+    padding: 8px 10px;
+  }
+
+  .stat-value {
+    font-size: 13px;
+  }
+
+  .plan-card-footer {
+    padding: 10px 16px 14px;
+  }
+
   .user-info-card {
     padding: 10px 12px;
   }
-  
+
   .info-item .value {
     font-size: 12px;
   }
-  
+
   .day-tabs :deep(.n-tabs-tab) {
     padding: 6px 10px;
     font-size: 12px;
   }
-  
+
   .course-card img {
     height: 120px;
   }
