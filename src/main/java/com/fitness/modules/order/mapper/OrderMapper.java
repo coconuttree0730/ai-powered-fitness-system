@@ -1,6 +1,8 @@
 package com.fitness.modules.order.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fitness.modules.order.model.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -47,4 +49,33 @@ public interface OrderMapper extends BaseMapper<Order> {
 
     @Select("SELECT COUNT(1) FROM orders WHERE order_type = 'MEMBERSHIP'")
     long countMembershipOrders();
+
+    @Select("<script>"
+            + "SELECT * FROM orders WHERE 1=1"
+            + "<if test='orderType != null and orderType != \"\"'> AND order_type = #{orderType}</if>"
+            + "<if test='status != null and status != \"\"'> AND status = #{status}</if>"
+            + "<if test='keyword != null and keyword != \"\"'> AND order_no LIKE CONCAT('%', #{keyword}, '%')</if>"
+            + "<if test='startTime != null'> AND create_time &gt;= #{startTime}</if>"
+            + "<if test='endTime != null'> AND create_time &lt;= #{endTime}</if>"
+            + " ORDER BY create_time DESC"
+            + "</script>")
+    IPage<Order> selectAdminOrders(Page<Order> page,
+                                   @Param("orderType") String orderType,
+                                   @Param("status") String status,
+                                   @Param("keyword") String keyword,
+                                   @Param("startTime") LocalDateTime startTime,
+                                   @Param("endTime") LocalDateTime endTime);
+
+    @Select("SELECT COUNT(1) FROM orders WHERE create_time >= #{todayStart}")
+    long countTodayOrders(@Param("todayStart") LocalDateTime todayStart);
+
+    @Select("SELECT COALESCE(SUM(pay_amount), 0) FROM orders "
+            + "WHERE status IN ('PAID', 'COMPLETED', 'ACTIVATED', 'SHIPPED') AND pay_time >= #{todayStart}")
+    BigDecimal sumTodayRevenue(@Param("todayStart") LocalDateTime todayStart);
+
+    @Select("SELECT COUNT(1) FROM orders WHERE status = 'PENDING'")
+    long countPendingOrders();
+
+    @Select("SELECT COUNT(1) FROM orders WHERE order_type = 'PRODUCT'")
+    long countProductOrders();
 }

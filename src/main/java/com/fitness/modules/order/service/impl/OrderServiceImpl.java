@@ -1,8 +1,11 @@
 package com.fitness.modules.order.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fitness.common.constants.ErrorCode;
+import com.fitness.common.result.PageResult;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.cache.RedisCacheNames;
 import com.fitness.common.cache.RedisTemplateCacheSupport;
@@ -373,10 +376,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
                 return;
             }
 
-            order.setStatus(OrderStatusEnum.PAID.getCode());
+            if (order.getStatus() == null) {
+                order.setStatus(OrderStatusEnum.PAID.getCode());
+            }
             updateById(order);
 
-            log.info("订单支付宝支付成功: orderNo={}, tradeNo={}, userId={}", orderNo, tradeNo, order.getUserId());
+            log.info("订单支付宝支付成功: orderNo={}, tradeNo={}, userId={}, status={}", orderNo, tradeNo, order.getUserId(),
+                    order.getStatus());
         } else {
             log.warn("支付宝回调状态非成功: orderNo={}, tradeStatus={}", orderNo, tradeStatus);
         }
@@ -434,6 +440,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
                 throw e;
             }
         }
+        order.setStatus(OrderStatusEnum.PAID.getCode());
+        updateById(order);
         log.info("教练套餐支付后绑定教练: orderNo={}, coachId={}, userId={}",
                 order.getOrderNo(), ext.getCoachId(), order.getUserId());
     }
@@ -542,7 +550,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             return;
         }
 
-        order.setStatus(OrderStatusEnum.PAID.getCode());
+        if (order.getStatus() == null) {
+            order.setStatus(OrderStatusEnum.PAID.getCode());
+        }
         order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
         order.setPayTime(LocalDateTime.now());
         updateById(order);
@@ -596,6 +606,117 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     @Override
     public Order selectByOrderNo(String orderNo) {
         return orderMapper.selectByOrderNo(orderNo);
+    }
+
+    @Override
+    public PageResult<OrderVO> getAdminOrderPage(int page, int pageSize, String orderType,
+            String status, String keyword,
+            LocalDateTime startTime, LocalDateTime endTime) {
+        Page<Order> mpPage = new Page<>(page, pageSize);
+        IPage<Order> result = orderMapper.selectAdminOrders(mpPage, orderType, status, keyword, startTime, endTime);
+
+        List<Order> orders = result.getRecords();
+        if (orders.isEmpty()) {
+            return PageResult.of(List.of(), 0L);
+        }
+
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+
+        Map<Long, ProductOrderExt> productExtMap = productOrderExtMapper.selectByOrderIds(orderIds)
+                .stream().collect(Collectors.toMap(ProductOrderExt::getOrderId, e -> e));
+        Map<Long, CoachPackageOrderExt> coachExtMap = coachPackageOrderExtMapper.selectByOrderIds(orderIds)
+                .stream().collect(Collectors.toMap(CoachPackageOrderExt::getOrderId, e -> e));
+        Map<Long, MembershipOrderExt> membershipExtMap = membershipOrderExtMapper.selectByOrderIds(orderIds)
+                .stream().collect(Collectors.toMap(MembershipOrderExt::getOrderId, e -> e));
+
+        Set<Long> coachIds = coachExtMap.values().stream()
+                .map(CoachPackageOrderExt::getCoachId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        Map<Long, User> coachMap = coachIds.isEmpty() ? Map.of()
+                : userMapper.selectBatchIds(coachIds).stream()
+                        .collect(Collectors.toMap(User::getId, u -> u));
+
+        Set<Long> userIds = orders.stream().map(Order::getUserId).collect(Collectors.toSet());
+        Map<Long, User> userMap = userIds.isEmpty() ? Map.of()
+                : userMapper.selectBatchIds(userIds).stream()
+                        .collect(Collectors.toMap(User::getId, u -> u));
+
+        List<OrderVO> voList = orders.stream()
+                .map(order -> convertToVO(order, productExtMap, coachExtMap, membershipExtMap, coachMap, userMap))
+                .collect(Collectors.toList());
+
+        return PageResult.of(voList, result.getTotal());
+    }
+
+    @Override
+    public OrderVO getAdminOrderDetail(String orderNo) {
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+        return convertToVO(order);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmPayment(String orderNo) {
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+        if (!OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR);
+        }
+
+        handlePostPaidLogic(order);
+
+        if (order.getStatus() == null) {
+            order.setStatus(OrderStatusEnum.PAID.getCode());
+        }
+        order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
+        order.setPayTime(LocalDateTime.now());
+        updateById(order);
+
+        log.info("管理员确认收款: orderNo={}, status={}", orderNo, order.getStatus());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void shipOrder(String orderNo, String trackingNo, String carrier) {
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+        if (!OrderTypeEnum.PRODUCT.getCode().equals(order.getOrderType())) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "仅商品订单支持发货");
+        }
+
+        ProductOrderExt ext = productOrderExtMapper.selectByOrderId(order.getId());
+        if (ext == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND, "商品订单扩展信息不存在");
+        }
+
+        ext.setTrackingNo(trackingNo);
+        ext.setCarrier(carrier);
+        productOrderExtMapper.updateById(ext);
+
+        order.setStatus(OrderStatusEnum.SHIPPED.getCode());
+        updateById(order);
+
+        log.info("管理员发货: orderNo={}, trackingNo={}, carrier={}", orderNo, trackingNo, carrier);
+    }
+
+    @Override
+    public Map<String, Object> getOrderStats() {
+        LocalDateTime todayStart = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+        Map<String, Object> stats = new java.util.LinkedHashMap<>();
+        stats.put("todayOrders", orderMapper.countTodayOrders(todayStart));
+        stats.put("todayRevenue", orderMapper.sumTodayRevenue(todayStart));
+        stats.put("pendingCount", orderMapper.countPendingOrders());
+        stats.put("productOrderCount", orderMapper.countProductOrders());
+        return stats;
     }
 
     private void refundProductPointsIfNeeded(Order order) {
@@ -667,6 +788,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             }
         }
 
+        User user = userMapper.selectById(order.getUserId());
+        if (user != null) {
+            vo.setUserName(user.getUsername());
+            vo.setUserPhone(user.getPhone());
+            vo.setUserAvatar(user.getAvatar());
+        }
+
         return vo;
     }
 
@@ -699,6 +827,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         }
 
         return vo;
+    }
+
+    private OrderVO convertToVO(Order order, Map<Long, ProductOrderExt> productExtMap,
+            Map<Long, CoachPackageOrderExt> coachExtMap,
+            Map<Long, MembershipOrderExt> membershipExtMap,
+            Map<Long, User> coachMap,
+            Map<Long, User> userMap) {
+        OrderVO vo = convertToVO(order, productExtMap, coachExtMap, membershipExtMap, coachMap);
+        injectUserInfo(vo, order.getUserId(), userMap);
+        return vo;
+    }
+
+    private void injectUserInfo(OrderVO vo, Long userId, Map<Long, User> userMap) {
+        User user = userMap.get(userId);
+        if (user != null) {
+            vo.setUserName(user.getUsername());
+            vo.setUserPhone(user.getPhone());
+            vo.setUserAvatar(user.getAvatar());
+        }
     }
 
     private String getStatusLabel(String status) {

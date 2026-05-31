@@ -128,6 +128,115 @@
           </div>
         </el-tab-pane>
 
+        <!-- 私教套餐订单 -->
+        <el-tab-pane name="coach-package-order">
+          <template #label>
+            <span class="tab-label">
+              <el-icon><User /></el-icon>私教套餐订单
+            </span>
+          </template>
+          <div class="tab-content">
+            <el-row :gutter="20" align="middle" class="tab-toolbar">
+              <el-col :span="18">
+                <el-space>
+                  <el-input
+                    v-model="coachPackageOrderSearch.orderNo"
+                    placeholder="订单号"
+                    clearable
+                    style="width: 180px"
+                    @keyup.enter="handleCoachPackageOrderSearch"
+                  >
+                    <template #prefix>
+                      <el-icon><Search /></el-icon>
+                    </template>
+                  </el-input>
+                  <el-select v-model="coachPackageOrderSearch.status" placeholder="全部状态" clearable style="width: 120px">
+                    <el-option label="待支付" value="PENDING" />
+                    <el-option label="已支付" value="PAID" />
+                    <el-option label="已激活" value="ACTIVATED" />
+                    <el-option label="已完成" value="COMPLETED" />
+                    <el-option label="已取消" value="CANCELLED" />
+                    <el-option label="已超时" value="TIMEOUT" />
+                  </el-select>
+                  <el-button type="primary" @click="handleCoachPackageOrderSearch">
+                    <el-icon><Search /></el-icon>搜索
+                  </el-button>
+                  <el-button @click="handleCoachPackageOrderReset">重置</el-button>
+                </el-space>
+              </el-col>
+              <el-col :span="6" style="text-align: right">
+                <el-button>
+                  <el-icon><Download /></el-icon>导出
+                </el-button>
+              </el-col>
+            </el-row>
+
+            <el-table :data="coachPackageOrderData" v-loading="loading" stripe style="width: 100%">
+              <el-table-column prop="orderNo" label="订单号" width="180" />
+              <el-table-column label="会员信息" min-width="150">
+                <template #default="{ row }">
+                  <div class="member-info">
+                    <el-avatar :size="32" :src="row.memberAvatar" v-if="row.memberAvatar" />
+                    <el-avatar :size="32" v-else><el-icon><User /></el-icon></el-avatar>
+                    <div class="member-detail">
+                      <div class="member-name">{{ row.memberName }}</div>
+                      <div class="member-phone">{{ row.memberPhone }}</div>
+                    </div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="套餐/教练" min-width="200">
+                <template #default="{ row }">
+                  <div>
+                    <div class="package-name-text">{{ row.packageName }}</div>
+                    <div class="coach-name-text" v-if="row.coachName">{{ row.coachName }}</div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="金额" width="120">
+                <template #default="{ row }">
+                  <span class="amount">¥{{ row.amount }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="支付方式" width="100">
+                <template #default="{ row }">
+                  <span>{{ row.payMethod }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="下单时间" width="180" prop="createTime" />
+              <el-table-column label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getOrderStatusType(row.status)">
+                    {{ row.statusLabel || row.status }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="180" fixed="right">
+                <template #default="{ row }">
+                  <el-button type="primary" link @click="handleViewCoachPackageOrder(row)">
+                    <el-icon><View /></el-icon>详情
+                  </el-button>
+                  <el-button v-if="row.status === 'PENDING'" type="success" link @click="handleConfirmCoachPackageOrder(row)">
+                    <el-icon><Check /></el-icon>确认收款
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div class="pagination-wrapper">
+              <el-pagination
+                v-model:current-page="coachPackageOrderPagination.page"
+                v-model:page-size="coachPackageOrderPagination.pageSize"
+                :page-sizes="[10, 20, 50]"
+                :total="coachPackageOrderPagination.total"
+                layout="total, sizes, prev, pager, next"
+                @size-change="fetchCoachPackageOrderData"
+                @current-change="fetchCoachPackageOrderData"
+              />
+            </div>
+          </div>
+        </el-tab-pane>
+
         <!-- 商品订单管理 -->
         <el-tab-pane name="product-order">
           <template #label>
@@ -152,8 +261,10 @@
                     style="width: 150px"
                   />
                   <el-select v-model="pointsExchangeSearch.status" placeholder="全部状态" clearable style="width: 120px">
-                    <el-option label="待处理" value="PENDING" />
+                    <el-option label="待支付" value="PENDING" />
+                    <el-option label="已支付" value="PAID" />
                     <el-option label="处理中" value="PROCESSING" />
+                    <el-option label="待取货" value="NOT_PICKED" />
                     <el-option label="已发货" value="SHIPPED" />
                     <el-option label="已完成" value="COMPLETED" />
                   </el-select>
@@ -226,8 +337,8 @@
                   <el-button v-if="row.status === 'PENDING'" type="success" link @click="handleProcessPointsExchange(row)">
                     <el-icon><Check /></el-icon>确认
                   </el-button>
-                  <el-button v-if="row.status === 'PAID'" type="warning" link @click="handleShipPointsExchange(row)">
-                    <el-icon><Box /></el-icon>发货
+                  <el-button v-if="row.status === 'NOT_PICKED'" type="success" link @click="handlePickupPointsExchange(row)">
+                    <el-icon><Check /></el-icon>确认取货
                   </el-button>
                 </template>
               </el-table-column>
@@ -317,53 +428,112 @@
         <el-button type="success" v-if="currentPointsExchange?.status === 'PENDING'" @click="handleProcessPointsExchange(currentPointsExchange)">
           开始处理
         </el-button>
-        <el-button type="warning" v-if="currentPointsExchange?.status === 'PROCESSING'" @click="handleShipPointsExchange(currentPointsExchange)">
-          确认发货
+        <el-button type="success" v-if="currentPointsExchange?.status === 'NOT_PICKED'" @click="handlePickupPointsExchange(currentPointsExchange)">
+          确认取货
         </el-button>
       </template>
     </el-dialog>
 
-    <!-- 发货弹窗 -->
-    <el-dialog v-model="shipDialogVisible" title="确认发货" width="500px">
+    <!-- 取货确认弹窗 -->
+    <el-dialog v-model="shipDialogVisible" title="取货确认" width="500px">
       <el-form ref="shipFormRef" :model="shipForm" :rules="shipRules" label-width="100px">
-        <el-form-item label="物流单号" prop="trackingNo">
-          <el-input v-model="shipForm.trackingNo" placeholder="请输入物流单号" />
-        </el-form-item>
-        <el-form-item label="物流公司" prop="carrier">
-          <el-select v-model="shipForm.carrier" placeholder="请选择物流公司" style="width: 100%">
-            <el-option label="顺丰速运" value="SF" />
-            <el-option label="中通快递" value="ZTO" />
-            <el-option label="圆通速递" value="YTO" />
-            <el-option label="申通快递" value="STO" />
-            <el-option label="韵达速递" value="YD" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="shipForm.remark" type="textarea" :rows="3" placeholder="可选填" />
+        <el-form-item label="取货码" prop="pickupCode">
+          <el-input v-model="shipForm.pickupCode" placeholder="请输入取货码" maxlength="10" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="shipDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitShip" :loading="submitting">确认发货</el-button>
+        <el-button type="primary" :loading="submitting" @click="handleSubmitShip">确认取货</el-button>
       </template>
     </el-dialog>
+
+    <!-- 私教套餐订单详情弹窗 -->
+    <el-dialog v-model="coachPackageOrderDetailVisible" title="私教套餐订单详情" width="700px" :close-on-click-modal="false">
+      <template v-if="currentCoachPackageOrder">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="订单号">{{ currentCoachPackageOrder.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="订单状态">
+            <el-tag :type="getOrderStatusType(currentCoachPackageOrder.status)">
+              {{ currentCoachPackageOrder.statusLabel || currentCoachPackageOrder.status }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="会员姓名">{{ currentCoachPackageOrder.memberName }}</el-descriptions-item>
+          <el-descriptions-item label="手机号">{{ currentCoachPackageOrder.memberPhone }}</el-descriptions-item>
+          <el-descriptions-item label="套餐名称">{{ currentCoachPackageOrder.packageName }}</el-descriptions-item>
+          <el-descriptions-item label="教练名称">{{ currentCoachPackageOrder.coachName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="金额">¥{{ currentCoachPackageOrder.amount }}</el-descriptions-item>
+          <el-descriptions-item label="支付方式">{{ currentCoachPackageOrder.payMethod }}</el-descriptions-item>
+          <el-descriptions-item label="下单时间">{{ currentCoachPackageOrder.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="支付时间">{{ currentCoachPackageOrder.payTime || '-' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <div class="order-timeline" v-if="currentCoachPackageOrder.timeline">
+          <h4>订单时间线</h4>
+          <el-timeline>
+            <el-timeline-item
+              v-for="(item, index) in currentCoachPackageOrder.timeline"
+              :key="index"
+              :type="item.type"
+              :timestamp="item.time"
+            >{{ item.content }}</el-timeline-item>
+          </el-timeline>
+        </div>
+      </template>
+      <template #footer>
+        <el-button @click="coachPackageOrderDetailVisible = false">关闭</el-button>
+        <el-button v-if="currentCoachPackageOrder?.status === 'PENDING'" type="success" @click="handleConfirmCoachPackageOrder(currentCoachPackageOrder)">确认收款</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 商品取货确认弹窗 -->
+    <el-dialog v-model="pickupDialogVisible" title="取货确认" width="450px">
+      <template v-if="currentPickupOrder">
+        <el-descriptions :column="1" border style="margin-bottom: 20px">
+          <el-descriptions-item label="订单号">{{ currentPickupOrder.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="会员">{{ currentPickupOrder.memberName }}</el-descriptions-item>
+          <el-descriptions-item label="商品">{{ currentPickupOrder.productName }}</el-descriptions-item>
+          <el-descriptions-item label="数量">x{{ currentPickupOrder.quantity }}</el-descriptions-item>
+        </el-descriptions>
+        <el-form ref="pickupFormRef" :model="pickupForm" :rules="pickupRules" label-width="80px">
+          <el-form-item label="取货码" prop="pickupCode">
+            <el-input v-model="pickupForm.pickupCode" placeholder="请输入会员提供的取货码" maxlength="10" />
+          </el-form-item>
+        </el-form>
+      </template>
+      <template #footer>
+        <el-button @click="pickupDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="pickupSubmitting" @click="handleSubmitPickup">确认取货</el-button>
+      </template>
+    </el-dialog>
+
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   CreditCard, Coin, Search, Download, View, Check, Box, ShoppingCart, TrendCharts, User
 } from '@element-plus/icons-vue'
+import { getAdminOrders, getAdminOrderDetail, confirmAdminOrder, shipAdminOrder, getAdminOrderStats, pickupAdminOrder } from '@/api/admin/order'
 
-// 统计数据
 const stats = ref([
-  { title: '今日订单', value: 28 },
-  { title: '今日收入', value: '¥12,580' },
-  { title: '待处理', value: 5 },
-  { title: '商品订单', value: 12 }
+  { title: '今日订单', value: 0 },
+  { title: '今日收入', value: '¥0' },
+  { title: '待处理', value: 0 },
+  { title: '商品订单', value: 0 }
 ])
+
+function fetchStats() {
+  getAdminOrderStats().then(data => {
+    stats.value = [
+      { title: '今日订单', value: data.todayOrders || 0 },
+      { title: '今日收入', value: '¥' + ((data.todayRevenue || 0)).toLocaleString() },
+      { title: '待处理', value: data.pendingCount || 0 },
+      { title: '商品订单', value: data.productOrderCount || 0 }
+    ]
+  }).catch(() => {})
+}
 
 // 当前标签页
 const activeTab = ref('membership-order')
@@ -384,8 +554,13 @@ const currentMembershipOrder = ref(null)
 const orderStatusMap = {
   PENDING: { label: '待支付', type: 'warning' },
   PAID: { label: '已支付', type: 'success' },
+  PROCESSING: { label: '处理中', type: 'primary' },
+  NOT_PICKED: { label: '待取货', type: 'warning' },
+  SHIPPED: { label: '已发货', type: 'success' },
   COMPLETED: { label: '已完成', type: 'primary' },
-  CANCELLED: { label: '已取消', type: 'info' }
+  CANCELLED: { label: '已取消', type: 'info' },
+  TIMEOUT: { label: '已超时', type: 'info' },
+  ACTIVATED: { label: '已激活', type: 'success' }
 }
 
 function getOrderStatusLabel(status) {
@@ -398,85 +573,75 @@ function getOrderStatusType(status) {
 
 function fetchMembershipOrderData() {
   loading.value = true
-  setTimeout(() => {
-    membershipOrderData.value = [
-      {
-        id: 1,
-        orderNo: 'MC20240115001',
-        memberName: '张三',
-        memberPhone: '138****8888',
-        memberAvatar: '',
-        cardName: '至尊年卡',
-        cardType: '年卡',
-        validityDays: 365,
-        amount: 3999,
-        payMethod: '微信支付',
-        createTime: '2024-01-15 14:30:25',
-        payTime: '2024-01-15 14:31:08',
-        status: 'COMPLETED',
-        timeline: [
-          { type: 'primary', time: '2024-01-15 14:30:25', content: '订单创建' },
-          { type: 'success', time: '2024-01-15 14:31:08', content: '支付成功 - 微信支付' },
-          { type: 'success', time: '2024-01-15 14:32:15', content: '会员卡已激活' },
-          { type: 'primary', time: '2024-01-15 14:32:15', content: '订单完成' }
-        ]
-      },
-      {
-        id: 2,
-        orderNo: 'MC20240115002',
-        memberName: '李四',
-        memberPhone: '139****6666',
-        memberAvatar: '',
-        cardName: '金卡季卡',
-        cardType: '季卡',
-        validityDays: 90,
-        amount: 1299,
-        payMethod: '支付宝',
-        createTime: '2024-01-15 13:22:18',
-        payTime: '2024-01-15 13:23:45',
-        status: 'COMPLETED',
-        timeline: [
-          { type: 'primary', time: '2024-01-15 13:22:18', content: '订单创建' },
-          { type: 'success', time: '2024-01-15 13:23:45', content: '支付成功 - 支付宝' },
-          { type: 'success', time: '2024-01-15 13:25:00', content: '会员卡已激活' },
-          { type: 'primary', time: '2024-01-15 13:25:00', content: '订单完成' }
-        ]
-      },
-      {
-        id: 3,
-        orderNo: 'MC20240115003',
-        memberName: '王五',
-        memberPhone: '137****5555',
-        memberAvatar: '',
-        cardName: '银卡月卡',
-        cardType: '月卡',
-        validityDays: 30,
-        amount: 499,
-        payMethod: '微信支付',
-        createTime: '2024-01-15 11:05:42',
-        payTime: null,
-        status: 'PENDING',
-        timeline: [
-          { type: 'primary', time: '2024-01-15 11:05:42', content: '订单创建' },
-          { type: 'warning', time: '-', content: '等待支付' }
-        ]
-      }
-    ]
-    membershipOrderPagination.total = 3
+  const params = {
+    page: membershipOrderPagination.page,
+    pageSize: membershipOrderPagination.pageSize,
+    orderType: 'MEMBERSHIP'
+  }
+  if (membershipOrderSearch.orderNo) params.keyword = membershipOrderSearch.orderNo
+  if (membershipOrderSearch.status) params.status = membershipOrderSearch.status
+  if (membershipOrderSearch.dateRange) {
+    params.startTime = formatDateParam(membershipOrderSearch.dateRange[0])
+    params.endTime = formatDateParam(membershipOrderSearch.dateRange[1]) + ' 23:59:59'
+  }
+
+  getAdminOrders(params).then(data => {
+    membershipOrderData.value = (data.records || []).map(order => ({
+      id: order.id,
+      orderNo: order.orderNo,
+      memberName: order.userName || '-',
+      memberPhone: maskPhone(order.userPhone),
+      memberAvatar: order.userAvatar || '',
+      cardName: order.membershipExt?.cardName || '-',
+      cardType: order.membershipExt?.cardName || '-',
+      validityDays: order.membershipExt?.expireTime ? '-' : '-',
+      amount: order.payAmount,
+      payMethod: order.payMethodLabel || order.payMethod || '-',
+      createTime: order.createTime,
+      payTime: order.payTime || null,
+      status: order.status,
+      statusLabel: order.statusLabel,
+      timeline: buildTimeline(order)
+    }))
+    membershipOrderPagination.total = data.total || 0
     loading.value = false
-  }, 300)
+  }).catch(() => {
+    membershipOrderData.value = []
+    membershipOrderPagination.total = 0
+    loading.value = false
+  })
 }
 
 function handleViewMembershipOrder(row) {
-  currentMembershipOrder.value = row
-  membershipOrderDetailVisible.value = true
+  getAdminOrderDetail(row.orderNo).then(order => {
+    currentMembershipOrder.value = {
+      ...row,
+      memberName: order.userName || row.memberName,
+      memberPhone: order.userPhone || row.memberPhone,
+      amount: order.payAmount,
+      payMethod: order.payMethodLabel || row.payMethod,
+      cardName: order.membershipExt?.cardName || row.cardName,
+      validityDays: order.membershipExt?.expireTime || '-',
+      payTime: order.payTime || null,
+      timeline: buildTimeline(order)
+    }
+    membershipOrderDetailVisible.value = true
+  }).catch(() => {
+    currentMembershipOrder.value = row
+    membershipOrderDetailVisible.value = true
+  })
 }
 
 function handleConfirmMembershipOrder(row) {
   ElMessageBox.confirm(`确认已收到会员 "${row.memberName}" 的付款吗？`, '提示', { type: 'info' }).then(() => {
-    ElMessage.success('订单已确认')
-    fetchMembershipOrderData()
-    membershipOrderDetailVisible.value = false
+    confirmAdminOrder(row.orderNo).then(() => {
+      ElMessage.success('订单已确认')
+      fetchMembershipOrderData()
+      fetchStats()
+      membershipOrderDetailVisible.value = false
+    }).catch(() => {
+      ElMessage.error('确认失败')
+    })
   })
 }
 
@@ -497,18 +662,17 @@ const currentPointsExchange = ref(null)
 const shipDialogVisible = ref(false)
 const shipFormRef = ref(null)
 const shipForm = reactive({
-  trackingNo: '',
-  carrier: '',
-  remark: ''
+  pickupCode: ''
 })
 const shipRules = {
-  trackingNo: [{ required: true, message: '请输入物流单号', trigger: 'blur' }],
-  carrier: [{ required: true, message: '请选择物流公司', trigger: 'change' }]
+  pickupCode: [{ required: true, message: '请输入取货码', trigger: 'blur' }]
 }
 
 const exchangeStatusMap = {
   PENDING: { label: '待处理', type: 'warning' },
+  PAID: { label: '已支付', type: 'success' },
   PROCESSING: { label: '处理中', type: 'primary' },
+  NOT_PICKED: { label: '待取货', type: 'warning' },
   SHIPPED: { label: '已发货', type: 'success' },
   COMPLETED: { label: '已完成', type: 'success' }
 }
@@ -523,77 +687,80 @@ function getExchangeStatusType(status) {
 
 function fetchPointsExchangeData() {
   loading.value = true
-  setTimeout(() => {
-    pointsExchangeData.value = [
-      {
-        id: 1,
-        orderNo: 'PE20240115001',
-        memberName: '赵六',
-        memberPhone: '136****4444',
-        memberAvatar: '',
-        productName: '乳清蛋白粉 5磅',
-        quantity: 1,
-        points: 3500,
-        remainingPoints: 5200,
-        createTime: '2024-01-15 15:20:30',
-        status: 'PENDING',
-        trackingNo: null,
-        address: '北京市朝阳区xxx街道xxx号'
-      },
-      {
-        id: 2,
-        orderNo: 'PE20240115002',
-        memberName: '钱七',
-        memberPhone: '135****3333',
-        memberAvatar: '',
-        productName: '可调节哑铃套装',
-        quantity: 1,
-        points: 8800,
-        remainingPoints: 1200,
-        createTime: '2024-01-15 14:15:22',
-        status: 'PROCESSING',
-        trackingNo: null,
-        address: '上海市浦东新区xxx路xxx号'
-      },
-      {
-        id: 3,
-        orderNo: 'PE20240115003',
-        memberName: '孙八',
-        memberPhone: '134****2222',
-        memberAvatar: '',
-        productName: '专业训练运动鞋',
-        quantity: 1,
-        points: 5200,
-        remainingPoints: 800,
-        createTime: '2024-01-15 10:30:45',
-        status: 'SHIPPED',
-        trackingNo: 'SF1234567890',
-        address: '广州市天河区xxx大道xxx号'
-      }
-    ]
-    pointsExchangePagination.total = 3
+  const params = {
+    page: pointsExchangePagination.page,
+    pageSize: pointsExchangePagination.pageSize,
+    orderType: 'PRODUCT'
+  }
+  if (pointsExchangeSearch.orderNo) params.keyword = pointsExchangeSearch.orderNo
+  if (pointsExchangeSearch.status) params.status = pointsExchangeSearch.status
+
+  getAdminOrders(params).then(data => {
+    pointsExchangeData.value = (data.records || []).map(order => ({
+      id: order.id,
+      orderNo: order.orderNo,
+      memberName: order.userName || '-',
+      memberPhone: maskPhone(order.userPhone),
+      memberAvatar: order.userAvatar || '',
+      productName: order.productExt?.productName || '-',
+      quantity: order.productExt?.quantity || 1,
+      originalPrice: order.originalAmount ? (order.productExt?.quantity > 0 ? order.originalAmount / order.productExt.quantity : order.originalAmount) : 0,
+      payAmount: order.payAmount || 0,
+      pointsDiscount: order.productExt?.pointsDiscount || 0,
+      points: order.productExt?.pointsUsed || 0,
+      payMethod: order.payMethodLabel || order.payMethod || '-',
+      createTime: order.createTime,
+      status: order.status,
+      statusLabel: order.statusLabel,
+      trackingNo: order.productExt?.trackingNo || null,
+      address: order.productExt?.address || '-'
+    }))
+    pointsExchangePagination.total = data.total || 0
     loading.value = false
-  }, 300)
+  }).catch(() => {
+    pointsExchangeData.value = []
+    pointsExchangePagination.total = 0
+    loading.value = false
+  })
 }
 
 function handleViewPointsExchange(row) {
-  currentPointsExchange.value = row
-  pointsExchangeDetailVisible.value = true
+  getAdminOrderDetail(row.orderNo).then(order => {
+    currentPointsExchange.value = {
+      ...row,
+      memberName: order.userName || row.memberName,
+      memberPhone: order.userPhone || row.memberPhone,
+      productName: order.productExt?.productName || row.productName,
+      points: order.productExt?.pointsUsed || row.points,
+      quantity: order.productExt?.quantity || row.quantity,
+      trackingNo: order.productExt?.trackingNo || null,
+      address: order.productExt?.address || row.address,
+      payAmount: order.payAmount,
+      status: order.status
+    }
+    pointsExchangeDetailVisible.value = true
+  }).catch(() => {
+    currentPointsExchange.value = row
+    pointsExchangeDetailVisible.value = true
+  })
 }
 
 function handleProcessPointsExchange(row) {
   ElMessageBox.confirm(`开始处理 "${row.memberName}" 的兑换订单？`, '提示', { type: 'info' }).then(() => {
-    ElMessage.success('订单处理中')
-    fetchPointsExchangeData()
-    pointsExchangeDetailVisible.value = false
+    confirmAdminOrder(row.orderNo).then(() => {
+      ElMessage.success('订单已确认处理')
+      fetchPointsExchangeData()
+      fetchStats()
+      pointsExchangeDetailVisible.value = false
+    }).catch(() => {
+      ElMessage.error('处理失败')
+    })
   })
 }
 
 function handleShipPointsExchange(row) {
   currentPointsExchange.value = row
-  shipForm.trackingNo = ''
-  shipForm.carrier = ''
-  shipForm.remark = ''
+  shipForm.pickupCode = ''
   shipDialogVisible.value = true
 }
 
@@ -603,13 +770,57 @@ function handleSubmitShip() {
   shipFormRef.value?.validate((valid) => {
     if (valid) {
       submitting.value = true
-      setTimeout(() => {
-        ElMessage.success('发货成功')
+      pickupAdminOrder(currentPointsExchange.value.orderNo, {
+        pickupCode: shipForm.pickupCode
+      }).then(() => {
+        ElMessage.success('取货确认成功')
         shipDialogVisible.value = false
         fetchPointsExchangeData()
+        fetchStats()
         pointsExchangeDetailVisible.value = false
         submitting.value = false
-      }, 500)
+      }).catch(() => {
+        ElMessage.error('取货确认失败，请检查取货码是否正确')
+        submitting.value = false
+      })
+    }
+  })
+}
+
+const pickupDialogVisible = ref(false)
+const currentPickupOrder = ref(null)
+const pickupFormRef = ref(null)
+const pickupSubmitting = ref(false)
+const pickupForm = reactive({
+  pickupCode: ''
+})
+const pickupRules = {
+  pickupCode: [{ required: true, message: '请输入取货码', trigger: 'blur' }]
+}
+
+function handlePickupPointsExchange(row) {
+  currentPickupOrder.value = row
+  pickupForm.pickupCode = ''
+  pickupDialogVisible.value = true
+}
+
+function handleSubmitPickup() {
+  pickupFormRef.value?.validate((valid) => {
+    if (valid) {
+      pickupSubmitting.value = true
+      pickupAdminOrder(currentPickupOrder.value.orderNo, {
+        pickupCode: pickupForm.pickupCode
+      }).then(() => {
+        ElMessage.success('取货确认成功')
+        pickupDialogVisible.value = false
+        fetchPointsExchangeData()
+        fetchStats()
+        pointsExchangeDetailVisible.value = false
+        pickupSubmitting.value = false
+      }).catch(() => {
+        ElMessage.error('取货确认失败，请检查取货码是否正确')
+        pickupSubmitting.value = false
+      })
     }
   })
 }
@@ -618,15 +829,168 @@ function handleExportPointsExchange() {
   ElMessage.success('积分兑换订单导出成功')
 }
 
+// ========== 私教套餐订单 ==========
+const coachPackageOrderSearch = reactive({
+  orderNo: '',
+  status: ''
+})
+const coachPackageOrderData = ref([])
+const coachPackageOrderPagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const coachPackageOrderDetailVisible = ref(false)
+const currentCoachPackageOrder = ref(null)
+
+function fetchCoachPackageOrderData() {
+  loading.value = true
+  const params = {
+    page: coachPackageOrderPagination.page,
+    pageSize: coachPackageOrderPagination.pageSize,
+    orderType: 'COACH_PACKAGE'
+  }
+  if (coachPackageOrderSearch.orderNo) params.keyword = coachPackageOrderSearch.orderNo
+  if (coachPackageOrderSearch.status) params.status = coachPackageOrderSearch.status
+
+  getAdminOrders(params).then(data => {
+    coachPackageOrderData.value = (data.records || []).map(order => ({
+      id: order.id,
+      orderNo: order.orderNo,
+      memberName: order.userName || '-',
+      memberPhone: maskPhone(order.userPhone),
+      memberAvatar: order.userAvatar || '',
+      packageName: order.coachPackageExt?.packageName || '-',
+      coachName: order.coachPackageExt?.coachName || '-',
+      amount: order.payAmount,
+      payMethod: order.payMethodLabel || order.payMethod || '-',
+      createTime: order.createTime,
+      payTime: order.payTime || null,
+      status: order.status,
+      statusLabel: order.statusLabel,
+      timeline: buildTimeline(order)
+    }))
+    coachPackageOrderPagination.total = data.total || 0
+    loading.value = false
+  }).catch(() => {
+    coachPackageOrderData.value = []
+    coachPackageOrderPagination.total = 0
+    loading.value = false
+  })
+}
+
+function handleCoachPackageOrderSearch() {
+  coachPackageOrderPagination.page = 1
+  fetchCoachPackageOrderData()
+}
+
+function handleCoachPackageOrderReset() {
+  coachPackageOrderSearch.orderNo = ''
+  coachPackageOrderSearch.status = ''
+  handleCoachPackageOrderSearch()
+}
+
+function handleViewCoachPackageOrder(row) {
+  getAdminOrderDetail(row.orderNo).then(order => {
+    currentCoachPackageOrder.value = {
+      ...row,
+      memberName: order.userName || row.memberName,
+      memberPhone: order.userPhone || row.memberPhone,
+      packageName: order.coachPackageExt?.packageName || row.packageName,
+      coachName: order.coachPackageExt?.coachName || row.coachName,
+      amount: order.payAmount,
+      payMethod: order.payMethodLabel || row.payMethod,
+      payTime: order.payTime || null,
+      timeline: buildTimeline(order)
+    }
+    coachPackageOrderDetailVisible.value = true
+  }).catch(() => {
+    currentCoachPackageOrder.value = row
+    coachPackageOrderDetailVisible.value = true
+  })
+}
+
+function handleConfirmCoachPackageOrder(row) {
+  ElMessageBox.confirm(`确认已收到会员 "${row.memberName}" 的付款吗？`, '提示', { type: 'info' }).then(() => {
+    confirmAdminOrder(row.orderNo).then(() => {
+      ElMessage.success('订单已确认')
+      fetchCoachPackageOrderData()
+      fetchStats()
+      coachPackageOrderDetailVisible.value = false
+    }).catch(() => {
+      ElMessage.error('确认失败')
+    })
+  })
+}
+
 function handleTabChange() {
   if (activeTab.value === 'membership-order') {
     fetchMembershipOrderData()
-  } else {
+  } else if (activeTab.value === 'product-order') {
     fetchPointsExchangeData()
+  } else if (activeTab.value === 'coach-package-order') {
+    fetchCoachPackageOrderData()
   }
 }
 
+watch(() => membershipOrderPagination.page, () => {
+  if (activeTab.value === 'membership-order') fetchMembershipOrderData()
+})
+watch(() => membershipOrderPagination.pageSize, () => {
+  membershipOrderPagination.page = 1
+  if (activeTab.value === 'membership-order') fetchMembershipOrderData()
+})
+watch(() => pointsExchangePagination.page, () => {
+  if (activeTab.value === 'product-order') fetchPointsExchangeData()
+})
+watch(() => pointsExchangePagination.pageSize, () => {
+  pointsExchangePagination.page = 1
+  if (activeTab.value === 'product-order') fetchPointsExchangeData()
+})
+watch(() => coachPackageOrderPagination.page, () => {
+  if (activeTab.value === 'coach-package-order') fetchCoachPackageOrderData()
+})
+watch(() => coachPackageOrderPagination.pageSize, () => {
+  coachPackageOrderPagination.page = 1
+  if (activeTab.value === 'coach-package-order') fetchCoachPackageOrderData()
+})
+
+function formatDateParam(date) {
+  if (!date) return null
+  const d = new Date(date)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day} 00:00:00`
+}
+
+function maskPhone(phone) {
+  if (!phone) return '-'
+  if (phone.length === 11) {
+    return phone.substring(0, 3) + '****' + phone.substring(7)
+  }
+  return phone
+}
+
+function buildTimeline(order) {
+  const timeline = []
+  timeline.push({ type: 'primary', time: order.createTime, content: '订单创建' })
+  if (order.payTime) {
+    const payLabel = order.payMethodLabel || '支付'
+    timeline.push({ type: 'success', time: order.payTime, content: `支付成功 - ${payLabel}` })
+  } else if (order.status === 'PENDING') {
+    timeline.push({ type: 'warning', time: '-', content: '等待支付' })
+  }
+  if (order.status === 'COMPLETED') {
+    timeline.push({ type: 'primary', time: order.createTime, content: '订单完成' })
+  }
+  if (order.status === 'SHIPPED') {
+    timeline.push({ type: 'success', time: order.createTime, content: '已发货' })
+  }
+  if (order.status === 'CANCELLED') {
+    timeline.push({ type: 'info', time: order.createTime, content: '订单已取消' })
+  }
+  return timeline
+}
+
 onMounted(() => {
+  fetchStats()
   fetchMembershipOrderData()
 })
 </script>
@@ -721,6 +1085,21 @@ onMounted(() => {
 .product-quantity {
   font-size: 12px;
   color: #909399;
+}
+
+.package-name-text {
+  font-weight: 500;
+  color: #303133;
+}
+
+.coach-name-text {
+  font-size: 12px;
+  color: #909399;
+}
+
+.amount {
+  font-weight: 600;
+  color: #f56c6c;
 }
 
 .price {

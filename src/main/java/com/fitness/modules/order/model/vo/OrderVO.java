@@ -29,6 +29,10 @@ public class OrderVO {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
+    private String userName;
+    private String userPhone;
+    private String userAvatar;
+
     private ProductOrderExt productExt;
     private CoachPackageOrderExt coachPackageExt;
     private MembershipOrderExt membershipExt;
