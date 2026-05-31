@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 networks:
   fitness-ai-net:
@@ -80,7 +80,9 @@ services:
       MYSQL_PASSWORD: myMysqlPass123
     command: --default-authentication-plugin=mysql_native_password
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
     container_name: fitness-rabbitmq
     restart: unless-stopped
     networks:

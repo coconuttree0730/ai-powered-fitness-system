@@ -48,6 +48,25 @@ spring:
           min-idle: ${REDIS_POOL_MIN_IDLE:2}
           max-wait: ${REDIS_POOL_MAX_WAIT:-1ms}
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:172.19.55.232}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:fitness_rabbit}
+    password: ${RABBITMQ_PASSWORD:myRabbitPass123}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    connection-name: fitness-system
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000ms
+          multiplier: 2.0
+          max-interval: 10000ms
+
   servlet:
     multipart:
       max-file-size: ${MULTIPART_MAX_FILE_SIZE:50MB}

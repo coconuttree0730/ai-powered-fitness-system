@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
+@Deprecated
 @Component
 public class PlanGenerationTaskManager {
 

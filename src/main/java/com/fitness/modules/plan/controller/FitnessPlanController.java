@@ -111,8 +111,10 @@ public class FitnessPlanController {
     /**
      * 异步生成健身计划（从个人档案）
      * 立即返回任务ID，前端轮询获取结果
+     * @deprecated 使用 {@link #generatePlanFromProfileAsyncV2()} 替代，基于MQ持久化
      */
-    @Operation(summary = "异步从个人档案生成健身计划")
+    @Deprecated
+    @Operation(summary = "异步从个人档案生成健身计划（旧版，内存TaskManager）")
     @PostMapping("/generate-from-profile/async")
     @PreAuthorize("hasRole('MEMBER')")
     public Result<Map<String, String>> generatePlanFromProfileAsync() {
@@ -123,6 +125,23 @@ public class FitnessPlanController {
         Map<String, String> response = new java.util.HashMap<>();
         response.put("taskId", task.getTaskId());
         response.put("status", task.getStatus().name());
+        return Result.success(response);
+    }
+
+    /**
+     * 异步生成健身计划（MQ版本）
+     * 创建计划记录并发送MQ消息，立即返回planId，前端轮询 GET /api/v1/plans/{planId} 获取状态
+     */
+    @Operation(summary = "异步从个人档案生成健身计划（MQ版本）")
+    @PostMapping("/generate-from-profile/async-v2")
+    @PreAuthorize("hasRole('MEMBER')")
+    public Result<Map<String, Object>> generatePlanFromProfileAsyncV2() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("MQ异步生成健身计划请求: userId={}", userId);
+        Long planId = fitnessPlanService.generatePlanAsync(userId);
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("planId", planId);
+        response.put("status", "PROCESSING");
         return Result.success(response);
     }
 

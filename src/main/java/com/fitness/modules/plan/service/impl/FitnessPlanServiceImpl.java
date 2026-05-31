@@ -2,8 +2,11 @@ package com.fitness.modules.plan.service.impl;
 
 import com.fitness.common.constants.ErrorCode;
 import com.fitness.common.exception.BusinessException;
+import com.fitness.config.RabbitMQConfig;
 import com.fitness.integration.ai.model.dto.FitnessPlanResponseDTO;
 import com.fitness.integration.ai.service.AIService;
+import com.fitness.integration.mq.MqMessageSender;
+import com.fitness.integration.mq.message.PlanGenerationMessage;
 import com.fitness.modules.course.model.vo.CourseCardVO;
 import com.fitness.modules.course.service.CourseService;
 import com.fitness.modules.equipment.model.dto.EquipmentQueryDTO;
@@ -50,6 +53,7 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
     private final EquipmentService equipmentService;
     private final ObjectMapper objectMapper;
     private final PlanGenerationTaskManager taskManager;
+    private final MqMessageSender mqMessageSender;
 
     // 缓存课程和器械数据，用于校验LLM返回的数据
     @Override
@@ -150,6 +154,61 @@ public class FitnessPlanServiceImpl implements FitnessPlanService {
         } catch (Exception e) {
             log.error("异步生成健身计划失败: userId={}, taskId={}, error={}", userId, taskId, e.getMessage(), e);
             taskManager.markFailed(taskId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long generatePlanAsync(Long userId) {
+        log.info("MQ异步生成健身计划: userId={}", userId);
+
+        if (!userFitnessProfileService.isProfileComplete(userId)) {
+            throw new BusinessException(ErrorCode.PROFILE_NOT_COMPLETE);
+        }
+        UserFitnessProfileVO profile = userFitnessProfileService.getProfile(userId);
+
+        FitnessPlan plan = new FitnessPlan();
+        plan.setUserId(userId);
+        plan.setPlanName("AI生成计划");
+        plan.setGoal(profile.getFitnessGoal());
+        plan.setDuration(7);
+        plan.setLevel(profile.getExperience());
+        plan.setStatus(0);
+        plan.setHeight(profile.getHeight());
+        plan.setWeight(profile.getWeight());
+        plan.setAge(profile.getAge());
+        plan.setGender(profile.getGender());
+        plan.setExperience(profile.getExperience());
+        plan.setFitnessGoal(profile.getFitnessGoal());
+        fitnessPlanMapper.insert(plan);
+
+        PlanGenerationMessage message = new PlanGenerationMessage(userId, plan.getId());
+        mqMessageSender.send(RabbitMQConfig.AI_EXCHANGE,
+                RabbitMQConfig.AI_PLAN_GENERATION_ROUTING_KEY, message);
+        log.info("计划生成消息已发送到MQ: userId={}, planId={}", userId, plan.getId());
+        return plan.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void processPlanGeneration(Long planId, Long userId) {
+        FitnessPlan plan = fitnessPlanMapper.selectById(planId);
+        if (plan == null) {
+            log.warn("计划不存在: planId={}", planId);
+            return;
+        }
+
+        try {
+            Map<String, Object> planData = generatePlanFromProfile(userId);
+            plan.setPlanDataJson(planData);
+            plan.setStatus(1);
+            fitnessPlanMapper.updateById(plan);
+            log.info("计划生成成功: planId={}, userId={}", planId, userId);
+        } catch (Exception e) {
+            log.error("计划生成失败: planId={}, userId={}, error={}", planId, userId, e.getMessage(), e);
+            plan.setStatus(2);
+            fitnessPlanMapper.updateById(plan);
+            throw new BusinessException(ErrorCode.AI_GENERATE_ERROR);
         }
     }
 

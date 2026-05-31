@@ -29,7 +29,7 @@ public class JacksonConfig {
 
     private static final String DATE_PATTERN = "yyyy-MM-dd";
     private static final String DATETIME_PATTERN = "yyyy-MM-dd HH:mm";
-    private static final String TIME_PATTERN = "HH:mm";
+    private static final String TIME_PATTERN = "HH:mm:ss";
 
     @Bean
     @Primary

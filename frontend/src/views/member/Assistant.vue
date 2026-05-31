@@ -16,7 +16,7 @@
             <!-- 跳过渲染空的 AI 消息（当正在显示"正在输入"动画时） -->
             <template v-if="!(msg.type === 'ai' && !msg.content && !msg.statusText && isAiTyping)">
               <div class="message-avatar">
-                <img v-if="msg.type === 'ai'" src="/ai.png" alt="AI" class="avatar-img" />
+                <img v-if="msg.type === 'ai'" src="/ai.jpg" alt="AI" class="avatar-img" />
                 <img v-else-if="userAvatarUrl" :src="userAvatarUrl" alt="用户" class="avatar-img" />
                 <span v-else>{{ userAvatarText }}</span>
               </div>
@@ -64,7 +64,7 @@
           <!-- 健身计划生成中动画 -->
           <div v-if="planGenerationStore.isGenerating" class="message ai plan-generating-message">
             <div class="message-avatar">
-              <img src="/ai.png" alt="AI" class="avatar-img" />
+              <img src="/ai.jpg" alt="AI" class="avatar-img" />
             </div>
             <div class="message-content plan-generating-content">
               <div class="plan-generating-animation">
@@ -111,7 +111,7 @@
           <transition name="plan-fade">
             <div v-if="showPlanPreview && fitnessPlanData" class="message ai plan-message-wrapper">
               <div class="message-avatar">
-              <img src="/ai.png" alt="AI" class="avatar-img" />
+              <img src="/ai.jpg" alt="AI" class="avatar-img" />
             </div>
             <div class="message-content plan-message-content">
                 <FitnessPlanPreview

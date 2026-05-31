@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -19,4 +20,8 @@ public interface FitnessPlanMapper extends BaseMapper<FitnessPlan> {
     @Select("SELECT * FROM fitness_plan WHERE user_id = #{userId} AND deleted = false ORDER BY create_time DESC LIMIT 1")
     @ResultMap("BaseResultMap")
     FitnessPlan selectLatestByUserId(@Param("userId") Long userId);
+
+    @Update("UPDATE fitness_plan SET status = #{status}, plan_data_json = #{planDataJson}::jsonb, update_time = NOW() WHERE id = #{planId}")
+    int updatePlanStatus(@Param("planId") Long planId, @Param("status") Integer status,
+                         @Param("planDataJson") String planDataJson);
 }

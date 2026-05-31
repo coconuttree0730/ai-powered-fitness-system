@@ -21,6 +21,10 @@ public interface OrderService extends IService<Order> {
 
     void handleAlipayCallback(Map<String, String> params);
 
+    Order markOrderPaid(Map<String, String> params);
+
+    void handlePostPaidProcess(Long orderId);
+
     OrderVO getOrderDetail(String orderNo);
 
     OrderVO getOrderDetail(String orderNo, Long userId);
@@ -30,6 +34,8 @@ public interface OrderService extends IService<Order> {
     void cancelOrder(String orderNo, Long userId);
 
     void handleTimeoutOrders();
+
+    void handleTimeoutOrder(Long orderId, String orderNo);
 
     Order selectByOrderNo(String orderNo);
 

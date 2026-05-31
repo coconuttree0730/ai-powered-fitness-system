@@ -15,6 +15,10 @@ public interface FitnessPlanService {
 
     void executeAsyncGeneration(Long userId, String taskId);
 
+    Long generatePlanAsync(Long userId);
+
+    void processPlanGeneration(Long planId, Long userId);
+
     List<PlanVO> getPlanList(Long userId);
 
     PlanVO getPlanDetail(Long userId, Long planId);

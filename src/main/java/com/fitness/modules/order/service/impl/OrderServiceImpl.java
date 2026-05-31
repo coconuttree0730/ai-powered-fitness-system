@@ -9,6 +9,10 @@ import com.fitness.common.result.PageResult;
 import com.fitness.common.exception.BusinessException;
 import com.fitness.common.cache.RedisCacheNames;
 import com.fitness.common.cache.RedisTemplateCacheSupport;
+import com.fitness.config.RabbitMQConfig;
+import com.fitness.integration.mq.MqMessageSender;
+import com.fitness.integration.mq.message.OrderTimeoutMessage;
+import com.fitness.integration.mq.message.PaymentSuccessMessage;
 import com.fitness.integration.payment.service.AlipayService;
 import com.fitness.modules.coach.mapper.CoachPackageMapper;
 import com.fitness.modules.coach.model.entity.CoachPackage;
@@ -78,6 +82,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
     private final CoachStudentService coachStudentService;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplateCacheSupport redisTemplateCacheSupport;
+    private final MqMessageSender mqMessageSender;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -173,6 +178,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         order.setStatus(OrderStatusEnum.PENDING.getCode());
         order.setRemark(dto.getRemark());
         save(order);
+        sendOrderTimeoutMessage(order);
 
         ProductOrderExt ext = new ProductOrderExt();
         ext.setOrderId(order.getId());
@@ -211,6 +217,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         order.setStatus(OrderStatusEnum.PENDING.getCode());
         order.setRemark(dto.getRemark());
         save(order);
+        sendOrderTimeoutMessage(order);
 
         CoachPackageOrderExt ext = new CoachPackageOrderExt();
         ext.setOrderId(order.getId());
@@ -247,6 +254,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         order.setStatus(OrderStatusEnum.PENDING.getCode());
         order.setRemark(dto.getRemark());
         save(order);
+        sendOrderTimeoutMessage(order);
 
         MembershipOrderExt ext = new MembershipOrderExt();
         ext.setOrderId(order.getId());
@@ -329,8 +337,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void handleAlipayCallback(Map<String, String> params) {
-        log.info("处理订单支付宝回调: {}", params);
+    public Order markOrderPaid(Map<String, String> params) {
+        log.info("标记订单支付成功: {}", params);
 
         if (!alipayService.verifyNotify(params)) {
             log.error("支付宝回调验签失败");
@@ -350,7 +358,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
 
         if (!OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
             log.warn("订单状态不是待支付，无需处理: orderNo={}, status={}", orderNo, order.getStatus());
-            return;
+            return order;
         }
 
         if (totalAmount != null) {
@@ -362,29 +370,50 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             }
         }
 
-        if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
-            log.debug("处理支付成功: orderNo={}", orderNo);
+        if (!"TRADE_SUCCESS".equals(tradeStatus) && !"TRADE_FINISHED".equals(tradeStatus)) {
+            log.warn("支付宝回调状态非成功: orderNo={}, tradeStatus={}", orderNo, tradeStatus);
+            return order;
+        }
 
-            order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
-            order.setPayTime(LocalDateTime.now());
-            order.setAlipayTradeNo(tradeNo);
+        order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
+        order.setPayTime(LocalDateTime.now());
+        order.setAlipayTradeNo(tradeNo);
+        order.setStatus(OrderStatusEnum.PAID.getCode());
+        updateById(order);
 
+        log.info("订单标记为已支付: orderNo={}, tradeNo={}, userId={}", orderNo, tradeNo, order.getUserId());
+        return order;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void handlePostPaidProcess(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            log.warn("后置处理订单不存在: orderId={}", orderId);
+            return;
+        }
+        handlePostPaidLogic(order);
+        if (order.getStatus() == null || OrderStatusEnum.PAID.getCode().equals(order.getStatus())) {
+            updateById(order);
+        }
+        log.info("支付后置处理完成: orderId={}, orderNo={}, status={}", orderId, order.getOrderNo(), order.getStatus());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void handleAlipayCallback(Map<String, String> params) {
+        Order order = markOrderPaid(params);
+        if (order != null && OrderStatusEnum.PAID.getCode().equals(order.getStatus())) {
             try {
                 handlePostPaidLogic(order);
+                if (order.getStatus() == null) {
+                    order.setStatus(OrderStatusEnum.PAID.getCode());
+                }
+                updateById(order);
             } catch (BusinessException e) {
-                log.error("支付后置处理失败，订单保持待处理: orderNo={}, error={}", orderNo, e.getMessage());
-                return;
+                log.error("支付后置处理失败，订单保持待处理: orderNo={}, error={}", order.getOrderNo(), e.getMessage());
             }
-
-            if (order.getStatus() == null) {
-                order.setStatus(OrderStatusEnum.PAID.getCode());
-            }
-            updateById(order);
-
-            log.info("订单支付宝支付成功: orderNo={}, tradeNo={}, userId={}, status={}", orderNo, tradeNo, order.getUserId(),
-                    order.getStatus());
-        } else {
-            log.warn("支付宝回调状态非成功: orderNo={}, tradeStatus={}", orderNo, tradeStatus);
         }
     }
 
@@ -542,20 +571,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
         log.info("Sync paid Alipay order: orderNo={}, alipayStatus={}",
                 order.getOrderNo(), alipayStatus);
 
-        try {
-            handlePostPaidLogic(order);
-        } catch (BusinessException e) {
-            log.error("同步支付后后置处理失败，订单保持待处理: orderNo={}, error={}",
-                    order.getOrderNo(), e.getMessage());
-            return;
-        }
-
-        if (order.getStatus() == null) {
-            order.setStatus(OrderStatusEnum.PAID.getCode());
-        }
         order.setPayMethod(PayMethodEnum.ALIPAY.getCode());
         order.setPayTime(LocalDateTime.now());
+        order.setStatus(OrderStatusEnum.PAID.getCode());
         updateById(order);
+
+        PaymentSuccessMessage message = new PaymentSuccessMessage(
+                order.getId(), order.getOrderNo(), order.getOrderType());
+        mqMessageSender.send(RabbitMQConfig.PAYMENT_EXCHANGE,
+                RabbitMQConfig.PAYMENT_SUCCESS_ROUTING_KEY, message);
+        log.info("同步支付成功，已发送MQ消息触发后置处理: orderNo={}", order.getOrderNo());
     }
 
     @Override
@@ -601,6 +626,33 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
             redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
             log.info("批量处理超时订单完成，共处理 {} 条", timeoutOrders.size());
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void handleTimeoutOrder(Long orderId, String orderNo) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            log.warn("超时订单不存在: orderId={}", orderId);
+            return;
+        }
+        if (!OrderStatusEnum.PENDING.getCode().equals(order.getStatus())) {
+            log.info("订单状态不是待支付，跳过超时处理: orderNo={}, status={}", orderNo, order.getStatus());
+            return;
+        }
+        refundProductPointsIfNeeded(order);
+        releaseStockReservation(order);
+        order.setStatus(OrderStatusEnum.TIMEOUT.getCode());
+        updateById(order);
+        redisTemplateCacheSupport.evictAll(RedisCacheNames.PRODUCT_PUBLIC_LIST);
+        log.info("订单超时自动取消: orderNo={}", orderNo);
+    }
+
+    private void sendOrderTimeoutMessage(Order order) {
+        OrderTimeoutMessage message = new OrderTimeoutMessage(order.getId(), order.getOrderNo());
+        long delayMs = ORDER_TIMEOUT_MINUTES * 60 * 1000L;
+        mqMessageSender.sendDelayed(RabbitMQConfig.ORDER_DELAYED_EXCHANGE,
+                RabbitMQConfig.ORDER_TIMEOUT_ROUTING_KEY, message, delayMs);
     }
 
     @Override

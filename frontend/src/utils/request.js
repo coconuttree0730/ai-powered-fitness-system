@@ -2,6 +2,7 @@ import axios from 'axios'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { getAccessToken, getRefreshToken, saveAccessToken, removeToken } from '@/utils/auth'
+import { ElMessage } from 'element-plus'
 
 const request = axios.create({
   baseURL: '/api/v1',
@@ -85,6 +86,7 @@ request.interceptors.response.use(
   (response) => {
     const res = response.data
     if (res.code !== 200) {
+      ElMessage.error(res.message || '请求失败')
       return Promise.reject(new ApiError(res.code, res.message || '请求失败', res.data))
     }
     return res.data
@@ -133,11 +135,32 @@ request.interceptors.response.use(
         } else {
           rejectPendingRequests()
           clearAllTokens()
+          ElMessage.error('登录已过期，请重新登录')
+          router.push('/')
           return Promise.reject(error)
         }
       } finally {
         isRefreshing = false
       }
+    }
+
+    // 非 401 的 HTTP 错误，显示统一提示
+    if (error.response) {
+      const status = error.response.status
+      const msg = error.response.data?.message
+      if (status >= 500) {
+        ElMessage.error(msg || '服务器错误，请稍后重试')
+      } else if (status === 403) {
+        ElMessage.error(msg || '权限不足')
+      } else if (status === 404) {
+        ElMessage.error(msg || '请求的资源不存在')
+      } else if (status >= 400) {
+        ElMessage.error(msg || '请求参数错误')
+      }
+    } else if (error.message && error.message.includes('timeout')) {
+      ElMessage.error('请求超时，请检查网络后重试')
+    } else if (error.message && error.message.includes('Network Error')) {
+      ElMessage.error('网络错误，请检查网络连接')
     }
 
     return Promise.reject(error)

@@ -1,5 +1,10 @@
 package com.fitness.integration.payment.controller;
 
+import com.fitness.config.RabbitMQConfig;
+import com.fitness.integration.mq.MqMessageSender;
+import com.fitness.integration.mq.message.PaymentSuccessMessage;
+import com.fitness.modules.order.model.entity.Order;
+import com.fitness.modules.order.model.enums.OrderStatusEnum;
 import com.fitness.modules.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,19 +23,14 @@ import java.util.Map;
 public class AlipayNotifyController {
 
     private final OrderService orderService;
+    private final MqMessageSender mqMessageSender;
 
-    /**
-     * 支付宝异步通知回调
-     */
     @PostMapping("/notify")
     public String alipayNotify(HttpServletRequest request) {
         log.info("收到支付宝异步通知");
-        log.debug("支付宝通知请求: remoteAddr={}, contentType={}", request.getRemoteAddr(), request.getContentType());
 
         Map<String, String> params = new HashMap<>();
         Map<String, String[]> requestParams = request.getParameterMap();
-        log.debug("支付宝通知参数数量: {}", requestParams.size());
-
         for (String key : requestParams.keySet()) {
             String[] values = requestParams.get(key);
             String valueStr = "";
@@ -38,16 +38,21 @@ public class AlipayNotifyController {
                 valueStr = (i == values.length - 1) ? valueStr + values[i] : valueStr + values[i] + ",";
             }
             params.put(key, valueStr);
-            log.debug("支付宝通知参数: {}={}", key, valueStr);
         }
 
-        log.info("支付宝通知参数汇总: out_trade_no={}, trade_no={}, trade_status={}, total_amount={}",
+        log.info("支付宝通知参数: out_trade_no={}, trade_no={}, trade_status={}, total_amount={}",
                 params.get("out_trade_no"), params.get("trade_no"), params.get("trade_status"),
                 params.get("total_amount"));
 
         try {
-            orderService.handleAlipayCallback(params);
-            log.info("支付宝回调处理成功，返回success");
+            Order order = orderService.markOrderPaid(params);
+            if (order != null && OrderStatusEnum.PAID.getCode().equals(order.getStatus())) {
+                PaymentSuccessMessage message = new PaymentSuccessMessage(
+                        order.getId(), order.getOrderNo(), order.getOrderType());
+                mqMessageSender.send(RabbitMQConfig.PAYMENT_EXCHANGE,
+                        RabbitMQConfig.PAYMENT_SUCCESS_ROUTING_KEY, message);
+                log.info("支付成功消息已发送到MQ: orderNo={}", order.getOrderNo());
+            }
             return "success";
         } catch (Exception e) {
             log.error("处理支付宝通知失败: errorMsg={}", e.getMessage(), e);

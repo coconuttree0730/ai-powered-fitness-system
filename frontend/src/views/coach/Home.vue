@@ -105,7 +105,10 @@
               查看日程
             </n-button>
           </div>
-          <div v-if="todayCourses.length === 0" class="empty-state">
+          <div v-if="loading" class="empty-state">
+            <n-spin size="medium" />
+          </div>
+          <div v-else-if="todayCourses.length === 0" class="empty-state">
             <n-empty description="今日暂无课程" />
           </div>
           <div v-else class="course-timeline">
@@ -179,6 +182,10 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { useMessage } from 'naive-ui'
+import { getMyStudents } from '@/api/coach/students'
+import { getCoachMySessions } from '@/api/course'
+import { getCoachOwnBookingsByRange } from '@/api/privateCoachBooking'
 import {
   PeopleOutline,
   CalendarOutline,
@@ -194,11 +201,14 @@ import {
   PersonOutline
 } from '@vicons/ionicons5'
 
+const message = useMessage()
+const loading = ref(false)
+
 // 统计数据
 const stats = reactive({
-  totalStudents: 156,
-  weekCourses: 24,
-  monthCourses: 96,
+  totalStudents: 0,
+  weekCourses: 0,
+  monthCourses: 0,
   completionRate: 92,
   renewalRate: 78,
   monthIncome: 25800,
@@ -208,12 +218,7 @@ const stats = reactive({
 })
 
 // 今日课程
-const todayCourses = ref([
-  { id: 1, courseName: '增肌训练基础', startTime: '09:00', endTime: '10:00', type: 'private', bookingCount: 1, capacity: 1 },
-  { id: 2, courseName: 'HIIT燃脂团课', startTime: '14:00', endTime: '15:00', type: 'public', bookingCount: 12, capacity: 20 },
-  { id: 3, courseName: '瑜伽拉伸', startTime: '16:00', endTime: '17:00', type: 'private', bookingCount: 1, capacity: 1 },
-  { id: 4, courseName: '核心力量训练', startTime: '19:00', endTime: '20:00', type: 'public', bookingCount: 8, capacity: 15 }
-])
+const todayCourses = ref([])
 
 // 图表相关
 const chartPeriod = ref('week')
@@ -222,6 +227,167 @@ const typeChartRef = ref(null)
 let salesChart = null
 let typeChart = null
 const showStatsModal = ref(false)
+
+function getTodayKey() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function getWeekStartAndEnd() {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const start = new Date(now)
+  start.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1))
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+  return { start, end }
+}
+
+async function fetchDashboardData() {
+  loading.value = true
+  try {
+    const today = getTodayKey()
+    const { start: weekStart, end: weekEnd } = getWeekStartAndEnd()
+
+    // 1. 获取学员总数
+    const studentsRes = await getMyStudents()
+    const students = Array.isArray(studentsRes) ? studentsRes : (studentsRes?.records || [])
+    stats.totalStudents = students.length
+
+    // 2. 获取教练课程实例（本周）
+    const sessionsRes = await getCoachMySessions({
+      pageNum: 1,
+      pageSize: 999
+    })
+    const sessions = sessionsRes?.records || []
+
+    // 统计本周课程数
+    const weekStartStr = weekStart.toISOString().split('T')[0]
+    const weekEndStr = weekEnd.toISOString().split('T')[0]
+    stats.weekCourses = sessions.filter(s => {
+      const d = s.sessionDate || s.date
+      return d >= weekStartStr && d <= weekEndStr
+    }).length
+
+    // 3. 获取今日课程（课程实例 + 私教预约）
+    const todaySessions = sessions.filter(s => {
+      const d = s.sessionDate || s.date
+      return d === today
+    }).map(s => ({
+      id: s.id,
+      courseName: s.courseName || '课程',
+      startTime: s.startTime ? String(s.startTime).substring(0, 5) : '00:00',
+      endTime: s.endTime ? String(s.endTime).substring(0, 5) : '00:00',
+      type: s.capacity === 1 ? 'private' : 'public',
+      bookingCount: s.bookedCount || 0,
+      capacity: s.capacity || 1
+    }))
+
+    // 4. 获取今日私教预约
+    let todayBookings = []
+    try {
+      const bookingRes = await getCoachOwnBookingsByRange(today, today)
+      const bookings = Array.isArray(bookingRes) ? bookingRes : (bookingRes?.records || [])
+      todayBookings = bookings
+        .filter(b => b.status !== 2)
+        .map(b => ({
+          id: 'pcb-' + b.id,
+          courseName: `私教预约 - ${b.userName || '学员'}`,
+          startTime: b.startTime && b.startTime.substring ? b.startTime.substring(0, 5) : '',
+          endTime: b.endTime && b.endTime.substring ? b.endTime.substring(0, 5) : '',
+          type: 'private',
+          bookingCount: 1,
+          capacity: 1
+        }))
+    } catch (e) {
+      // 私教预约接口可能不存在或报错，静默忽略
+    }
+
+    // 合并今日课程并按时间排序
+    const allToday = [...todaySessions, ...todayBookings]
+    allToday.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))
+    todayCourses.value = allToday
+
+    // 5. 更新图表数据
+    updateChartsFromSessions(sessions)
+  } catch (error) {
+    message.error('获取数据失败')
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+function updateChartsFromSessions(sessions) {
+  if (!sessions || sessions.length === 0) return
+
+  // 课程类型分布统计
+  const typeMap = {}
+  sessions.forEach(s => {
+    const category = s.category || '其他'
+    typeMap[category] = (typeMap[category] || 0) + 1
+  })
+
+  const pieData = Object.entries(typeMap).map(([name, value]) => ({
+    value,
+    name,
+    itemStyle: { color: getCategoryColor(name) }
+  }))
+
+  if (typeChart) {
+    typeChart.setOption({
+      series: [{ data: pieData.length ? pieData : [{ value: 1, name: '暂无数据', itemStyle: { color: '#ccc' } }] }]
+    })
+  }
+
+  // 按日期统计课程数量（最近7天）
+  const dateCountMap = {}
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const now = new Date()
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+    const dayName = weekDays[d.getDay()]
+    dateCountMap[dayName] = { date: dateStr, count: 0 }
+  }
+
+  sessions.forEach(s => {
+    const d = s.sessionDate || s.date
+    if (!d) return
+    const dayName = weekDays[new Date(d).getDay()]
+    if (dateCountMap[dayName]) {
+      dateCountMap[dayName].count += 1
+    }
+  })
+
+  const xData = Object.keys(dateCountMap)
+  const yData = Object.values(dateCountMap).map(v => v.count)
+
+  if (salesChart) {
+    salesChart.setOption({
+      xAxis: { data: xData },
+      series: [{ data: yData }]
+    })
+  }
+}
+
+function getCategoryColor(category) {
+  const colorMap = {
+    '私教课': '#FF6B35',
+    '团课': '#06D6A0',
+    '瑜伽': '#667eea',
+    '有氧': '#FFD166',
+    '力量': '#EF476F',
+    '其他': '#9CA3AF'
+  }
+  return colorMap[category] || '#9CA3AF'
+}
 
 // 初始化销量趋势图
 function initSalesChart() {
@@ -257,7 +423,7 @@ function initSalesChart() {
       axisLabel: { color: '#6B7280' }
     },
     series: [{
-      data: [8, 12, 10, 15, 18, 22, 20],
+      data: [0, 0, 0, 0, 0, 0, 0],
       type: 'line',
       smooth: true,
       symbol: 'circle',
@@ -326,10 +492,7 @@ function initTypeChart() {
         }
       },
       data: [
-        { value: 45, name: '私教课', itemStyle: { color: '#FF6B35' } },
-        { value: 30, name: '团课', itemStyle: { color: '#06D6A0' } },
-        { value: 15, name: '瑜伽', itemStyle: { color: '#667eea' } },
-        { value: 10, name: '其他', itemStyle: { color: '#FFD166' } }
+        { value: 1, name: '暂无数据', itemStyle: { color: '#E5E7EB' } }
       ]
     }]
   }
@@ -340,9 +503,9 @@ function initTypeChart() {
 watch(chartPeriod, (newVal) => {
   if (salesChart) {
     const dataMap = {
-      day: { x: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'], y: [2, 5, 3, 8, 6, 10, 7] },
-      week: { x: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], y: [8, 12, 10, 15, 18, 22, 20] },
-      month: { x: ['第1周', '第2周', '第3周', '第4周'], y: [65, 78, 82, 91] }
+      day: { x: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'], y: [0, 0, 0, 0, 0, 0, 0] },
+      week: { x: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], y: [0, 0, 0, 0, 0, 0, 0] },
+      month: { x: ['第1周', '第2周', '第3周', '第4周'], y: [0, 0, 0, 0] }
     }
     const data = dataMap[newVal]
     salesChart.setOption({
@@ -360,6 +523,7 @@ onMounted(() => {
   nextTick(() => {
     initSalesChart()
     initTypeChart()
+    fetchDashboardData()
   })
   
   window.addEventListener('resize', () => {
