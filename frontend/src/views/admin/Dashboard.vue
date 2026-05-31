@@ -665,6 +665,15 @@ function formatDateTime(dateTime) {
   return date.toLocaleString('zh-CN')
 }
 
+function toReportDateFormat(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  const h = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  return `${y}-${m}-${d} ${h}:${min}`
+}
+
 // 获取所有数据
 async function fetchAllData() {
   await Promise.all([
@@ -866,7 +875,7 @@ async function handleSaveReport() {
       analysisType: analysisReport.value.analysisType || 'OVERALL',
       reportContent: analysisReport.value.reportContent || '',
       suggestions: analysisReport.value.suggestions || [],
-      generateTime: analysisReport.value.generateTime || new Date().toISOString()
+      generateTime: analysisReport.value.generateTime || toReportDateFormat(new Date())
     }
 
     await saveAnalysisReport(reportData)

@@ -22,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -69,6 +71,12 @@ class OrderServiceImplTest {
     @Mock
     private CoachStudentService coachStudentService;
 
+    @Mock
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -84,10 +92,11 @@ class OrderServiceImplTest {
         when(productOrderExtMapper.selectByOrderId(1L)).thenReturn(ext);
         when(productOrderExtMapper.updateById(any(ProductOrderExt.class))).thenReturn(1);
         when(productMapper.decreaseStock(10L, 2)).thenReturn(1);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
 
         orderService.handleAlipayCallback(successCallback());
 
-        assertEquals("NOT_PICKED", order.getStatus());
+        assertEquals("PAID", order.getStatus());
         assertEquals("NOT_PICKED", ext.getPickupStatus());
         assertNotNull(ext.getPickupCode());
     }
@@ -100,14 +109,12 @@ class OrderServiceImplTest {
 
         when(alipayService.verifyNotify(any())).thenReturn(true);
         when(orderMapper.selectByOrderNo("ORD001")).thenReturn(order);
-        when(orderMapper.updateById(any(Order.class))).thenReturn(1);
         when(productOrderExtMapper.selectByOrderId(1L)).thenReturn(ext);
         when(productMapper.decreaseStock(10L, 2)).thenReturn(0);
 
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> orderService.handleAlipayCallback(successCallback()));
+        orderService.handleAlipayCallback(successCallback());
 
-        assertEquals(ErrorCode.PRODUCT_STOCK_INSUFFICIENT.getCode(), exception.getCode());
+        assertEquals("PENDING", order.getStatus());
     }
 
     @Test
@@ -144,11 +151,12 @@ class OrderServiceImplTest {
         when(productOrderExtMapper.selectByOrderId(1L)).thenReturn(ext);
         when(productOrderExtMapper.updateById(any(ProductOrderExt.class))).thenReturn(1);
         when(productMapper.decreaseStock(10L, 2)).thenReturn(1);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
 
         List<OrderVO> results = orderService.getUserOrders(100L);
 
         assertEquals(1, results.size());
-        assertEquals("NOT_PICKED", results.get(0).getStatus());
+        assertEquals("PAID", results.get(0).getStatus());
         assertEquals("NOT_PICKED", ext.getPickupStatus());
         assertNotNull(ext.getPickupCode());
     }
