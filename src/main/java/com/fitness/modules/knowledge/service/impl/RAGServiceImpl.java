@@ -2,13 +2,17 @@ package com.fitness.modules.knowledge.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fitness.integration.ai.prompt.AiPromptSpec;
 import com.fitness.integration.ai.service.AIService;
 import com.fitness.modules.chat.prompt.ChatPromptTemplates;
 import com.fitness.modules.knowledge.mapper.KnowledgeCategoryMapper;
+import com.fitness.modules.knowledge.model.dto.RAGDebugQueryDTO;
 import com.fitness.modules.knowledge.model.dto.RAGQueryDTO;
 import com.fitness.modules.knowledge.model.entity.KnowledgeCategory;
 import com.fitness.modules.knowledge.model.vo.KnowledgeChunkVO;
+import com.fitness.modules.knowledge.model.vo.RAGDebugChunkVO;
+import com.fitness.modules.knowledge.model.vo.RAGDebugResultVO;
 import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
 import com.fitness.modules.knowledge.service.EmbeddingService;
 import com.fitness.modules.knowledge.service.KnowledgeChunkService;
@@ -26,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -107,10 +112,11 @@ public class RAGServiceImpl implements RAGService {
     public List<RAGSearchResultVO.RetrievedChunk> hybridSearch(
             String query, Integer topK, Long categoryId, Double similarityThreshold) {
         log.info("Hybrid retrieval started, query='{}', topK={}", query, topK);
+        int effectiveTopK = normalizeTopK(topK);
 
         // 关键词搜索与embedding+向量搜索并行
         CompletableFuture<List<KnowledgeChunkVO>> keywordFuture = CompletableFuture.supplyAsync(
-            () -> chunkService.keywordSearch(query, topK * 2, categoryId), ioTaskExecutor);
+            () -> chunkService.keywordSearch(query, effectiveTopK * 2, categoryId), ioTaskExecutor);
 
         List<KnowledgeChunkVO> vectorResults = Collections.emptyList();
 
@@ -119,10 +125,10 @@ public class RAGServiceImpl implements RAGService {
         if (queryEmbedding != null && queryEmbedding.length > 0) {
             log.info("Query embedding completed, dimensions={}, elapsed={} ms",
                     queryEmbedding.length, System.currentTimeMillis() - vectorStart);
-            vectorResults = chunkService.vectorSearch(queryEmbedding, topK * 2, categoryId, similarityThreshold);
+            vectorResults = chunkService.vectorSearch(queryEmbedding, effectiveTopK * 2, categoryId, similarityThreshold);
             log.info("Vector retrieval completed, results={}", vectorResults.size());
 
-            for (int i = 0; i < Math.min(vectorResults.size(), topK); i++) {
+            for (int i = 0; i < Math.min(vectorResults.size(), effectiveTopK); i++) {
                 KnowledgeChunkVO chunk = vectorResults.get(i);
                 log.debug("Vector result #{} title='{}' similarity={} preview={}",
                         i + 1,
@@ -138,7 +144,7 @@ public class RAGServiceImpl implements RAGService {
         List<KnowledgeChunkVO> keywordResults = keywordFuture.join();
         log.info("Keyword retrieval completed, results={}", keywordResults.size());
 
-        for (int i = 0; i < Math.min(keywordResults.size(), topK); i++) {
+        for (int i = 0; i < Math.min(keywordResults.size(), effectiveTopK); i++) {
             KnowledgeChunkVO chunk = keywordResults.get(i);
             log.debug("Keyword result #{} title='{}' preview={}",
                     i + 1,
@@ -146,13 +152,34 @@ public class RAGServiceImpl implements RAGService {
                     preview(chunk.getContent()));
         }
 
+        List<RAGSearchResultVO.RetrievedChunk> finalResults =
+                mergeResults(vectorResults, keywordResults, effectiveTopK);
+
+        log.info("Hybrid retrieval merged, finalResults={}", finalResults.size());
+        for (int i = 0; i < finalResults.size(); i++) {
+            RAGSearchResultVO.RetrievedChunk chunk = finalResults.get(i);
+            String sourceType = chunk.getSource() == 1 ? "vector" : (chunk.getSource() == 2 ? "keyword" : "hybrid");
+            log.debug("Top-{} source={} title='{}' score={} content={}",
+                    i + 1, sourceType, chunk.getDocumentTitle(), chunk.getSimilarity(), chunk.getContent());
+        }
+
+        return finalResults;
+    }
+
+    private List<RAGSearchResultVO.RetrievedChunk> mergeResults(
+            List<KnowledgeChunkVO> vectorResults,
+            List<KnowledgeChunkVO> keywordResults,
+            int topK) {
         Map<Long, RAGSearchResultVO.RetrievedChunk> mergedResults = new LinkedHashMap<>();
 
         for (int i = 0; i < vectorResults.size(); i++) {
             KnowledgeChunkVO chunk = vectorResults.get(i);
             RAGSearchResultVO.RetrievedChunk retrievedChunk = toRetrievedChunk(chunk, 1);
             double rrfScore = 1.0 / (RRF_K + i + 1);
-            retrievedChunk.setSimilarity(chunk.getSimilarity());
+            retrievedChunk.setVectorSimilarity(chunk.getSimilarity());
+            retrievedChunk.setRrfScore(rrfScore);
+            retrievedChunk.setFinalScore(rrfScore);
+            retrievedChunk.setSimilarity(rrfScore);
             mergedResults.put(chunk.getId(), retrievedChunk);
             log.debug("Vector result RRF: chunkId={}, rank={}, rrfScore={}",
                     chunk.getId(), i + 1, rrfScore);
@@ -164,33 +191,97 @@ public class RAGServiceImpl implements RAGService {
 
             if (mergedResults.containsKey(chunk.getId())) {
                 RAGSearchResultVO.RetrievedChunk existing = mergedResults.get(chunk.getId());
-                double existingScore = existing.getSimilarity() != null ? existing.getSimilarity() : 0;
-                existing.setSimilarity(existingScore + rrfScore);
+                double existingScore = existing.getRrfScore() != null ? existing.getRrfScore() : 0;
+                double finalScore = existingScore + rrfScore;
+                existing.setKeywordScore(chunk.getSimilarity());
+                existing.setRrfScore(finalScore);
+                existing.setFinalScore(finalScore);
+                existing.setSimilarity(finalScore);
                 existing.setSource(3);
                 log.debug("Merged keyword result: chunkId={}, previousScore={}, addedRrf={}, finalScore={}",
-                        chunk.getId(), existingScore, rrfScore, existingScore + rrfScore);
+                        chunk.getId(), existingScore, rrfScore, finalScore);
             } else {
                 RAGSearchResultVO.RetrievedChunk retrievedChunk = toRetrievedChunk(chunk, 2);
+                retrievedChunk.setKeywordScore(chunk.getSimilarity());
+                retrievedChunk.setRrfScore(rrfScore);
+                retrievedChunk.setFinalScore(rrfScore);
                 retrievedChunk.setSimilarity(rrfScore);
                 mergedResults.put(chunk.getId(), retrievedChunk);
                 log.debug("Added keyword result: chunkId={}, rrfScore={}", chunk.getId(), rrfScore);
             }
         }
 
-        List<RAGSearchResultVO.RetrievedChunk> finalResults = mergedResults.values().stream()
-                .sorted(Comparator.comparingDouble(RAGSearchResultVO.RetrievedChunk::getSimilarity).reversed())
+        return mergedResults.values().stream()
+                .sorted(Comparator.comparingDouble(RAGSearchResultVO.RetrievedChunk::getFinalScore).reversed())
                 .limit(topK)
                 .collect(Collectors.toList());
+    }
 
-        log.info("Hybrid retrieval merged, finalResults={}", finalResults.size());
-        for (int i = 0; i < finalResults.size(); i++) {
-            RAGSearchResultVO.RetrievedChunk chunk = finalResults.get(i);
-            String sourceType = chunk.getSource() == 1 ? "vector" : (chunk.getSource() == 2 ? "keyword" : "hybrid");
-            log.debug("Top-{} source={} title='{}' score={} content={}",
-                    i + 1, sourceType, chunk.getDocumentTitle(), chunk.getSimilarity(), chunk.getContent());
+    @Override
+    public RAGDebugResultVO debugSearch(RAGDebugQueryDTO queryDTO) {
+        long startTime = System.currentTimeMillis();
+        int effectiveTopK = normalizeTopK(queryDTO.getTopK());
+        Long categoryId = resolveCategoryId(queryDTO.getCategoryId(), queryDTO.getCategoryCode());
+
+        RAGDebugResultVO result = new RAGDebugResultVO();
+        result.setQuery(queryDTO.getQuery());
+        result.setCategoryId(categoryId);
+        result.setCategoryCode(queryDTO.getCategoryCode());
+        result.setTopK(effectiveTopK);
+        result.setSimilarityThreshold(queryDTO.getSimilarityThreshold());
+        log.info("RAG debug started, query='{}', categoryCode={}, categoryId={}, topK={}, threshold={}",
+                queryDTO.getQuery(), queryDTO.getCategoryCode(), categoryId, effectiveTopK,
+                queryDTO.getSimilarityThreshold());
+
+        CompletableFuture<List<KnowledgeChunkVO>> keywordFuture = CompletableFuture.supplyAsync(
+                () -> queryDTO.isUseKeywordSearch()
+                        ? chunkService.keywordSearch(queryDTO.getQuery(), effectiveTopK * 2, categoryId)
+                        : Collections.emptyList(),
+                ioTaskExecutor);
+
+        long embeddingStart = System.currentTimeMillis();
+        float[] queryEmbedding = queryDTO.isUseVectorSearch() ? embeddingService.embed(queryDTO.getQuery()) : null;
+        result.setEmbeddingTimeMs(System.currentTimeMillis() - embeddingStart);
+
+        List<KnowledgeChunkVO> vectorResults = Collections.emptyList();
+        long vectorStart = System.currentTimeMillis();
+        if (queryEmbedding != null && queryEmbedding.length > 0) {
+            vectorResults = chunkService.vectorSearch(
+                    queryEmbedding,
+                    effectiveTopK * 2,
+                    categoryId,
+                    queryDTO.getSimilarityThreshold());
         }
+        result.setVectorSearchTimeMs(System.currentTimeMillis() - vectorStart);
 
-        return finalResults;
+        long keywordStart = System.currentTimeMillis();
+        List<KnowledgeChunkVO> keywordResults = keywordFuture.join();
+        result.setKeywordSearchTimeMs(System.currentTimeMillis() - keywordStart);
+
+        List<RAGSearchResultVO.RetrievedChunk> mergedResults =
+                mergeResults(vectorResults, keywordResults, effectiveTopK);
+
+        result.setVectorChunks(toDebugChunks(vectorResults, 1));
+        result.setKeywordChunks(toDebugChunks(keywordResults, 2));
+        result.setMergedChunks(toDebugChunksFromRetrieved(mergedResults));
+        result.setRetrievalTimeMs(System.currentTimeMillis() - startTime);
+        log.info("RAG debug finished, vector={}, keyword={}, merged={}, retrieval={} ms",
+                vectorResults.size(), keywordResults.size(), mergedResults.size(), result.getRetrievalTimeMs());
+        return result;
+    }
+
+    private Long resolveCategoryId(Long categoryId, String categoryCode) {
+        if (categoryId != null || StrUtil.isBlank(categoryCode)) {
+            return categoryId;
+        }
+        List<KnowledgeCategory> categories = categoryMapper.selectList(
+                new LambdaQueryWrapper<KnowledgeCategory>()
+                        .eq(KnowledgeCategory::getDeleted, false));
+        return categories.stream()
+                .filter(category -> categoryCode.equalsIgnoreCase(category.getCode()))
+                .map(KnowledgeCategory::getId)
+                .findFirst()
+                .orElse(null);
     }
 
     private RAGSearchResultVO.RetrievedChunk toRetrievedChunk(KnowledgeChunkVO chunk, int source) {
@@ -217,6 +308,58 @@ public class RAGServiceImpl implements RAGService {
         }
 
         return retrievedChunk;
+    }
+
+    private List<RAGDebugChunkVO> toDebugChunks(List<KnowledgeChunkVO> chunks, int source) {
+        return IntStream.range(0, chunks.size())
+                .mapToObj(index -> toDebugChunk(chunks.get(index), source, index + 1))
+                .collect(Collectors.toList());
+    }
+
+    private RAGDebugChunkVO toDebugChunk(KnowledgeChunkVO chunk, int source, int rank) {
+        RAGDebugChunkVO debugChunk = new RAGDebugChunkVO();
+        debugChunk.setChunkId(chunk.getId());
+        debugChunk.setDocumentId(chunk.getDocumentId());
+        debugChunk.setDocumentTitle(chunk.getDocumentTitle());
+        debugChunk.setContent(chunk.getContent());
+        debugChunk.setContentPreview(preview(chunk.getContent()));
+        debugChunk.setSource(source);
+        debugChunk.setRank(rank);
+        if (source == 1) {
+            debugChunk.setVectorSimilarity(chunk.getSimilarity());
+        } else if (source == 2) {
+            debugChunk.setKeywordScore(chunk.getSimilarity());
+        }
+        return debugChunk;
+    }
+
+    private List<RAGDebugChunkVO> toDebugChunksFromRetrieved(List<RAGSearchResultVO.RetrievedChunk> chunks) {
+        return IntStream.range(0, chunks.size())
+                .mapToObj(index -> toDebugChunk(chunks.get(index), index + 1))
+                .collect(Collectors.toList());
+    }
+
+    private RAGDebugChunkVO toDebugChunk(RAGSearchResultVO.RetrievedChunk chunk, int rank) {
+        RAGDebugChunkVO debugChunk = new RAGDebugChunkVO();
+        debugChunk.setChunkId(chunk.getChunkId());
+        debugChunk.setDocumentId(chunk.getDocumentId());
+        debugChunk.setDocumentTitle(chunk.getDocumentTitle());
+        debugChunk.setContent(chunk.getContent());
+        debugChunk.setContentPreview(preview(chunk.getContent()));
+        debugChunk.setVectorSimilarity(chunk.getVectorSimilarity());
+        debugChunk.setKeywordScore(chunk.getKeywordScore());
+        debugChunk.setRrfScore(chunk.getRrfScore());
+        debugChunk.setFinalScore(chunk.getFinalScore());
+        debugChunk.setSource(chunk.getSource());
+        debugChunk.setRank(rank);
+        return debugChunk;
+    }
+
+    private int normalizeTopK(Integer topK) {
+        if (topK == null || topK <= 0) {
+            return 5;
+        }
+        return Math.min(topK, 20);
     }
 
     private String buildContext(List<RAGSearchResultVO.RetrievedChunk> chunks) {

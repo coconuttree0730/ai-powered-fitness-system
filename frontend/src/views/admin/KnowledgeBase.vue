@@ -14,66 +14,68 @@
       </el-col>
     </el-row>
 
-    <!-- 搜索和操作区域 -->
-    <el-card class="search-card" :body-style="{ padding: '20px' }">
-      <el-row :gutter="20" align="middle">
-        <el-col :span="18">
-          <el-space>
-            <el-input
-              v-model="searchForm.keyword"
-              placeholder="文档标题"
-              clearable
-              style="width: 220px"
-              @keyup.enter="handleSearch"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-            </el-input>
-            <el-select
-              v-model="searchForm.status"
-              placeholder="全部状态"
-              clearable
-              style="width: 150px"
-            >
-              <el-option label="已发布" :value="1" />
-              <el-option label="草稿" :value="0" />
-            </el-select>
-            <el-select
-              v-model="searchForm.categoryCode"
-              placeholder="全部分类"
-              clearable
-              style="width: 180px"
-            >
-              <el-option
-                v-for="cat in categoryList"
-                :key="cat.id"
-                :value="cat.value"
-                :label="cat.label"
-              />
-            </el-select>
-            <el-button type="primary" @click="handleSearch">
-              <el-icon><Search /></el-icon>搜索
-            </el-button>
-            <el-button @click="handleReset">重置</el-button>
-          </el-space>
-        </el-col>
-        <el-col :span="6" style="text-align: right">
-          <el-button type="primary" @click="handleAdd">
-            <el-icon><Plus /></el-icon>上传文档
-          </el-button>
-        </el-col>
-      </el-row>
-    </el-card>
+    <el-tabs v-model="activeTab" class="knowledge-tabs">
+      <el-tab-pane label="文档管理" name="documents">
+        <!-- 搜索和操作区域 -->
+        <el-card class="search-card" :body-style="{ padding: '20px' }">
+          <el-row :gutter="20" align="middle">
+            <el-col :span="18">
+              <el-space>
+                <el-input
+                  v-model="searchForm.keyword"
+                  placeholder="文档标题"
+                  clearable
+                  style="width: 220px"
+                  @keyup.enter="handleSearch"
+                >
+                  <template #prefix>
+                    <el-icon><Search /></el-icon>
+                  </template>
+                </el-input>
+                <el-select
+                  v-model="searchForm.status"
+                  placeholder="全部状态"
+                  clearable
+                  style="width: 150px"
+                >
+                  <el-option label="已发布" :value="1" />
+                  <el-option label="草稿" :value="0" />
+                </el-select>
+                <el-select
+                  v-model="searchForm.categoryCode"
+                  placeholder="全部分类"
+                  clearable
+                  style="width: 180px"
+                >
+                  <el-option
+                    v-for="cat in categoryList"
+                    :key="cat.id"
+                    :value="cat.value"
+                    :label="cat.label"
+                  />
+                </el-select>
+                <el-button type="primary" @click="handleSearch">
+                  <el-icon><Search /></el-icon>搜索
+                </el-button>
+                <el-button @click="handleReset">重置</el-button>
+              </el-space>
+            </el-col>
+            <el-col :span="6" style="text-align: right">
+              <el-button type="primary" @click="handleAdd">
+                <el-icon><Plus /></el-icon>上传文档
+              </el-button>
+            </el-col>
+          </el-row>
+        </el-card>
 
-    <!-- 数据表格 -->
-    <el-card class="table-card">
-      <el-table
-        :data="tableData"
-        v-loading="loading"
-        stripe
-        style="width: 100%"
-      >
+        <!-- 数据表格 -->
+        <el-card class="table-card">
+          <el-table
+            :data="tableData"
+            v-loading="loading"
+            stripe
+            style="width: 100%"
+          >
         <el-table-column type="index" width="50" />
         <el-table-column label="文档信息" min-width="300">
           <template #default="{ row }">
@@ -146,21 +148,204 @@
             </el-button>
           </template>
         </el-table-column>
-      </el-table>
+          </el-table>
 
-      <!-- 分页 -->
-      <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.pageNum"
-          v-model:page-size="pagination.pageSize"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
-      </div>
-    </el-card>
+          <!-- 分页 -->
+          <div class="pagination-wrapper">
+            <el-pagination
+              v-model:current-page="pagination.pageNum"
+              v-model:page-size="pagination.pageSize"
+              :total="pagination.total"
+              :page-sizes="[10, 20, 50, 100]"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handlePageChange"
+            />
+          </div>
+        </el-card>
+      </el-tab-pane>
+
+      <el-tab-pane label="RAG调试" name="ragDebug">
+        <el-card class="debug-card" :body-style="{ padding: '20px' }">
+          <el-form :model="ragDebugForm" label-width="96px" class="debug-form">
+            <el-form-item label="问题">
+              <el-input
+                v-model="ragDebugForm.query"
+                type="textarea"
+                :rows="3"
+                maxlength="300"
+                show-word-limit
+                placeholder="输入要检索的问题"
+              />
+            </el-form-item>
+            <el-row :gutter="16">
+              <el-col :span="7">
+                <el-form-item label="分类">
+                  <el-select
+                    v-model="ragDebugForm.categoryCode"
+                    clearable
+                    placeholder="全部分类"
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="cat in categoryList"
+                      :key="cat.id"
+                      :label="cat.label"
+                      :value="cat.value"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="5">
+                <el-form-item label="TopK">
+                  <el-input-number v-model="ragDebugForm.topK" :min="1" :max="20" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="阈值">
+                  <el-input-number
+                    v-model="ragDebugForm.similarityThreshold"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    :precision="2"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="召回">
+                  <el-checkbox v-model="ragDebugForm.useVectorSearch">向量</el-checkbox>
+                  <el-checkbox v-model="ragDebugForm.useKeywordSearch">关键词</el-checkbox>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item>
+              <el-button type="primary" :loading="ragDebugLoading" @click="handleRagDebug">
+                <el-icon><Search /></el-icon>运行调试
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+
+        <el-card v-if="ragDebugResult" class="debug-card">
+          <div class="debug-summary">
+            <el-tag type="info">Embedding {{ ragDebugResult.embeddingTimeMs || 0 }}ms</el-tag>
+            <el-tag type="info">向量 {{ ragDebugResult.vectorSearchTimeMs || 0 }}ms</el-tag>
+            <el-tag type="info">关键词 {{ ragDebugResult.keywordSearchTimeMs || 0 }}ms</el-tag>
+            <el-tag type="success">总检索 {{ ragDebugResult.retrievalTimeMs || 0 }}ms</el-tag>
+          </div>
+
+          <el-row :gutter="16">
+            <el-col :span="8">
+              <div class="debug-section-title">向量召回</div>
+              <el-table :data="ragDebugResult.vectorChunks || []" size="small" border>
+                <el-table-column prop="rank" label="#" width="48" />
+                <el-table-column prop="documentTitle" label="文档" min-width="120" />
+                <el-table-column label="向量分" width="88">
+                  <template #default="{ row }">{{ formatScore(row.vectorSimilarity) }}</template>
+                </el-table-column>
+                <el-table-column prop="contentPreview" label="内容" min-width="180" show-overflow-tooltip />
+              </el-table>
+            </el-col>
+            <el-col :span="8">
+              <div class="debug-section-title">关键词召回</div>
+              <el-table :data="ragDebugResult.keywordChunks || []" size="small" border>
+                <el-table-column prop="rank" label="#" width="48" />
+                <el-table-column prop="documentTitle" label="文档" min-width="120" />
+                <el-table-column label="关键词分" width="88">
+                  <template #default="{ row }">{{ formatScore(row.keywordScore) }}</template>
+                </el-table-column>
+                <el-table-column prop="contentPreview" label="内容" min-width="180" show-overflow-tooltip />
+              </el-table>
+            </el-col>
+            <el-col :span="8">
+              <div class="debug-section-title">融合排序</div>
+              <el-table :data="ragDebugResult.mergedChunks || []" size="small" border>
+                <el-table-column prop="rank" label="#" width="48" />
+                <el-table-column prop="documentTitle" label="文档" min-width="120" />
+                <el-table-column label="RRF" width="80">
+                  <template #default="{ row }">{{ formatScore(row.rrfScore) }}</template>
+                </el-table-column>
+                <el-table-column label="最终分" width="88">
+                  <template #default="{ row }">{{ formatScore(row.finalScore) }}</template>
+                </el-table-column>
+                <el-table-column prop="contentPreview" label="内容" min-width="180" show-overflow-tooltip />
+              </el-table>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-tab-pane>
+
+      <el-tab-pane label="RAG评测" name="ragEvaluation">
+        <el-card class="debug-card" :body-style="{ padding: '20px' }">
+          <el-form :model="evaluationForm" label-width="96px" class="debug-form">
+            <el-row :gutter="16">
+              <el-col :span="6">
+                <el-form-item label="TopK">
+                  <el-input-number v-model="evaluationForm.topK" :min="1" :max="20" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="阈值">
+                  <el-input-number
+                    v-model="evaluationForm.similarityThreshold"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    :precision="2"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="10">
+                <el-form-item>
+                  <el-button
+                    type="primary"
+                    :loading="evaluationLoading"
+                    @click="handleRunEvaluation"
+                  >
+                    <el-icon><Search /></el-icon>运行评测
+                  </el-button>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-card>
+
+        <el-card v-if="evaluationResult" class="debug-card">
+          <div class="debug-summary">
+            <el-tag type="info">总数 {{ evaluationResult.total || 0 }}</el-tag>
+            <el-tag type="success">通过 {{ evaluationResult.passed || 0 }}</el-tag>
+            <el-tag type="warning">命中率 {{ formatPercent(evaluationResult.hitRate) }}</el-tag>
+            <el-tag type="info">平均检索 {{ evaluationResult.averageRetrievalTimeMs || 0 }}ms</el-tag>
+            <el-tag type="info">平均总耗时 {{ evaluationResult.averageTotalTimeMs || 0 }}ms</el-tag>
+          </div>
+
+          <el-table :data="evaluationResult.cases || []" size="small" border>
+            <el-table-column prop="id" label="Case" width="100" />
+            <el-table-column prop="question" label="问题" min-width="220" show-overflow-tooltip />
+            <el-table-column label="通过" width="80">
+              <template #default="{ row }">
+                <el-tag :type="row.passed ? 'success' : 'danger'" size="small">
+                  {{ row.passed ? '是' : '否' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="文档命中" width="92">
+              <template #default="{ row }">{{ row.matchedDocument ? '是' : '否' }}</template>
+            </el-table-column>
+            <el-table-column label="关键词命中" width="104">
+              <template #default="{ row }">{{ row.matchedKeyword ? '是' : '否' }}</template>
+            </el-table-column>
+            <el-table-column prop="topDocumentTitle" label="Top文档" min-width="140" show-overflow-tooltip />
+            <el-table-column label="关键词" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">{{ (row.matchedKeywords || []).join('、') || '-' }}</template>
+            </el-table-column>
+            <el-table-column prop="retrievalTimeMs" label="检索ms" width="90" />
+            <el-table-column prop="totalTimeMs" label="总ms" width="80" />
+          </el-table>
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
 
     <!-- 上传弹窗 -->
     <el-dialog
@@ -251,9 +436,13 @@ import {
   publishKnowledgeDocument,
   archiveKnowledgeDocument,
   reindexKnowledgeDocument,
-  uploadKnowledgeDocument
+  uploadKnowledgeDocument,
+  debugKnowledgeRAG,
+  runAIEvaluation
 } from '@/api/knowledge'
 import { getDictOptions } from '@/api/dict'
+
+const activeTab = ref('documents')
 
 // 统计数据
 const stats = ref([
@@ -309,6 +498,23 @@ const currentFile = ref(null)
 const rules = {
   title: [{ required: true, message: '请输入文档标题', trigger: 'blur' }]
 }
+
+const ragDebugLoading = ref(false)
+const ragDebugResult = ref(null)
+const ragDebugForm = reactive({
+  query: '',
+  categoryCode: null,
+  topK: 5,
+  similarityThreshold: 0.7,
+  useVectorSearch: true,
+  useKeywordSearch: true
+})
+const evaluationLoading = ref(false)
+const evaluationResult = ref(null)
+const evaluationForm = reactive({
+  topK: 5,
+  similarityThreshold: 0.7
+})
 
 // 获取分类列表
 async function fetchCategories() {
@@ -533,6 +739,51 @@ function formatDate(date) {
   return new Date(date).toLocaleString()
 }
 
+function formatScore(score) {
+  if (score === null || score === undefined) return '-'
+  return Number(score).toFixed(4)
+}
+
+function formatPercent(value) {
+  if (value === null || value === undefined) return '0%'
+  return `${(Number(value) * 100).toFixed(1)}%`
+}
+
+async function handleRagDebug() {
+  if (!ragDebugForm.query.trim()) {
+    ElMessage.warning('请输入调试问题')
+    return
+  }
+
+  ragDebugLoading.value = true
+  try {
+    ragDebugResult.value = await debugKnowledgeRAG({
+      ...ragDebugForm,
+      query: ragDebugForm.query.trim()
+    })
+  } catch (error) {
+    console.error('RAG调试失败:', error)
+    ElMessage.error('RAG调试失败')
+  } finally {
+    ragDebugLoading.value = false
+  }
+}
+
+async function handleRunEvaluation() {
+  evaluationLoading.value = true
+  try {
+    evaluationResult.value = await runAIEvaluation({
+      topK: evaluationForm.topK,
+      similarityThreshold: evaluationForm.similarityThreshold
+    })
+  } catch (error) {
+    console.error('RAG评测失败:', error)
+    ElMessage.error('RAG评测失败')
+  } finally {
+    evaluationLoading.value = false
+  }
+}
+
 onMounted(() => {
   fetchCategories()
   fetchDocuments()
@@ -583,8 +834,33 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.knowledge-tabs {
+  margin-top: 4px;
+}
+
 .table-card {
   margin-bottom: 20px;
+}
+
+.debug-card {
+  margin-bottom: 20px;
+}
+
+.debug-form {
+  max-width: 1100px;
+}
+
+.debug-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.debug-section-title {
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 10px;
 }
 
 .kb-info {

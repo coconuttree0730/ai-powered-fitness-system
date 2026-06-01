@@ -30,6 +30,14 @@ public class RAGSearchResultVO {
 
         private Double similarity;
 
+        private Double vectorSimilarity;
+
+        private Double keywordScore;
+
+        private Double rrfScore;
+
+        private Double finalScore;
+
         private String categoryName;
 
         private Integer source;

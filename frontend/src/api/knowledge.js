@@ -143,3 +143,29 @@ export function chatWithKnowledgeRAG(query) {
     }
   })
 }
+
+/**
+ * RAG调试检索
+ * @param {Object} data 调试参数
+ * @returns {Promise} 调试结果
+ */
+export function debugKnowledgeRAG(data) {
+  return request({
+    url: '/admin/knowledge/rag/debug',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 运行AI评测
+ * @param {Object} data 评测参数
+ * @returns {Promise} 评测结果
+ */
+export function runAIEvaluation(data) {
+  return request({
+    url: '/admin/ai/evaluation/run',
+    method: 'post',
+    data
+  })
+}

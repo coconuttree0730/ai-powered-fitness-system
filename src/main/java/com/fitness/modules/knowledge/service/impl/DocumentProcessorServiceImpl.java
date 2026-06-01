@@ -21,10 +21,10 @@ import java.util.Map;
 @Service
 public class DocumentProcessorServiceImpl implements DocumentProcessorService {
 
-    @Value("${knowledge.chunk.size:800}")
+    @Value("${knowledge.chunk.size:500}")
     private int chunkSize;
 
-    @Value("${knowledge.chunk.overlap:150}")
+    @Value("${knowledge.chunk.overlap:50}")
     private int chunkOverlap;
 
     private static final int MIN_CHUNK_SIZE = 100;

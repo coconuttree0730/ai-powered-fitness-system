@@ -28,6 +28,9 @@
         FROM knowledge_chunk kc
         INNER JOIN knowledge_document kd ON kc.document_id = kd.id AND kd.deleted = false AND kd.status = 1
         <where>
+            <if test="categoryId != null">
+                AND kd.category_id = #{categoryId}
+            </if>
             <if test="similarityThreshold != null">
                 AND 1 - (kc.embedding &lt;=&gt; #{embedding}::vector) >= #{similarityThreshold}
             </if>
@@ -51,6 +54,9 @@
         INNER JOIN knowledge_document kd ON kc.document_id = kd.id AND kd.deleted = false AND kd.status = 1
         <where>
             to_tsvector('simple', kc.content) @@ plainto_tsquery('simple', #{keyword})
+            <if test="categoryId != null">
+                AND kd.category_id = #{categoryId}
+            </if>
         </where>
         ORDER BY ts_rank_cd(to_tsvector('simple', kc.content), plainto_tsquery('simple', #{keyword})) DESC
         LIMIT #{topK}

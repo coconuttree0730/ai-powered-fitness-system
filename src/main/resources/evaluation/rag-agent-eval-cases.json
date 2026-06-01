@@ -1,0 +1,202 @@
+[
+  {
+    "id": "RAG-001",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "membership",
+    "question": "会员卡可以借给朋友用吗？",
+    "expectedDocumentTitle": "会员服务规则",
+    "expectedKeywords": ["本人使用", "不得转借", "不得转让"],
+    "notes": "会员权益规则"
+  },
+  {
+    "id": "RAG-002",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "membership",
+    "question": "会员卡到期后还能继续使用吗？",
+    "expectedDocumentTitle": "会员服务规则",
+    "expectedKeywords": ["有效期", "到期", "续费"],
+    "notes": "会员有效期"
+  },
+  {
+    "id": "RAG-003",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "membership",
+    "question": "办卡后不想练了能退款吗？",
+    "expectedDocumentTitle": "会员服务规则",
+    "expectedKeywords": ["退款", "退卡", "剩余"],
+    "notes": "退款规则"
+  },
+  {
+    "id": "RAG-004",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "course",
+    "question": "团课预约后可以取消吗？",
+    "expectedDocumentTitle": "课程预约规则",
+    "expectedKeywords": ["取消", "预约", "开课前"],
+    "notes": "课程取消规则"
+  },
+  {
+    "id": "RAG-005",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "course",
+    "question": "瑜伽课适合零基础会员吗？",
+    "expectedDocumentTitle": "课程介绍",
+    "expectedKeywords": ["瑜伽", "零基础", "初学者"],
+    "notes": "课程适配"
+  },
+  {
+    "id": "RAG-006",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "course",
+    "question": "动感单车课需要提前准备什么？",
+    "expectedDocumentTitle": "课程介绍",
+    "expectedKeywords": ["动感单车", "水", "毛巾"],
+    "notes": "课程准备"
+  },
+  {
+    "id": "RAG-007",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "equipment",
+    "question": "跑步机坏了应该怎么处理？",
+    "expectedDocumentTitle": "器材使用规则",
+    "expectedKeywords": ["报修", "停止使用", "工作人员"],
+    "notes": "器材报修"
+  },
+  {
+    "id": "RAG-008",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "equipment",
+    "question": "使用力量器械后需要归位吗？",
+    "expectedDocumentTitle": "器材使用规则",
+    "expectedKeywords": ["归位", "器械", "安全"],
+    "notes": "器材归位"
+  },
+  {
+    "id": "RAG-009",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "fitness",
+    "question": "新手增肌一周练几次比较合适？",
+    "expectedDocumentTitle": "健身训练建议",
+    "expectedKeywords": ["新手", "增肌", "每周"],
+    "notes": "训练频率"
+  },
+  {
+    "id": "RAG-010",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "fitness",
+    "question": "减脂期间有氧和力量训练怎么安排？",
+    "expectedDocumentTitle": "健身训练建议",
+    "expectedKeywords": ["减脂", "有氧", "力量训练"],
+    "notes": "训练安排"
+  },
+  {
+    "id": "RAG-011",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "fitness",
+    "question": "训练前为什么要热身？",
+    "expectedDocumentTitle": "健身安全须知",
+    "expectedKeywords": ["热身", "受伤", "关节"],
+    "notes": "运动安全"
+  },
+  {
+    "id": "RAG-012",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "fitness",
+    "question": "运动后需要拉伸吗？",
+    "expectedDocumentTitle": "健身安全须知",
+    "expectedKeywords": ["拉伸", "恢复", "肌肉"],
+    "notes": "运动恢复"
+  },
+  {
+    "id": "RAG-013",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "product",
+    "question": "蛋白粉适合什么时候喝？",
+    "expectedDocumentTitle": "商品使用建议",
+    "expectedKeywords": ["蛋白粉", "训练后", "补充"],
+    "notes": "商品建议"
+  },
+  {
+    "id": "RAG-014",
+    "type": "RAG",
+    "difficulty": "EASY",
+    "categoryCode": "product",
+    "question": "积分可以兑换什么商品？",
+    "expectedDocumentTitle": "积分兑换规则",
+    "expectedKeywords": ["积分", "兑换", "商品"],
+    "notes": "积分规则"
+  },
+  {
+    "id": "RAG-015",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "booking",
+    "question": "课程预约满员了还能报名吗？",
+    "expectedDocumentTitle": "课程预约规则",
+    "expectedKeywords": ["满员", "名额", "候补"],
+    "notes": "课程名额"
+  },
+  {
+    "id": "RAG-016",
+    "type": "RAG",
+    "difficulty": "MEDIUM",
+    "categoryCode": "booking",
+    "question": "我迟到了还能进教室上课吗？",
+    "expectedDocumentTitle": "课程预约规则",
+    "expectedKeywords": ["迟到", "入场", "安全"],
+    "notes": "迟到规则"
+  },
+  {
+    "id": "RAG-017",
+    "type": "RAG",
+    "difficulty": "HARD",
+    "categoryCode": "membership",
+    "question": "如果我这个月比较忙，卡的有效期能不能暂停？",
+    "expectedDocumentTitle": "会员服务规则",
+    "expectedKeywords": ["暂停", "冻结", "有效期"],
+    "notes": "口语化停卡"
+  },
+  {
+    "id": "RAG-018",
+    "type": "RAG",
+    "difficulty": "HARD",
+    "categoryCode": "course",
+    "question": "我想找一个强度别太大的课恢复一下，有什么规则要注意？",
+    "expectedDocumentTitle": "课程介绍",
+    "expectedKeywords": ["低强度", "恢复", "预约"],
+    "notes": "组合问题"
+  },
+  {
+    "id": "AGENT-001",
+    "type": "AGENT",
+    "difficulty": "MEDIUM",
+    "categoryCode": "course",
+    "question": "帮我看看最近有什么适合新手的课程",
+    "expectedDocumentTitle": "课程介绍",
+    "expectedKeywords": ["新手", "课程", "适合"],
+    "notes": "只读 Agent 场景"
+  },
+  {
+    "id": "AGENT-002",
+    "type": "AGENT",
+    "difficulty": "MEDIUM",
+    "categoryCode": "membership",
+    "question": "我主要周末来练，哪种会员卡更合适？",
+    "expectedDocumentTitle": "会员服务规则",
+    "expectedKeywords": ["会员卡", "周末", "权益"],
+    "notes": "会员推荐场景"
+  }
+]
