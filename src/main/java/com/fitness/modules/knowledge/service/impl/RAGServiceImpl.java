@@ -18,6 +18,9 @@ import com.fitness.modules.knowledge.rerank.RerankerService;
 import com.fitness.modules.knowledge.rerank.model.RerankCandidate;
 import com.fitness.modules.knowledge.rerank.model.RerankRequest;
 import com.fitness.modules.knowledge.rerank.model.RerankResult;
+import com.fitness.modules.knowledge.rewrite.QueryRewriteService;
+import com.fitness.modules.knowledge.rewrite.model.QueryRewriteRequest;
+import com.fitness.modules.knowledge.rewrite.model.QueryRewriteResult;
 import com.fitness.modules.knowledge.service.EmbeddingService;
 import com.fitness.modules.knowledge.service.KnowledgeChunkService;
 import com.fitness.modules.knowledge.service.RAGService;
@@ -27,6 +30,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -54,8 +58,15 @@ public class RAGServiceImpl implements RAGService {
     private final AIService aiService;
     private final ChatPromptTemplates chatPromptTemplates;
     private final RerankerService rerankerService;
+    private final QueryRewriteService queryRewriteService;
     @Qualifier("ioTaskExecutor")
     private final Executor ioTaskExecutor;
+
+    @Value("${knowledge.rag.query-rewrite.enabled:false}")
+    private boolean queryRewriteEnabled;
+
+    @Value("${knowledge.rag.query-rewrite.max-queries:3}")
+    private int queryRewriteMaxQueries;
 
     @Value("${knowledge.rag.reranker.enabled:false}")
     private boolean rerankerEnabled;
@@ -127,6 +138,37 @@ public class RAGServiceImpl implements RAGService {
             String query, Integer topK, Long categoryId, Double similarityThreshold) {
         log.info("Hybrid retrieval started, query='{}', topK={}", query, topK);
         int effectiveTopK = normalizeTopK(topK);
+        int candidateLimit = rerankCandidateLimit(effectiveTopK);
+        List<String> retrievalQueries = resolveRetrievalQueries(query);
+
+        List<RAGSearchResultVO.RetrievedChunk> allCandidates = new ArrayList<>();
+        for (String retrievalQuery : retrievalQueries) {
+            allCandidates.addAll(retrieveMergedCandidates(
+                    retrievalQuery, effectiveTopK, candidateLimit, categoryId, similarityThreshold));
+        }
+
+        List<RAGSearchResultVO.RetrievedChunk> mergedResults =
+                mergeRetrievedChunks(allCandidates, candidateLimit);
+        List<RAGSearchResultVO.RetrievedChunk> finalResults =
+                applyReranker(query, mergedResults, effectiveTopK);
+
+        log.info("Hybrid retrieval merged, queries={}, finalResults={}", retrievalQueries.size(), finalResults.size());
+        for (int i = 0; i < finalResults.size(); i++) {
+            RAGSearchResultVO.RetrievedChunk chunk = finalResults.get(i);
+            String sourceType = chunk.getSource() == 1 ? "vector" : (chunk.getSource() == 2 ? "keyword" : "hybrid");
+            log.debug("Top-{} source={} title='{}' score={} content={}",
+                    i + 1, sourceType, chunk.getDocumentTitle(), chunk.getSimilarity(), chunk.getContent());
+        }
+
+        return finalResults;
+    }
+
+    private List<RAGSearchResultVO.RetrievedChunk> retrieveMergedCandidates(
+            String query,
+            int effectiveTopK,
+            int candidateLimit,
+            Long categoryId,
+            Double similarityThreshold) {
 
         // 关键词搜索与embedding+向量搜索并行
         CompletableFuture<List<KnowledgeChunkVO>> keywordFuture = CompletableFuture.supplyAsync(
@@ -166,20 +208,7 @@ public class RAGServiceImpl implements RAGService {
                     preview(chunk.getContent()));
         }
 
-        List<RAGSearchResultVO.RetrievedChunk> mergedResults =
-                mergeResults(vectorResults, keywordResults, rerankCandidateLimit(effectiveTopK));
-        List<RAGSearchResultVO.RetrievedChunk> finalResults =
-                applyReranker(query, mergedResults, effectiveTopK);
-
-        log.info("Hybrid retrieval merged, finalResults={}", finalResults.size());
-        for (int i = 0; i < finalResults.size(); i++) {
-            RAGSearchResultVO.RetrievedChunk chunk = finalResults.get(i);
-            String sourceType = chunk.getSource() == 1 ? "vector" : (chunk.getSource() == 2 ? "keyword" : "hybrid");
-            log.debug("Top-{} source={} title='{}' score={} content={}",
-                    i + 1, sourceType, chunk.getDocumentTitle(), chunk.getSimilarity(), chunk.getContent());
-        }
-
-        return finalResults;
+        return mergeResults(vectorResults, keywordResults, candidateLimit);
     }
 
     private List<RAGSearchResultVO.RetrievedChunk> mergeResults(
@@ -231,6 +260,78 @@ public class RAGServiceImpl implements RAGService {
                 .sorted(Comparator.comparingDouble(RAGSearchResultVO.RetrievedChunk::getFinalScore).reversed())
                 .limit(topK)
                 .collect(Collectors.toList());
+    }
+
+    private List<RAGSearchResultVO.RetrievedChunk> mergeRetrievedChunks(
+            List<RAGSearchResultVO.RetrievedChunk> chunks,
+            int topK) {
+        Map<Long, RAGSearchResultVO.RetrievedChunk> mergedResults = new LinkedHashMap<>();
+        for (RAGSearchResultVO.RetrievedChunk chunk : chunks) {
+            if (!mergedResults.containsKey(chunk.getChunkId())) {
+                mergedResults.put(chunk.getChunkId(), chunk);
+                continue;
+            }
+
+            RAGSearchResultVO.RetrievedChunk existing = mergedResults.get(chunk.getChunkId());
+            double existingScore = existing.getFinalScore() != null ? existing.getFinalScore() : 0;
+            double addedScore = chunk.getFinalScore() != null ? chunk.getFinalScore() : 0;
+            double finalScore = existingScore + addedScore;
+            existing.setRrfScore(finalScore);
+            existing.setFinalScore(finalScore);
+            existing.setSimilarity(finalScore);
+            existing.setSource(3);
+            existing.setVectorSimilarity(maxNullable(existing.getVectorSimilarity(), chunk.getVectorSimilarity()));
+            existing.setKeywordScore(maxNullable(existing.getKeywordScore(), chunk.getKeywordScore()));
+        }
+
+        return mergedResults.values().stream()
+                .sorted(Comparator.comparingDouble(RAGSearchResultVO.RetrievedChunk::getFinalScore).reversed())
+                .limit(topK)
+                .collect(Collectors.toList());
+    }
+
+    private Double maxNullable(Double left, Double right) {
+        if (left == null) {
+            return right;
+        }
+        if (right == null) {
+            return left;
+        }
+        return Math.max(left, right);
+    }
+
+    private List<String> resolveRetrievalQueries(String query) {
+        if (!queryRewriteEnabled) {
+            return List.of(query);
+        }
+
+        try {
+            QueryRewriteRequest request = new QueryRewriteRequest();
+            request.setQuery(query);
+            request.setMaxQueries(queryRewriteMaxQueries);
+
+            QueryRewriteResult result = queryRewriteService.rewrite(request);
+            if (result == null || CollUtil.isEmpty(result.getQueries())) {
+                log.info("Query rewrite returned no queries, fallback to original query");
+                return List.of(query);
+            }
+            List<String> queries = result.getQueries().stream()
+                    .filter(StrUtil::isNotBlank)
+                    .distinct()
+                    .limit(normalizeMaxQueries(queryRewriteMaxQueries))
+                    .collect(Collectors.toList());
+            return CollUtil.isEmpty(queries) ? List.of(query) : queries;
+        } catch (Exception ex) {
+            log.warn("Query rewrite failed, fallback to original query: {}", ex.getMessage());
+            return List.of(query);
+        }
+    }
+
+    private int normalizeMaxQueries(Integer maxQueries) {
+        if (maxQueries == null || maxQueries <= 0) {
+            return 3;
+        }
+        return Math.min(maxQueries, 5);
     }
 
     @Override

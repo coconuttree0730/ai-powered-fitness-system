@@ -12,6 +12,8 @@ import com.fitness.modules.knowledge.rerank.RerankerService;
 import com.fitness.modules.knowledge.rerank.impl.NoopRerankerServiceImpl;
 import com.fitness.modules.knowledge.rerank.model.RerankRequest;
 import com.fitness.modules.knowledge.rerank.model.RerankResult;
+import com.fitness.modules.knowledge.rewrite.impl.NoopQueryRewriteServiceImpl;
+import com.fitness.modules.knowledge.rewrite.model.QueryRewriteResult;
 import com.fitness.modules.knowledge.service.EmbeddingService;
 import com.fitness.modules.knowledge.service.KnowledgeChunkService;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,7 @@ class RAGServiceImplTest {
                 aiService,
                 chatPromptTemplates,
                 new NoopRerankerServiceImpl(),
+                new NoopQueryRewriteServiceImpl(),
                 Runnable::run);
 
         List<RAGSearchResultVO.RetrievedChunk> results =
@@ -91,6 +94,7 @@ class RAGServiceImplTest {
                 aiService,
                 chatPromptTemplates,
                 rerankerService,
+                new NoopQueryRewriteServiceImpl(),
                 Runnable::run);
         ReflectionTestUtils.setField(service, "rerankerEnabled", true);
         ReflectionTestUtils.setField(service, "rerankerTopN", 20);
@@ -130,7 +134,11 @@ class RAGServiceImplTest {
                 aiService,
                 chatPromptTemplates,
                 rerankerService,
+                new NoopQueryRewriteServiceImpl(),
                 Runnable::run);
+
+        ReflectionTestUtils.setField(service, "queryRewriteEnabled", false);
+        ReflectionTestUtils.setField(service, "queryRewriteMaxQueries", 3);
         ReflectionTestUtils.setField(service, "rerankerEnabled", true);
         ReflectionTestUtils.setField(service, "rerankerTopN", 20);
 
@@ -140,6 +148,50 @@ class RAGServiceImplTest {
         assertEquals(1L, results.get(0).getChunkId());
         assertEquals(2L, results.get(1).getChunkId());
         assertEquals(null, results.get(0).getRerankScore());
+    }
+
+    @Test
+    void hybridSearchShouldUseRewrittenQueriesWhenEnabled() {
+        EmbeddingService embeddingService = mock(EmbeddingService.class);
+        KnowledgeChunkService chunkService = mock(KnowledgeChunkService.class);
+        KnowledgeCategoryMapper categoryMapper = mock(KnowledgeCategoryMapper.class);
+        AIService aiService = mock(AIService.class);
+        ChatPromptTemplates chatPromptTemplates = mock(ChatPromptTemplates.class);
+        QueryRewriteResult rewriteResult = new QueryRewriteResult();
+        rewriteResult.setOriginalQuery("有哪些课程");
+        rewriteResult.setQueries(List.of("有哪些课程", "团课 私教 课程 预约"));
+        rewriteResult.setStrategy("test");
+
+        when(embeddingService.embed("有哪些课程")).thenReturn(new float[] {0.1f, 0.2f});
+        when(embeddingService.embed("团课 私教 课程 预约")).thenReturn(new float[] {0.2f, 0.3f});
+        when(chunkService.vectorSearch(any(), eq(4), eq(null), eq(0.7)))
+                .thenReturn(List.of(chunk(1L, "课程规则", "课程列表", 0.70)))
+                .thenReturn(List.of(chunk(2L, "团课规则", "团课预约", 0.80)));
+        when(chunkService.keywordSearch("有哪些课程", 4, null))
+                .thenReturn(List.of(chunk(1L, "课程规则", "课程列表", 0.50)));
+        when(chunkService.keywordSearch("团课 私教 课程 预约", 4, null))
+                .thenReturn(List.of(chunk(2L, "团课规则", "团课预约", 0.60)));
+
+        RAGServiceImpl service = new RAGServiceImpl(
+                embeddingService,
+                chunkService,
+                categoryMapper,
+                aiService,
+                chatPromptTemplates,
+                new NoopRerankerServiceImpl(),
+                request -> rewriteResult,
+                Runnable::run);
+        ReflectionTestUtils.setField(service, "queryRewriteEnabled", true);
+        ReflectionTestUtils.setField(service, "queryRewriteMaxQueries", 3);
+
+        List<RAGSearchResultVO.RetrievedChunk> results =
+                service.hybridSearch("有哪些课程", 2, null, 0.7);
+
+        assertEquals(2, results.size());
+        verify(embeddingService).embed("有哪些课程");
+        verify(embeddingService).embed("团课 私教 课程 预约");
+        verify(chunkService).keywordSearch("有哪些课程", 4, null);
+        verify(chunkService).keywordSearch("团课 私教 课程 预约", 4, null);
     }
 
     @Test
@@ -163,6 +215,7 @@ class RAGServiceImplTest {
                 aiService,
                 chatPromptTemplates,
                 new NoopRerankerServiceImpl(),
+                new NoopQueryRewriteServiceImpl(),
                 Runnable::run);
         RAGDebugQueryDTO queryDTO = new RAGDebugQueryDTO();
         queryDTO.setQuery("会员卡转让");
@@ -206,6 +259,7 @@ class RAGServiceImplTest {
                 aiService,
                 chatPromptTemplates,
                 rerankerService,
+                new NoopQueryRewriteServiceImpl(),
                 Runnable::run);
         ReflectionTestUtils.setField(service, "rerankerEnabled", true);
         ReflectionTestUtils.setField(service, "rerankerTopN", 20);
@@ -245,6 +299,7 @@ class RAGServiceImplTest {
                 aiService,
                 chatPromptTemplates,
                 new NoopRerankerServiceImpl(),
+                new NoopQueryRewriteServiceImpl(),
                 Runnable::run);
         RAGDebugQueryDTO queryDTO = new RAGDebugQueryDTO();
         queryDTO.setQuery("会员卡转让");

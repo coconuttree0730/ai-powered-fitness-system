@@ -95,6 +95,10 @@ knowledge:
     size: ${KNOWLEDGE_CHUNK_SIZE:500}
     overlap: ${KNOWLEDGE_CHUNK_OVERLAP:50}
   rag:
+    query-rewrite:
+      enabled: ${KNOWLEDGE_RAG_QUERY_REWRITE_ENABLED:false}
+      provider: ${KNOWLEDGE_RAG_QUERY_REWRITE_PROVIDER:noop}
+      max-queries: ${KNOWLEDGE_RAG_QUERY_REWRITE_MAX_QUERIES:3}
     reranker:
       enabled: ${KNOWLEDGE_RAG_RERANKER_ENABLED:false}
       provider: ${KNOWLEDGE_RAG_RERANKER_PROVIDER:noop}
