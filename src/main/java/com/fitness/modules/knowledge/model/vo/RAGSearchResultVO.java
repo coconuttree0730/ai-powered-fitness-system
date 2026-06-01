@@ -38,6 +38,8 @@ public class RAGSearchResultVO {
 
         private Double finalScore;
 
+        private Double rerankScore;
+
         private String categoryName;
 
         private Integer source;

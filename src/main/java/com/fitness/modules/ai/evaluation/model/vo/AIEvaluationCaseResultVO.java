@@ -18,6 +18,10 @@ public class AIEvaluationCaseResultVO {
 
     private String topDocumentTitle;
 
+    private Boolean rerankEnabled;
+
+    private Double topRerankScore;
+
     private List<String> matchedKeywords;
 
     private Long retrievalTimeMs;

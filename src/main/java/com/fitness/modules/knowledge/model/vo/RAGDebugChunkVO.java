@@ -22,6 +22,8 @@ public class RAGDebugChunkVO {
 
     private Double finalScore;
 
+    private Double rerankScore;
+
     private Integer source;
 
     private Integer rank;

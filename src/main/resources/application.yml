@@ -94,6 +94,13 @@ knowledge:
   chunk:
     size: ${KNOWLEDGE_CHUNK_SIZE:500}
     overlap: ${KNOWLEDGE_CHUNK_OVERLAP:50}
+  rag:
+    reranker:
+      enabled: ${KNOWLEDGE_RAG_RERANKER_ENABLED:false}
+      provider: ${KNOWLEDGE_RAG_RERANKER_PROVIDER:noop}
+      endpoint: ${KNOWLEDGE_RAG_RERANKER_ENDPOINT:http://localhost:8081/rerank}
+      top-n: ${KNOWLEDGE_RAG_RERANKER_TOP_N:20}
+      timeout-ms: ${KNOWLEDGE_RAG_RERANKER_TIMEOUT_MS:3000}
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml

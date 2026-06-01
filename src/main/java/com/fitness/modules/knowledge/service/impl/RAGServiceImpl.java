@@ -14,19 +14,26 @@ import com.fitness.modules.knowledge.model.vo.KnowledgeChunkVO;
 import com.fitness.modules.knowledge.model.vo.RAGDebugChunkVO;
 import com.fitness.modules.knowledge.model.vo.RAGDebugResultVO;
 import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
+import com.fitness.modules.knowledge.rerank.RerankerService;
+import com.fitness.modules.knowledge.rerank.model.RerankCandidate;
+import com.fitness.modules.knowledge.rerank.model.RerankRequest;
+import com.fitness.modules.knowledge.rerank.model.RerankResult;
 import com.fitness.modules.knowledge.service.EmbeddingService;
 import com.fitness.modules.knowledge.service.KnowledgeChunkService;
 import com.fitness.modules.knowledge.service.RAGService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -46,8 +53,15 @@ public class RAGServiceImpl implements RAGService {
     private final KnowledgeCategoryMapper categoryMapper;
     private final AIService aiService;
     private final ChatPromptTemplates chatPromptTemplates;
+    private final RerankerService rerankerService;
     @Qualifier("ioTaskExecutor")
     private final Executor ioTaskExecutor;
+
+    @Value("${knowledge.rag.reranker.enabled:false}")
+    private boolean rerankerEnabled;
+
+    @Value("${knowledge.rag.reranker.top-n:20}")
+    private int rerankerTopN;
 
     @Override
     public RAGSearchResultVO search(RAGQueryDTO queryDTO) {
@@ -152,8 +166,10 @@ public class RAGServiceImpl implements RAGService {
                     preview(chunk.getContent()));
         }
 
+        List<RAGSearchResultVO.RetrievedChunk> mergedResults =
+                mergeResults(vectorResults, keywordResults, rerankCandidateLimit(effectiveTopK));
         List<RAGSearchResultVO.RetrievedChunk> finalResults =
-                mergeResults(vectorResults, keywordResults, effectiveTopK);
+                applyReranker(query, mergedResults, effectiveTopK);
 
         log.info("Hybrid retrieval merged, finalResults={}", finalResults.size());
         for (int i = 0; i < finalResults.size(); i++) {
@@ -259,7 +275,10 @@ public class RAGServiceImpl implements RAGService {
         result.setKeywordSearchTimeMs(System.currentTimeMillis() - keywordStart);
 
         List<RAGSearchResultVO.RetrievedChunk> mergedResults =
-                mergeResults(vectorResults, keywordResults, effectiveTopK);
+                applyReranker(
+                        queryDTO.getQuery(),
+                        mergeResults(vectorResults, keywordResults, rerankCandidateLimit(effectiveTopK)),
+                        effectiveTopK);
 
         result.setVectorChunks(toDebugChunks(vectorResults, 1));
         result.setKeywordChunks(toDebugChunks(keywordResults, 2));
@@ -350,9 +369,104 @@ public class RAGServiceImpl implements RAGService {
         debugChunk.setKeywordScore(chunk.getKeywordScore());
         debugChunk.setRrfScore(chunk.getRrfScore());
         debugChunk.setFinalScore(chunk.getFinalScore());
+        debugChunk.setRerankScore(chunk.getRerankScore());
         debugChunk.setSource(chunk.getSource());
         debugChunk.setRank(rank);
         return debugChunk;
+    }
+
+    private List<RAGSearchResultVO.RetrievedChunk> applyReranker(
+            String query,
+            List<RAGSearchResultVO.RetrievedChunk> candidates,
+            int topK) {
+        if (!rerankerEnabled || CollUtil.isEmpty(candidates)) {
+            return limitByFinalScore(candidates, topK);
+        }
+
+        try {
+            RerankRequest request = new RerankRequest();
+            request.setQuery(query);
+            request.setTopN(topK);
+            request.setCandidates(toRerankCandidates(candidates));
+
+            List<RerankResult> rerankResults = rerankerService.rerank(request);
+            if (CollUtil.isEmpty(rerankResults)) {
+                log.info("Reranker returned no results, fallback to RRF order");
+                return limitByFinalScore(candidates, topK);
+            }
+            return reorderByRerankResults(candidates, rerankResults, topK);
+        } catch (Exception ex) {
+            log.warn("Reranker failed, fallback to RRF order: {}", ex.getMessage());
+            return limitByFinalScore(candidates, topK);
+        }
+    }
+
+    private List<RerankCandidate> toRerankCandidates(List<RAGSearchResultVO.RetrievedChunk> chunks) {
+        return IntStream.range(0, chunks.size())
+                .mapToObj(index -> toRerankCandidate(chunks.get(index), index + 1))
+                .collect(Collectors.toList());
+    }
+
+    private RerankCandidate toRerankCandidate(RAGSearchResultVO.RetrievedChunk chunk, int rank) {
+        RerankCandidate candidate = new RerankCandidate();
+        candidate.setChunkId(chunk.getChunkId());
+        candidate.setContent(chunk.getContent());
+        candidate.setOriginalScore(chunk.getFinalScore());
+        candidate.setOriginalRank(rank);
+        return candidate;
+    }
+
+    private List<RAGSearchResultVO.RetrievedChunk> reorderByRerankResults(
+            List<RAGSearchResultVO.RetrievedChunk> candidates,
+            List<RerankResult> rerankResults,
+            int topK) {
+        Map<Long, RAGSearchResultVO.RetrievedChunk> candidateMap = candidates.stream()
+                .collect(Collectors.toMap(
+                        RAGSearchResultVO.RetrievedChunk::getChunkId,
+                        chunk -> chunk,
+                        (left, right) -> left,
+                        LinkedHashMap::new));
+        Set<Long> seenChunkIds = new HashSet<>();
+        List<RAGSearchResultVO.RetrievedChunk> reranked = rerankResults.stream()
+                .sorted(Comparator.comparingInt(result -> result.getRank() == null ? Integer.MAX_VALUE : result.getRank()))
+                .map(result -> applyRerankScore(candidateMap.get(result.getChunkId()), result))
+                .filter(chunk -> chunk != null && seenChunkIds.add(chunk.getChunkId()))
+                .collect(Collectors.toList());
+
+        candidates.stream()
+                .filter(chunk -> !seenChunkIds.contains(chunk.getChunkId()))
+                .sorted(Comparator.comparingDouble(RAGSearchResultVO.RetrievedChunk::getFinalScore).reversed())
+                .forEach(reranked::add);
+
+        return reranked.stream()
+                .limit(topK)
+                .collect(Collectors.toList());
+    }
+
+    private RAGSearchResultVO.RetrievedChunk applyRerankScore(
+            RAGSearchResultVO.RetrievedChunk chunk,
+            RerankResult result) {
+        if (chunk == null) {
+            return null;
+        }
+        chunk.setRerankScore(result.getScore());
+        return chunk;
+    }
+
+    private List<RAGSearchResultVO.RetrievedChunk> limitByFinalScore(
+            List<RAGSearchResultVO.RetrievedChunk> candidates,
+            int topK) {
+        return candidates.stream()
+                .sorted(Comparator.comparingDouble(RAGSearchResultVO.RetrievedChunk::getFinalScore).reversed())
+                .limit(topK)
+                .collect(Collectors.toList());
+    }
+
+    private int rerankCandidateLimit(int topK) {
+        if (!rerankerEnabled || rerankerTopN <= 0) {
+            return topK;
+        }
+        return Math.max(topK, Math.min(rerankerTopN, topK * 4));
     }
 
     private int normalizeTopK(Integer topK) {

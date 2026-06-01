@@ -86,6 +86,8 @@ public class AIEvaluationServiceImpl implements AIEvaluationService {
                 ? Collections.emptyList()
                 : debugResult.getMergedChunks();
         String topDocumentTitle = chunks.isEmpty() ? null : chunks.get(0).getDocumentTitle();
+        Double topRerankScore = chunks.isEmpty() ? null : chunks.get(0).getRerankScore();
+        boolean rerankEnabled = chunks.stream().anyMatch(chunk -> chunk.getRerankScore() != null);
         boolean matchedDocument = matchesDocument(chunks, evaluationCase.getExpectedDocumentTitle());
         List<String> matchedKeywords = matchedKeywords(chunks, evaluationCase.getExpectedKeywords());
         boolean matchedKeyword = !matchedKeywords.isEmpty();
@@ -97,6 +99,8 @@ public class AIEvaluationServiceImpl implements AIEvaluationService {
         result.setMatchedKeyword(matchedKeyword);
         result.setPassed(matchedDocument || matchedKeyword);
         result.setTopDocumentTitle(topDocumentTitle);
+        result.setRerankEnabled(rerankEnabled);
+        result.setTopRerankScore(topRerankScore);
         result.setMatchedKeywords(matchedKeywords);
         result.setRetrievalTimeMs(debugResult.getRetrievalTimeMs());
         result.setTotalTimeMs(System.currentTimeMillis() - startTime);

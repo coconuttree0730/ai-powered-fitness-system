@@ -269,6 +269,9 @@
                 <el-table-column label="最终分" width="88">
                   <template #default="{ row }">{{ formatScore(row.finalScore) }}</template>
                 </el-table-column>
+                <el-table-column label="Rerank" width="88">
+                  <template #default="{ row }">{{ formatScore(row.rerankScore) }}</template>
+                </el-table-column>
                 <el-table-column prop="contentPreview" label="内容" min-width="180" show-overflow-tooltip />
               </el-table>
             </el-col>
@@ -337,6 +340,12 @@
               <template #default="{ row }">{{ row.matchedKeyword ? '是' : '否' }}</template>
             </el-table-column>
             <el-table-column prop="topDocumentTitle" label="Top文档" min-width="140" show-overflow-tooltip />
+            <el-table-column label="Rerank" width="88">
+              <template #default="{ row }">{{ row.rerankEnabled ? 'ON' : 'OFF' }}</template>
+            </el-table-column>
+            <el-table-column label="Rerank分" width="96">
+              <template #default="{ row }">{{ formatScore(row.topRerankScore) }}</template>
+            </el-table-column>
             <el-table-column label="关键词" min-width="160" show-overflow-tooltip>
               <template #default="{ row }">{{ (row.matchedKeywords || []).join('、') || '-' }}</template>
             </el-table-column>

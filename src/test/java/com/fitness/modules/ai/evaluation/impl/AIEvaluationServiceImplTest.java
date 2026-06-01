@@ -27,6 +27,7 @@ class AIEvaluationServiceImplTest {
         RAGDebugChunkVO chunk = new RAGDebugChunkVO();
         chunk.setDocumentTitle("会员服务规则");
         chunk.setContent("会员卡仅限本人使用，不得转借或转让。");
+        chunk.setRerankScore(0.88);
         RAGDebugResultVO debugResult = new RAGDebugResultVO();
         debugResult.setMergedChunks(List.of(chunk));
         debugResult.setRetrievalTimeMs(12L);
@@ -43,6 +44,8 @@ class AIEvaluationServiceImplTest {
         assertEquals(1.0, result.getHitRate());
         assertTrue(result.getCases().get(0).getMatchedDocument());
         assertTrue(result.getCases().get(0).getMatchedKeyword());
+        assertTrue(result.getCases().get(0).getRerankEnabled());
+        assertEquals(0.88, result.getCases().get(0).getTopRerankScore());
         ArgumentCaptor<RAGDebugQueryDTO> queryCaptor = ArgumentCaptor.forClass(RAGDebugQueryDTO.class);
         verify(ragService).debugSearch(queryCaptor.capture());
         assertEquals("membership", queryCaptor.getValue().getCategoryCode());

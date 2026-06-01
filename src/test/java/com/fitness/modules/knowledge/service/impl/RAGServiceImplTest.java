@@ -8,9 +8,14 @@ import com.fitness.modules.knowledge.model.entity.KnowledgeCategory;
 import com.fitness.modules.knowledge.model.vo.KnowledgeChunkVO;
 import com.fitness.modules.knowledge.model.vo.RAGDebugResultVO;
 import com.fitness.modules.knowledge.model.vo.RAGSearchResultVO;
+import com.fitness.modules.knowledge.rerank.RerankerService;
+import com.fitness.modules.knowledge.rerank.impl.NoopRerankerServiceImpl;
+import com.fitness.modules.knowledge.rerank.model.RerankRequest;
+import com.fitness.modules.knowledge.rerank.model.RerankResult;
 import com.fitness.modules.knowledge.service.EmbeddingService;
 import com.fitness.modules.knowledge.service.KnowledgeChunkService;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -45,6 +50,7 @@ class RAGServiceImplTest {
                 categoryMapper,
                 aiService,
                 chatPromptTemplates,
+                new NoopRerankerServiceImpl(),
                 Runnable::run);
 
         List<RAGSearchResultVO.RetrievedChunk> results =
@@ -57,6 +63,83 @@ class RAGServiceImplTest {
         assertEquals(chunk.getRrfScore(), chunk.getFinalScore());
         assertEquals(chunk.getFinalScore(), chunk.getSimilarity());
         assertEquals(3, chunk.getSource());
+    }
+
+    @Test
+    void hybridSearchShouldApplyRerankerWhenEnabled() {
+        EmbeddingService embeddingService = mock(EmbeddingService.class);
+        KnowledgeChunkService chunkService = mock(KnowledgeChunkService.class);
+        KnowledgeCategoryMapper categoryMapper = mock(KnowledgeCategoryMapper.class);
+        AIService aiService = mock(AIService.class);
+        ChatPromptTemplates chatPromptTemplates = mock(ChatPromptTemplates.class);
+        RerankerService rerankerService = request -> List.of(
+                rerankResult(2L, 0.95, 1),
+                rerankResult(1L, 0.20, 2));
+
+        when(embeddingService.embed("membership transfer")).thenReturn(new float[] {0.1f, 0.2f});
+        when(chunkService.vectorSearch(any(), eq(4), eq(null), eq(0.7)))
+                .thenReturn(List.of(
+                        chunk(1L, "General Rule", "general fitness rule", 0.90),
+                        chunk(2L, "Membership Rule", "membership transfer is not allowed", 0.30)));
+        when(chunkService.keywordSearch("membership transfer", 4, null))
+                .thenReturn(List.of());
+
+        RAGServiceImpl service = new RAGServiceImpl(
+                embeddingService,
+                chunkService,
+                categoryMapper,
+                aiService,
+                chatPromptTemplates,
+                rerankerService,
+                Runnable::run);
+        ReflectionTestUtils.setField(service, "rerankerEnabled", true);
+        ReflectionTestUtils.setField(service, "rerankerTopN", 20);
+
+        List<RAGSearchResultVO.RetrievedChunk> results =
+                service.hybridSearch("membership transfer", 2, null, 0.7);
+
+        assertEquals(2L, results.get(0).getChunkId());
+        assertEquals(0.95, results.get(0).getRerankScore());
+        assertEquals(1L, results.get(1).getChunkId());
+        assertEquals(0.20, results.get(1).getRerankScore());
+    }
+
+    @Test
+    void hybridSearchShouldFallbackToRrfOrderWhenRerankerFails() {
+        EmbeddingService embeddingService = mock(EmbeddingService.class);
+        KnowledgeChunkService chunkService = mock(KnowledgeChunkService.class);
+        KnowledgeCategoryMapper categoryMapper = mock(KnowledgeCategoryMapper.class);
+        AIService aiService = mock(AIService.class);
+        ChatPromptTemplates chatPromptTemplates = mock(ChatPromptTemplates.class);
+        RerankerService rerankerService = request -> {
+            throw new IllegalStateException("reranker unavailable");
+        };
+
+        when(embeddingService.embed("membership transfer")).thenReturn(new float[] {0.1f, 0.2f});
+        when(chunkService.vectorSearch(any(), eq(4), eq(null), eq(0.7)))
+                .thenReturn(List.of(
+                        chunk(1L, "General Rule", "general fitness rule", 0.90),
+                        chunk(2L, "Membership Rule", "membership transfer is not allowed", 0.30)));
+        when(chunkService.keywordSearch("membership transfer", 4, null))
+                .thenReturn(List.of());
+
+        RAGServiceImpl service = new RAGServiceImpl(
+                embeddingService,
+                chunkService,
+                categoryMapper,
+                aiService,
+                chatPromptTemplates,
+                rerankerService,
+                Runnable::run);
+        ReflectionTestUtils.setField(service, "rerankerEnabled", true);
+        ReflectionTestUtils.setField(service, "rerankerTopN", 20);
+
+        List<RAGSearchResultVO.RetrievedChunk> results =
+                service.hybridSearch("membership transfer", 2, null, 0.7);
+
+        assertEquals(1L, results.get(0).getChunkId());
+        assertEquals(2L, results.get(1).getChunkId());
+        assertEquals(null, results.get(0).getRerankScore());
     }
 
     @Test
@@ -79,6 +162,7 @@ class RAGServiceImplTest {
                 categoryMapper,
                 aiService,
                 chatPromptTemplates,
+                new NoopRerankerServiceImpl(),
                 Runnable::run);
         RAGDebugQueryDTO queryDTO = new RAGDebugQueryDTO();
         queryDTO.setQuery("会员卡转让");
@@ -96,6 +180,44 @@ class RAGServiceImplTest {
         assertEquals(result.getMergedChunks().get(0).getRrfScore(),
                 result.getMergedChunks().get(0).getFinalScore());
         verify(aiService, never()).chat(any(), any());
+    }
+
+    @Test
+    void debugSearchShouldExposeRerankScoreWhenRerankerIsEnabled() {
+        EmbeddingService embeddingService = mock(EmbeddingService.class);
+        KnowledgeChunkService chunkService = mock(KnowledgeChunkService.class);
+        KnowledgeCategoryMapper categoryMapper = mock(KnowledgeCategoryMapper.class);
+        AIService aiService = mock(AIService.class);
+        ChatPromptTemplates chatPromptTemplates = mock(ChatPromptTemplates.class);
+        RerankerService rerankerService = request -> List.of(rerankResult(2L, 0.91, 1));
+
+        when(embeddingService.embed("membership transfer")).thenReturn(new float[] {0.1f, 0.2f});
+        when(chunkService.vectorSearch(any(), eq(4), eq(null), eq(0.7)))
+                .thenReturn(List.of(
+                        chunk(1L, "General Rule", "general fitness rule", 0.90),
+                        chunk(2L, "Membership Rule", "membership transfer is not allowed", 0.30)));
+        when(chunkService.keywordSearch("membership transfer", 4, null))
+                .thenReturn(List.of());
+
+        RAGServiceImpl service = new RAGServiceImpl(
+                embeddingService,
+                chunkService,
+                categoryMapper,
+                aiService,
+                chatPromptTemplates,
+                rerankerService,
+                Runnable::run);
+        ReflectionTestUtils.setField(service, "rerankerEnabled", true);
+        ReflectionTestUtils.setField(service, "rerankerTopN", 20);
+        RAGDebugQueryDTO queryDTO = new RAGDebugQueryDTO();
+        queryDTO.setQuery("membership transfer");
+        queryDTO.setTopK(2);
+        queryDTO.setSimilarityThreshold(0.7);
+
+        RAGDebugResultVO result = service.debugSearch(queryDTO);
+
+        assertEquals(2L, result.getMergedChunks().get(0).getChunkId());
+        assertEquals(0.91, result.getMergedChunks().get(0).getRerankScore());
     }
 
     @Test
@@ -122,6 +244,7 @@ class RAGServiceImplTest {
                 categoryMapper,
                 aiService,
                 chatPromptTemplates,
+                new NoopRerankerServiceImpl(),
                 Runnable::run);
         RAGDebugQueryDTO queryDTO = new RAGDebugQueryDTO();
         queryDTO.setQuery("会员卡转让");
@@ -145,5 +268,13 @@ class RAGServiceImplTest {
         chunk.setContent(content);
         chunk.setSimilarity(similarity);
         return chunk;
+    }
+
+    private RerankResult rerankResult(Long chunkId, Double score, Integer rank) {
+        RerankResult result = new RerankResult();
+        result.setChunkId(chunkId);
+        result.setScore(score);
+        result.setRank(rank);
+        return result;
     }
 }
