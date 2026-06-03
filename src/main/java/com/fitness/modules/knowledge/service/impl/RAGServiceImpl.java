@@ -480,6 +480,7 @@ public class RAGServiceImpl implements RAGService {
             String query,
             List<RAGSearchResultVO.RetrievedChunk> candidates,
             int topK) {
+        log.info("applyReranker called: rerankerEnabled={}, candidates={}, topK={}", rerankerEnabled, candidates == null ? 0 : candidates.size(), topK);
         if (!rerankerEnabled || CollUtil.isEmpty(candidates)) {
             return limitByFinalScore(candidates, topK);
         }
@@ -491,6 +492,7 @@ public class RAGServiceImpl implements RAGService {
             request.setCandidates(toRerankCandidates(candidates));
 
             List<RerankResult> rerankResults = rerankerService.rerank(request);
+            log.info("Reranker returned {} results", rerankResults == null ? 0 : rerankResults.size());
             if (CollUtil.isEmpty(rerankResults)) {
                 log.info("Reranker returned no results, fallback to RRF order");
                 return limitByFinalScore(candidates, topK);

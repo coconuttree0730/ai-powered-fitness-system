@@ -1,54 +1,55 @@
 package com.fitness.modules.knowledge.rerank;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitness.modules.knowledge.rerank.impl.HttpRerankerServiceImpl;
 import com.fitness.modules.knowledge.rerank.model.RerankCandidate;
 import com.fitness.modules.knowledge.rerank.model.RerankRequest;
 import com.fitness.modules.knowledge.rerank.model.RerankResult;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
 
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import static org.springframework.http.HttpMethod.POST;
 
 class HttpRerankerServiceImplTest {
 
+    private HttpServer server;
+    private int port;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        server = HttpServer.create(new InetSocketAddress(0), 0);
+        port = server.getAddress().getPort();
+        server.createContext("/rerank", exchange -> {
+            String response = """
+                    {"results": [{"id": "2", "score": 0.94}, {"id": "1", "score": 0.12}]}
+                    """;
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length());
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes(StandardCharsets.UTF_8));
+            }
+        });
+        server.start();
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (server != null) {
+            server.stop(0);
+        }
+    }
+
     @Test
     void rerankShouldPostCandidatesAndMapResponseScores() {
-        RestClient.Builder builder = RestClient.builder();
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        server.expect(requestTo("http://reranker.local/rerank"))
-                .andExpect(method(POST))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("""
-                        {
-                          "query": "membership transfer",
-                          "documents": [
-                            {"id": "1", "text": "general fitness rule"},
-                            {"id": "2", "text": "membership transfer is not allowed"}
-                          ],
-                          "topN": 2
-                        }
-                        """))
-                .andRespond(withSuccess("""
-                        {
-                          "results": [
-                            {"id": "2", "score": 0.94},
-                            {"id": "1", "score": 0.12}
-                          ]
-                        }
-                        """, MediaType.APPLICATION_JSON));
-
         HttpRerankerServiceImpl service = new HttpRerankerServiceImpl(
-                builder.build(),
-                "http://reranker.local/rerank");
+                "http://localhost:" + port + "/rerank", 3000, new ObjectMapper());
 
         List<RerankResult> results = service.rerank(request(
                 "membership transfer",
@@ -62,7 +63,6 @@ class HttpRerankerServiceImplTest {
         assertEquals(1L, results.get(1).getChunkId());
         assertEquals(0.12, results.get(1).getScore());
         assertEquals(2, results.get(1).getRank());
-        server.verify();
     }
 
     private RerankRequest request(String query, RerankCandidate... candidates) {

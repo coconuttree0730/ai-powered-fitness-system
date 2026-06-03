@@ -1,19 +1,21 @@
 package com.fitness.modules.knowledge.rerank.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitness.modules.knowledge.rerank.RerankerService;
 import com.fitness.modules.knowledge.rerank.model.RerankCandidate;
 import com.fitness.modules.knowledge.rerank.model.RerankRequest;
 import com.fitness.modules.knowledge.rerank.model.RerankResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
-import java.time.Duration;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -22,21 +24,24 @@ import java.util.stream.IntStream;
 @Slf4j
 public class HttpRerankerServiceImpl implements RerankerService {
 
-    private final RestClient restClient;
     private final String endpoint;
+    private final int timeoutMs;
+    private final ObjectMapper objectMapper;
 
+    @Autowired
     public HttpRerankerServiceImpl(
-            RestClient.Builder restClientBuilder,
+            ObjectMapper objectMapper,
             @Value("${knowledge.rag.reranker.endpoint:http://localhost:8081/rerank}") String endpoint,
-            @Value("${knowledge.rag.reranker.timeout-ms:3000}") int timeoutMs) {
-        this(restClientBuilder
-                .requestFactory(requestFactory(timeoutMs))
-                .build(), endpoint);
+            @Value("${knowledge.rag.reranker.timeout-ms:10000}") int timeoutMs) {
+        this.endpoint = endpoint;
+        this.timeoutMs = timeoutMs;
+        this.objectMapper = objectMapper;
     }
 
-    public HttpRerankerServiceImpl(RestClient restClient, String endpoint) {
+    public HttpRerankerServiceImpl(String endpoint, int timeoutMs, ObjectMapper objectMapper) {
         this.endpoint = endpoint;
-        this.restClient = restClient;
+        this.timeoutMs = timeoutMs;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -45,28 +50,42 @@ public class HttpRerankerServiceImpl implements RerankerService {
             return List.of();
         }
 
-        HttpRerankResponse response = restClient.post()
-                .uri(endpoint)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(toHttpRequest(request))
-                .retrieve()
-                .body(HttpRerankResponse.class);
-        if (response == null || CollUtil.isEmpty(response.results())) {
+        try {
+            String requestJson = objectMapper.writeValueAsString(toHttpRequest(request));
+            log.info("Reranker request: {} bytes, {} candidates", requestJson.length(), request.getCandidates().size());
+
+            HttpURLConnection conn = (HttpURLConnection) URI.create(endpoint).toURL().openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setConnectTimeout(timeoutMs);
+            conn.setReadTimeout(timeoutMs);
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(requestJson.getBytes(StandardCharsets.UTF_8));
+            }
+
+            int status = conn.getResponseCode();
+            if (status != 200) {
+                log.warn("Reranker returned HTTP {}", status);
+                return List.of();
+            }
+
+            String responseJson = new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            HttpRerankResponse response = objectMapper.readValue(responseJson, HttpRerankResponse.class);
+
+            if (response == null || CollUtil.isEmpty(response.results())) {
+                return List.of();
+            }
+
+            return IntStream.range(0, response.results().size())
+                    .mapToObj(index -> toRerankResult(response.results().get(index), index + 1))
+                    .filter(result -> result.getChunkId() != null)
+                    .toList();
+        } catch (Exception ex) {
+            log.warn("Reranker HTTP call failed: {}", ex.getMessage());
             return List.of();
         }
-
-        return IntStream.range(0, response.results().size())
-                .mapToObj(index -> toRerankResult(response.results().get(index), index + 1))
-                .filter(result -> result.getChunkId() != null)
-                .toList();
-    }
-
-    private static SimpleClientHttpRequestFactory requestFactory(int timeoutMs) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        Duration timeout = Duration.ofMillis(Math.max(timeoutMs, 1));
-        requestFactory.setConnectTimeout(timeout);
-        requestFactory.setReadTimeout(timeout);
-        return requestFactory;
     }
 
     private HttpRerankRequest toHttpRequest(RerankRequest request) {
@@ -77,7 +96,12 @@ public class HttpRerankerServiceImpl implements RerankerService {
     }
 
     private HttpRerankDocument toHttpDocument(RerankCandidate candidate) {
-        return new HttpRerankDocument(String.valueOf(candidate.getChunkId()), candidate.getContent());
+        // 截断内容以避免请求体过大导致超时
+        String content = candidate.getContent();
+        if (content != null && content.length() > 500) {
+            content = content.substring(0, 500);
+        }
+        return new HttpRerankDocument(String.valueOf(candidate.getChunkId()), content);
     }
 
     private RerankResult toRerankResult(HttpRerankItem item, int rank) {
