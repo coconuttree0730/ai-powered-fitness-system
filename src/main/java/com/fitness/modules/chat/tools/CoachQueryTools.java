@@ -11,7 +11,12 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class CoachQueryTools {
+public class CoachQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final CoachDetailService coachDetailService;
 

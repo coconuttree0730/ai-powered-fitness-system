@@ -13,7 +13,12 @@ import java.time.Duration;
 
 @Slf4j
 @Component
-public class WeatherQueryTools {
+public class WeatherQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;

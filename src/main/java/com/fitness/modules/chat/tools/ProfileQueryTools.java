@@ -9,7 +9,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ProfileQueryTools {
+public class ProfileQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final UserFitnessProfileService userFitnessProfileService;
 

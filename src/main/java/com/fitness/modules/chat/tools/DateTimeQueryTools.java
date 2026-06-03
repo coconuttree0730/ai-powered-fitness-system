@@ -9,7 +9,12 @@ import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
-public class DateTimeQueryTools {
+public class DateTimeQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 

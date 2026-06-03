@@ -14,7 +14,12 @@ import java.time.Duration;
 
 @Slf4j
 @Component
-public class LocationQueryTools {
+public class LocationQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;

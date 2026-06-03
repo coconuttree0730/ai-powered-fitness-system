@@ -10,7 +10,12 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ProductQueryTools {
+public class ProductQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final ProductService productService;
 

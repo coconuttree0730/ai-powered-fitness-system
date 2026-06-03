@@ -13,7 +13,12 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class MembershipQueryTools {
+public class MembershipQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final MembershipCardService membershipCardService;
     private final UserMembershipService userMembershipService;

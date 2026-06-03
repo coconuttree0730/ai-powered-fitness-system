@@ -12,7 +12,12 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class CourseQueryTools {
+public class CourseQueryTools implements ToolRiskAware {
+
+    @Override
+    public ToolRiskLevel getRiskLevel() {
+        return ToolRiskLevel.LOW;
+    }
 
     private final CourseService courseService;
 
