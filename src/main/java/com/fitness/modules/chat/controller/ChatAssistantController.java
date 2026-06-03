@@ -124,6 +124,40 @@ public class ChatAssistantController {
         return Result.success(messages);
     }
 
+    @Operation(summary = "HITL：恢复被中断的 Agent 执行（流式）")
+    @RateLimit(key = "chat:hitl", limit = 10, window = 60, dimension = RateLimitDimension.USER)
+    @PostMapping(value = "/messages/hitl/resume", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> resumeWithApproval(
+            @RequestParam Long sessionId,
+            @RequestParam String threadId,
+            @RequestParam boolean approved) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return Flux.error(new org.springframework.security.access.AccessDeniedException("User is not authenticated"));
+        }
+        if (!SecurityUtils.hasRole("MEMBER")) {
+            return Flux.error(new org.springframework.security.access.AccessDeniedException("Access denied"));
+        }
+
+        return chatAssistantService.resumeWithApproval(userId, sessionId, threadId, approved)
+                .map(event -> ServerSentEvent.<String>builder()
+                        .id(event.getType())
+                        .event(event.getType())
+                        .data(toJson(event))
+                        .build())
+                .concatWith(Flux.just(ServerSentEvent.<String>builder()
+                        .event("done")
+                        .data(toJson(ChatStreamEventVO.done()))
+                        .build()))
+                .onErrorResume(ex -> {
+                    log.error("Failed to resume HITL", ex);
+                    return Flux.just(ServerSentEvent.<String>builder()
+                            .event("error")
+                            .data(toJson(ChatStreamEventVO.error("操作确认失败，请稍后重试。")))
+                            .build());
+                });
+    }
+
     @Operation(summary = "生成健身计划")
     @RateLimit(key = "chat:plan", limit = 5, window = 60, dimension = RateLimitDimension.USER)
     @PostMapping("/fitness-plan/generate")

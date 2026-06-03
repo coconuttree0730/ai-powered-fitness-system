@@ -94,4 +94,9 @@ public interface ChatAssistantService {
      * @return 健身计划卡片列表
      */
     List<FitnessPlanCardVO> getUserPlans(Long userId);
+
+    /**
+     * HITL：恢复被中断的 Agent 执行
+     */
+    Flux<ChatStreamEventVO> resumeWithApproval(Long userId, Long sessionId, String threadId, boolean approved);
 }

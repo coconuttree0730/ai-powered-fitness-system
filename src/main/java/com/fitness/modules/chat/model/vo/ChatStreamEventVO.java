@@ -30,4 +30,12 @@ public class ChatStreamEventVO {
     public static ChatStreamEventVO error(String message) {
         return new ChatStreamEventVO("error", null, message);
     }
+
+    /**
+     * HITL：需要用户确认的操作
+     * @param pendingActionsJson JSON 格式的待确认操作列表
+     */
+    public static ChatStreamEventVO approvalRequired(String pendingActionsJson) {
+        return new ChatStreamEventVO("approval_required", pendingActionsJson, null);
+    }
 }

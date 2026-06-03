@@ -1,12 +1,15 @@
 package com.fitness.integration.ai.agent.config;
 
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
+import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
 import com.alibaba.cloud.ai.graph.agent.hook.summarization.SummarizationHook;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.redis.RedisSaver;
 import com.alibaba.cloud.ai.graph.store.stores.DatabaseStore;
 import com.fitness.modules.chat.agent.JianXiaoZhuAgentPrompts;
 import com.fitness.modules.chat.tools.CoachQueryTools;
 import com.fitness.modules.chat.tools.CourseQueryTools;
+import com.fitness.modules.chat.tools.CourseSessionQueryTools;
 import com.fitness.modules.chat.tools.LocationQueryTools;
 import com.fitness.modules.chat.tools.MembershipQueryTools;
 import com.fitness.modules.chat.tools.ProductQueryTools;
@@ -14,6 +17,7 @@ import com.fitness.modules.chat.tools.ProfileQueryTools;
 import com.fitness.modules.chat.tools.RagQueryTool;
 import com.fitness.modules.chat.tools.DateTimeQueryTools;
 import com.fitness.modules.chat.tools.WeatherQueryTools;
+import com.fitness.modules.chat.tools.BookingWriteTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
@@ -36,6 +40,7 @@ public class AgentRuntimeConfig {
     private final JianXiaoZhuAgentPrompts prompts;
     private final MembershipQueryTools membershipQueryTools;
     private final CourseQueryTools courseQueryTools;
+    private final CourseSessionQueryTools courseSessionQueryTools;
     private final ProductQueryTools productQueryTools;
     private final CoachQueryTools coachQueryTools;
     private final ProfileQueryTools profileQueryTools;
@@ -43,6 +48,7 @@ public class AgentRuntimeConfig {
     private final WeatherQueryTools weatherQueryTools;
     private final LocationQueryTools locationQueryTools;
     private final RagQueryTool ragQueryTool;
+    private final BookingWriteTool bookingWriteTool;
     private final RedisProperties redisProperties;
 
     @Bean(destroyMethod = "shutdown")
@@ -78,17 +84,35 @@ public class AgentRuntimeConfig {
         return new DatabaseStore(dataSource, "chat_memory_store");
     }
 
+    /**
+     * 上下文压缩：LLM进行摘要压缩
+     * @return
+     */
     @Bean
     public SummarizationHook summarizationHook() {
         return SummarizationHook.builder()
-                .model(chatModel)
+                .model(chatModel) //可以选择普通模型进行
                 .maxTokensBeforeSummary(1000) // 触发摘要的token阈值
                 .messagesToKeep(3) // 保留最近3条消息
                 .build();
     }
 
+    /**
+     * HITL 人工确认 Hook：拦截写操作工具，需用户确认后才执行
+     */
     @Bean
-    public ReactAgent jianXiaoZhuReactAgent(RedisSaver redisSaver, SummarizationHook summarizationHook) {
+    public HumanInTheLoopHook humanInTheLoopHook() {
+        return HumanInTheLoopHook.builder()
+                .approvalOn("bookCourseSession", ToolConfig.builder()
+                        .description("预约课程需要人工确认，请确认是否执行预约")
+                        .build())
+                .build();
+    }
+
+    @Bean
+    public ReactAgent jianXiaoZhuReactAgent(RedisSaver redisSaver,
+                                            SummarizationHook summarizationHook,
+                                            HumanInTheLoopHook humanInTheLoopHook) {
         return ReactAgent.builder()
                 .name("jian_xiao_zhu_agent")
                 .model(chatModel)
@@ -96,15 +120,17 @@ public class AgentRuntimeConfig {
                 .methodTools(
                         membershipQueryTools,
                         courseQueryTools,
+                        courseSessionQueryTools,
                         productQueryTools,
                         coachQueryTools,
                         profileQueryTools,
                         dateTimeQueryTools,
                         weatherQueryTools,
                         locationQueryTools,
-                        ragQueryTool
+                        ragQueryTool,
+                        bookingWriteTool
                 )
-                .hooks(summarizationHook)
+                .hooks(summarizationHook, humanInTheLoopHook)
                 .parallelToolExecution(false)
                 .saver(redisSaver)
                 .build();

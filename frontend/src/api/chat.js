@@ -130,3 +130,27 @@ export function getGenerationTaskStatus(taskId) {
     method: 'get'
   })
 }
+
+/**
+ * HITL：恢复被中断的 Agent 执行（流式）
+ * @param {Object} params
+ * @param {number} params.sessionId - 会话ID
+ * @param {string} params.threadId - 线程ID
+ * @param {boolean} params.approved - 是否批准
+ * @param {AbortSignal} signal - 中断信号
+ */
+export function resumeWithApproval(params, signal) {
+  const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+  const query = new URLSearchParams({
+    sessionId: params.sessionId,
+    threadId: params.threadId,
+    approved: params.approved
+  }).toString()
+  return fetch(`/api/v1/chat/messages/hitl/resume?${query}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    signal
+  })
+}

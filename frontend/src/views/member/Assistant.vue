@@ -107,6 +107,58 @@
             </div>
           </div>
 
+          <!-- HITL 审批卡片 -->
+          <transition name="plan-fade">
+            <div v-if="pendingApproval" class="message ai hitl-approval-wrapper">
+              <div class="message-avatar">
+                <img src="/ai.jpg" alt="AI" class="avatar-img" />
+              </div>
+              <div class="message-content hitl-approval-content">
+                <div class="hitl-card">
+                  <div class="hitl-card-header">
+                    <div class="hitl-icon-wrapper">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      </svg>
+                    </div>
+                    <span class="hitl-card-title">待确认操作</span>
+                  </div>
+                  <div v-for="(action, idx) in pendingApproval.actions" :key="idx" class="hitl-action-item">
+                    <div class="hitl-action-label">
+                      {{ action.toolName === 'bookCourseSession' ? '课程预约' : action.description || action.toolName }}
+                    </div>
+                    <div v-if="action.toolName === 'bookCourseSession'" class="hitl-action-detail">
+                      <span class="hitl-detail-label">场次ID：</span>
+                      <span class="hitl-detail-value">{{ parseBookingArguments(action.arguments).sessionId }}</span>
+                    </div>
+                    <div v-else class="hitl-action-detail">
+                      <span class="hitl-detail-label">参数：</span>
+                      <span class="hitl-detail-value">{{ action.arguments }}</span>
+                    </div>
+                  </div>
+                  <div class="hitl-card-actions">
+                    <n-button
+                      type="primary"
+                      size="small"
+                      :loading="hitlProcessing"
+                      :disabled="hitlProcessing"
+                      @click="handleApproval(true)"
+                    >
+                      确认执行
+                    </n-button>
+                    <n-button
+                      size="small"
+                      :disabled="hitlProcessing"
+                      @click="handleApproval(false)"
+                    >
+                      取消
+                    </n-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </transition>
+
           <!-- 健身计划预览组件 (Tab版详细展示) - 作为聊天消息展示 -->
           <transition name="plan-fade">
             <div v-if="showPlanPreview && fitnessPlanData" class="message ai plan-message-wrapper">
@@ -424,7 +476,8 @@ import {
   getSessionMessages,
   generateFitnessPlan,
   generateFitnessPlanFromProfile,
-  startAsyncPlanGeneration
+  startAsyncPlanGeneration,
+  resumeWithApproval
 } from '@/api/chat'
 import { saveFitnessPlan as savePlanToServer, getMyPlans, getProfile } from '@/api/plan'
 import { getCurrentUser } from '@/api/user'
@@ -623,6 +676,10 @@ const inputMessage = ref('')
 const sending = ref(false)
 const isAiTyping = ref(false)
 const abortController = ref(null)
+
+// HITL 审批状态
+const pendingApproval = ref(null) // { sessionId, threadId, actions: [{toolCallId, toolName, arguments, description}] }
+const hitlProcessing = ref(false)
 
 // 全局忙碌状态：用于互斥锁
 const isBusy = computed(() => sending.value || generatingPlan.value)
@@ -951,6 +1008,32 @@ async function sendMessage() {
         return
       }
 
+      if (resolvedEvent === 'approval_required') {
+        // HITL：需要用户确认操作
+        let actions = []
+        try {
+          actions = typeof payload.text === 'string' ? JSON.parse(payload.text) : payload.text || []
+        } catch (e) {
+          console.warn('Failed to parse approval actions:', e)
+        }
+        pendingApproval.value = {
+          sessionId: currentSessionId.value,
+          threadId: String(currentSessionId.value),
+          actions
+        }
+        updateAiMessage(aiMessageIndex, {
+          type: 'ai',
+          content: fullContent || '有一个操作需要您的确认。',
+          nodes: parseToNodes(fullContent || '有一个操作需要您的确认。', true),
+          isFinal: true,
+          statusText: ''
+        })
+        resetSending(true)
+        scrollToBottom()
+        await flushStreamRender()
+        return
+      }
+
       if (resolvedEvent === 'error') {
         const errorContent = payload.message || '抱歉，我遇到了一些问题，请稍后再试。'
         updateAiMessage(aiMessageIndex, {
@@ -1027,6 +1110,196 @@ async function sendMessage() {
 function stopMessage() {
   if (abortController.value) {
     abortController.value.abort()
+  }
+}
+
+// ==================== HITL 审批相关功能 ====================
+
+async function handleApproval(approved) {
+  if (!pendingApproval.value || hitlProcessing.value) return
+
+  hitlProcessing.value = true
+  const approval = pendingApproval.value
+
+  // 在消息列表中添加用户的确认/取消消息
+  messages.value.push({
+    type: 'user',
+    content: approved ? '确认执行' : '取消操作'
+  })
+
+  // 添加 AI 消息占位
+  const aiMessageId = 'ai_hitl_' + Date.now()
+  messages.value.push({
+    id: aiMessageId,
+    type: 'ai',
+    content: '',
+    nodes: [],
+    isFinal: false,
+    statusText: approved ? '正在执行操作...' : '已取消'
+  })
+  const aiMessageIndex = messages.value.length - 1
+  scrollToBottom()
+
+  // 清除待审批状态
+  pendingApproval.value = null
+
+  abortController.value = new AbortController()
+  let isCompleted = false
+
+  const resetHitl = (force = false) => {
+    if (!isCompleted || force) {
+      isCompleted = true
+      hitlProcessing.value = false
+      abortController.value = null
+      scrollToBottom()
+    }
+  }
+
+  try {
+    const response = await resumeWithApproval({
+      sessionId: approval.sessionId,
+      threadId: approval.threadId,
+      approved
+    }, abortController.value.signal)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let fullContent = ''
+
+    const handleEvent = async ({ event, data }) => {
+      if (!data) return
+      let payload
+      try {
+        payload = JSON.parse(data)
+      } catch (e) {
+        return
+      }
+
+      const resolvedEvent = event === 'message' && payload.type ? payload.type : event
+
+      if (resolvedEvent === 'status') {
+        updateAiMessage(aiMessageIndex, { statusText: payload.message || '处理中...' })
+        scrollToBottom()
+        await flushStreamRender()
+        return
+      }
+
+      if (resolvedEvent === 'delta') {
+        fullContent += payload.text || ''
+        updateAiMessage(aiMessageIndex, {
+          content: fullContent,
+          nodes: parseToNodes(fullContent, false),
+          isFinal: false,
+          statusText: '正在生成回答...'
+        })
+        scrollToBottom()
+        await flushStreamRender()
+        return
+      }
+
+      if (resolvedEvent === 'approval_required') {
+        // 又一次需要审批
+        let actions = []
+        try {
+          actions = typeof payload.text === 'string' ? JSON.parse(payload.text) : payload.text || []
+        } catch (e) { /* ignore */ }
+        pendingApproval.value = {
+          sessionId: approval.sessionId,
+          threadId: approval.threadId,
+          actions
+        }
+        updateAiMessage(aiMessageIndex, {
+          content: fullContent || '有一个操作需要您的确认。',
+          nodes: parseToNodes(fullContent || '有一个操作需要您的确认。', true),
+          isFinal: true,
+          statusText: ''
+        })
+        resetHitl(true)
+        return
+      }
+
+      if (resolvedEvent === 'done') {
+        updateAiMessage(aiMessageIndex, {
+          content: fullContent,
+          nodes: parseToNodes(fullContent, true),
+          isFinal: true,
+          statusText: ''
+        })
+        resetHitl(true)
+        return
+      }
+
+      if (resolvedEvent === 'error') {
+        const errorContent = payload.message || '操作失败，请稍后重试。'
+        updateAiMessage(aiMessageIndex, {
+          content: fullContent || errorContent,
+          nodes: parseToNodes(fullContent || errorContent, true),
+          isFinal: true,
+          statusText: ''
+        })
+        resetHitl(true)
+        return
+      }
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const extracted = extractStreamEvents(buffer)
+        buffer = extracted.remaining
+        for (const evt of extracted.events) {
+          await handleEvent(evt)
+        }
+      }
+      if (buffer.trim()) {
+        await handleEvent(parseSseEventBlock(buffer))
+      }
+      if (!isCompleted) {
+        updateAiMessage(aiMessageIndex, {
+          content: fullContent,
+          nodes: parseToNodes(fullContent, true),
+          isFinal: true,
+          statusText: ''
+        })
+      }
+    } finally {
+      reader.releaseLock()
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('HITL resume aborted')
+    } else {
+      console.error('HITL resume failed:', error)
+      message.error('操作确认失败，请稍后重试')
+      updateAiMessage(aiMessageIndex, {
+        content: '操作确认失败，请稍后重试。',
+        nodes: parseToNodes('操作确认失败，请稍后重试。', true),
+        isFinal: true,
+        statusText: ''
+      })
+    }
+  } finally {
+    resetHitl()
+  }
+}
+
+// 解析预约参数为可读信息
+function parseBookingArguments(argsStr) {
+  try {
+    const args = typeof argsStr === 'string' ? JSON.parse(argsStr) : argsStr
+    return {
+      sessionId: args.sessionId || args.session_id || '-',
+      label: '课程预约'
+    }
+  } catch {
+    return { sessionId: '-', label: '课程预约' }
   }
 }
 
@@ -3115,6 +3388,91 @@ async function regeneratePlan() {
   color: #4B5563;
   line-height: 1.6;
   margin-bottom: 8px;
+}
+
+/* ==================== HITL 审批卡片样式 ==================== */
+
+.hitl-approval-wrapper {
+  animation: fadeIn 0.4s ease;
+}
+
+.hitl-approval-content {
+  background: transparent !important;
+  border-bottom-left-radius: 4px !important;
+  padding: 0 !important;
+  max-width: 480px;
+}
+
+.hitl-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.hitl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F0F2F5;
+}
+
+.hitl-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FF6B35, #FF8C61);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hitl-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.hitl-action-item {
+  background: #F8FAFC;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.hitl-action-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin-bottom: 8px;
+}
+
+.hitl-action-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.hitl-detail-label {
+  color: #9CA3AF;
+}
+
+.hitl-detail-value {
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.hitl-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #F0F2F5;
 }
 
 /* 响应式适配 - 折叠侧边栏 */

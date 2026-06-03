@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
+import reactor.util.context.Context;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -137,16 +138,16 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
                     }
                 })
                 .doOnComplete(() -> {
+                    // 在 boundedElastic 线程恢复安全上下文，用于 saveAssistantMessage
                     SecurityContextHolder.setContext(securityContext);
-                    try {
-                        saveAssistantMessage(session, fullResponse.toString(), dto.getContent());
-                        log.info("Completed stream message: sessionId={}, userId={}", session.getId(), userId);
-                    } finally {
-                        SecurityContextHolder.clearContext();
-                    }
+                    saveAssistantMessage(session, fullResponse.toString(), dto.getContent());
+                    log.info("Completed stream message: sessionId={}, userId={}", session.getId(), userId);
+                    // 不清除上下文 — 异步分发回原始线程时安全过滤器链仍需要它
                 })
                 .doOnError(error -> log.error("Stream message failed: sessionId={}, userId={}, error={}",
-                        session.getId(), userId, error.getMessage()));
+                        session.getId(), userId, error.getMessage()))
+                .contextWrite(reactor.util.context.Context.of(
+                        SecurityContext.class.getName(), securityContext));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -280,6 +281,34 @@ public class ChatAssistantServiceImpl implements ChatAssistantService {
 
         log.info("Saved fitness plan: userId={}, planId={}", userId, plan.getId());
         return plan.getId();
+    }
+
+    @Override
+    public Flux<ChatStreamEventVO> resumeWithApproval(Long userId, Long sessionId, String threadId, boolean approved) {
+        ChatSession session = chatSessionMapper.selectById(sessionId);
+        if (session == null || !session.getUserId().equals(userId)) {
+            return Flux.error(new BusinessException("会话不存在或无权访问"));
+        }
+
+        StringBuilder fullResponse = new StringBuilder();
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+
+        return jianXiaoZhuAgentService.resumeWithApproval(sessionId, threadId, approved)
+                .doOnNext(event -> {
+                    if ("delta".equals(event.getType()) && StrUtil.isNotBlank(event.getText())) {
+                        fullResponse.append(event.getText());
+                    }
+                })
+                .doOnComplete(() -> {
+                    SecurityContextHolder.setContext(securityContext);
+                    if (fullResponse.length() > 0) {
+                        saveAssistantMessage(session, fullResponse.toString(), "HITL确认");
+                    }
+                    log.info("HITL resume completed: sessionId={}, threadId={}, approved={}", sessionId, threadId, approved);
+                })
+                .doOnError(error -> log.error("HITL resume failed: sessionId={}, error={}", sessionId, error.getMessage()))
+                .contextWrite(reactor.util.context.Context.of(
+                        SecurityContext.class.getName(), securityContext));
     }
 
     @Override
