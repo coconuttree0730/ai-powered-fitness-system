@@ -100,11 +100,11 @@ knowledge:
       provider: ${KNOWLEDGE_RAG_QUERY_REWRITE_PROVIDER:noop}
       max-queries: ${KNOWLEDGE_RAG_QUERY_REWRITE_MAX_QUERIES:3}
     reranker:
-      enabled: ${KNOWLEDGE_RAG_RERANKER_ENABLED:false}
-      provider: ${KNOWLEDGE_RAG_RERANKER_PROVIDER:noop}
-      endpoint: ${KNOWLEDGE_RAG_RERANKER_ENDPOINT:http://localhost:8081/rerank}
-      top-n: ${KNOWLEDGE_RAG_RERANKER_TOP_N:20}
-      timeout-ms: ${KNOWLEDGE_RAG_RERANKER_TIMEOUT_MS:3000}
+      enabled: ${KNOWLEDGE_RAG_RERANKER_ENABLED:true}
+      provider: ${KNOWLEDGE_RAG_RERANKER_PROVIDER:http}
+      endpoint: ${KNOWLEDGE_RAG_RERANKER_ENDPOINT:http://localhost:8079/rerank}
+      top-n: ${KNOWLEDGE_RAG_RERANKER_TOP_N:5}
+      timeout-ms: ${KNOWLEDGE_RAG_RERANKER_TIMEOUT_MS:10000}
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
@@ -170,3 +170,4 @@ logging:
     org.springframework.security: INFO
     com.alibaba.cloud.ai.graph: WARN
     com.alibaba.cloud.ai.graph.utils: WARN
+

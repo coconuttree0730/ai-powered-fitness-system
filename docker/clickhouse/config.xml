@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <zookeeper>
+        <node>
+            <host>zookeeper</host>
+            <port>2181</port>
+        </node>
+    </zookeeper>
+    <macros>
+        <shard>01</shard>
+        <replica>replica1</replica>
+    </macros>
+</clickhouse>

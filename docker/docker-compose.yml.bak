@@ -15,8 +15,6 @@ volumes:
   ollama_data:
     external: true
     name: ollama
-  langfuse_data:
-  clickhouse_data:
 
 services:
   ollama:
@@ -65,7 +63,22 @@ services:
       POSTGRES_DB: fitness_ai_db
       POSTGRES_USER: fitness_user
       POSTGRES_PASSWORD: myPostgresPass123
-
+  mysql:
+    image: mysql:8.0
+    container_name: fitness-mysql
+    restart: unless-stopped
+    networks:
+      - fitness-ai-net
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fitness_ai_mysql
+      MYSQL_USER: fitness_user
+      MYSQL_PASSWORD: myMysqlPass123
+    command: --default-authentication-plugin=mysql_native_password
   rabbitmq:
     build:
       context: ./rabbitmq
@@ -112,51 +125,3 @@ services:
       - ./web-nginx-dist:/usr/share/nginx/html  # ✅ 新增：前端静态文件挂载
     extra_hosts:
       - "host.docker.internal:host-gateway"     # ✅ 新增：允许容器访问宿主机
-
-  # Zookeeper for ClickHouse
-  zookeeper:
-    image: zookeeper:latest
-    container_name: fitness-zookeeper
-    restart: unless-stopped
-    networks:
-      - fitness-ai-net
-    ports:
-      - "2181:2181"
-
-  # ClickHouse for Langfuse V3
-  clickhouse:
-    image: clickhouse/clickhouse-server:latest
-    container_name: fitness-clickhouse
-    restart: unless-stopped
-    networks:
-      - fitness-ai-net
-    ports:
-      - "8123:8123"
-      - "9004:9000"
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse
-      - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/zookeeper.xml
-    depends_on:
-      - zookeeper
-
-  # Langfuse Observability Platform (V2 - 只需 PostgreSQL + Redis)
-  langfuse:
-    image: langfuse/langfuse:2
-    container_name: fitness-langfuse
-    restart: unless-stopped
-    networks:
-      - fitness-ai-net
-    ports:
-      - "3100:3000"
-    environment:
-      DATABASE_URL: postgresql://fitness_user:myPostgresPass123@postgres:5432/langfuse_db
-      REDIS_URL: redis://:myRedisPass123@redis:6379/1
-      NEXTAUTH_URL: http://localhost:3100
-      NEXTAUTH_SECRET: langfuse-nextauth-secret-2026
-      SALT: langfuse-salt-2026
-      AUTH_DISABLE_SIGNUP: "false"
-    depends_on:
-      - postgres
-      - redis
-    volumes:
-      - langfuse_data:/app/data

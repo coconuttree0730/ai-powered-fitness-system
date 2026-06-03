@@ -115,6 +115,8 @@
             <artifactId>spring-ai-alibaba-graph-core</artifactId>
         </dependency>
 
+        <!-- Langfuse Observability (暂时移除，SDK 不存在) -->
+
         <!-- MyBatis-Plus -->
         <dependency>
             <groupId>com.baomidou</groupId>
